@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Check, ChevronDown } from 'lucide-react'
 import Reveal from '../lib/Reveal'
+import { asset } from '../lib/asset'
 
 const CATEGORIES = [
   {
     id: 'casamentos',
     title: 'Casamentos',
     tagline: 'A vossa história de amor, contada para sempre.',
-    image: '/brand/portfolio/forest-bride.jpg',
+    image: asset('/brand/portfolio/forest-bride.jpg'),
     imgPos: 'object-top',
     packs: [
       {
@@ -30,7 +31,7 @@ const CATEGORIES = [
     id: 'maternidade',
     title: 'Maternidade',
     tagline: 'Celebrar a espera. Eternizar o início.',
-    image: '/brand/portfolio/maternity-railway.jpg',
+    image: asset('/brand/portfolio/maternity-railway.jpg'),
     imgPos: 'object-center',
     packs: [
       {
@@ -51,7 +52,7 @@ const CATEGORIES = [
     id: 'eventos',
     title: 'Eventos',
     tagline: 'Cobertura à medida de cada ocasião.',
-    image: '/brand/portfolio/baby-balloons.jpg',
+    image: asset('/brand/portfolio/baby-balloons.jpg'),
     imgPos: 'object-[50%_15%]',
     packs: [
       {

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Aperture, ArrowRight, Compass, Sparkle } from 'lucide-react'
 import Reveal from '../lib/Reveal'
+import { asset } from '../lib/asset'
 
 const TEAM = [
   { name: 'Daniel', role: 'Videógrafo & Filmmaker', sub: 'Operador de Drone' },
@@ -43,7 +44,7 @@ export default function About() {
       <section className="container-px grid md:grid-cols-2 gap-8 sm:gap-14 mb-16 sm:mb-32">
         <Reveal>
           <img
-            src="/brand/portfolio/palace-dome.jpg"
+            src={asset('/brand/portfolio/palace-dome.jpg')}
             alt="Equipa NEBULA"
             loading="lazy"
             className="w-full rounded-2xl object-cover object-center"

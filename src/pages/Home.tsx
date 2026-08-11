@@ -3,24 +3,25 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import { useRef } from 'react'
 import { ArrowRight } from 'lucide-react'
 import Reveal from '../lib/Reveal'
+import { asset } from '../lib/asset'
 
 const SERVICES = [
   {
     title: 'Casamentos',
     tagline: 'A vossa história de amor, contada para sempre.',
-    image: '/brand/portfolio/forest-bride.jpg',
+    image: asset('/brand/portfolio/forest-bride.jpg'),
     imgPos: 'object-top',
   },
   {
     title: 'Maternidade',
     tagline: 'Celebrar a espera. Eternizar o início.',
-    image: '/brand/portfolio/maternity-railway.jpg',
+    image: asset('/brand/portfolio/maternity-railway.jpg'),
     imgPos: 'object-center',
   },
   {
     title: 'Eventos',
     tagline: 'Coberturas à medida de cada ocasião.',
-    image: '/brand/portfolio/baby-balloons.jpg',
+    image: asset('/brand/portfolio/baby-balloons.jpg'),
     imgPos: 'object-[50%_15%]',
   },
 ]
@@ -33,11 +34,11 @@ const STATS = [
 ]
 
 const GALLERY = [
-  { src: '/brand/portfolio/palace-dome.jpg', pos: 'center center' },
-  { src: '/brand/portfolio/editorial-dramatic.jpg', pos: 'center 20%' },
-  { src: '/brand/portfolio/maternity-sunset-couple.jpg', pos: 'center 30%' },
-  { src: '/brand/portfolio/hero-beach-dress.jpg', pos: 'center 25%' },
-  { src: '/brand/portfolio/editorial-blue-dress.jpg', pos: 'center 15%' },
+  { src: asset('/brand/portfolio/palace-dome.jpg'), pos: 'center center' },
+  { src: asset('/brand/portfolio/editorial-dramatic.jpg'), pos: 'center 20%' },
+  { src: asset('/brand/portfolio/maternity-sunset-couple.jpg'), pos: 'center 30%' },
+  { src: asset('/brand/portfolio/hero-beach-dress.jpg'), pos: 'center 25%' },
+  { src: asset('/brand/portfolio/editorial-blue-dress.jpg'), pos: 'center 15%' },
 ]
 
 const STEPS = [
@@ -77,7 +78,7 @@ export default function Home() {
       <section ref={heroRef} className="relative h-[100svh] overflow-hidden">
         <motion.div style={{ scale: imgScale }} className="absolute inset-0 origin-center">
           <img
-            src="/brand/portfolio/hero-beach-dress.jpg"
+            src={asset('/brand/portfolio/hero-beach-dress.jpg')}
             alt="NEBULA — fotografia editorial"
             className="w-full h-full object-cover object-[50%_25%]"
           />
@@ -96,7 +97,7 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="flex items-center gap-3 mb-7 sm:mb-9"
           >
-            <img src="/brand/logo-symbol-white.png" alt="" className="h-5 sm:h-6 w-auto opacity-80" />
+            <img src={asset('/brand/logo-symbol-white.png')} alt="" className="h-5 sm:h-6 w-auto opacity-80" />
             <span className="label-sm">Lisboa & Portalegre</span>
           </motion.div>
 

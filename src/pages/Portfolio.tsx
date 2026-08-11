@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Reveal from '../lib/Reveal'
+import { asset } from '../lib/asset'
 
 const FILTERS = ['Todos', 'Casamentos', 'Maternidade', 'Eventos'] as const
 
@@ -12,20 +13,20 @@ const ITEMS: {
   tall?: boolean
   pos: string
 }[] = [
-  { src: '/brand/portfolio/palace-dome.jpg', category: 'Casamentos', tall: true, pos: 'center center' },
-  { src: '/brand/portfolio/forest-bride.jpg', category: 'Casamentos', pos: 'center 20%' },
-  { src: '/brand/portfolio/hero-beach-dress.jpg', category: 'Casamentos', pos: 'center 25%' },
-  { src: '/brand/portfolio/gender-reveal-beach.jpg', category: 'Maternidade', pos: 'center center' },
-  { src: '/brand/portfolio/maternity-railway.jpg', category: 'Maternidade', tall: true, pos: 'center center' },
-  { src: '/brand/portfolio/maternity-sunset-couple.jpg', category: 'Maternidade', pos: 'center 30%' },
-  { src: '/brand/portfolio/baby-balloons.jpg', category: 'Eventos', pos: 'center 15%' },
-  { src: '/brand/portfolio/editorial-studio-1.jpg', category: 'Eventos', pos: 'center center' },
-  { src: '/brand/portfolio/editorial-dramatic.jpg', category: 'Eventos', tall: true, pos: 'center 20%' },
-  { src: '/brand/portfolio/editorial-blue-dress.jpg', category: 'Eventos', pos: 'center 15%' },
-  { src: '/brand/portfolio/editorial-purple.jpg', category: 'Eventos', pos: 'center 20%' },
-  { src: '/brand/portfolio/editorial-lake.jpg', category: 'Eventos', pos: 'center center' },
-  { src: '/brand/portfolio/editorial-studio-2.jpg', category: 'Eventos', pos: 'center 25%' },
-  { src: '/brand/portfolio/editorial-autumn.jpg', category: 'Casamentos', pos: 'center 30%' },
+  { src: asset('/brand/portfolio/palace-dome.jpg'), category: 'Casamentos', tall: true, pos: 'center center' },
+  { src: asset('/brand/portfolio/forest-bride.jpg'), category: 'Casamentos', pos: 'center 20%' },
+  { src: asset('/brand/portfolio/hero-beach-dress.jpg'), category: 'Casamentos', pos: 'center 25%' },
+  { src: asset('/brand/portfolio/gender-reveal-beach.jpg'), category: 'Maternidade', pos: 'center center' },
+  { src: asset('/brand/portfolio/maternity-railway.jpg'), category: 'Maternidade', tall: true, pos: 'center center' },
+  { src: asset('/brand/portfolio/maternity-sunset-couple.jpg'), category: 'Maternidade', pos: 'center 30%' },
+  { src: asset('/brand/portfolio/baby-balloons.jpg'), category: 'Eventos', pos: 'center 15%' },
+  { src: asset('/brand/portfolio/editorial-studio-1.jpg'), category: 'Eventos', pos: 'center center' },
+  { src: asset('/brand/portfolio/editorial-dramatic.jpg'), category: 'Eventos', tall: true, pos: 'center 20%' },
+  { src: asset('/brand/portfolio/editorial-blue-dress.jpg'), category: 'Eventos', pos: 'center 15%' },
+  { src: asset('/brand/portfolio/editorial-purple.jpg'), category: 'Eventos', pos: 'center 20%' },
+  { src: asset('/brand/portfolio/editorial-lake.jpg'), category: 'Eventos', pos: 'center center' },
+  { src: asset('/brand/portfolio/editorial-studio-2.jpg'), category: 'Eventos', pos: 'center 25%' },
+  { src: asset('/brand/portfolio/editorial-autumn.jpg'), category: 'Casamentos', pos: 'center 30%' },
 ]
 
 export default function Portfolio() {

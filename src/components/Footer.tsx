@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Mail, Phone } from 'lucide-react'
 import InstagramIcon from '../lib/InstagramIcon'
+import { asset } from '../lib/asset'
 
 const NAV = [
   { to: '/sobre', label: 'Sobre' },
@@ -14,7 +15,7 @@ export default function Footer() {
     <footer className="bg-eerie border-t border-white/[0.08] pt-14 sm:pt-20 pb-8">
       <div className="container-px grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 sm:gap-12">
         <div className="sm:col-span-2">
-          <img src="/brand/logo-mix-white.png" alt="NEBULA" className="h-9 sm:h-10 w-auto mb-5" />
+          <img src={asset('/brand/logo-mix-white.png')} alt="NEBULA" className="h-9 sm:h-10 w-auto mb-5" />
           <p className="text-titanium/50 text-sm max-w-xs leading-relaxed">
             Produtora audiovisual especializada em fotografia editorial e vídeo
             cinematográfico. Capturamos histórias, não apenas momentos.

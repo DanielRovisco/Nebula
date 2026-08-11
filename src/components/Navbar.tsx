@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
+import { asset } from '../lib/asset'
 
 const LINKS = [
   { to: '/', label: 'Home' },
@@ -35,7 +36,7 @@ export default function Navbar() {
       <div className="container-px flex items-center justify-between py-5 sm:py-5">
         <Link to="/" className="flex items-center z-50 relative" onClick={() => setOpen(false)}>
           <img
-            src="/brand/logo-lettering-white.png"
+            src={asset('/brand/logo-lettering-white.png')}
             alt="NEBULA"
             className="h-7 sm:h-8 w-auto"
           />
