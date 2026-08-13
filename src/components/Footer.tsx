@@ -52,11 +52,16 @@ export default function Footer() {
           <h4 className="label-sm mb-5">Contacto</h4>
           <ul className="flex flex-col gap-0.5 text-sm">
             <li>
+              {/*
+                `break-all` porque o endereço não tem espaços: na coluna estreita
+                do rodapé (4 colunas a partir de md) não cabia inteiro e alargava
+                a página, dando scroll horizontal em ecrãs de tablet.
+              */}
               <a
                 href={`mailto:${CONTACT.email}`}
-                className="inline-flex items-center gap-2 py-1.5 text-titanium/60 hover:text-titanium transition-colors"
+                className="flex items-start gap-2 py-1.5 text-titanium/60 hover:text-titanium transition-colors break-all"
               >
-                <Mail size={14} className="shrink-0" />
+                <Mail size={14} className="shrink-0 mt-1" />
                 {CONTACT.email}
               </a>
             </li>

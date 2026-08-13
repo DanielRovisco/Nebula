@@ -36,7 +36,7 @@ const SERVICES = [
 const STATS: { value: string; countTo?: number; suffix?: string; label: string }[] = [
   { value: '20+', countTo: 20, suffix: '+', label: 'Histórias contadas' },
   { value: '3', label: 'Criadores visuais' },
-  { value: '4K', label: 'Vídeo cinematográfico' },
+  { value: '360°', label: 'Foto, vídeo e drone' },
 ]
 
 const GALLERY = [
