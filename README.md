@@ -81,3 +81,88 @@ submetido no Google Search Console.
 O site respeita `prefers-reduced-motion`: com essa preferência ativa, o scroll
 suave (Lenis), o parallax do hero, os reveals e as transições de página são
 desligados e o conteúdo é entregue estático.
+
+## Galerias privadas
+
+Cada cliente recebe um link `/galeria/<código>` e uma password. A administração
+das galerias vive em `/admin` — **não há link para lá em lado nenhum do site**,
+por opção.
+
+### Porque é que isto precisa de Supabase
+
+O site é estático no GitHub Pages, e num site estático uma password em
+JavaScript não protege nada: os ficheiros continuam acessíveis por URL direto a
+quem o souber. Além disso o Pages tem um limite de 1 GB de site publicado, que
+uma única galeria de casamento em tamanho real esgota.
+
+Por isso as fotografias dos clientes vivem num bucket **privado** do Supabase e
+a password é verificada **no servidor**. O browser nunca recebe um URL de
+ficheiro sem antes acertar na password, e os URLs que recebe são assinados e
+expiram ao fim de 2 horas.
+
+### Instalação (uma vez)
+
+1. **Criar o projeto** em supabase.com (ou reutilizar um existente).
+2. **Esquema:** SQL Editor → colar `supabase/schema.sql` → Run. Cria as
+   tabelas, as políticas RLS, o bucket privado `galleries` e as funções de
+   password.
+3. **Conta de administração:** Authentication → Users → Add user, com o email e
+   password de quem vai gerir. Não há registo aberto — só entra quem for criado
+   aqui.
+4. **Edge Function:**
+   ```bash
+   supabase functions deploy gallery-access --no-verify-jwt
+   ```
+   O `--no-verify-jwt` é necessário porque o cliente é anónimo: quem autoriza é
+   a password da galeria, validada lá dentro.
+5. **Variáveis** (ver `.env.example`): `VITE_SUPABASE_URL` e
+   `VITE_SUPABASE_ANON_KEY`, em `.env.local` para desenvolvimento e como
+   *secrets* no workflow do GitHub Actions para o site publicado.
+
+A chave anónima pode ser pública — é para isso que serve. O que nunca pode sair
+do Supabase é a `service_role`, usada só dentro da Edge Function.
+
+### Utilização
+
+**Criar uma galeria:** `/admin` → Nova galeria. O código do URL é sugerido a
+partir do título e a password é gerada de forma legível ao telefone
+(`norte-1609`). Nasce em rascunho — não abre a ninguém, nem com a password
+certa, até carregares em Publicar.
+
+**Carregar fotos:** arrasta para a área da galeria ou usa o botão. Cada foto
+gera uma miniatura no browser antes do upload, para a grelha do cliente não ter
+de carregar ficheiros em tamanho real. A ordem define-se arrastando.
+
+**Password esquecida:** não há como a recuperar — está guardada cifrada com
+bcrypt. Define uma nova no editor da galeria.
+
+**Prazo:** o campo "Expira em" fecha a galeria a partir dessa data sem apagar
+nada.
+
+### O que o cliente vê
+
+Entra em `/galeria`, ou direto em `/galeria/<código>` com o código já
+preenchido. Depois da password: grelha com miniaturas, lightbox com setas e
+teclado, download foto a foto e "Descarregar tudo" em ZIP. O acesso fica
+guardado no separador durante 2 horas; passado isso, volta a pedir a password.
+
+O botão de download desaparece se desligares o download nas definições da
+galeria.
+
+### Limites que vale a pena conhecer
+
+- **O ZIP é montado na memória do dispositivo.** Acima de ~1,5 GB a interface
+  avisa antes de tentar. Em galerias muito grandes, o download foto a foto é
+  mais seguro, sobretudo em telemóvel.
+- **Dez tentativas falhadas por hora** bloqueiam o acesso a uma galeria, mesmo
+  com a password correta. Volta a abrir sozinho ao fim de uma hora.
+- **O plano gratuito do Supabase é apertado para fotografia.** Confirma os
+  limites de armazenamento e tráfego atuais antes de contar com ele.
+
+### Modo de demonstração
+
+`VITE_DEMO_GALLERIES=true` liga galerias falsas em memória, para mostrar o
+desenho sem Supabase configurado (código `ana-e-tiago`, password `demo`). Tem
+de ser ligado à mão — **nunca é um fallback automático**. Um deploy sem
+configuração mostra um aviso e recusa o acesso, em vez de servir um cadeado
+decorativo com ar de verdadeiro.

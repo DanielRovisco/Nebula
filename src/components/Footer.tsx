@@ -9,6 +9,7 @@ const NAV = [
   { to: '/servicos', label: 'Serviços' },
   { to: '/portfolio', label: 'Portfólio' },
   { to: '/contacto', label: 'Contacto' },
+  { to: '/galeria', label: 'Galeria privada' },
 ]
 
 export default function Footer() {

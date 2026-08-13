@@ -10,6 +10,7 @@ const LINKS = [
   { to: '/sobre', label: 'Sobre' },
   { to: '/servicos', label: 'Serviços' },
   { to: '/portfolio', label: 'Portfólio' },
+  { to: '/galeria', label: 'Galeria privada' },
 ]
 
 export default function Navbar() {
