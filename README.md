@@ -169,9 +169,14 @@ npm install
 npm run demo
 ```
 
-e abrir `http://localhost:5173/Nebula/admin` (o painel; qualquer email serve,
-password com 3+ caracteres) ou `http://localhost:5173/Nebula/galeria` (o lado
-do cliente; código `ana-e-tiago`, password `demo`). Vêm duas galerias de
+e abrir `http://localhost:5173/Nebula/admin` (o painel entra direto, sem
+login) ou `http://localhost:5173/Nebula/galeria` (o lado do cliente; código
+`ana-e-tiago`, password `demo`).
+
+A entrada sem login existe **só em demonstração**, onde os dados são falsos e
+a autenticação aceitaria tudo de qualquer maneira. No build de produção o
+painel exige sempre login — o ecrã de acesso não é dispensável por variável de
+ambiente nenhuma. Vêm duas galerias de
 exemplo, uma publicada e outra em rascunho, com as fotos do próprio portfólio.
 
 Por baixo, `npm run demo` é `vite --mode demo`, que carrega o `.env.demo` com

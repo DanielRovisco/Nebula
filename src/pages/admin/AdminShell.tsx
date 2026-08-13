@@ -9,10 +9,12 @@ import { CONFIGURED, DEMO } from '../../lib/gallery/config'
  * autenticada, as políticas RLS do Supabase recusam tudo.
  */
 export default function AdminShell({ children }: { children: ReactNode }) {
-  // Sem backend configurado não há sessão possível: arranca já em 'out' em vez
-  // de passar por 'loading' e chamar setState dentro do efeito.
+  // Em demonstração o login é ruído: são dados falsos e a "autenticação" aceita
+  // tudo, por isso entra-se direto para ver o painel. Fora da demonstração, sem
+  // backend configurado não há sessão possível — arranca em 'out' em vez de
+  // passar por 'loading' e chamar setState dentro do efeito.
   const [state, setState] = useState<'loading' | 'out' | 'in'>(
-    CONFIGURED || DEMO ? 'loading' : 'out',
+    DEMO ? 'in' : CONFIGURED ? 'loading' : 'out',
   )
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -39,7 +41,9 @@ export default function AdminShell({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    if (!CONFIGURED && !DEMO) return
+    // Em demonstração já entrámos: perguntar pela sessão só serviria para nos
+    // pôr fora outra vez.
+    if (DEMO || !CONFIGURED) return
     api.currentUser().then((u) => setState(u ? 'in' : 'out')).catch(() => setState('out'))
   }, [])
 
@@ -77,8 +81,9 @@ export default function AdminShell({ children }: { children: ReactNode }) {
           {DEMO && (
             <div className="mt-6 border border-amber-400/30 bg-amber-400/[0.07] rounded-xl p-4 text-xs text-amber-100/80 leading-relaxed">
               <strong className="block mb-1">Modo de demonstração</strong>
-              Qualquer email serve e a password só precisa de 3 caracteres. Nada
-              do que fizeres aqui é real.
+              Normalmente entra-se direto, sem este ecrã. Se chegaste aqui foi
+              por teres saído — qualquer email serve e a password só precisa de
+              3 caracteres.
             </div>
           )}
           {!DEMO && !CONFIGURED && (
@@ -161,7 +166,8 @@ export default function AdminShell({ children }: { children: ReactNode }) {
       {DEMO && (
         <div className="container-px mb-8">
           <div className="border border-amber-400/30 bg-amber-400/[0.07] rounded-xl p-3 text-xs text-amber-100/80">
-            Modo de demonstração — nada é guardado a sério.
+            Modo de demonstração — entrada sem password, dados falsos e nada é
+            guardado. No site publicado o painel exige sempre login.
           </div>
         </div>
       )}
