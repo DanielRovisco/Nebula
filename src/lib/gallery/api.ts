@@ -2,28 +2,81 @@ import { DEMO, anonKey, functionsUrl, supabase } from './config'
 import { demoApi } from './demo'
 import type { Gallery, GalleryAccess, GalleryPatch, NewGallery, Photo } from './types'
 
-const THUMB_WIDTH = 640
+const THUMB_EDGE = 640
 const THUMB_QUALITY = 0.78
 
-/** Reduz uma imagem no browser, para a grelha não carregar ficheiros enormes. */
-async function makeThumb(file: File): Promise<{ blob: Blob; width: number; height: number }> {
+/** Lado maior a que as fotos são reduzidas quando a redução está ligada. */
+export const DELIVERY_EDGE = 3000
+const DELIVERY_QUALITY = 0.88
+
+interface Resized {
+  blob: Blob
+  width: number
+  height: number
+  /** Dimensões do ficheiro original, antes de qualquer redução. */
+  originalWidth: number
+  originalHeight: number
+}
+
+/**
+ * Reduz uma imagem no browser. Serve para dois fins: a miniatura da grelha e,
+ * opcionalmente, a própria foto de entrega — um JPEG de 3000px no lado maior
+ * ocupa 3 a 5 vezes menos do que o original da máquina, sem diferença visível
+ * numa galeria de cliente, e é o que faz 10 GB chegarem para uma temporada.
+ */
+async function resize(
+  file: File,
+  maxEdge: number,
+  mime: string,
+  quality: number,
+): Promise<Resized> {
   const bitmap = await createImageBitmap(file)
-  const scale = Math.min(1, THUMB_WIDTH / bitmap.width)
-  const w = Math.round(bitmap.width * scale)
-  const h = Math.round(bitmap.height * scale)
+  const { width: ow, height: oh } = bitmap
+  const scale = Math.min(1, maxEdge / Math.max(ow, oh))
+  const w = Math.round(ow * scale)
+  const h = Math.round(oh * scale)
 
   const canvas = document.createElement('canvas')
   canvas.width = w
   canvas.height = h
   canvas.getContext('2d')!.drawImage(bitmap, 0, 0, w, h)
-
-  const blob = await new Promise<Blob | null>((res) =>
-    canvas.toBlob(res, 'image/webp', THUMB_QUALITY),
-  )
-  const dims = { width: bitmap.width, height: bitmap.height }
   bitmap.close()
-  if (!blob) throw new Error('Não foi possível gerar a miniatura.')
-  return { blob, ...dims }
+
+  const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, mime, quality))
+  if (!blob) throw new Error('Não foi possível processar a imagem.')
+  return { blob, width: w, height: h, originalWidth: ow, originalHeight: oh }
+}
+
+/** Chama uma Edge Function com o token da sessão do admin. */
+async function callAdmin<T>(body: Record<string, unknown>): Promise<T> {
+  const { data } = await supabase().auth.getSession()
+  const token = data.session?.access_token
+  if (!token) throw new Error('Sessão expirada. Volta a entrar.')
+
+  const res = await fetch(functionsUrl('admin-storage'), {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      apikey: anonKey(),
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error === 'unauthorized' ? 'Sessão expirada. Volta a entrar.' : 'Falha no storage.')
+  }
+  return res.json()
+}
+
+/** Envia um blob para o R2 usando um PUT pré-assinado. */
+async function putToR2(url: string, blob: Blob, contentType: string) {
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: { 'content-type': contentType },
+    body: blob,
+  })
+  if (!res.ok) throw new Error(`O upload falhou (${res.status}).`)
 }
 
 const rowToGallery = (r: Record<string, unknown>): Gallery => ({
@@ -175,12 +228,17 @@ const realApi = {
     const paths = (photos ?? []).flatMap((p) =>
       [p.storage_path, p.thumb_path].filter(Boolean) as string[],
     )
-    if (paths.length) await sb.storage.from('galleries').remove(paths)
+    if (paths.length) await callAdmin({ action: 'delete', keys: paths })
     const { error } = await sb.from('galleries').delete().eq('id', id)
     if (error) throw new Error(error.message)
   },
 
-  async uploadPhotos(galleryId: string, files: File[], onProgress: (done: number) => void) {
+  async uploadPhotos(
+    galleryId: string,
+    files: File[],
+    onProgress: (done: number) => void,
+    options: { maxEdge?: number | null } = {},
+  ) {
     const sb = supabase()
     const { data: existing } = await sb
       .from('photos')
@@ -192,29 +250,56 @@ const realApi = {
     let done = 0
 
     for (const file of files) {
-      const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-      const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-      const fullPath = `${galleryId}/${stamp}-${safe}`
-      const thumbPath = `${galleryId}/thumbs/${stamp}.webp`
-
-      const up = await sb.storage.from('galleries').upload(fullPath, file, {
-        cacheControl: '3600',
-        upsert: false,
-      })
-      if (up.error) throw new Error(`${file.name}: ${up.error.message}`)
-
+      // A foto de entrega: reduzida se pedido, senão o ficheiro tal e qual.
+      let payload: Blob = file
+      let contentType = file.type || 'image/jpeg'
       let width: number | null = null
       let height: number | null = null
+
+      if (options.maxEdge) {
+        try {
+          const r = await resize(file, options.maxEdge, 'image/jpeg', DELIVERY_QUALITY)
+          // Só vale a pena se realmente encolher — um ficheiro já pequeno pode
+          // até crescer ao ser recomprimido.
+          if (r.blob.size < file.size) {
+            payload = r.blob
+            contentType = 'image/jpeg'
+            width = r.width
+            height = r.height
+          } else {
+            width = r.originalWidth
+            height = r.originalHeight
+          }
+        } catch {
+          // Formato que o browser não sabe descodificar: sobe o original.
+        }
+      }
+
+      const full = await callAdmin<{ key: string; url: string }>({
+        action: 'upload-url',
+        galleryId,
+        fileName: file.name,
+        contentType,
+        kind: 'full',
+      })
+      await putToR2(full.url, payload, contentType)
+
       let storedThumb: string | null = null
       try {
-        const thumb = await makeThumb(file)
-        width = thumb.width
-        height = thumb.height
-        const t = await sb.storage.from('galleries').upload(thumbPath, thumb.blob, {
+        const thumb = await resize(file, THUMB_EDGE, 'image/webp', THUMB_QUALITY)
+        if (width === null) {
+          width = thumb.originalWidth
+          height = thumb.originalHeight
+        }
+        const t = await callAdmin<{ key: string; url: string }>({
+          action: 'upload-url',
+          galleryId,
+          fileName: file.name,
           contentType: 'image/webp',
-          upsert: false,
+          kind: 'thumb',
         })
-        if (!t.error) storedThumb = thumbPath
+        await putToR2(t.url, thumb.blob, 'image/webp')
+        storedThumb = t.key
       } catch {
         // Sem miniatura a galeria ainda funciona (usa a foto inteira), por isso
         // uma falha aqui não deve abortar o upload.
@@ -222,15 +307,23 @@ const realApi = {
 
       const { error } = await sb.from('photos').insert({
         gallery_id: galleryId,
-        storage_path: fullPath,
+        storage_path: full.key,
         thumb_path: storedThumb,
         file_name: file.name,
         width,
         height,
-        size_bytes: file.size,
+        size_bytes: payload.size,
         sort_order: order++,
       })
-      if (error) throw new Error(`${file.name}: ${error.message}`)
+      if (error) {
+        // A linha não entrou: os objetos já no R2 ficariam órfãos a ocupar
+        // espaço que ninguém consegue ver nem apagar pela interface.
+        await callAdmin({
+          action: 'delete',
+          keys: [full.key, storedThumb].filter(Boolean) as string[],
+        }).catch(() => {})
+        throw new Error(`${file.name}: ${error.message}`)
+      }
       onProgress(++done)
     }
   },
@@ -244,7 +337,7 @@ const realApi = {
       .single()
     if (data) {
       const paths = [data.storage_path, data.thumb_path].filter(Boolean) as string[]
-      if (paths.length) await sb.storage.from('galleries').remove(paths)
+      if (paths.length) await callAdmin({ action: 'delete', keys: paths })
     }
     const { error } = await sb.from('photos').delete().eq('id', photoId)
     if (error) throw new Error(error.message)

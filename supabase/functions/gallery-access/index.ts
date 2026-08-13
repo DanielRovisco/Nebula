@@ -1,28 +1,17 @@
 // Edge Function: único caminho pelo qual um cliente chega às fotos.
 //
-// Corre com a service role, mas nunca a expõe: recebe slug + password, valida
-// no Postgres (crypt), e só então devolve signed URLs de curta duração. O
-// bucket é privado, portanto sem passar por aqui não há acesso a ficheiro
-// nenhum — é isto que torna a proteção real e não decorativa.
+// Recebe slug + password, valida no Postgres (crypt), e só então devolve URLs
+// pré-assinados do R2, de curta duração. O bucket é privado, portanto sem
+// passar por aqui não há acesso a ficheiro nenhum — é isto que torna a proteção
+// real e não decorativa.
 //
 // Deploy:  supabase functions deploy gallery-access --no-verify-jwt
 // (--no-verify-jwt porque o cliente é anónimo; a autorização é a password.)
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { cors, json, presign } from '../_shared/r2.ts'
 
 const SIGNED_URL_TTL = 60 * 60 * 2 // 2 horas
-
-const cors = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...cors, 'content-type': 'application/json' },
-  })
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
@@ -71,30 +60,20 @@ Deno.serve(async (req) => {
     return json({ error: 'server_error' }, 500)
   }
 
-  // Assina tudo de uma vez: as fotos em tamanho real e as miniaturas.
-  const paths = [
-    ...photos.map((p) => p.storage_path),
-    ...(photos.map((p) => p.thumb_path).filter(Boolean) as string[]),
-  ]
-
-  // Uma galeria publicada mas ainda sem fotos é um estado normal (o cliente
-  // recebeu o link antes da entrega). Pedir zero URLs assinados não faz
-  // sentido, e o cliente já sabe mostrar uma galeria vazia.
-  const urlByPath = new Map<string, string>()
-  if (paths.length > 0) {
-    const { data: signed, error: signError } = await admin.storage
-      .from('galleries')
-      .createSignedUrls(paths, SIGNED_URL_TTL)
-    if (signError) {
-      console.error('sign', signError)
-      return json({ error: 'server_error' }, 500)
-    }
-    for (const s of signed ?? []) {
-      // Um ficheiro que falhe a assinatura vem sem signedUrl; fica de fora e a
-      // grelha mostra essa foto em falta em vez de rebentar a galeria toda.
-      if (s.signedUrl) urlByPath.set(s.path, s.signedUrl)
-    }
-  }
+  // Assina tudo de uma vez. Uma galeria publicada mas ainda sem fotos é um
+  // estado normal (o cliente recebeu o link antes da entrega) e o cliente já
+  // sabe mostrar uma galeria vazia.
+  const signed = await Promise.all(
+    photos.map(async (p) => ({
+      id: p.id,
+      fileName: p.file_name,
+      width: p.width,
+      height: p.height,
+      sizeBytes: p.size_bytes,
+      url: await presign(p.storage_path, 'GET', SIGNED_URL_TTL),
+      thumbUrl: p.thumb_path ? await presign(p.thumb_path, 'GET', SIGNED_URL_TTL) : null,
+    })),
+  )
 
   return json({
     gallery: {
@@ -106,14 +85,6 @@ Deno.serve(async (req) => {
       downloadEnabled: gallery.download_enabled,
     },
     expiresIn: SIGNED_URL_TTL,
-    photos: photos.map((p) => ({
-      id: p.id,
-      fileName: p.file_name,
-      width: p.width,
-      height: p.height,
-      sizeBytes: p.size_bytes,
-      url: urlByPath.get(p.storage_path) ?? null,
-      thumbUrl: p.thumb_path ? urlByPath.get(p.thumb_path) ?? null : null,
-    })),
+    photos: signed,
   })
 })

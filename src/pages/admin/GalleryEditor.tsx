@@ -5,6 +5,7 @@ import { api } from '../../lib/gallery/api'
 import type { Gallery, Photo } from '../../lib/gallery/types'
 import { SITE_URL } from '../../lib/site'
 import { suggestPassword } from '../../lib/gallery/helpers'
+import { DELIVERY_EDGE } from '../../lib/gallery/api'
 
 export default function GalleryEditor() {
   const { id = '' } = useParams()
@@ -17,6 +18,9 @@ export default function GalleryEditor() {
   const [upload, setUpload] = useState<{ done: number; total: number } | null>(null)
   const [newPassword, setNewPassword] = useState('')
   const [dragIndex, setDragIndex] = useState<number | null>(null)
+  // Ligado por omissão: uma galeria de entrega não precisa da resolução da
+  // máquina, e reduzir é o que faz o armazenamento gratuito chegar.
+  const [shrink, setShrink] = useState(true)
   const fileInput = useRef<HTMLInputElement>(null)
 
   const load = useCallback(() => {
@@ -60,7 +64,12 @@ export default function GalleryEditor() {
     setError(null)
     setUpload({ done: 0, total: files.length })
     try {
-      await api.uploadPhotos(gallery.id, files, (done) => setUpload({ done, total: files.length }))
+      await api.uploadPhotos(
+        gallery.id,
+        files,
+        (done) => setUpload({ done, total: files.length }),
+        { maxEdge: shrink ? DELIVERY_EDGE : null },
+      )
       load()
       flash(`${files.length} ${files.length === 1 ? 'foto adicionada' : 'fotos adicionadas'}.`)
     } catch (e) {
@@ -195,6 +204,19 @@ export default function GalleryEditor() {
             onChange={(e) => handleFiles(e.target.files)}
           />
         </div>
+
+        <label className="flex items-center gap-3 mb-5 cursor-pointer w-fit">
+          <input
+            type="checkbox"
+            checked={shrink}
+            onChange={(e) => setShrink(e.target.checked)}
+            className="w-4 h-4 accent-[#fcfff0]"
+          />
+          <span className="text-xs text-titanium/50">
+            Reduzir para {DELIVERY_EDGE}px no lado maior — ocupa 3 a 5 vezes
+            menos, sem diferença visível para o cliente
+          </span>
+        </label>
 
         {upload && (
           <div className="h-px bg-white/10 mb-6 overflow-hidden">

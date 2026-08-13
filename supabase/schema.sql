@@ -157,16 +157,13 @@ revoke all on function verify_gallery_password(text, text) from public, anon, au
 grant execute on function verify_gallery_password(text, text) to service_role;
 
 -- ─── Storage ────────────────────────────────────────────────────────────────
--- Bucket privado: sem política de leitura pública, nada é servido por URL
--- direto. O acesso do cliente é sempre por signed URL de curta duração emitido
--- pela Edge Function.
-
-insert into storage.buckets (id, name, public)
-values ('galleries', 'galleries', false)
-on conflict (id) do update set public = false;
-
-drop policy if exists "admin gere ficheiros" on storage.objects;
-create policy "admin gere ficheiros" on storage.objects
-  for all to authenticated
-  using (bucket_id = 'galleries')
-  with check (bucket_id = 'galleries');
+-- As fotografias NÃO vivem no Supabase: vivem num bucket privado do
+-- Cloudflare R2, que tem 10 GB gratuitos e não cobra tráfego de saída — e o
+-- tráfego é o custo real quando o produto é clientes a descarregar galerias.
+--
+-- O Supabase fica com a base de dados, a autenticação e as Edge Functions,
+-- que cabem de sobra no plano gratuito. Não há bucket nem políticas de storage
+-- para criar aqui; o acesso ao R2 é feito com URLs pré-assinados emitidos pelas
+-- funções, com as credenciais guardadas nos secrets.
+--
+-- As colunas storage_path e thumb_path guardam a chave do objeto no R2.

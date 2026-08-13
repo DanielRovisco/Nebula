@@ -1,0 +1,39 @@
+name: Keep Supabase awake
+
+# O plano gratuito do Supabase adormece um projeto ao fim de 7 dias sem
+# tráfego, e acordar demora ~30s. Num link de galeria entregue a um cliente
+# isso é inaceitável, por isso este workflow toca no projeto a cada 3 dias.
+#
+# Deixa de ser preciso se passares ao plano pago.
+#
+# Requer o secret SUPABASE_URL (o mesmo do site). Enquanto não existir, o
+# workflow sai em silêncio em vez de falhar todas as semanas.
+
+on:
+  schedule:
+    - cron: '0 6 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tocar no projeto Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "Secrets do Supabase por definir — nada a fazer."
+            exit 0
+          fi
+          # Uma consulta trivial conta como atividade e mantém o projeto acordado.
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/")
+          echo "Resposta do Supabase: $code"
+          # 200 e 401 servem: ambos provam que o projeto está de pé.
+          case "$code" in
+            200|401|404) exit 0 ;;
+            *) echo "Projeto pode estar em baixo."; exit 1 ;;
+          esac

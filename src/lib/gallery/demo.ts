@@ -170,7 +170,13 @@ export const demoApi = {
     save(s)
   },
 
-  async uploadPhotos(galleryId: string, files: File[], onProgress: (done: number) => void) {
+  async uploadPhotos(
+    galleryId: string,
+    files: File[],
+    onProgress: (done: number) => void,
+    _options: { maxEdge?: number | null } = {},
+  ) {
+    void _options
     const s = load()
     let done = 0
     for (const file of files) {

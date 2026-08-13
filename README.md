@@ -95,17 +95,26 @@ Cada cliente recebe um link `/galeria/<código>` e uma password. A administraç�
 das galerias vive em `/admin` — **não há link para lá em lado nenhum do site**,
 por opção.
 
-### Porque é que isto precisa de Supabase
+### Porque é que isto precisa de backend
 
 O site é estático no GitHub Pages, e num site estático uma password em
 JavaScript não protege nada: os ficheiros continuam acessíveis por URL direto a
 quem o souber. Além disso o Pages tem um limite de 1 GB de site publicado, que
 uma única galeria de casamento em tamanho real esgota.
 
-Por isso as fotografias dos clientes vivem num bucket **privado** do Supabase e
-a password é verificada **no servidor**. O browser nunca recebe um URL de
-ficheiro sem antes acertar na password, e os URLs que recebe são assinados e
-expiram ao fim de 2 horas.
+O trabalho está dividido por dois serviços, ambos no plano gratuito:
+
+- **Supabase** — base de dados, autenticação do painel e Edge Functions. Só
+  guarda metadados (títulos, códigos, caminhos), que cabem de sobra nos 500 MB
+  gratuitos.
+- **Cloudflare R2** — as fotografias, num bucket **privado**. São 10 GB
+  gratuitos e, mais importante, **tráfego de saída sempre grátis**: o custo real
+  de um serviço destes não é guardar ficheiros, é os clientes descarregarem-nos.
+
+A password é verificada **no servidor**. O browser nunca recebe um URL de
+ficheiro sem antes acertar na password, e os URLs que recebe são pré-assinados
+e expiram ao fim de 2 horas. As credenciais do R2 vivem só nos secrets das Edge
+Functions — nunca chegam ao browser.
 
 O `supabase/schema.sql` foi validado contra um PostgreSQL 16 real: corre sem
 erros, é idempotente (segunda passagem não estraga dados) e passa 20 testes de
@@ -118,25 +127,63 @@ ambiente.
 
 ### Instalação (uma vez)
 
-1. **Criar o projeto** em supabase.com (ou reutilizar um existente).
-2. **Esquema:** SQL Editor → colar `supabase/schema.sql` → Run. Cria as
-   tabelas, as políticas RLS, o bucket privado `galleries` e as funções de
-   password.
-3. **Conta de administração:** Authentication → Users → Add user, com o email e
-   password de quem vai gerir. Não há registo aberto — só entra quem for criado
-   aqui.
-4. **Edge Function:**
-   ```bash
-   supabase functions deploy gallery-access --no-verify-jwt
+**1. Supabase**
+
+1. Criar o projeto em supabase.com (ou reutilizar um existente).
+2. SQL Editor → colar `supabase/schema.sql` → Run. Cria as tabelas, as
+   políticas RLS e as funções de password.
+3. Authentication → Users → Add user, com o email e password de quem vai gerir.
+   Não há registo aberto — só entra quem for criado aqui.
+
+**2. Cloudflare R2**
+
+1. No painel da Cloudflare: R2 → Create bucket, com o nome `galleries`.
+   Deixá-lo **privado** (sem acesso público nem domínio ligado).
+2. R2 → Manage API Tokens → criar um token com permissão de leitura e escrita
+   nesse bucket. Guardar o Access Key ID e o Secret.
+3. Anotar o Account ID (aparece na barra lateral do R2).
+4. **CORS do bucket** — sem isto o browser recusa o upload. Em Settings → CORS
+   policy do bucket:
+   ```json
+   [{
+     "AllowedOrigins": ["https://danielrovisco.github.io", "http://localhost:5173"],
+     "AllowedMethods": ["PUT", "GET"],
+     "AllowedHeaders": ["content-type"],
+     "MaxAgeSeconds": 3600
+   }]
    ```
-   O `--no-verify-jwt` é necessário porque o cliente é anónimo: quem autoriza é
-   a password da galeria, validada lá dentro.
-5. **Variáveis** (ver `.env.example`): `VITE_SUPABASE_URL` e
-   `VITE_SUPABASE_ANON_KEY`, em `.env.local` para desenvolvimento e como
-   *secrets* no workflow do GitHub Actions para o site publicado.
+
+**3. Ligar os dois**
+
+```bash
+supabase secrets set \
+  R2_ACCOUNT_ID=... \
+  R2_ACCESS_KEY_ID=... \
+  R2_SECRET_ACCESS_KEY=... \
+  R2_BUCKET=galleries
+
+supabase functions deploy gallery-access --no-verify-jwt
+supabase functions deploy admin-storage
+```
+
+O `--no-verify-jwt` na primeira é necessário porque o cliente é anónimo: quem
+autoriza é a password da galeria, validada lá dentro. A segunda fica **com**
+verificação de JWT, porque só o admin autenticado lhe pode chamar.
+
+**4. Variáveis do site** (ver `.env.example`): `VITE_SUPABASE_URL` e
+`VITE_SUPABASE_ANON_KEY`, em `.env.local` para desenvolvimento e como *secrets*
+no workflow do GitHub Actions para o site publicado. As mesmas duas servem para
+o workflow `keepalive.yml`.
 
 A chave anónima pode ser pública — é para isso que serve. O que nunca pode sair
-do Supabase é a `service_role`, usada só dentro da Edge Function.
+do servidor é a `service_role` do Supabase e as credenciais do R2.
+
+### O projeto adormece
+
+O plano gratuito do Supabase pausa um projeto ao fim de 7 dias sem tráfego, e
+acordar demora ~30 segundos — mau num link entregue a um cliente. O workflow
+`.github/workflows/keepalive.yml` toca no projeto a cada 3 dias para o evitar.
+Enquanto os secrets não existirem, sai em silêncio.
 
 ### Utilização
 
@@ -147,7 +194,15 @@ certa, até carregares em Publicar.
 
 **Carregar fotos:** arrasta para a área da galeria ou usa o botão. Cada foto
 gera uma miniatura no browser antes do upload, para a grelha do cliente não ter
-de carregar ficheiros em tamanho real. A ordem define-se arrastando.
+de carregar ficheiros em tamanho real, e sobe direto para o R2 sem passar pelas
+Edge Functions. A ordem define-se arrastando, ou pelas setas em cada foto (o
+arrasto não funciona ao toque).
+
+**Reduzir no upload:** ligado por omissão, limita as fotos a 3000px no lado
+maior. Ocupa 3 a 5 vezes menos espaço sem diferença visível numa galeria de
+entrega, e é o que faz os 10 GB gratuitos chegarem para uma temporada.
+Desliga-o quando quiseres entregar em resolução máxima. O valor está em
+`DELIVERY_EDGE`, em `src/lib/gallery/api.ts`.
 
 **Password esquecida:** não há como a recuperar — está guardada cifrada com
 bcrypt. Define uma nova no editor da galeria.
@@ -172,8 +227,10 @@ galeria.
   mais seguro, sobretudo em telemóvel.
 - **Dez tentativas falhadas por hora** bloqueiam o acesso a uma galeria, mesmo
   com a password correta. Volta a abrir sozinho ao fim de uma hora.
-- **O plano gratuito do Supabase é apertado para fotografia.** Confirma os
-  limites de armazenamento e tráfego atuais antes de contar com ele.
+- **10 GB gratuitos são cerca de uma temporada com a redução ligada**, ou uma
+  ou duas entregas em resolução máxima. Acima disso o R2 cobra por
+  armazenamento mas continua a não cobrar tráfego. Confirma os valores atuais
+  antes de contar com eles.
 
 ### Modo de demonstração
 
