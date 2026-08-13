@@ -148,7 +148,7 @@ export default function Home() {
               Marcar Sessão
               <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
             </Link>
-            <span className="label-sm opacity-70">Datas 2025 disponíveis</span>
+            <span className="label-sm opacity-70">Datas 2026 disponíveis</span>
           </motion.div>
         </motion.div>
 
