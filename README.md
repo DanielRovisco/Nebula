@@ -21,16 +21,17 @@ npm run images   # regenerar derivados responsivos das fotografias
 
 ## Imagens
 
-As fotografias originais vivem em `public/brand/portfolio/_originals/` e **não
-são servidas ao visitante**. O script `npm run images` gera, para cada original:
+As fotografias originais vivem em `originals/portfolio/` — **fora de `public/`**,
+porque tudo o que está em `public/` é copiado para `dist/` e publicado, e os
+ficheiros de origem não têm de ser servidos a ninguém. O script `npm run images` gera, para cada original:
 
 - `<nome>-480.webp`, `<nome>-960.webp`, `<nome>-1440.webp` — servidos por
   `srcset`, o browser escolhe conforme o viewport
 - `<nome>.jpg` — fallback recomprimido para browsers sem WebP
 
 Os derivados são versionados no repositório, para o workflow de deploy não
-precisar do `sharp`. **Ao adicionar uma foto nova:** colocá-la em `_originals/`,
-correr `npm run images`, e referenciá-la pelo slug (sem extensão) através do
+precisar do `sharp`. **Ao adicionar uma foto nova:** colocá-la em
+`originals/portfolio/`, correr `npm run images`, e referenciá-la pelo slug (sem extensão) através do
 componente `<Picture>`.
 
 Todas as imagens de conteúdo passam pelo `src/lib/Picture.tsx`, que trata do

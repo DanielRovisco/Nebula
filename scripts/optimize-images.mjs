@@ -1,5 +1,9 @@
 // Gera derivados responsivos (WebP + JPEG de fallback) a partir dos originais
-// em public/brand/portfolio/_originals/.
+// em originals/portfolio/.
+//
+// Os originais vivem FORA de public/ de propósito: tudo o que está em public/ é
+// copiado para dist/ e publicado, e não há razão para servir ao visitante os
+// ficheiros de origem (eram 6,4 MB de deploy morto).
 //
 //   npm run images
 //
@@ -13,7 +17,7 @@ import { readdir, mkdir, stat } from 'node:fs/promises'
 import { join, parse } from 'node:path'
 import sharp from 'sharp'
 
-const SRC = 'public/brand/portfolio/_originals'
+const SRC = 'originals/portfolio'
 const OUT = 'public/brand/portfolio'
 const WIDTHS = [480, 960, 1440]
 
