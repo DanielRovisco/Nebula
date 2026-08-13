@@ -13,6 +13,7 @@ a cada push para `main` (`.github/workflows/deploy.yml`).
 ```bash
 npm install
 npm run dev      # servidor de desenvolvimento
+npm run demo     # idem, com galerias de exemplo (ver "Modo de demonstração")
 npm run build    # tsc + build de produção para dist/
 npm run preview  # servir o build de produção localmente
 npm run lint
@@ -161,8 +162,21 @@ galeria.
 
 ### Modo de demonstração
 
-`VITE_DEMO_GALLERIES=true` liga galerias falsas em memória, para mostrar o
-desenho sem Supabase configurado (código `ana-e-tiago`, password `demo`). Tem
+Para ver o painel e a galeria do cliente sem Supabase nenhum configurado:
+
+```bash
+npm install
+npm run demo
+```
+
+e abrir `http://localhost:5173/Nebula/admin` (o painel; qualquer email serve,
+password com 3+ caracteres) ou `http://localhost:5173/Nebula/galeria` (o lado
+do cliente; código `ana-e-tiago`, password `demo`). Vêm duas galerias de
+exemplo, uma publicada e outra em rascunho, com as fotos do próprio portfólio.
+
+Por baixo, `npm run demo` é `vite --mode demo`, que carrega o `.env.demo` com
+`VITE_DEMO_GALLERIES=true`. O `npm run build` não lê esse ficheiro, por isso o
+modo de demonstração não escapa para o site publicado. Tem
 de ser ligado à mão — **nunca é um fallback automático**. Um deploy sem
 configuração mostra um aviso e recusa o acesso, em vez de servir um cadeado
 decorativo com ar de verdadeiro.
