@@ -85,6 +85,12 @@ desligados e o conteúdo é entregue estático.
 
 ## Galerias privadas
 
+> **Estado atual: o site publicado está em modo de demonstração.**
+> O workflow de deploy corre `npm run build:demo`, por isso `/admin` abre sem
+> login e as galerias são de brincar. É temporário, para avaliar o desenho.
+> Antes de ligar o Supabase a sério, trocar de volta para `npm run build` em
+> `.github/workflows/deploy.yml` — está lá um aviso a dizê-lo.
+
 Cada cliente recebe um link `/galeria/<código>` e uma password. A administração
 das galerias vive em `/admin` — **não há link para lá em lado nenhum do site**,
 por opção.

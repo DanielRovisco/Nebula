@@ -20,7 +20,16 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run build
+      # ⚠️ TEMPORÁRIO — galerias em modo de demonstração no site publicado.
+      #
+      # Serve para explorar o painel e a galeria do cliente sem login e sem
+      # Supabase. Os dados são falsos e vivem no browser de quem visita: não há
+      # fotografias de clientes envolvidas, e por isso não há nada exposto.
+      #
+      # ANTES DE LIGAR O SUPABASE A SÉRIO: apagar este bloco e voltar a
+      # `npm run build`, senão o site publicado continua a servir galerias de
+      # brincar em vez das verdadeiras.
+      - run: npm run build:demo
 
       - uses: peaceiris/actions-gh-pages@v4
         with:
