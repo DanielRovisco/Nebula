@@ -117,13 +117,27 @@ ficheiro sem antes acertar na password, e os URLs que recebe são pré-assinados
 e expiram ao fim de 2 horas. As credenciais do R2 vivem só nos secrets das Edge
 Functions — nunca chegam ao browser.
 
-O `supabase/schema.sql` foi validado contra um PostgreSQL 16 real: corre sem
-erros, é idempotente (segunda passagem não estraga dados) e passa 20 testes de
-comportamento — hash bcrypt com salt por galeria, password em claro nunca
-guardada, recusa de rascunhos e galerias expiradas, bloqueio após 10 tentativas
-falhadas, e `anon` sem permissão para verificar passwords ou alterá-las.
+O `supabase/schema.sql` é validado contra um PostgreSQL real. Para o correr:
 
-A Edge Function continua por estrear em execução real — não há Deno neste
+```bash
+createdb nebula_test
+psql -d nebula_test -f supabase/tests/scaffold.sql
+psql -d nebula_test -f supabase/schema.sql
+psql -d nebula_test -f supabase/tests/security.sql   # 19 linhas, todas SIM
+```
+
+O `scaffold.sql` imita o Supabase, e o detalhe que importa é este: **o pgcrypto
+vive no schema `extensions`, não no `public`**. Testar com ele em `public` dá
+falsos positivos — foi assim que passaram 20 testes verdes com um `search_path`
+que fazia o `gen_salt()` não ser encontrado no Supabase real. O schema funciona
+agora nas duas disposições.
+
+Os testes cobrem hash bcrypt com salt por galeria, password em claro nunca
+guardada, recusa de rascunhos e galerias expiradas, bloqueio após 10 tentativas
+falhadas, e `anon` sem permissão para verificar passwords ou alterá-las. São
+repetíveis e não deixam dados para trás.
+
+As Edge Functions continuam por estrear em execução real — não há Deno neste
 ambiente.
 
 ### Instalação (uma vez)

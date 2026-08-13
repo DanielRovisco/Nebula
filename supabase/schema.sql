@@ -2,7 +2,11 @@
 -- Correr no Supabase: SQL Editor → New query → colar → Run.
 -- É idempotente: pode voltar a correr sem estragar dados existentes.
 
-create extension if not exists pgcrypto;
+-- O pgcrypto dá-nos crypt() e gen_salt(). No Supabase já vem instalado no
+-- schema `extensions` (não no `public`), por isso não basta pedi-lo: as funções
+-- abaixo têm de o procurar lá — ver o search_path de cada uma.
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
 
 -- ─── Tabelas ────────────────────────────────────────────────────────────────
 
@@ -90,7 +94,8 @@ create policy "admin escreve fotos" on photos
 -- veria a coluna — a view abaixo é o que a app usa, sem o hash.
 
 create or replace function set_gallery_password(gallery_id uuid, new_password text)
-returns void language sql security definer set search_path = public as $$
+returns void language sql security definer
+  set search_path = public, extensions as $$
   update galleries set password_hash = crypt(new_password, gen_salt('bf', 10))
   where id = gallery_id;
 $$;
@@ -127,7 +132,8 @@ returns table (
   client_name text,
   message text,
   download_enabled boolean
-) language plpgsql security definer set search_path = public as $$
+) language plpgsql security definer
+  set search_path = public, extensions as $$
 declare
   recent_failures int;
 begin
