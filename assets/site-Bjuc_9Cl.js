@@ -1,0 +1,1 @@
+var e=`https://danielrovisco.github.io/Nebula`,t={email:`nebula.pdstudio@gmail.com`,instagram:`https://www.instagram.com/proj3ct.nebula/`,instagramHandle:`@proj3ct.nebula`,instagramDm:`https://ig.me/m/proj3ct.nebula`},n=t=>`${e}/${t.replace(/^\//,``)}`;export{e as n,n as r,t};

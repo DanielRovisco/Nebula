@@ -1,0 +1,1 @@
+function e(e){return e.normalize(`NFD`).replace(/[\u0300-\u036f]/g,``).replace(/&/g,` e `).toLowerCase().replace(/[^a-z0-9]+/g,`-`).replace(/^-|-$/g,``)}function t(){let e=[`luz`,`foco`,`raiz`,`onda`,`norte`,`calma`,`vento`,`lago`,`ramo`,`mare`];return`${e[Math.floor(Math.random()*e.length)]}-${Math.floor(1e3+Math.random()*9e3)}`}export{t as n,e as t};
