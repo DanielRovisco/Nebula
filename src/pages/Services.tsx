@@ -3,14 +3,17 @@ import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Check, ChevronDown } from 'lucide-react'
 import Reveal from '../lib/Reveal'
-import { asset } from '../lib/asset'
+import Picture from '../lib/Picture'
+import Seo from '../lib/Seo'
+import { absoluteUrl } from '../lib/site'
 
 const CATEGORIES = [
   {
     id: 'casamentos',
     title: 'Casamentos',
     tagline: 'A vossa história de amor, contada para sempre.',
-    image: asset('/brand/portfolio/forest-bride.jpg'),
+    image: 'forest-bride',
+    alt: 'Noiva em vestido longo entre árvores',
     imgPos: 'object-top',
     packs: [
       {
@@ -31,7 +34,8 @@ const CATEGORIES = [
     id: 'maternidade',
     title: 'Maternidade',
     tagline: 'Celebrar a espera. Eternizar o início.',
-    image: asset('/brand/portfolio/maternity-railway.jpg'),
+    image: 'maternity-railway',
+    alt: 'Sessão de maternidade junto a uma linha de ferro',
     imgPos: 'object-center',
     packs: [
       {
@@ -52,7 +56,8 @@ const CATEGORIES = [
     id: 'eventos',
     title: 'Eventos',
     tagline: 'Cobertura à medida de cada ocasião.',
-    image: asset('/brand/portfolio/baby-balloons.jpg'),
+    image: 'baby-balloons',
+    alt: 'Bebé rodeado de balões durante uma festa de família',
     imgPos: 'object-[50%_15%]',
     packs: [
       {
@@ -72,6 +77,12 @@ export default function Services() {
 
   return (
     <div className="pt-28 sm:pt-36 pb-20 sm:pb-28">
+      <Seo
+        title="Serviços & Packs — NEBULA Fotografia & Vídeo"
+        description="Packs de fotografia e vídeo para casamentos, maternidade e eventos: vídeo 4K, drone, pré-wedding, galeria online privada e sneak peek em 24h."
+        image={absoluteUrl('/brand/portfolio/forest-bride-1440.webp')}
+      />
+
       {/* Header */}
       <section className="container-px mb-12 sm:mb-24">
         <Reveal>
@@ -129,9 +140,10 @@ export default function Services() {
                     >
                       <div className="px-6 sm:px-10 pb-8 sm:pb-10">
                         {/* Image */}
-                        <img
-                          src={cat.image}
-                          alt={cat.title}
+                        <Picture
+                          name={cat.image}
+                          alt={cat.alt}
+                          sizes="(max-width: 1024px) 100vw, 900px"
                           className={`w-full h-52 sm:h-64 rounded-xl object-cover ${cat.imgPos} mb-6 sm:mb-8`}
                         />
                         {/* Pack cards */}

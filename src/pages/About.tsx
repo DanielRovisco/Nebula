@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
 import { Aperture, ArrowRight, Compass, Sparkle } from 'lucide-react'
 import Reveal from '../lib/Reveal'
-import { asset } from '../lib/asset'
+import Picture from '../lib/Picture'
+import Seo from '../lib/Seo'
+import { CONTACT, absoluteUrl } from '../lib/site'
 
 const TEAM = [
   { name: 'Daniel', role: 'Videógrafo & Filmmaker', sub: 'Operador de Drone' },
@@ -30,6 +32,12 @@ const VALUES = [
 export default function About() {
   return (
     <div className="pt-28 sm:pt-36 pb-20 sm:pb-28">
+      <Seo
+        title="Sobre nós — NEBULA Fotografia & Vídeo"
+        description="Somos três criadores visuais entre Lisboa e Portalegre: fotografia editorial, vídeo cinematográfico 4K e drone. Criatividade, rigor e autenticidade."
+        image={absoluteUrl('/brand/portfolio/palace-dome-1440.webp')}
+      />
+
       {/* Header */}
       <section className="container-px mb-14 sm:mb-28">
         <Reveal>
@@ -43,10 +51,10 @@ export default function About() {
       {/* Intro + Image */}
       <section className="container-px grid md:grid-cols-2 gap-8 sm:gap-14 mb-16 sm:mb-32">
         <Reveal>
-          <img
-            src={asset('/brand/portfolio/palace-dome.jpg')}
-            alt="Equipa NEBULA"
-            loading="lazy"
+          <Picture
+            name="palace-dome"
+            alt="Cúpula de palácio fotografada de baixo — trabalho da equipa NEBULA"
+            sizes="(max-width: 768px) 100vw, 50vw"
             className="w-full rounded-2xl object-cover object-center"
             style={{ height: 'clamp(40vh, 55vh, 65vh)' }}
           />
@@ -129,7 +137,7 @@ export default function About() {
               <span className="text-titanium/80">@proj3ct.nebula</span>
             </p>
             <a
-              href="https://www.instagram.com/proj3ct.nebula/"
+              href={CONTACT.instagram}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-3 border border-white/20 px-8 py-4 rounded-full text-[11px] uppercase tracking-[0.2em] hover:border-white/45 transition-colors active:scale-95"

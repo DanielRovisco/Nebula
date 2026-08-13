@@ -3,6 +3,7 @@ import { Link, NavLink } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import { asset } from '../lib/asset'
+import { CONTACT } from '../lib/site'
 
 const LINKS = [
   { to: '/', label: 'Home' },
@@ -38,6 +39,8 @@ export default function Navbar() {
           <img
             src={asset('/brand/logo-lettering-white.png')}
             alt="NEBULA"
+            width={2795}
+            height={577}
             className="h-7 sm:h-8 w-auto"
           />
         </Link>
@@ -134,7 +137,7 @@ export default function Navbar() {
               className="mt-8"
             >
               <a
-                href="https://ig.me/m/proj3ct.nebula"
+                href={CONTACT.instagramDm}
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => setOpen(false)}

@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
-import { Mail, Phone } from 'lucide-react'
+import { Mail } from 'lucide-react'
 import InstagramIcon from '../lib/InstagramIcon'
 import { asset } from '../lib/asset'
+import { CONTACT } from '../lib/site'
 
 const NAV = [
   { to: '/sobre', label: 'Sobre' },
@@ -15,19 +16,19 @@ export default function Footer() {
     <footer className="bg-eerie border-t border-white/[0.08] pt-14 sm:pt-20 pb-8">
       <div className="container-px grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 sm:gap-12">
         <div className="sm:col-span-2">
-          <img src={asset('/brand/logo-mix-white.png')} alt="NEBULA" className="h-9 sm:h-10 w-auto mb-5" />
+          <img src={asset('/brand/logo-mix-white.png')} alt="NEBULA" width={2795} height={2599} className="h-9 sm:h-10 w-auto mb-5" />
           <p className="text-titanium/50 text-sm max-w-xs leading-relaxed">
             Produtora audiovisual especializada em fotografia editorial e vídeo
             cinematográfico. Capturamos histórias, não apenas momentos.
           </p>
           <a
-            href="https://www.instagram.com/proj3ct.nebula/"
+            href={CONTACT.instagram}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 mt-5 text-titanium/40 hover:text-titanium/70 transition-colors text-xs"
           >
             <InstagramIcon size={14} />
-            @proj3ct.nebula
+            {CONTACT.instagramHandle}
           </a>
         </div>
 
@@ -52,25 +53,16 @@ export default function Footer() {
           <ul className="flex flex-col gap-0.5 text-sm">
             <li>
               <a
-                href="mailto:nebula.pdstudio@gmail.com"
+                href={`mailto:${CONTACT.email}`}
                 className="inline-flex items-center gap-2 py-1.5 text-titanium/60 hover:text-titanium transition-colors"
               >
                 <Mail size={14} className="shrink-0" />
-                nebula.pdstudio@gmail.com
+                {CONTACT.email}
               </a>
             </li>
             <li>
               <a
-                href="tel:+351900000000"
-                className="inline-flex items-center gap-2 py-1.5 text-titanium/60 hover:text-titanium transition-colors"
-              >
-                <Phone size={14} className="shrink-0" />
-                +351 900 000 000
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://ig.me/m/proj3ct.nebula"
+                href={CONTACT.instagramDm}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 py-1.5 text-titanium/60 hover:text-titanium transition-colors"

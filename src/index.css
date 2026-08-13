@@ -41,7 +41,7 @@ h1, h2, h3, h4 {
 }
 
 p, span, a, li, button, input, textarea, select {
-  font-family: "Montserrat", system-ui, sans-serif;
+  font-family: "Montserrat Variable", Montserrat, system-ui, sans-serif;
 }
 
 a {
@@ -97,9 +97,26 @@ button {
 }
 
 .label-sm {
-  font-family: "Montserrat", system-ui, sans-serif;
+  font-family: "Montserrat Variable", Montserrat, system-ui, sans-serif;
   font-size: 0.65rem;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: rgba(252, 255, 240, 0.4);
+}
+
+/*
+  Quem pede menos movimento no sistema recebe o site sem parallax, sem scroll
+  suave e sem reveals — o conteúdo aparece de imediato. As animações do
+  framer-motion são desligadas em JS (ver useReducedMotion nos componentes);
+  isto cobre o que é puramente CSS.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import Navbar from './components/Navbar'
@@ -8,10 +9,13 @@ import SmoothScroll from './lib/SmoothScroll'
 import PageTransition from './lib/PageTransition'
 import ScrollToTop from './lib/ScrollToTop'
 import Home from './pages/Home'
-import About from './pages/About'
-import Services from './pages/Services'
-import Portfolio from './pages/Portfolio'
-import Contact from './pages/Contact'
+
+// A Home fica no bundle inicial (é a entrada da maioria das visitas); as
+// restantes rotas são chunks separados, carregados quando alguém navega.
+const About = lazy(() => import('./pages/About'))
+const Services = lazy(() => import('./pages/Services'))
+const Portfolio = lazy(() => import('./pages/Portfolio'))
+const Contact = lazy(() => import('./pages/Contact'))
 
 export default function App() {
   const location = useLocation()
@@ -24,13 +28,16 @@ export default function App() {
       <AnimatePresence mode="wait">
         <PageTransition key={location.pathname}>
           <main>
-            <Routes location={location}>
-              <Route path="/" element={<Home />} />
-              <Route path="/sobre" element={<About />} />
-              <Route path="/servicos" element={<Services />} />
-              <Route path="/portfolio" element={<Portfolio />} />
-              <Route path="/contacto" element={<Contact />} />
-            </Routes>
+            {/* min-h evita o Footer saltar para cima enquanto o chunk carrega. */}
+            <Suspense fallback={<div className="min-h-screen" />}>
+              <Routes location={location}>
+                <Route path="/" element={<Home />} />
+                <Route path="/sobre" element={<About />} />
+                <Route path="/servicos" element={<Services />} />
+                <Route path="/portfolio" element={<Portfolio />} />
+                <Route path="/contacto" element={<Contact />} />
+              </Routes>
+            </Suspense>
           </main>
         </PageTransition>
       </AnimatePresence>

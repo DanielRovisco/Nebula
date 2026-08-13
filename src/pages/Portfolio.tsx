@@ -1,41 +1,54 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import Reveal from '../lib/Reveal'
-import { asset } from '../lib/asset'
+import Picture from '../lib/Picture'
+import Seo from '../lib/Seo'
+import { absoluteUrl } from '../lib/site'
 
 const FILTERS = ['Todos', 'Casamentos', 'Maternidade', 'Eventos'] as const
 
 type Filter = typeof FILTERS[number]
 
 const ITEMS: {
-  src: string
+  name: string
+  alt: string
   category: Filter
   tall?: boolean
   pos: string
 }[] = [
-  { src: asset('/brand/portfolio/palace-dome.jpg'), category: 'Casamentos', tall: true, pos: 'center center' },
-  { src: asset('/brand/portfolio/forest-bride.jpg'), category: 'Casamentos', pos: 'center 20%' },
-  { src: asset('/brand/portfolio/hero-beach-dress.jpg'), category: 'Casamentos', pos: 'center 25%' },
-  { src: asset('/brand/portfolio/gender-reveal-beach.jpg'), category: 'Maternidade', pos: 'center center' },
-  { src: asset('/brand/portfolio/maternity-railway.jpg'), category: 'Maternidade', tall: true, pos: 'center center' },
-  { src: asset('/brand/portfolio/maternity-sunset-couple.jpg'), category: 'Maternidade', pos: 'center 30%' },
-  { src: asset('/brand/portfolio/baby-balloons.jpg'), category: 'Eventos', pos: 'center 15%' },
-  { src: asset('/brand/portfolio/editorial-studio-1.jpg'), category: 'Eventos', pos: 'center center' },
-  { src: asset('/brand/portfolio/editorial-dramatic.jpg'), category: 'Eventos', tall: true, pos: 'center 20%' },
-  { src: asset('/brand/portfolio/editorial-blue-dress.jpg'), category: 'Eventos', pos: 'center 15%' },
-  { src: asset('/brand/portfolio/editorial-purple.jpg'), category: 'Eventos', pos: 'center 20%' },
-  { src: asset('/brand/portfolio/editorial-lake.jpg'), category: 'Eventos', pos: 'center center' },
-  { src: asset('/brand/portfolio/editorial-studio-2.jpg'), category: 'Eventos', pos: 'center 25%' },
-  { src: asset('/brand/portfolio/editorial-autumn.jpg'), category: 'Casamentos', pos: 'center 30%' },
+  { name: 'palace-dome', alt: 'Cúpula de palácio fotografada de baixo durante um casamento', category: 'Casamentos', tall: true, pos: 'center center' },
+  { name: 'forest-bride', alt: 'Noiva em vestido longo entre árvores', category: 'Casamentos', pos: 'center 20%' },
+  { name: 'hero-beach-dress', alt: 'Vestido de noiva a esvoaçar numa praia ao final do dia', category: 'Casamentos', pos: 'center 25%' },
+  { name: 'gender-reveal-beach', alt: 'Revelação do sexo do bebé numa praia', category: 'Maternidade', pos: 'center center' },
+  { name: 'maternity-railway', alt: 'Sessão de maternidade junto a uma linha de ferro', category: 'Maternidade', tall: true, pos: 'center center' },
+  { name: 'maternity-sunset-couple', alt: 'Casal à espera de bebé ao pôr do sol', category: 'Maternidade', pos: 'center 30%' },
+  { name: 'baby-balloons', alt: 'Bebé rodeado de balões durante uma festa de família', category: 'Eventos', pos: 'center 15%' },
+  { name: 'editorial-studio-1', alt: 'Retrato editorial em estúdio', category: 'Eventos', pos: 'center center' },
+  { name: 'editorial-dramatic', alt: 'Retrato editorial com iluminação dramática', category: 'Eventos', tall: true, pos: 'center 20%' },
+  { name: 'editorial-blue-dress', alt: 'Retrato editorial de vestido azul', category: 'Eventos', pos: 'center 15%' },
+  { name: 'editorial-purple', alt: 'Retrato editorial em tons de violeta', category: 'Eventos', pos: 'center 20%' },
+  { name: 'editorial-lake', alt: 'Sessão editorial junto a um lago', category: 'Eventos', pos: 'center center' },
+  { name: 'editorial-studio-2', alt: 'Segundo retrato editorial em estúdio', category: 'Eventos', pos: 'center 25%' },
+  { name: 'editorial-autumn', alt: 'Sessão de casamento em cenário de outono', category: 'Casamentos', pos: 'center 30%' },
 ]
+
+// Grelha de 3 colunas com cards ocupando ~1/3 do viewport em desktop.
+const GRID_SIZES = '(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw'
 
 export default function Portfolio() {
   const [filter, setFilter] = useState<Filter>('Todos')
+  const reduced = useReducedMotion()
 
   const filtered = filter === 'Todos' ? ITEMS : ITEMS.filter((i) => i.category === filter)
 
   return (
     <div className="pt-28 sm:pt-36 pb-20 sm:pb-28">
+      <Seo
+        title="Portfólio — NEBULA Fotografia & Vídeo"
+        description="Galeria de casamentos, maternidade e eventos fotografados pela NEBULA em Lisboa, Portalegre e restante Portugal."
+        image={absoluteUrl('/brand/portfolio/palace-dome-1440.webp')}
+      />
+
       <section className="container-px mb-10 sm:mb-14">
         <Reveal>
           <span className="label-sm">Portfólio</span>
@@ -45,11 +58,16 @@ export default function Portfolio() {
         </Reveal>
       </section>
 
-      <section className="container-px mb-8 sm:mb-12 flex gap-2 sm:gap-2.5 flex-wrap">
+      <section
+        className="container-px mb-8 sm:mb-12 flex gap-2 sm:gap-2.5 flex-wrap"
+        role="group"
+        aria-label="Filtrar portfólio por categoria"
+      >
         {FILTERS.map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
+            aria-pressed={filter === f}
             className={`px-4 sm:px-5 py-2.5 rounded-full text-[11px] sm:text-xs uppercase tracking-[0.12em] border transition-all duration-300 active:scale-95 min-h-[42px] ${
               filter === f
                 ? 'bg-titanium text-eerie border-titanium'
@@ -62,14 +80,18 @@ export default function Portfolio() {
       </section>
 
       <section className="container-px">
-        <motion.div layout className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           {filtered.map((item, i) => (
             <motion.div
-              layout
-              key={item.src}
-              initial={{ opacity: 0, scale: 0.94 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: i * 0.035, ease: [0.16, 1, 0.3, 1] }}
+              // `layout` animations em 14 cards ao mesmo tempo eram o ponto mais
+              // pesado do site em telemóveis de gama média. Um fade de opacidade
+              // dá a mesma leitura sem forçar o browser a medir tudo por frame.
+              key={item.name}
+              initial={reduced ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              // Stagger limitado: sem cap, o 14.º card só aparecia meio segundo
+              // depois do primeiro.
+              transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.24) }}
               className={`overflow-hidden rounded-xl group${item.tall ? ' sm:row-span-2' : ''}`}
             >
               <div
@@ -77,10 +99,10 @@ export default function Portfolio() {
                   item.tall ? 'h-[44vh] sm:h-[62vh]' : 'h-[30vh] sm:h-[33vh]'
                 }`}
               >
-                <img
-                  src={item.src}
-                  alt={item.category}
-                  loading="lazy"
+                <Picture
+                  name={item.name}
+                  alt={item.alt}
+                  sizes={GRID_SIZES}
                   style={{ objectPosition: item.pos }}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
@@ -91,7 +113,7 @@ export default function Portfolio() {
               </div>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
       </section>
     </div>
   )

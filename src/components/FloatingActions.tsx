@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-
-const IG_DM = 'https://ig.me/m/proj3ct.nebula'
+import { CONTACT } from '../lib/site'
 
 export default function FloatingActions() {
   const [visible, setVisible] = useState(false)
@@ -24,7 +23,7 @@ export default function FloatingActions() {
           className="fixed bottom-6 right-5 sm:right-8 z-50"
         >
           <a
-            href={IG_DM}
+            href={CONTACT.instagramDm}
             target="_blank"
             rel="noreferrer"
             aria-label="Enviar mensagem no Instagram"

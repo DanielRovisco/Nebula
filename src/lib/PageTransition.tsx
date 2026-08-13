@@ -1,7 +1,11 @@
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import type { ReactNode } from 'react'
 
 export default function PageTransition({ children }: { children: ReactNode }) {
+  const reduced = useReducedMotion()
+
+  if (reduced) return <>{children}</>
+
   return (
     <motion.div
       initial={{ opacity: 0 }}

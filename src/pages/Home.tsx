@@ -1,27 +1,33 @@
 import { Link } from 'react-router-dom'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion'
 import { useRef } from 'react'
 import { ArrowRight } from 'lucide-react'
 import Reveal from '../lib/Reveal'
+import Picture from '../lib/Picture'
+import Seo from '../lib/Seo'
 import { asset } from '../lib/asset'
+import { CONTACT, absoluteUrl } from '../lib/site'
 
 const SERVICES = [
   {
     title: 'Casamentos',
     tagline: 'A vossa história de amor, contada para sempre.',
-    image: asset('/brand/portfolio/forest-bride.jpg'),
+    image: 'forest-bride',
+    alt: 'Noiva em vestido longo entre árvores, fotografia de casamento editorial',
     imgPos: 'object-top',
   },
   {
     title: 'Maternidade',
     tagline: 'Celebrar a espera. Eternizar o início.',
-    image: asset('/brand/portfolio/maternity-railway.jpg'),
+    image: 'maternity-railway',
+    alt: 'Sessão de maternidade ao ar livre junto a uma linha de ferro',
     imgPos: 'object-center',
   },
   {
     title: 'Eventos',
     tagline: 'Coberturas à medida de cada ocasião.',
-    image: asset('/brand/portfolio/baby-balloons.jpg'),
+    image: 'baby-balloons',
+    alt: 'Bebé rodeado de balões durante uma festa de família',
     imgPos: 'object-[50%_15%]',
   },
 ]
@@ -34,11 +40,11 @@ const STATS = [
 ]
 
 const GALLERY = [
-  { src: asset('/brand/portfolio/palace-dome.jpg'), pos: 'center center' },
-  { src: asset('/brand/portfolio/editorial-dramatic.jpg'), pos: 'center 20%' },
-  { src: asset('/brand/portfolio/maternity-sunset-couple.jpg'), pos: 'center 30%' },
-  { src: asset('/brand/portfolio/hero-beach-dress.jpg'), pos: 'center 25%' },
-  { src: asset('/brand/portfolio/editorial-blue-dress.jpg'), pos: 'center 15%' },
+  { name: 'palace-dome', alt: 'Cúpula de palácio fotografada de baixo durante um casamento', pos: 'center center' },
+  { name: 'editorial-dramatic', alt: 'Retrato editorial com iluminação dramática', pos: 'center 20%' },
+  { name: 'maternity-sunset-couple', alt: 'Casal à espera de bebé ao pôr do sol', pos: 'center 30%' },
+  { name: 'hero-beach-dress', alt: 'Vestido a esvoaçar numa praia ao final do dia', pos: 'center 25%' },
+  { name: 'editorial-blue-dress', alt: 'Retrato editorial de vestido azul', pos: 'center 15%' },
 ]
 
 const STEPS = [
@@ -66,6 +72,7 @@ const HEADLINE = [
 ]
 
 export default function Home() {
+  const reduced = useReducedMotion()
   const heroRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
   const imgScale = useTransform(scrollYProgress, [0, 1], [1, 1.18])
@@ -74,12 +81,23 @@ export default function Home() {
 
   return (
     <div>
+      <Seo
+        title="NEBULA — Fotografia & Vídeo Cinematográfico em Lisboa"
+        description="Fotógrafo e videógrafo para casamentos, maternidade e eventos em Lisboa e Portalegre. Fotografia editorial e vídeo cinematográfico 4K."
+        image={absoluteUrl('/brand/portfolio/hero-beach-dress-1440.webp')}
+      />
+
       {/* ── HERO ─────────────────────────────────────── */}
       <section ref={heroRef} className="relative h-[100svh] overflow-hidden">
-        <motion.div style={{ scale: imgScale }} className="absolute inset-0 origin-center">
-          <img
-            src={asset('/brand/portfolio/hero-beach-dress.jpg')}
-            alt="NEBULA — fotografia editorial"
+        <motion.div
+          style={reduced ? undefined : { scale: imgScale }}
+          className="absolute inset-0 origin-center"
+        >
+          <Picture
+            name="hero-beach-dress"
+            alt="Vestido de noiva a esvoaçar numa praia ao final do dia — fotografia editorial NEBULA"
+            sizes="100vw"
+            priority
             className="w-full h-full object-cover object-[50%_25%]"
           />
         </motion.div>
@@ -88,7 +106,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-eerie/20" />
 
         <motion.div
-          style={{ opacity: textOpacity, y: textY }}
+          style={reduced ? undefined : { opacity: textOpacity, y: textY }}
           className="absolute inset-0 flex flex-col justify-end container-px pb-14 sm:pb-24"
         >
           <motion.div
@@ -97,20 +115,17 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="flex items-center gap-3 mb-7 sm:mb-9"
           >
-            <img src={asset('/brand/logo-symbol-white.png')} alt="" className="h-5 sm:h-6 w-auto opacity-80" />
+            <img src={asset('/brand/logo-symbol-white.png')} alt="" width={1252} height={1494} className="h-5 sm:h-6 w-auto opacity-80" />
             <span className="label-sm">Lisboa & Portalegre</span>
           </motion.div>
 
-          <div
-            role="heading"
-            aria-level={1}
-            className="text-[12vw] sm:text-[8vw] md:text-[6vw] font-semibold tracking-tight"
-          >
+          {/* h1 real em vez de role="heading" — é o único da página. */}
+          <h1 className="text-[12vw] sm:text-[8vw] md:text-[6vw] font-semibold tracking-tight">
             {HEADLINE.map(({ text, delay }) => (
               <span key={text} className="block overflow-hidden" style={{ lineHeight: 0.93 }}>
                 <motion.span
                   className="block"
-                  initial={{ y: '108%' }}
+                  initial={reduced ? false : { y: '108%' }}
                   animate={{ y: 0 }}
                   transition={{ duration: 1, delay, ease: [0.16, 1, 0.3, 1] }}
                 >
@@ -118,7 +133,7 @@ export default function Home() {
                 </motion.span>
               </span>
             ))}
-          </div>
+          </h1>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -144,7 +159,7 @@ export default function Home() {
           className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-0"
         >
           <motion.div
-            animate={{ scaleY: [0.4, 1, 0.4] }}
+            animate={reduced ? undefined : { scaleY: [0.4, 1, 0.4] }}
             transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
             style={{ transformOrigin: 'top' }}
             className="w-px h-14 bg-gradient-to-b from-titanium/50 to-transparent"
@@ -196,10 +211,10 @@ export default function Home() {
                   className="block relative rounded-2xl overflow-hidden group"
                   style={{ height: 'clamp(48vh, 60vh, 68vh)' }}
                 >
-                  <img
-                    src={s.image}
-                    alt={s.title}
-                    loading="lazy"
+                  <Picture
+                    name={s.image}
+                    alt={s.alt}
+                    sizes="(max-width: 768px) 100vw, 33vw"
                     className={`absolute inset-0 w-full h-full object-cover ${s.imgPos} transition-transform duration-[1400ms] group-hover:scale-105`}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-eerie/95 via-eerie/25 to-transparent" />
@@ -278,12 +293,12 @@ export default function Home() {
 
         <div className="flex gap-3 sm:gap-4 overflow-x-auto px-[clamp(1.25rem,6vw,6rem)] pb-4 snap-x snap-mandatory [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
           {GALLERY.map((item, i) => (
-            <Reveal key={item.src} delay={i * 0.06} className="shrink-0 snap-start">
+            <Reveal key={item.name} delay={i * 0.06} className="shrink-0 snap-start">
               <div className="w-[70vw] sm:w-[34vw] md:w-[27vw] overflow-hidden rounded-xl" style={{ height: 'clamp(48vh, 58vh, 65vh)' }}>
-                <img
-                  src={item.src}
-                  alt=""
-                  loading="lazy"
+                <Picture
+                  name={item.name}
+                  alt={item.alt}
+                  sizes="(max-width: 640px) 70vw, (max-width: 768px) 34vw, 27vw"
                   style={{ objectPosition: item.pos }}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                 />
@@ -336,7 +351,7 @@ export default function Home() {
               <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
             </Link>
             <a
-              href="https://ig.me/m/proj3ct.nebula"
+              href={CONTACT.instagramDm}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-3 border border-white/20 px-9 py-5 rounded-full text-[11px] uppercase tracking-[0.2em] hover:border-white/45 transition-colors active:scale-95"

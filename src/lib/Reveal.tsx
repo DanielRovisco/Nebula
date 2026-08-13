@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import type { ReactNode } from 'react'
 
 interface RevealProps {
@@ -6,10 +6,14 @@ interface RevealProps {
   delay?: number
   y?: number
   className?: string
-  as?: 'div' | 'span'
 }
 
 export default function Reveal({ children, delay = 0, y = 40, className }: RevealProps) {
+  const reduced = useReducedMotion()
+
+  // Com movimento reduzido o conteúdo é entregue já visível, sem transição.
+  if (reduced) return <div className={className}>{children}</div>
+
   return (
     <motion.div
       className={className}
