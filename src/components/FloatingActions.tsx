@@ -27,7 +27,10 @@ export default function FloatingActions() {
             target="_blank"
             rel="noreferrer"
             aria-label="Enviar mensagem no Instagram"
-            className="flex items-center gap-2.5 bg-titanium text-eerie pl-4 pr-5 h-12 rounded-full shadow-xl shadow-black/40 hover:scale-105 active:scale-95 transition-transform"
+            // Em telemóvel só aparece o ícone, por isso o botão é um círculo
+            // perfeito e centra. O padding assimétrico (pl-4 pr-5) só entra a
+            // partir de sm, quando há texto ao lado para o justificar.
+            className="flex items-center justify-center gap-2.5 bg-titanium text-eerie w-12 h-12 sm:w-auto sm:pl-4 sm:pr-5 rounded-full shadow-xl shadow-black/40 hover:scale-105 active:scale-95 transition-transform"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>

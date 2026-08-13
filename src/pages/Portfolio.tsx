@@ -32,8 +32,14 @@ const ITEMS: {
   { name: 'editorial-autumn', alt: 'Sessão de casamento em cenário de outono', category: 'Casamentos', pos: 'center 30%' },
 ]
 
-// Grelha de 3 colunas com cards ocupando ~1/3 do viewport em desktop.
-const GRID_SIZES = '(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw'
+// Duas colunas até md, três a partir daí — nunca uma imagem a ocupar a largura
+// toda, por isso 50vw cobre todo o intervalo de telemóvel e tablet.
+const GRID_SIZES = '(max-width: 768px) 50vw, 33vw'
+
+// Cards altos ocupam duas linhas. A altura tem de ser exatamente dois cards
+// curtos mais a goteira, senão a grelha deixa buracos.
+const SHORT = 'h-[26vh] sm:h-[33vh]'
+const TALL = 'h-[calc(52vh_+_0.5rem)] sm:h-[calc(66vh_+_1rem)]'
 
 export default function Portfolio() {
   const [filter, setFilter] = useState<Filter>('Todos')
@@ -49,7 +55,7 @@ export default function Portfolio() {
         image={absoluteUrl('/brand/portfolio/palace-dome-1440.webp')}
       />
 
-      <section className="container-px mb-10 sm:mb-14">
+      <section className="container-px mb-12 sm:mb-16">
         <Reveal>
           <span className="label-sm">Portfólio</span>
           <h1 className="mt-4 max-w-3xl leading-[1.05]" style={{ fontSize: 'clamp(2.2rem, 6vw, 5rem)' }}>
@@ -59,7 +65,7 @@ export default function Portfolio() {
       </section>
 
       <section
-        className="container-px mb-8 sm:mb-12 flex gap-2 sm:gap-2.5 flex-wrap"
+        className="container-px mb-10 sm:mb-14 flex gap-2.5 flex-wrap"
         role="group"
         aria-label="Filtrar portfólio por categoria"
       >
@@ -68,7 +74,7 @@ export default function Portfolio() {
             key={f}
             onClick={() => setFilter(f)}
             aria-pressed={filter === f}
-            className={`px-4 sm:px-5 py-2.5 rounded-full text-[11px] sm:text-xs uppercase tracking-[0.12em] border transition-all duration-300 active:scale-95 min-h-[42px] ${
+            className={`px-6 sm:px-7 py-3 rounded-full text-[11px] sm:text-xs uppercase tracking-[0.12em] border transition-all duration-300 active:scale-95 min-h-[44px] ${
               filter === f
                 ? 'bg-titanium text-eerie border-titanium'
                 : 'border-white/15 text-titanium/60 hover:border-white/40 hover:text-titanium/85'
@@ -80,7 +86,7 @@ export default function Portfolio() {
       </section>
 
       <section className="container-px">
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
           {filtered.map((item, i) => (
             <motion.div
               // `layout` animations em 14 cards ao mesmo tempo eram o ponto mais
@@ -92,12 +98,10 @@ export default function Portfolio() {
               // Stagger limitado: sem cap, o 14.º card só aparecia meio segundo
               // depois do primeiro.
               transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.24) }}
-              className={`overflow-hidden rounded-xl group${item.tall ? ' sm:row-span-2' : ''}`}
+              className={`overflow-hidden rounded-xl group${item.tall ? ' row-span-2' : ''}`}
             >
               <div
-                className={`relative overflow-hidden ${
-                  item.tall ? 'h-[44vh] sm:h-[62vh]' : 'h-[30vh] sm:h-[33vh]'
-                }`}
+                className={`relative overflow-hidden ${item.tall ? TALL : SHORT}`}
               >
                 <Picture
                   name={item.name}

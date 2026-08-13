@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import { ArrowRight } from 'lucide-react'
 import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
+import CountUp from '../lib/CountUp'
 import Seo from '../lib/Seo'
 import { asset } from '../lib/asset'
 import { CONTACT, absoluteUrl } from '../lib/site'
@@ -32,11 +33,10 @@ const SERVICES = [
   },
 ]
 
-const STATS = [
-  { value: '200+', label: 'Histórias contadas' },
+const STATS: { value: string; countTo?: number; suffix?: string; label: string }[] = [
+  { value: '20+', countTo: 20, suffix: '+', label: 'Histórias contadas' },
   { value: '3', label: 'Criadores visuais' },
   { value: '4K', label: 'Vídeo cinematográfico' },
-  { value: '2', label: 'Cidades base' },
 ]
 
 const GALLERY = [
@@ -259,11 +259,17 @@ export default function Home() {
       {/* ── NÚMEROS ─────────────────────────────────────── */}
       <section className="py-10 sm:py-14">
         <div className="container-px">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.07] rounded-2xl overflow-hidden">
+          <div className="grid grid-cols-3 gap-px bg-white/[0.07] rounded-2xl overflow-hidden">
             {STATS.map((stat) => (
-              <div key={stat.label} className="bg-eerie px-6 py-8 sm:py-10 text-center">
+              <div key={stat.label} className="bg-eerie px-3 sm:px-6 py-8 sm:py-10 text-center">
                 <Reveal>
-                  <div className="text-3xl sm:text-4xl font-semibold tracking-tight">{stat.value}</div>
+                  <div className="text-2xl sm:text-4xl font-semibold tracking-tight">
+                    {stat.countTo !== undefined ? (
+                      <CountUp to={stat.countTo} suffix={stat.suffix} />
+                    ) : (
+                      stat.value
+                    )}
+                  </div>
                   <div className="label-sm mt-2.5 block leading-relaxed">{stat.label}</div>
                 </Reveal>
               </div>

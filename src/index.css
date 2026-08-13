@@ -15,50 +15,59 @@
   --serif: 'Cormorant Garamond', Georgia, serif;
 }
 
-* {
-  box-sizing: border-box;
-}
+/*
+  Resets ao nível de elemento vivem em @layer base de propósito. CSS sem layer
+  ganha sempre a CSS com layer, e as utilities do Tailwind estão em
+  @layer utilities — com estas regras fora de um layer, `button { padding: 0 }`
+  anulava silenciosamente qualquer `px-*`/`py-*` aplicado a um <button>, e
+  `border: none` anulava o `border` dos pills do portfólio.
+*/
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
 
-html {
-  scroll-behavior: auto;
-}
+  html {
+    scroll-behavior: auto;
+  }
 
-body {
-  margin: 0;
-  background: var(--eerie);
-  color: var(--titanium);
-  font-family: "Poppins", system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
-}
+  body {
+    margin: 0;
+    background: var(--eerie);
+    color: var(--titanium);
+    font-family: "Poppins", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
 
-h1, h2, h3, h4 {
-  font-family: "Poppins", system-ui, sans-serif;
-  font-weight: 600;
-  margin: 0;
-  letter-spacing: -0.02em;
-}
+  h1, h2, h3, h4 {
+    font-family: "Poppins", system-ui, sans-serif;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
 
-p, span, a, li, button, input, textarea, select {
-  font-family: "Montserrat Variable", Montserrat, system-ui, sans-serif;
-}
+  p, span, a, li, button, input, textarea, select {
+    font-family: "Montserrat Variable", Montserrat, system-ui, sans-serif;
+  }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
-img {
-  display: block;
-  max-width: 100%;
-}
+  img {
+    display: block;
+    max-width: 100%;
+  }
 
-button {
-  cursor: pointer;
-  border: none;
-  background: none;
-  padding: 0;
+  button {
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+  }
 }
 
 ::selection {

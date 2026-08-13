@@ -29,76 +29,84 @@ export default function Navbar() {
   }, [open])
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled ? 'bg-eerie/88 backdrop-blur-md border-b border-white/[0.08]' : 'bg-transparent'
-      }`}
-    >
-      <div className="container-px flex items-center justify-between py-5 sm:py-5">
-        <Link to="/" className="flex items-center z-50 relative" onClick={() => setOpen(false)}>
-          <img
-            src={asset('/brand/logo-lettering-white.png')}
-            alt="NEBULA"
-            width={2795}
-            height={577}
-            className="h-7 sm:h-8 w-auto"
-          />
-        </Link>
-
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-8">
-          {LINKS.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.to === '/'}
-              className={({ isActive }) =>
-                `relative text-[11px] uppercase tracking-[0.18em] transition-colors py-1 group ${
-                  isActive ? 'text-titanium' : 'text-titanium/60 hover:text-titanium'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  {link.label}
-                  <span
-                    className={`absolute left-0 -bottom-0.5 h-px bg-titanium/60 transition-all duration-300 ${
-                      isActive ? 'w-full' : 'w-0 group-hover:w-full'
-                    }`}
-                  />
-                </>
-              )}
-            </NavLink>
-          ))}
-          <Link
-            to="/contacto"
-            className="ml-2 px-5 py-2.5 rounded-full border border-titanium/25 text-[11px] uppercase tracking-[0.18em] text-titanium/75 hover:bg-titanium hover:text-eerie hover:border-titanium transition-all duration-300 active:scale-95"
-          >
-            Marcar Sessão
+    <>
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+          scrolled ? 'bg-eerie/88 backdrop-blur-md border-b border-white/[0.08]' : 'bg-transparent'
+        }`}
+      >
+        <div className="container-px flex items-center justify-between py-5 sm:py-5">
+          <Link to="/" className="flex items-center z-50 relative" onClick={() => setOpen(false)}>
+            <img
+              src={asset('/brand/logo-lettering-white.png')}
+              alt="NEBULA"
+              width={2795}
+              height={577}
+              className="h-7 sm:h-8 w-auto"
+            />
           </Link>
-        </nav>
 
-        {/* Mobile hamburger */}
-        <button
-          className="md:hidden relative z-50 text-titanium -mr-2 p-3 active:scale-90 transition-transform"
-          onClick={() => setOpen((v) => !v)}
-          aria-label={open ? 'Fechar menu' : 'Abrir menu'}
-        >
-          <AnimatePresence mode="wait">
-            {open ? (
-              <motion.span key="x" initial={{ opacity: 0, rotate: -90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                <X size={24} />
-              </motion.span>
-            ) : (
-              <motion.span key="menu" initial={{ opacity: 0, rotate: 90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                <Menu size={24} />
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </button>
-      </div>
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-8">
+            {LINKS.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                end={link.to === '/'}
+                className={({ isActive }) =>
+                  `relative text-[11px] uppercase tracking-[0.18em] transition-colors py-1 group ${
+                    isActive ? 'text-titanium' : 'text-titanium/60 hover:text-titanium'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    {link.label}
+                    <span
+                      className={`absolute left-0 -bottom-0.5 h-px bg-titanium/60 transition-all duration-300 ${
+                        isActive ? 'w-full' : 'w-0 group-hover:w-full'
+                      }`}
+                    />
+                  </>
+                )}
+              </NavLink>
+            ))}
+            <Link
+              to="/contacto"
+              className="ml-2 px-5 py-2.5 rounded-full border border-titanium/25 text-[11px] uppercase tracking-[0.18em] text-titanium/75 hover:bg-titanium hover:text-eerie hover:border-titanium transition-all duration-300 active:scale-95"
+            >
+              Marcar Sessão
+            </Link>
+          </nav>
 
-      {/* Mobile overlay */}
+          {/* Mobile hamburger */}
+          <button
+            className="md:hidden relative z-50 text-titanium -mr-2 p-3 active:scale-90 transition-transform"
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? 'Fechar menu' : 'Abrir menu'}
+          >
+            <AnimatePresence mode="wait">
+              {open ? (
+                <motion.span key="x" initial={{ opacity: 0, rotate: -90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <X size={24} />
+                </motion.span>
+              ) : (
+                <motion.span key="menu" initial={{ opacity: 0, rotate: 90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <Menu size={24} />
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </button>
+        </div>
+      </header>
+
+      {/*
+        O overlay vive FORA do <header> de propósito. Com scroll o header ganha
+        `backdrop-blur-md`, e um backdrop-filter cria um containing block para
+        descendentes `position: fixed` — lá dentro, `fixed inset-0` passava a
+        medir-se contra a barra (~68px) em vez do viewport, o que tirava o fundo
+        e cortava o texto do menu.
+      */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -154,6 +162,6 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-    </header>
+    </>
   )
 }
