@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, GripVertical, Trash2, Upload } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, GripVertical, Trash2, Upload } from 'lucide-react'
 import { api } from '../../lib/gallery/api'
 import type { Gallery, Photo } from '../../lib/gallery/types'
 import { SITE_URL } from '../../lib/site'
@@ -100,14 +100,19 @@ export default function GalleryEditor() {
     }
   }
 
-  function onDrop(target: number) {
-    if (dragIndex === null || dragIndex === target) return
+  function move(from: number, to: number) {
+    if (from === to || to < 0 || to >= photos.length) return
     const next = [...photos]
-    const [moved] = next.splice(dragIndex, 1)
-    next.splice(target, 0, moved)
+    const [moved] = next.splice(from, 1)
+    next.splice(to, 0, moved)
     setPhotos(next)
-    setDragIndex(null)
     api.reorderPhotos(id, next.map((p) => p.id)).catch((e) => setError((e as Error).message))
+  }
+
+  function onDrop(target: number) {
+    if (dragIndex === null) return
+    move(dragIndex, target)
+    setDragIndex(null)
   }
 
   if (!gallery) {
@@ -217,7 +222,8 @@ export default function GalleryEditor() {
         ) : (
           <>
             <p className="text-xs text-titanium/30 mb-4">
-              Arrasta para reordenar — é esta a ordem que o cliente vê.
+              Arrasta para reordenar, ou usa as setas em cada foto — o arrasto
+              não funciona ao toque. É esta a ordem que o cliente vê.
             </p>
             <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
               {photos.map((photo, i) => (
@@ -246,11 +252,35 @@ export default function GalleryEditor() {
                   <button
                     onClick={() => removePhoto(photo)}
                     aria-label={`Apagar ${photo.fileName}`}
-                    className="absolute top-1 right-1 p-2 text-titanium/0 group-hover:text-titanium/70 hover:!text-red-300 transition-colors"
+                    className="absolute top-1 right-1 p-2 text-titanium/70 sm:text-titanium/0 sm:group-hover:text-titanium/70 hover:!text-red-300 transition-colors"
                   >
                     <Trash2 size={15} />
                   </button>
-                  <span className="absolute bottom-0 inset-x-0 px-1.5 py-1 text-[9px] text-titanium/0 group-hover:text-titanium/60 truncate transition-colors bg-gradient-to-t from-eerie/80 to-transparent">
+
+                  {/*
+                    O arrasto HTML5 não existe em ecrãs de toque, por isso a
+                    ordenação ficaria impossível no telemóvel. As setas são
+                    sempre visíveis ao toque e aparecem com o rato no desktop.
+                  */}
+                  <div className="absolute bottom-1 inset-x-1 flex justify-between sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => move(i, i - 1)}
+                      disabled={i === 0}
+                      aria-label={`Mover ${photo.fileName} para trás`}
+                      className="p-1.5 rounded-full bg-eerie/70 text-titanium/80 hover:text-titanium disabled:opacity-0"
+                    >
+                      <ChevronLeft size={14} />
+                    </button>
+                    <button
+                      onClick={() => move(i, i + 1)}
+                      disabled={i === photos.length - 1}
+                      aria-label={`Mover ${photo.fileName} para a frente`}
+                      className="p-1.5 rounded-full bg-eerie/70 text-titanium/80 hover:text-titanium disabled:opacity-0"
+                    >
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                  <span className="absolute top-7 inset-x-0 px-1.5 text-[9px] text-titanium/0 group-hover:text-titanium/60 truncate transition-colors">
                     {photo.fileName}
                   </span>
                 </div>

@@ -74,17 +74,27 @@ Deno.serve(async (req) => {
   // Assina tudo de uma vez: as fotos em tamanho real e as miniaturas.
   const paths = [
     ...photos.map((p) => p.storage_path),
-    ...photos.map((p) => p.thumb_path).filter(Boolean) as string[],
+    ...(photos.map((p) => p.thumb_path).filter(Boolean) as string[]),
   ]
-  const { data: signed, error: signError } = await admin.storage
-    .from('galleries')
-    .createSignedUrls(paths, SIGNED_URL_TTL)
-  if (signError) {
-    console.error('sign', signError)
-    return json({ error: 'server_error' }, 500)
-  }
 
-  const urlByPath = new Map(signed.map((s) => [s.path, s.signedUrl]))
+  // Uma galeria publicada mas ainda sem fotos é um estado normal (o cliente
+  // recebeu o link antes da entrega). Pedir zero URLs assinados não faz
+  // sentido, e o cliente já sabe mostrar uma galeria vazia.
+  const urlByPath = new Map<string, string>()
+  if (paths.length > 0) {
+    const { data: signed, error: signError } = await admin.storage
+      .from('galleries')
+      .createSignedUrls(paths, SIGNED_URL_TTL)
+    if (signError) {
+      console.error('sign', signError)
+      return json({ error: 'server_error' }, 500)
+    }
+    for (const s of signed ?? []) {
+      // Um ficheiro que falhe a assinatura vem sem signedUrl; fica de fora e a
+      // grelha mostra essa foto em falta em vez de rebentar a galeria toda.
+      if (s.signedUrl) urlByPath.set(s.path, s.signedUrl)
+    }
+  }
 
   return json({
     gallery: {

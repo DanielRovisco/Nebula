@@ -107,6 +107,15 @@ a password é verificada **no servidor**. O browser nunca recebe um URL de
 ficheiro sem antes acertar na password, e os URLs que recebe são assinados e
 expiram ao fim de 2 horas.
 
+O `supabase/schema.sql` foi validado contra um PostgreSQL 16 real: corre sem
+erros, é idempotente (segunda passagem não estraga dados) e passa 20 testes de
+comportamento — hash bcrypt com salt por galeria, password em claro nunca
+guardada, recusa de rascunhos e galerias expiradas, bloqueio após 10 tentativas
+falhadas, e `anon` sem permissão para verificar passwords ou alterá-las.
+
+A Edge Function continua por estrear em execução real — não há Deno neste
+ambiente.
+
 ### Instalação (uma vez)
 
 1. **Criar o projeto** em supabase.com (ou reutilizar um existente).

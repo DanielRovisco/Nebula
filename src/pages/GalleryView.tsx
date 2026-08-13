@@ -204,7 +204,10 @@ export default function GalleryView() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-[120] bg-eerie/97 flex flex-col"
+            // Opaco, não 97%: com transparência via-se o site inteiro por trás
+            // da fotografia — navbar, título, tudo. Numa galeria a foto tem de
+            // ser a única coisa no ecrã.
+            className="fixed inset-0 z-[120] bg-eerie flex flex-col"
             role="dialog"
             aria-modal="true"
             aria-label={current.fileName}
