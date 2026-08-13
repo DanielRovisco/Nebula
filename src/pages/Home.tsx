@@ -36,7 +36,7 @@ const SERVICES = [
 const STATS: { value: string; countTo?: number; suffix?: string; label: string }[] = [
   { value: '20+', countTo: 20, suffix: '+', label: 'Histórias contadas' },
   { value: '3', label: 'Criadores visuais' },
-  { value: '360°', label: 'Foto, vídeo e drone' },
+  { value: '360°', label: 'Foto, vídeo e criação de conteúdo' },
 ]
 
 const GALLERY = [
@@ -270,7 +270,18 @@ export default function Home() {
                       stat.value
                     )}
                   </div>
-                  <div className="label-sm mt-2.5 block leading-relaxed">{stat.label}</div>
+                  {/*
+                    Em colunas de ~100px o tracking de 0.28em do label-sm faz
+                    palavras como "conteúdo" rebentarem a largura do card, por
+                    isso aperta em ecrãs estreitos e recupera a partir de sm.
+                  */}
+                  {/*
+                    `break-words` garante que nenhuma palavra rebenta a coluna
+                    nos ecrãs mais estreitos, onde nem 0.1em de tracking chega.
+                  */}
+                  <div className="label-sm mt-2.5 block leading-relaxed tracking-[0.1em] break-words hyphens-auto sm:tracking-[0.28em]">
+                    {stat.label}
+                  </div>
                 </Reveal>
               </div>
             ))}

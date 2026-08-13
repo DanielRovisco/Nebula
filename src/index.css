@@ -86,31 +86,39 @@
   border-radius: 3px;
 }
 
-.font-serif {
-  font-family: var(--serif);
-}
+/*
+  Classes utilitárias próprias em @layer components: ficam abaixo de
+  @layer utilities na cascata, para que uma utility do Tailwind aplicada ao
+  mesmo elemento possa sobrepor-se. Sem layer, `label-sm text-titanium/80` ou
+  `label-sm tracking-[0.14em]` eram silenciosamente ignorados.
+*/
+@layer components {
+  .font-serif {
+    font-family: var(--serif);
+  }
 
-.text-eerie { color: var(--eerie); }
-.bg-eerie { background-color: var(--eerie); }
-.text-titanium { color: var(--titanium); }
-.bg-titanium { background-color: var(--titanium); }
+  .text-eerie { color: var(--eerie); }
+  .bg-eerie { background-color: var(--eerie); }
+  .text-titanium { color: var(--titanium); }
+  .bg-titanium { background-color: var(--titanium); }
 
-.container-px {
-  padding-left: clamp(1.25rem, 6vw, 6rem);
-  padding-right: clamp(1.25rem, 6vw, 6rem);
-}
+  .container-px {
+    padding-left: clamp(1.25rem, 6vw, 6rem);
+    padding-right: clamp(1.25rem, 6vw, 6rem);
+  }
 
-.hairline {
-  height: 1px;
-  background: rgba(252, 255, 240, 0.1);
-}
+  .hairline {
+    height: 1px;
+    background: rgba(252, 255, 240, 0.1);
+  }
 
-.label-sm {
-  font-family: "Montserrat Variable", Montserrat, system-ui, sans-serif;
-  font-size: 0.65rem;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: rgba(252, 255, 240, 0.4);
+  .label-sm {
+    font-family: "Montserrat Variable", Montserrat, system-ui, sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgba(252, 255, 240, 0.4);
+  }
 }
 
 /*
