@@ -14,6 +14,7 @@ a cada push para `main` (`.github/workflows/deploy.yml`).
 npm install
 npm run dev      # servidor de desenvolvimento
 npm run demo     # idem, com galerias de exemplo (ver "Modo de demonstração")
+npm run setup:check  # diagnostica a configuração das galerias privadas
 npm run build    # tsc + build de produção para dist/
 npm run preview  # servir o build de produção localmente
 npm run lint
@@ -126,6 +127,22 @@ A Edge Function continua por estrear em execução real — não há Deno neste
 ambiente.
 
 ### Instalação (uma vez)
+
+A qualquer momento, para saber em que pé estás:
+
+```bash
+npm run setup:check
+```
+
+Percorre a cadeia toda — variáveis, projeto, esquema, as duas Edge Functions,
+credenciais do R2, escrita no bucket e CORS — e diz qual o primeiro passo que
+falta e o que fazer. Com `ADMIN_EMAIL` e `ADMIN_PASSWORD` definidos faz também
+o teste completo: login, pedir um upload assinado, escrever mesmo no R2 e
+apagar o ficheiro de teste.
+
+```bash
+ADMIN_EMAIL=eu@nebula.pt ADMIN_PASSWORD=... npm run setup:check
+```
 
 **1. Supabase**
 

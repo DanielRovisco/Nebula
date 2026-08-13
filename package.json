@@ -10,7 +10,8 @@
     "build:demo": "tsc -b && vite build --mode demo",
     "lint": "eslint .",
     "preview": "vite preview",
-    "images": "node scripts/optimize-images.mjs"
+    "images": "node scripts/optimize-images.mjs",
+    "setup:check": "node scripts/check-setup.mjs"
   },
   "dependencies": {
     "@fontsource-variable/montserrat": "^5.3.0",
