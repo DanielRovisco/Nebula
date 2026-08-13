@@ -5,31 +5,55 @@
     <link rel="icon" type="image/png" href="/Nebula/brand/logo-symbol-white.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="NEBULA — Fotógrafo e videógrafo para casamentos, maternidade e eventos em Lisboa e Portalegre. Fotografia editorial e vídeo cinematográfico 4K. Narrativa visual com rigor e autenticidade." />
-    <meta name="keywords" content="fotógrafo casamentos Lisboa, videógrafo casamentos Portugal, fotografia maternidade Lisboa, fotografia editorial Portugal, vídeo cinematográfico 4K, drone casamentos" />
     <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://danielrovisco.github.io/Nebula/" />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="NEBULA" />
     <meta property="og:title" content="NEBULA — Fotografia & Vídeo Cinematográfico em Lisboa" />
     <meta property="og:description" content="Fotografia editorial e vídeo cinematográfico para casamentos, maternidade e eventos. Lisboa & Portalegre. Narrativa, não apenas registo." />
-    <meta property="og:image" content="/Nebula/brand/logo-mix-white.png" />
+    <meta property="og:url" content="https://danielrovisco.github.io/Nebula/" />
+    <meta property="og:image" content="https://danielrovisco.github.io/Nebula/brand/portfolio/hero-beach-dress-1440.webp" />
+    <meta property="og:image:width" content="1440" />
+    <meta property="og:image:height" content="1920" />
     <meta property="og:locale" content="pt_PT" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="NEBULA — Fotografia & Vídeo Cinematográfico" />
     <meta name="twitter:description" content="Fotografia editorial e vídeo 4K para casamentos, maternidade e eventos. Lisboa & Portalegre." />
+    <meta name="twitter:image" content="https://danielrovisco.github.io/Nebula/brand/portfolio/hero-beach-dress-1440.webp" />
     <title>NEBULA — Fotografia & Vídeo Cinematográfico em Lisboa</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400;1,500&family=Poppins:wght@300;400;500;600;700;800&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!--
+      O hero é o elemento de LCP e é renderizado pelo React, logo o preload
+      scanner do browser não o descobre no HTML. Este preload arranca o
+      download em paralelo com o bundle em vez de depois dele.
+    -->
+    <link
+      rel="preload"
+      as="image"
+      type="image/webp"
+      href="/Nebula/brand/portfolio/hero-beach-dress-1440.webp"
+      imagesrcset="/Nebula/brand/portfolio/hero-beach-dress-480.webp 480w, /Nebula/brand/portfolio/hero-beach-dress-960.webp 960w, /Nebula/brand/portfolio/hero-beach-dress-1440.webp 1440w"
+      imagesizes="100vw"
+      fetchpriority="high"
+    />
+
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
-      "@id": "https://nebula.pt",
+      "@id": "https://danielrovisco.github.io/Nebula/",
       "name": "NEBULA",
       "description": "Produtora audiovisual especializada em fotografia editorial e vídeo cinematográfico para casamentos, maternidade e eventos.",
-      "url": "https://nebula.pt",
-      "logo": "/brand/logo-symbol-white.png",
-      "telephone": "+351900000000",
+      "url": "https://danielrovisco.github.io/Nebula/",
+      "logo": "https://danielrovisco.github.io/Nebula/brand/logo-symbol-white.png",
+      "image": "https://danielrovisco.github.io/Nebula/brand/portfolio/hero-beach-dress-1440.webp",
       "email": "nebula.pdstudio@gmail.com",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "email": "nebula.pdstudio@gmail.com",
+        "availableLanguage": ["Portuguese", "English"]
+      },
       "address": {
         "@type": "PostalAddress",
         "addressLocality": "Lisboa",
@@ -54,8 +78,11 @@
         }
       }(window.location));
     </script>
-    <script type="module" crossorigin src="/Nebula/assets/index-CSAHO8yE.js"></script>
-    <link rel="stylesheet" crossorigin href="/Nebula/assets/index-Dsl6ker5.css">
+    <script type="module" crossorigin src="/Nebula/assets/index-TZ46V71K.js"></script>
+    <link rel="modulepreload" crossorigin href="/Nebula/assets/rolldown-runtime-Cyuzqnbw.js">
+    <link rel="modulepreload" crossorigin href="/Nebula/assets/motion-B8TVTd79.js">
+    <link rel="modulepreload" crossorigin href="/Nebula/assets/react-BwLzMKq_.js">
+    <link rel="stylesheet" crossorigin href="/Nebula/assets/index-01FP_0rx.css">
   </head>
   <body>
     <div id="root"></div>

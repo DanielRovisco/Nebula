@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://danielrovisco.github.io/Nebula/sitemap.xml
