@@ -5,6 +5,15 @@
   --color-titanium: #fcfff0;
   --color-gray: #8a8a8a;
   --color-gray-dark: #2a2a2a;
+
+  /*
+    A serifada entra no tema, não numa classe própria: o Tailwind já gera uma
+    utility `font-serif` e, estando ela em @layer utilities, ganhava sempre a
+    uma `.font-serif` nossa em @layer components — o manifesto da Home e a
+    citação do Sobre ficaram em Georgia sem ninguém dar por isso. Definindo-a
+    aqui, `font-serif` passa a significar Cormorant em todo o lado.
+  */
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
 }
 
 :root {
@@ -93,10 +102,6 @@
   `label-sm tracking-[0.14em]` eram silenciosamente ignorados.
 */
 @layer components {
-  .font-serif {
-    font-family: var(--serif);
-  }
-
   .text-eerie { color: var(--eerie); }
   .bg-eerie { background-color: var(--eerie); }
   .text-titanium { color: var(--titanium); }

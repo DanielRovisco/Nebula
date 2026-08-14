@@ -49,6 +49,24 @@ create table if not exists photos (
   created_at timestamptz not null default now()
 );
 
+-- ─── Capa, tipografia e vídeos ──────────────────────────────────────────────
+-- Aditivo de propósito: quem já correu este ficheiro pode voltar a corrê-lo.
+
+alter table galleries
+  -- Foto escolhida como capa. Se for apagada, a galeria fica sem capa em vez
+  -- de apontar para o vazio.
+  add column if not exists cover_photo_id uuid references photos(id) on delete set null,
+  -- Texto centrado sobre a capa. Vazio = usa o título da galeria.
+  add column if not exists cover_title text,
+  -- 'serif' | 'sans' | 'label' — ver COVER_FONTS no frontend.
+  add column if not exists cover_font text not null default 'serif',
+  -- 'white' | 'black' | 'none' — qual dos logos aparece na capa.
+  add column if not exists logo_variant text not null default 'white';
+
+alter table photos
+  -- Distingue foto de vídeo sem depender da extensão do nome do ficheiro.
+  add column if not exists content_type text;
+
 create index if not exists photos_gallery_idx on photos (gallery_id, sort_order);
 create index if not exists galleries_slug_idx on galleries (slug);
 
@@ -103,9 +121,11 @@ $$;
 revoke all on function set_gallery_password(uuid, text) from public, anon;
 grant execute on function set_gallery_password(uuid, text) to authenticated;
 
-create or replace view galleries_admin as
-  select id, slug, title, client_name, message, cover_path, published,
-         download_enabled, expires_at, created_at, updated_at
+drop view if exists galleries_admin;
+create view galleries_admin as
+  select id, slug, title, client_name, message, cover_path, cover_photo_id,
+         cover_title, cover_font, logo_variant, published, download_enabled,
+         expires_at, created_at, updated_at
   from galleries;
 
 -- ─── Verificação de acesso do cliente ──────────────────────────────────────
@@ -124,14 +144,22 @@ create index if not exists access_attempts_idx on access_attempts (slug, at desc
 
 alter table access_attempts enable row level security;
 
-create or replace function verify_gallery_password(p_slug text, p_password text)
+-- CREATE OR REPLACE não muda o tipo de retorno: para acrescentar colunas é
+-- preciso apagar a função primeiro.
+drop function if exists verify_gallery_password(text, text);
+
+create function verify_gallery_password(p_slug text, p_password text)
 returns table (
   id uuid,
   slug text,
   title text,
   client_name text,
   message text,
-  download_enabled boolean
+  download_enabled boolean,
+  cover_photo_id uuid,
+  cover_title text,
+  cover_font text,
+  logo_variant text
 ) language plpgsql security definer
   set search_path = public, extensions as $$
 declare
@@ -149,7 +177,8 @@ begin
   end if;
 
   return query
-  select g.id, g.slug, g.title, g.client_name, g.message, g.download_enabled
+  select g.id, g.slug, g.title, g.client_name, g.message, g.download_enabled,
+         g.cover_photo_id, g.cover_title, g.cover_font, g.logo_variant
   from galleries g
   where g.slug = p_slug
     and g.published = true

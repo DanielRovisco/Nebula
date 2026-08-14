@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ChevronLeft, ChevronRight, GripVertical, Trash2, Upload } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Play, Star, Trash2, Upload } from 'lucide-react'
 import { api } from '../../lib/gallery/api'
 import type { Gallery, Photo } from '../../lib/gallery/types'
 import { SITE_URL } from '../../lib/site'
 import { suggestPassword } from '../../lib/gallery/helpers'
 import { DELIVERY_EDGE } from '../../lib/gallery/api'
+import { COVER_FONTS, LOGO_VARIANTS } from '../../lib/gallery/cover'
+import { isVideo, type CoverFont, type LogoVariant } from '../../lib/gallery/types'
 
 export default function GalleryEditor() {
   const { id = '' } = useParams()
@@ -59,7 +61,9 @@ export default function GalleryEditor() {
 
   async function handleFiles(list: FileList | null) {
     if (!list?.length || !gallery) return
-    const files = Array.from(list).filter((f) => f.type.startsWith('image/'))
+    const files = Array.from(list).filter(
+      (f) => f.type.startsWith('image/') || f.type.startsWith('video/'),
+    )
     if (!files.length) return
     setError(null)
     setUpload({ done: 0, total: files.length })
@@ -193,12 +197,12 @@ export default function GalleryEditor() {
             className="inline-flex items-center gap-2.5 bg-titanium text-eerie px-6 py-3 rounded-full text-[11px] uppercase tracking-[0.18em] font-semibold active:scale-95 transition-all min-h-[44px] disabled:opacity-60 disabled:cursor-wait"
           >
             <Upload size={14} />
-            {upload ? `A enviar ${upload.done}/${upload.total}` : 'Adicionar fotos'}
+            {upload ? `A enviar ${upload.done}/${upload.total}` : 'Adicionar ficheiros'}
           </button>
           <input
             ref={fileInput}
             type="file"
-            accept="image/*"
+            accept="image/*,video/*"
             multiple
             hidden
             onChange={(e) => handleFiles(e.target.files)}
@@ -213,8 +217,9 @@ export default function GalleryEditor() {
             className="w-4 h-4 accent-[#fcfff0]"
           />
           <span className="text-xs text-titanium/50">
-            Reduzir para {DELIVERY_EDGE}px no lado maior — ocupa 3 a 5 vezes
-            menos, sem diferença visível para o cliente
+            Reduzir fotos para {DELIVERY_EDGE}px no lado maior — ocupa 3 a 5
+            vezes menos, sem diferença visível para o cliente. Vídeos sobem
+            sempre intactos.
           </span>
         </label>
 
@@ -267,10 +272,27 @@ export default function GalleryEditor() {
                     className="w-full h-full object-cover pointer-events-none"
                   />
                   <div className="absolute inset-0 bg-eerie/0 group-hover:bg-eerie/50 transition-colors" />
-                  <GripVertical
-                    size={15}
-                    className="absolute top-1.5 left-1.5 text-titanium/0 group-hover:text-titanium/70 transition-colors pointer-events-none"
-                  />
+                  {isVideo(photo) && (
+                    <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <span className="w-8 h-8 rounded-full bg-eerie/60 flex items-center justify-center">
+                        <Play size={12} className="text-titanium ml-0.5" fill="currentColor" />
+                      </span>
+                    </span>
+                  )}
+
+                  <button
+                    onClick={() => patch({ coverPhotoId: photo.id })}
+                    aria-label={`Usar ${photo.fileName} como capa`}
+                    title="Usar como capa"
+                    className={`absolute top-1 left-1 p-2 transition-colors ${
+                      gallery.coverPhotoId === photo.id
+                        ? 'text-amber-300'
+                        : 'text-titanium/70 sm:text-titanium/0 sm:group-hover:text-titanium/70 hover:!text-amber-300'
+                    }`}
+                  >
+                    <Star size={15} fill={gallery.coverPhotoId === photo.id ? 'currentColor' : 'none'} />
+                  </button>
+
                   <button
                     onClick={() => removePhoto(photo)}
                     aria-label={`Apagar ${photo.fileName}`}
@@ -310,6 +332,81 @@ export default function GalleryEditor() {
             </div>
           </>
         )}
+      </section>
+
+      {/* ── Capa ────────────────────────────────────────────── */}
+      <section className="mb-14 max-w-2xl">
+        <h2 className="text-xl mb-2">Capa</h2>
+        <p className="text-xs text-titanium/35 mb-6 leading-relaxed">
+          É o primeiro ecrã que o cliente vê. Escolhe a fotografia clicando na
+          estrela de uma das miniaturas acima — sem escolha, usa a primeira.
+        </p>
+
+        <div className="grid sm:grid-cols-2 gap-6">
+          <div className="sm:col-span-2">
+            <label className="label-sm block mb-2.5" htmlFor="ge-cover-title">
+              Texto sobre a capa
+            </label>
+            <input
+              id="ge-cover-title"
+              defaultValue={gallery.coverTitle ?? ''}
+              onBlur={(e) =>
+                e.target.value !== (gallery.coverTitle ?? '') && patch({ coverTitle: e.target.value })
+              }
+              className={field}
+              placeholder={gallery.title}
+            />
+            <p className="text-xs text-titanium/25 mt-2">Vazio usa o título da galeria.</p>
+          </div>
+
+          <div>
+            <label className="label-sm block mb-2.5" htmlFor="ge-font">Tipo de letra</label>
+            <select
+              id="ge-font"
+              value={gallery.coverFont}
+              onChange={(e) => patch({ coverFont: e.target.value as CoverFont })}
+              className={`${field} bg-eerie`}
+            >
+              {Object.entries(COVER_FONTS).map(([k, v]) => (
+                <option key={k} value={k}>{v.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="label-sm block mb-2.5" htmlFor="ge-logo">Logo na capa</label>
+            <select
+              id="ge-logo"
+              value={gallery.logoVariant}
+              onChange={(e) => patch({ logoVariant: e.target.value as LogoVariant })}
+              className={`${field} bg-eerie`}
+            >
+              {Object.entries(LOGO_VARIANTS).map(([k, v]) => (
+                <option key={k} value={k}>{v.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Pré-visualização do texto tal como sai na capa. */}
+        <div className="mt-7 border border-white/10 rounded-2xl p-8 text-center bg-white/[0.02]">
+          <span className="label-sm block mb-4 text-titanium/25">Pré-visualização</span>
+          {LOGO_VARIANTS[gallery.logoVariant]?.src && (
+            <img
+              src={LOGO_VARIANTS[gallery.logoVariant].src!}
+              alt=""
+              className={`h-8 w-auto mx-auto mb-5 ${
+                gallery.logoVariant === 'black' ? 'invert-0' : ''
+              }`}
+            />
+          )}
+          <p
+            className={`${COVER_FONTS[gallery.coverFont]?.className ?? ''} leading-tight`}
+            style={{ fontSize: gallery.coverFont === 'label' ? '1.1rem' : '2rem' }}
+          >
+            {gallery.coverTitle?.trim() || gallery.title}
+          </p>
+        </div>
       </section>
 
       {/* ── Definições ──────────────────────────────────────── */}

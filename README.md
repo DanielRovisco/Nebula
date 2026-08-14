@@ -241,15 +241,46 @@ bcrypt. Define uma nova no editor da galeria.
 **Prazo:** o campo "Expira em" fecha a galeria a partir dessa data sem apagar
 nada.
 
+### A capa
+
+No editor da galeria, a secção **Capa** define o primeiro ecrã que o cliente vê:
+
+- **Fotografia** — clica na estrela de uma das miniaturas. Sem escolha, usa a
+  primeira da galeria.
+- **Texto sobre a capa** — vazio usa o título.
+- **Tipo de letra** — serifada itálica, sem serifa, ou maiúsculas espaçadas.
+  São as três do site, sem downloads extra.
+- **Logo** — branco, preto, ou nenhum.
+
+A pré-visualização por baixo mostra o resultado enquanto escreves.
+
 ### O que o cliente vê
 
 Entra em `/galeria`, ou direto em `/galeria/<código>` com o código já
-preenchido. Depois da password: grelha com miniaturas, lightbox com setas e
-teclado, download foto a foto e "Descarregar tudo" em ZIP. O acesso fica
-guardado no separador durante 2 horas; passado isso, volta a pedir a password.
+preenchido. Depois da password acertada:
 
-O botão de download desaparece se desligares o download nas definições da
-galeria.
+1. **Introdução** — o símbolo, uma linha a desenhar-se e as boas-vindas pelo
+   primeiro nome. Dura ~3,4s, salta-se com um toque, aparece uma vez por
+   sessão e é ignorada por inteiro com `prefers-reduced-motion`.
+2. **Capa** — fotografia a ecrã inteiro, texto centrado e o logo escolhido.
+3. **Galeria** — grelha com miniaturas, visualizador com setas e teclado,
+   download ficheiro a ficheiro (também na grelha, sem abrir) e
+   "Descarregar tudo" em ZIP.
+
+A galeria aberta corre sem a navegação do site: a capa já tem o seu logo, e a
+navbar por cima punha dois logos NEBULA no mesmo ecrã. O caminho de volta é o
+link no fim.
+
+O acesso fica guardado no separador durante 2 horas; passado isso, volta a
+pedir a password. Os botões de download desaparecem se desligares o download
+nas definições da galeria.
+
+### Vídeos
+
+O upload aceita vídeo além de fotografia. A miniatura é tirada de um fotograma
+no browser, a grelha marca-os com um símbolo de play e o visualizador abre-os
+com controlos. Os vídeos sobem sempre intactos — a redução de resolução só se
+aplica a imagens, porque recodificar vídeo no browser não é viável.
 
 ### Limites que vale a pena conhecer
 

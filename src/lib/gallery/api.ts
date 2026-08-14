@@ -79,6 +79,57 @@ async function putToR2(url: string, blob: Blob, contentType: string) {
   if (!res.ok) throw new Error(`O upload falhou (${res.status}).`)
 }
 
+/**
+ * Miniatura de um vídeo: carrega-o em memória, salta para um fotograma com
+ * conteúdo (o primeiro costuma ser preto) e desenha-o para um canvas.
+ */
+async function videoThumb(file: File): Promise<Resized> {
+  const url = URL.createObjectURL(file)
+  try {
+    const video = document.createElement('video')
+    video.src = url
+    video.muted = true
+    video.playsInline = true
+    video.preload = 'metadata'
+
+    await new Promise<void>((resolve, reject) => {
+      video.onloadeddata = () => resolve()
+      video.onerror = () => reject(new Error('Vídeo ilegível.'))
+      setTimeout(() => reject(new Error('Vídeo demorou demasiado.')), 15000)
+    })
+
+    // Um segundo dentro, ou a meio se for muito curto.
+    video.currentTime = Math.min(1, (video.duration || 2) / 2)
+    await new Promise<void>((resolve, reject) => {
+      video.onseeked = () => resolve()
+      video.onerror = () => reject(new Error('Não foi possível avançar o vídeo.'))
+      setTimeout(() => resolve(), 5000)
+    })
+
+    const ow = video.videoWidth
+    const oh = video.videoHeight
+    const scale = Math.min(1, THUMB_EDGE / Math.max(ow, oh))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.round(ow * scale)
+    canvas.height = Math.round(oh * scale)
+    canvas.getContext('2d')!.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+    const blob = await new Promise<Blob | null>((res) =>
+      canvas.toBlob(res, 'image/webp', THUMB_QUALITY),
+    )
+    if (!blob) throw new Error('Não foi possível gerar a miniatura do vídeo.')
+    return {
+      blob,
+      width: canvas.width,
+      height: canvas.height,
+      originalWidth: ow,
+      originalHeight: oh,
+    }
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
 const rowToGallery = (r: Record<string, unknown>): Gallery => ({
   id: r.id as string,
   slug: r.slug as string,
@@ -86,6 +137,10 @@ const rowToGallery = (r: Record<string, unknown>): Gallery => ({
   clientName: (r.client_name as string) ?? null,
   message: (r.message as string) ?? null,
   coverPath: (r.cover_path as string) ?? null,
+  coverPhotoId: (r.cover_photo_id as string) ?? null,
+  coverTitle: (r.cover_title as string) ?? null,
+  coverFont: ((r.cover_font as string) ?? 'serif') as Gallery['coverFont'],
+  logoVariant: ((r.logo_variant as string) ?? 'white') as Gallery['logoVariant'],
   published: Boolean(r.published),
   downloadEnabled: Boolean(r.download_enabled),
   expiresAt: (r.expires_at as string) ?? null,
@@ -98,6 +153,7 @@ const rowToPhoto = (r: Record<string, unknown>): Photo => ({
   storagePath: r.storage_path as string,
   thumbPath: (r.thumb_path as string) ?? null,
   fileName: r.file_name as string,
+  contentType: (r.content_type as string) ?? null,
   width: (r.width as number) ?? null,
   height: (r.height as number) ?? null,
   sizeBytes: (r.size_bytes as number) ?? null,
@@ -168,6 +224,9 @@ const realApi = {
         published: input.published ?? false,
         download_enabled: input.downloadEnabled ?? true,
         expires_at: input.expiresAt ?? null,
+        cover_title: input.coverTitle ?? null,
+        cover_font: input.coverFont ?? 'serif',
+        logo_variant: input.logoVariant ?? 'white',
       })
       .select()
       .single()
@@ -199,6 +258,10 @@ const realApi = {
     if (patch.published !== undefined) update.published = patch.published
     if (patch.downloadEnabled !== undefined) update.download_enabled = patch.downloadEnabled
     if (patch.expiresAt !== undefined) update.expires_at = patch.expiresAt
+    if (patch.coverPhotoId !== undefined) update.cover_photo_id = patch.coverPhotoId
+    if (patch.coverTitle !== undefined) update.cover_title = patch.coverTitle || null
+    if (patch.coverFont !== undefined) update.cover_font = patch.coverFont
+    if (patch.logoVariant !== undefined) update.logo_variant = patch.logoVariant
 
     if (Object.keys(update).length) {
       const { error } = await sb.from('galleries').update(update).eq('id', id)
@@ -250,13 +313,17 @@ const realApi = {
     let done = 0
 
     for (const file of files) {
+      const video = file.type.startsWith('video/')
+
       // A foto de entrega: reduzida se pedido, senão o ficheiro tal e qual.
+      // Vídeos sobem sempre intactos — recodificar vídeo no browser não é
+      // viável, e reduzir um vídeo não é coisa que se faça sem o dono ver.
       let payload: Blob = file
-      let contentType = file.type || 'image/jpeg'
+      let contentType = file.type || (video ? 'video/mp4' : 'image/jpeg')
       let width: number | null = null
       let height: number | null = null
 
-      if (options.maxEdge) {
+      if (options.maxEdge && !video) {
         try {
           const r = await resize(file, options.maxEdge, 'image/jpeg', DELIVERY_QUALITY)
           // Só vale a pena se realmente encolher — um ficheiro já pequeno pode
@@ -286,7 +353,9 @@ const realApi = {
 
       let storedThumb: string | null = null
       try {
-        const thumb = await resize(file, THUMB_EDGE, 'image/webp', THUMB_QUALITY)
+        const thumb = video
+          ? await videoThumb(file)
+          : await resize(file, THUMB_EDGE, 'image/webp', THUMB_QUALITY)
         if (width === null) {
           width = thumb.originalWidth
           height = thumb.originalHeight
@@ -310,6 +379,7 @@ const realApi = {
         storage_path: full.key,
         thumb_path: storedThumb,
         file_name: file.name,
+        content_type: contentType,
         width,
         height,
         size_bytes: payload.size,

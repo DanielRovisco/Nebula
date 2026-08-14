@@ -46,6 +46,21 @@ export default function App() {
     )
   }
 
+  // A galeria aberta também corre sem a navegação do site: a capa tem o seu
+  // próprio logo centrado, e ter a navbar por cima punha dois logos NEBULA no
+  // mesmo ecrã. O cliente está na entrega dele, não a navegar o site — o
+  // caminho de volta é o link no fim da galeria.
+  if (/^\/galeria\/[^/]+\/ver$/.test(location.pathname)) {
+    return (
+      <Suspense fallback={<Loading />}>
+        <ScrollToTop />
+        <Routes>
+          <Route path="/galeria/:slug/ver" element={<GalleryView />} />
+        </Routes>
+      </Suspense>
+    )
+  }
+
   return (
     <SmoothScroll>
       <ScrollProgress />

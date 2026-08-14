@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
 
   const { data: photos, error: photosError } = await admin
     .from('photos')
-    .select('id, storage_path, thumb_path, file_name, width, height, size_bytes, sort_order')
+    .select('id, storage_path, thumb_path, file_name, content_type, width, height, size_bytes, sort_order')
     .eq('gallery_id', gallery.id)
     .order('sort_order', { ascending: true })
   if (photosError) {
@@ -67,6 +67,7 @@ Deno.serve(async (req) => {
     photos.map(async (p) => ({
       id: p.id,
       fileName: p.file_name,
+      contentType: p.content_type,
       width: p.width,
       height: p.height,
       sizeBytes: p.size_bytes,
@@ -74,6 +75,12 @@ Deno.serve(async (req) => {
       thumbUrl: p.thumb_path ? await presign(p.thumb_path, 'GET', SIGNED_URL_TTL) : null,
     })),
   )
+
+  // A capa é uma das fotos da galeria: reaproveita-se o URL já assinado em vez
+  // de assinar duas vezes o mesmo objeto.
+  const cover = gallery.cover_photo_id
+    ? signed.find((p) => p.id === gallery.cover_photo_id)
+    : undefined
 
   return json({
     gallery: {
@@ -83,6 +90,12 @@ Deno.serve(async (req) => {
       clientName: gallery.client_name,
       message: gallery.message,
       downloadEnabled: gallery.download_enabled,
+      coverTitle: gallery.cover_title,
+      coverFont: gallery.cover_font ?? 'serif',
+      logoVariant: gallery.logo_variant ?? 'white',
+      // Sem capa escolhida, a primeira foto serve — uma galeria nunca abre num
+      // ecrã vazio.
+      coverUrl: cover?.url ?? signed[0]?.url ?? null,
     },
     expiresIn: SIGNED_URL_TTL,
     photos: signed,
