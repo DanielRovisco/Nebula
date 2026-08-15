@@ -67,6 +67,17 @@ export interface GalleryAccess {
   photos: SignedPhoto[]
   /** Segundos de validade dos URLs assinados, a contar da resposta. */
   expiresIn: number
+  /** Comprovativo para registar downloads. Sozinho não abre ficheiros. */
+  logToken?: string
+}
+
+export type EventKind = 'open' | 'download_all' | 'download_one'
+
+export interface GalleryEvent {
+  id: number
+  kind: EventKind
+  fileName: string | null
+  at: string
 }
 
 export type NewGallery = {

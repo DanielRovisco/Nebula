@@ -1,4 +1,4 @@
-import type { Gallery, GalleryAccess, GalleryPatch, NewGallery, Photo } from './types'
+import type { Gallery, GalleryAccess, GalleryEvent, GalleryPatch, NewGallery, Photo } from './types'
 import { asset } from '../asset'
 
 // Dados de demonstração: usam as fotos do próprio portfólio, que já estão no
@@ -18,6 +18,7 @@ const KEY = 'nebula-demo-galleries'
 interface DemoState {
   galleries: (Gallery & { password: string })[]
   photos: Photo[]
+  events: (GalleryEvent & { galleryId: string })[]
 }
 
 function seed(): DemoState {
@@ -69,13 +70,20 @@ function seed(): DemoState {
     sizeBytes: 420_000,
     sortOrder: i,
   }))
-  return { galleries, photos }
+  const agora = Date.now()
+  const events: (GalleryEvent & { galleryId: string })[] = [
+    { id: 3, galleryId: 'demo-1', kind: 'download_all', fileName: null, at: new Date(agora - 36e5 * 2).toISOString() },
+    { id: 2, galleryId: 'demo-1', kind: 'download_one', fileName: 'forest-bride.jpg', at: new Date(agora - 36e5 * 3).toISOString() },
+    { id: 1, galleryId: 'demo-1', kind: 'open', fileName: null, at: new Date(agora - 36e5 * 4).toISOString() },
+  ]
+  return { galleries, photos, events }
 }
 
 function load(): DemoState {
   try {
     const raw = sessionStorage.getItem(KEY)
-    if (raw) return JSON.parse(raw)
+    // `events` é recente: um estado gravado antes disto não o tem.
+    if (raw) return { events: [], ...JSON.parse(raw) }
   } catch { /* sessionStorage indisponível — segue com dados novos */ }
   const s = seed()
   save(s)
@@ -232,11 +240,42 @@ export const demoApi = {
     save(s)
   },
 
+  async listEvents(galleryId: string, limit = 60): Promise<GalleryEvent[]> {
+    await wait(180)
+    const s = load()
+    return s.events
+      .filter((e) => e.galleryId === galleryId)
+      .sort((a, b) => b.at.localeCompare(a.at))
+      .slice(0, limit)
+  },
+
+  async logEvent(token: string, body: Record<string, unknown>) {
+    const s = load()
+    s.events.unshift({
+      id: Date.now(),
+      galleryId: token,
+      kind: body.kind as GalleryEvent['kind'],
+      fileName: (body.fileName as string) ?? null,
+      at: new Date().toISOString(),
+    })
+    save(s)
+  },
+
   async access(slug: string, password: string): Promise<GalleryAccess> {
     await wait(500)
     const s = load()
     const g = s.galleries.find((x) => x.slug === slug && x.published && x.password === password)
     if (!g) throw new Error('invalid_credentials')
+
+    s.events.unshift({
+      id: Date.now(),
+      galleryId: g.id,
+      kind: 'open',
+      fileName: null,
+      at: new Date().toISOString(),
+    })
+    save(s)
+
     return {
       gallery: {
         id: g.id,
@@ -254,6 +293,8 @@ export const demoApi = {
           null,
       },
       expiresIn: 7200,
+      // Na demonstração o "token" é só o id da galeria — não há nada a assinar.
+      logToken: g.id,
       photos: s.photos
         .filter((p) => p.galleryId === g.id)
         .sort((a, b) => a.sortOrder - b.sortOrder)

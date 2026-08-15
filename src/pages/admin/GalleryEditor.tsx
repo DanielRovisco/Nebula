@@ -8,6 +8,7 @@ import { suggestPassword } from '../../lib/gallery/helpers'
 import { DELIVERY_EDGE } from '../../lib/gallery/api'
 import { COVER_FONTS, LOGO_VARIANTS } from '../../lib/gallery/cover'
 import { isVideo, type CoverFont, type LogoVariant } from '../../lib/gallery/types'
+import GalleryActivity from './GalleryActivity'
 
 export default function GalleryEditor() {
   const { id = '' } = useParams()
@@ -482,6 +483,9 @@ export default function GalleryEditor() {
           <span className="text-sm text-titanium/70">Permitir download das fotografias</span>
         </label>
       </section>
+
+      {/* ── Atividade ───────────────────────────────────────── */}
+      <GalleryActivity galleryId={gallery.id} />
 
       {/* ── Password ────────────────────────────────────────── */}
       <section className="mb-14 max-w-2xl">

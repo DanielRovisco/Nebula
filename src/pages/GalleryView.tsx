@@ -6,6 +6,7 @@ import Seo from '../lib/Seo'
 import { loadSession, clearSession } from '../lib/gallery/session'
 import { downloadAll, downloadOne, ZIP_WARN_BYTES, type ZipProgress } from '../lib/gallery/download'
 import { DEMO } from '../lib/gallery/config'
+import { api } from '../lib/gallery/api'
 import { isVideo, type GalleryAccess } from '../lib/gallery/types'
 import GalleryIntro from './gallery/GalleryIntro'
 import GalleryCover from './gallery/GalleryCover'
@@ -87,6 +88,7 @@ export default function GalleryView() {
     abortRef.current = new AbortController()
     try {
       await downloadAll(photos, access.gallery.title, setZipping, abortRef.current.signal)
+      if (access.logToken) api.logEvent(access.logToken, { kind: 'download_all' })
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
         setError('O download falhou a meio. Os links podem ter expirado — voltem a entrar.')
@@ -101,6 +103,13 @@ export default function GalleryView() {
     setError(null)
     try {
       await downloadOne(photos[index])
+      if (access?.logToken) {
+        api.logEvent(access.logToken, {
+          kind: 'download_one',
+          photoId: photos[index].id,
+          fileName: photos[index].fileName,
+        })
+      }
     } catch {
       setError('Não foi possível descarregar esse ficheiro. Voltem a entrar e tentem de novo.')
     }

@@ -194,6 +194,7 @@ supabase secrets set \
   R2_BUCKET=galleries
 
 supabase functions deploy gallery-access --no-verify-jwt
+supabase functions deploy gallery-log --no-verify-jwt
 supabase functions deploy admin-storage
 ```
 
@@ -274,6 +275,29 @@ link no fim.
 O acesso fica guardado no separador durante 2 horas; passado isso, volta a
 pedir a password. Os botões de download desaparecem se desligares o download
 nas definições da galeria.
+
+### Registo de atividade
+
+Cada galeria tem uma secção **Atividade** no painel, com o que o cliente fez:
+
+```
+Cliente descarregou o álbum completo        agora mesmo
+Cliente descarregou palace-dome.jpg         há 2 horas
+Cliente abriu a galeria                     há 4 horas
+```
+
+A abertura é registada pela própria `gallery-access`. Os downloads são
+registados pela `gallery-log`, que **exige o comprovativo de acesso** — um
+token HMAC assinado que a `gallery-access` entrega a quem acertou na password.
+Sem ele, com um de outra galeria, ou passadas as 2 horas, nada é escrito: é o
+que impede alguém de encher o registo com downloads inventados. O token não é
+uma credencial de acesso; sozinho não abre ficheiro nenhum.
+
+Guarda-se o que aconteceu e quando, e mais nada — sem IPs nem identificadores
+de dispositivo. Apagar a galeria apaga o registo com ela.
+
+Se o registo falhar, o download do cliente segue à mesma. Nunca vale a pena
+estragar uma entrega por causa de uma linha de log.
 
 ### Vídeos
 

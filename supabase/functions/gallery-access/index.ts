@@ -10,6 +10,7 @@
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { cors, json, presign } from '../_shared/r2.ts'
+import { signAccessToken } from '../_shared/token.ts'
 
 const SIGNED_URL_TTL = 60 * 60 * 2 // 2 horas
 
@@ -76,6 +77,13 @@ Deno.serve(async (req) => {
     })),
   )
 
+  // A abertura da galeria fica registada. Se falhar, não é motivo para negar
+  // o acesso a quem acertou na password.
+  admin
+    .from('gallery_events')
+    .insert({ gallery_id: gallery.id, kind: 'open' })
+    .then(({ error }) => error && console.error('log open', error))
+
   // A capa é uma das fotos da galeria: reaproveita-se o URL já assinado em vez
   // de assinar duas vezes o mesmo objeto.
   const cover = gallery.cover_photo_id
@@ -98,6 +106,9 @@ Deno.serve(async (req) => {
       coverUrl: cover?.url ?? signed[0]?.url ?? null,
     },
     expiresIn: SIGNED_URL_TTL,
+    // Comprovativo para o cliente poder registar downloads. Sozinho não abre
+    // ficheiro nenhum.
+    logToken: await signAccessToken(gallery.id, SIGNED_URL_TTL),
     photos: signed,
   })
 })

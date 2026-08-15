@@ -191,6 +191,34 @@ end $$;
 revoke all on function verify_gallery_password(text, text) from public, anon, authenticated;
 grant execute on function verify_gallery_password(text, text) to service_role;
 
+-- ─── Registo de atividade ───────────────────────────────────────────────────
+-- O que o cliente fez na galeria dele. Serve para o fotógrafo saber se a
+-- entrega foi vista e descarregada — não para perfilar ninguém: guarda-se o
+-- que aconteceu e quando, e mais nada.
+
+create table if not exists gallery_events (
+  id bigserial primary key,
+  gallery_id uuid not null references galleries(id) on delete cascade,
+  -- 'open' | 'download_all' | 'download_one'
+  kind text not null check (kind in ('open', 'download_all', 'download_one')),
+  -- Nome legível do ficheiro, para o registo continuar a fazer sentido mesmo
+  -- depois de a foto ser apagada.
+  file_name text,
+  photo_id uuid,
+  at timestamptz not null default now()
+);
+
+create index if not exists gallery_events_idx on gallery_events (gallery_id, at desc);
+
+alter table gallery_events enable row level security;
+
+drop policy if exists "admin lê eventos" on gallery_events;
+create policy "admin lê eventos" on gallery_events
+  for select to authenticated using (true);
+
+-- Ninguém escreve aqui a partir do browser: os eventos entram pela Edge
+-- Function, que exige o comprovativo de acesso emitido depois da password.
+
 -- ─── Storage ────────────────────────────────────────────────────────────────
 -- As fotografias NÃO vivem no Supabase: vivem num bucket privado do
 -- Cloudflare R2, que tem 10 GB gratuitos e não cobra tráfego de saída — e o

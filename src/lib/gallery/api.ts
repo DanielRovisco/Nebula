@@ -1,6 +1,6 @@
 import { DEMO, anonKey, functionsUrl, supabase } from './config'
 import { demoApi } from './demo'
-import type { Gallery, GalleryAccess, GalleryPatch, NewGallery, Photo } from './types'
+import type { Gallery, GalleryAccess, GalleryEvent, GalleryPatch, NewGallery, Photo } from './types'
 
 const THUMB_EDGE = 640
 const THUMB_QUALITY = 0.78
@@ -418,6 +418,37 @@ const realApi = {
     await Promise.all(
       orderedIds.map((id, i) => sb.from('photos').update({ sort_order: i }).eq('id', id)),
     )
+  },
+
+  async listEvents(galleryId: string, limit = 60): Promise<GalleryEvent[]> {
+    const { data, error } = await supabase()
+      .from('gallery_events')
+      .select('id, kind, file_name, at')
+      .eq('gallery_id', galleryId)
+      .order('at', { ascending: false })
+      .limit(limit)
+    if (error) throw new Error(error.message)
+    return (data ?? []).map((r) => ({
+      id: r.id as number,
+      kind: r.kind as GalleryEvent['kind'],
+      fileName: (r.file_name as string) ?? null,
+      at: r.at as string,
+    }))
+  },
+
+  async logEvent(token: string, body: Record<string, unknown>) {
+    // Best-effort: o registo nunca deve estragar o download do cliente.
+    try {
+      await fetch(functionsUrl('gallery-log'), {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          apikey: anonKey(),
+          Authorization: `Bearer ${anonKey()}`,
+        },
+        body: JSON.stringify({ token, ...body }),
+      })
+    } catch { /* ignora */ }
   },
 
   async access(slug: string, password: string): Promise<GalleryAccess> {
