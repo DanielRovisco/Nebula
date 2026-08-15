@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { api } from '../../lib/gallery/api'
 import { CONFIGURED, DEMO } from '../../lib/gallery/config'
 
@@ -76,7 +76,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
       <div className="min-h-screen flex items-center justify-center container-px py-24">
         <div className="w-full max-w-sm">
           <span className="label-sm">NEBULA</span>
-          <h1 className="mt-3 text-3xl">Painel de galerias</h1>
+          <h1 className="mt-3 text-3xl">Painel</h1>
 
           {DEMO && (
             <div className="mt-6 border border-amber-400/30 bg-amber-400/[0.07] rounded-xl p-4 text-xs text-amber-100/80 leading-relaxed">
@@ -146,7 +146,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
       <header className="container-px flex items-center justify-between mb-12 flex-wrap gap-4">
         <Link to="/admin" className="flex items-baseline gap-3">
           <span className="text-lg font-semibold tracking-tight">NEBULA</span>
-          <span className="label-sm">Galerias</span>
+          <span className="label-sm">Painel</span>
         </Link>
         <div className="flex items-center gap-2">
           <Link
@@ -163,6 +163,30 @@ export default function AdminShell({ children }: { children: ReactNode }) {
           </button>
         </div>
       </header>
+
+      {/* Separadores: as galerias de cliente e o site são trabalhos diferentes. */}
+      <nav className="container-px mb-10 flex gap-1 border-b border-white/[0.08]">
+        {[
+          { to: '/admin', label: 'Galerias', end: true },
+          { to: '/admin/site', label: 'Site', end: false },
+        ].map((t) => (
+          <NavLink
+            key={t.to}
+            to={t.to}
+            end={t.end}
+            className={({ isActive }) =>
+              `px-5 py-3 text-[11px] uppercase tracking-[0.18em] border-b-2 -mb-px transition-colors ${
+                isActive
+                  ? 'border-titanium text-titanium'
+                  : 'border-transparent text-titanium/40 hover:text-titanium/70'
+              }`
+            }
+          >
+            {t.label}
+          </NavLink>
+        ))}
+      </nav>
+
       {DEMO && (
         <div className="container-px mb-8">
           <div className="border border-amber-400/30 bg-amber-400/[0.07] rounded-xl p-3 text-xs text-amber-100/80">

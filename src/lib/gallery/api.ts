@@ -2,12 +2,12 @@ import { DEMO, anonKey, functionsUrl, supabase } from './config'
 import { demoApi } from './demo'
 import type { Gallery, GalleryAccess, GalleryEvent, GalleryPatch, NewGallery, Photo } from './types'
 
-const THUMB_EDGE = 640
-const THUMB_QUALITY = 0.78
+export const THUMB_EDGE = 640
+export const THUMB_QUALITY = 0.78
 
 /** Lado maior a que as fotos são reduzidas quando a redução está ligada. */
 export const DELIVERY_EDGE = 3000
-const DELIVERY_QUALITY = 0.88
+export const DELIVERY_QUALITY = 0.88
 
 interface Resized {
   blob: Blob
@@ -24,7 +24,7 @@ interface Resized {
  * ocupa 3 a 5 vezes menos do que o original da máquina, sem diferença visível
  * numa galeria de cliente, e é o que faz 10 GB chegarem para uma temporada.
  */
-async function resize(
+export async function resize(
   file: File,
   maxEdge: number,
   mime: string,
@@ -48,7 +48,7 @@ async function resize(
 }
 
 /** Chama uma Edge Function com o token da sessão do admin. */
-async function callAdmin<T>(body: Record<string, unknown>): Promise<T> {
+export async function callAdmin<T>(body: Record<string, unknown>): Promise<T> {
   const { data } = await supabase().auth.getSession()
   const token = data.session?.access_token
   if (!token) throw new Error('Sessão expirada. Volta a entrar.')
@@ -70,7 +70,7 @@ async function callAdmin<T>(body: Record<string, unknown>): Promise<T> {
 }
 
 /** Envia um blob para o R2 usando um PUT pré-assinado. */
-async function putToR2(url: string, blob: Blob, contentType: string) {
+export async function putToR2(url: string, blob: Blob, contentType: string) {
   const res = await fetch(url, {
     method: 'PUT',
     headers: { 'content-type': contentType },

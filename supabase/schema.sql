@@ -219,6 +219,85 @@ create policy "admin lê eventos" on gallery_events
 -- Ninguém escreve aqui a partir do browser: os eventos entram pela Edge
 -- Function, que exige o comprovativo de acesso emitido depois da password.
 
+-- ─── Conteúdo do site ───────────────────────────────────────────────────────
+-- Ao contrário das galerias de cliente, isto é público: o site lê-o sem estar
+-- autenticado. Só o admin escreve.
+--
+-- As imagens do portfólio vivem num bucket R2 PÚBLICO (separado do privado das
+-- galerias) — uma página pública não pode depender de URLs assinados, que
+-- expiram e não são cacheáveis nem indexáveis.
+
+create table if not exists site_categories (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique,
+  label text not null,
+  sort_order int not null default 0
+);
+
+create table if not exists site_photos (
+  id uuid primary key default gen_random_uuid(),
+  category_id uuid references site_categories(id) on delete set null,
+  -- Chave no bucket público. O URL é <VITE_R2_PUBLIC_URL>/<storage_key>.
+  storage_key text not null,
+  thumb_key text,
+  -- Texto alternativo: numa página pública é acessibilidade e é SEO.
+  alt text not null default '',
+  width int,
+  height int,
+  -- Fotos altas ocupam duas linhas na grelha, como no portfólio atual.
+  tall boolean not null default false,
+  sort_order int not null default 0,
+  published boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists site_photos_idx on site_photos (sort_order);
+
+-- Textos e números soltos do site (estatísticas, contactos). Um sítio só, em
+-- vez de uma tabela por cada coisinha editável.
+create table if not exists site_settings (
+  key text primary key,
+  value jsonb not null,
+  updated_at timestamptz not null default now()
+);
+
+alter table site_categories enable row level security;
+alter table site_photos enable row level security;
+alter table site_settings enable row level security;
+
+-- Leitura pública: é isto que o site mostra a quem o visita.
+drop policy if exists "todos leem categorias" on site_categories;
+create policy "todos leem categorias" on site_categories
+  for select to anon, authenticated using (true);
+
+drop policy if exists "todos leem fotos do site" on site_photos;
+create policy "todos leem fotos do site" on site_photos
+  for select to anon, authenticated using (published);
+
+drop policy if exists "todos leem definicoes" on site_settings;
+create policy "todos leem definicoes" on site_settings
+  for select to anon, authenticated using (true);
+
+-- Escrita só para quem fez login no painel.
+drop policy if exists "admin escreve categorias" on site_categories;
+create policy "admin escreve categorias" on site_categories
+  for all to authenticated using (true) with check (true);
+
+drop policy if exists "admin escreve fotos do site" on site_photos;
+create policy "admin escreve fotos do site" on site_photos
+  for all to authenticated using (true) with check (true);
+
+drop policy if exists "admin escreve definicoes" on site_settings;
+create policy "admin escreve definicoes" on site_settings
+  for all to authenticated using (true) with check (true);
+
+-- Categorias de arranque, iguais às que o site já mostra.
+insert into site_categories (slug, label, sort_order) values
+  ('casamentos', 'Casamentos', 1),
+  ('maternidade', 'Maternidade', 2),
+  ('eventos', 'Eventos', 3)
+on conflict (slug) do nothing;
+
 -- ─── Storage ────────────────────────────────────────────────────────────────
 -- As fotografias NÃO vivem no Supabase: vivem num bucket privado do
 -- Cloudflare R2, que tem 10 GB gratuitos e não cobra tráfego de saída — e o

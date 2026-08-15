@@ -13,7 +13,7 @@
 // aqui, e a verificação abaixo confirma que é mesmo um utilizador válido.)
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { cors, deleteObjects, json, presign } from '../_shared/r2.ts'
+import { cors, deleteObjects, json, presign, type BucketKind } from '../_shared/r2.ts'
 
 const UPLOAD_TTL = 60 * 15 // 15 min para começar o upload
 
@@ -40,6 +40,9 @@ Deno.serve(async (req) => {
     return json({ error: 'bad_request' }, 400)
   }
 
+  // 'public' escreve no bucket das imagens do site; por omissão, o privado.
+  const bucket: BucketKind = body.bucket === 'public' ? 'public' : 'private'
+
   if (body.action === 'upload-url') {
     const galleryId = String(body.galleryId ?? '')
     const fileName = String(body.fileName ?? '')
@@ -56,14 +59,14 @@ Deno.serve(async (req) => {
         ? `${galleryId}/thumbs/${stamp}.webp`
         : `${galleryId}/${stamp}-${safe}`
 
-    const url = await presign(key, 'PUT', UPLOAD_TTL, { 'content-type': contentType })
+    const url = await presign(key, 'PUT', UPLOAD_TTL, { 'content-type': contentType }, bucket)
     return json({ key, url })
   }
 
   if (body.action === 'delete') {
     const keys = Array.isArray(body.keys) ? body.keys.map(String) : []
     if (!keys.length) return json({ deleted: 0, failed: [] })
-    const failed = await deleteObjects(keys)
+    const failed = await deleteObjects(keys, bucket)
     return json({ deleted: keys.length - failed.length, failed })
   }
 

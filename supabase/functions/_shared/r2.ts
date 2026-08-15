@@ -10,7 +10,16 @@
 import { AwsClient } from 'https://esm.sh/aws4fetch@1.0.20'
 
 const accountId = Deno.env.get('R2_ACCOUNT_ID')!
-const bucket = Deno.env.get('R2_BUCKET') ?? 'galleries'
+
+// Dois buckets com propósitos opostos: as galerias de cliente são privadas e
+// só se abrem com URLs assinados; as imagens do site são públicas, porque uma
+// página pública não pode depender de links que expiram.
+const BUCKETS = {
+  private: Deno.env.get('R2_BUCKET') ?? 'galleries',
+  public: Deno.env.get('R2_PUBLIC_BUCKET') ?? 'nebula-site',
+} as const
+
+export type BucketKind = keyof typeof BUCKETS
 
 export const R2_ENDPOINT = `https://${accountId}.r2.cloudflarestorage.com`
 
@@ -21,8 +30,8 @@ const client = new AwsClient({
   region: 'auto',
 })
 
-export const objectUrl = (key: string) =>
-  `${R2_ENDPOINT}/${bucket}/${key.split('/').map(encodeURIComponent).join('/')}`
+export const objectUrl = (key: string, kind: BucketKind = 'private') =>
+  `${R2_ENDPOINT}/${BUCKETS[kind]}/${key.split('/').map(encodeURIComponent).join('/')}`
 
 /**
  * URL assinado para uma operação, válido por `expiresIn` segundos.
@@ -35,8 +44,9 @@ export async function presign(
   method: 'GET' | 'PUT' | 'DELETE',
   expiresIn: number,
   headers: Record<string, string> = {},
+  kind: BucketKind = 'private',
 ): Promise<string> {
-  const url = new URL(objectUrl(key))
+  const url = new URL(objectUrl(key, kind))
   url.searchParams.set('X-Amz-Expires', String(expiresIn))
   const signed = await client.sign(url.toString(), {
     method,
@@ -47,12 +57,12 @@ export async function presign(
 }
 
 /** Apaga objetos. Erros por objeto não travam os restantes. */
-export async function deleteObjects(keys: string[]): Promise<string[]> {
+export async function deleteObjects(keys: string[], kind: BucketKind = 'private'): Promise<string[]> {
   const failed: string[] = []
   await Promise.all(
     keys.map(async (key) => {
       try {
-        const res = await client.fetch(objectUrl(key), { method: 'DELETE' })
+        const res = await client.fetch(objectUrl(key, kind), { method: 'DELETE' })
         // 404 conta como sucesso: o objetivo era não existir.
         if (!res.ok && res.status !== 404) failed.push(key)
       } catch {

@@ -24,6 +24,7 @@ const GalleryView = lazy(() => import('./pages/GalleryView'))
 const AdminShell = lazy(() => import('./pages/admin/AdminShell'))
 const GalleryList = lazy(() => import('./pages/admin/GalleryList'))
 const GalleryEditor = lazy(() => import('./pages/admin/GalleryEditor'))
+const SiteAdmin = lazy(() => import('./pages/admin/SiteAdmin'))
 
 const Loading = () => <div className="min-h-screen" />
 
@@ -39,6 +40,7 @@ export default function App() {
         <AdminShell>
           <Routes>
             <Route path="/admin" element={<GalleryList />} />
+            <Route path="/admin/site" element={<SiteAdmin />} />
             <Route path="/admin/:id" element={<GalleryEditor />} />
           </Routes>
         </AdminShell>

@@ -84,6 +84,34 @@ O site respeita `prefers-reduced-motion`: com essa preferência ativa, o scroll
 suave (Lenis), o parallax do hero, os reveals e as transições de página são
 desligados e o conteúdo é entregue estático.
 
+## Painel de administração
+
+`/admin` tem dois separadores:
+
+- **Galerias** — as entregas privadas a clientes (ver secção seguinte).
+- **Site** — o conteúdo público: fotos e categorias do portfólio, números da
+  página inicial e a nota do hero.
+
+### Separador Site
+
+O que se muda aqui aparece no site **sem deploy**. Requer um segundo bucket R2,
+este **público** (as imagens do site não podem depender de links assinados, que
+expiram e não são cacheáveis nem indexáveis):
+
+1. R2 → Create bucket, ex. `nebula-site`. Ativar **Public access** (r2.dev ou
+   domínio próprio) e copiar o URL público.
+2. `supabase secrets set R2_PUBLIC_BUCKET=nebula-site`
+3. No site: `VITE_R2_PUBLIC_URL=https://<url-publico-do-bucket>`
+
+**Rede de segurança:** enquanto não houver fotos carregadas — ou se o Supabase
+estiver a dormir, em baixo, ou o bucket por configurar — o portfólio continua a
+mostrar as fotos que estão no código. O site nunca aparece vazio, e o conteúdo
+do código é renderizado no primeiro frame, sem esperar pela rede.
+
+O conteúdo público é lido por `fetch` direto ao PostgREST, não pelo SDK do
+Supabase: importar o SDK na página de portfólio arrastava 215 kB de JavaScript
+para uma página de marketing. O SDK fica reservado ao painel.
+
 ## Galerias privadas
 
 > **Estado atual: o site publicado está em modo de demonstração.**

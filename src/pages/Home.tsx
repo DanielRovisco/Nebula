@@ -8,6 +8,7 @@ import CountUp from '../lib/CountUp'
 import Seo from '../lib/Seo'
 import { asset } from '../lib/asset'
 import { CONTACT, absoluteUrl } from '../lib/site'
+import { useSiteSettings } from '../lib/site-content/useSiteContent'
 
 const SERVICES = [
   {
@@ -31,12 +32,6 @@ const SERVICES = [
     alt: 'Bebé rodeado de balões durante uma festa de família',
     imgPos: 'object-[50%_15%]',
   },
-]
-
-const STATS: { value: string; countTo?: number; suffix?: string; label: string }[] = [
-  { value: '20+', countTo: 20, suffix: '+', label: 'Histórias contadas' },
-  { value: '3', label: 'Criadores visuais' },
-  { value: '360°', label: 'Foto, vídeo e criação de conteúdo' },
 ]
 
 const GALLERY = [
@@ -73,6 +68,9 @@ const HEADLINE = [
 
 export default function Home() {
   const reduced = useReducedMotion()
+  // Números e nota do hero vêm do painel, com os valores do código como ponto
+  // de partida — a página abre cheia sem esperar pela rede.
+  const { stats: STATS, heroNote } = useSiteSettings()
   const heroRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
   const imgScale = useTransform(scrollYProgress, [0, 1], [1, 1.18])
@@ -148,7 +146,7 @@ export default function Home() {
               Marcar Sessão
               <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
             </Link>
-            <span className="label-sm opacity-70">Datas 2026 disponíveis</span>
+            <span className="label-sm opacity-70">{heroNote}</span>
           </motion.div>
         </motion.div>
 
