@@ -348,6 +348,8 @@ export const en: Dict = {
     unchoose: 'Remove from your choices',
     close: 'Close',
     prev: 'Previous',
+    slideshow: 'Slideshow',
+    stopSlideshow: 'Stop slideshow',
     next: 'Next',
     zipWarning:
       'This gallery is large and the ZIP is assembled in your device memory, which can fail on phones. Would you like to download it anyway?',

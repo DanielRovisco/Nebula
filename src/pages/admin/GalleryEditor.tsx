@@ -4,6 +4,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Play, Star, Trash2, Upload } from
 import { api } from '../../lib/gallery/api'
 import type { Gallery, Photo } from '../../lib/gallery/types'
 import { SITE_URL } from '../../lib/site'
+import { saveSession } from '../../lib/gallery/session'
 import { suggestPassword } from '../../lib/gallery/helpers'
 import { DELIVERY_EDGE } from '../../lib/gallery/api'
 import { COVER_FONTS, LOGO_VARIANTS } from '../../lib/gallery/cover'
@@ -21,6 +22,7 @@ export default function GalleryEditor() {
   const [saving, setSaving] = useState(false)
   const [upload, setUpload] = useState<{ done: number; total: number } | null>(null)
   const [newPassword, setNewPassword] = useState('')
+  const [preparando, setPreparando] = useState(false)
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   // Ligado por omissão: uma galeria de entrega não precisa da resolução da
   // máquina, e reduzir é o que faz o armazenamento gratuito chegar.
@@ -130,6 +132,74 @@ export default function GalleryEditor() {
     setDragIndex(null)
   }
 
+  /**
+   * Abre a galeria exatamente como o cliente a vê, sem ter de saber a password
+   * dele nem de a mudar para espreitar.
+   *
+   * Monta a mesma sessão que o acesso normal criaria — com URLs assinados
+   * pedidos à Edge Function, que é quem tem as credenciais do R2 — e entrega-a
+   * ao separador que abre a seguir. Como não há comprovativo de acesso, nada do
+   * que se faça na pré-visualização entra no registo nem nas escolhas do
+   * cliente: o que estamos a ver é a entrega dele, não a nossa visita.
+   */
+  async function preVisualizar() {
+    if (!gallery) return
+    setPreparando(true)
+    setError(null)
+    try {
+      const caminhos = photos.flatMap((f) => [f.storagePath, f.thumbPath].filter(Boolean) as string[])
+      const urls = await api.readUrls(caminhos)
+      const porCaminho = new Map(caminhos.map((c, i) => [c, urls[i]]))
+
+      const assinadas = photos.map((f) => ({
+        id: f.id,
+        fileName: f.fileName,
+        contentType: f.contentType,
+        width: f.width,
+        height: f.height,
+        sizeBytes: f.sizeBytes,
+        url: porCaminho.get(f.storagePath) ?? null,
+        thumbUrl: f.thumbPath ? porCaminho.get(f.thumbPath) ?? null : null,
+      }))
+      const capa = gallery.coverPhotoId
+        ? assinadas.find((f) => f.id === gallery.coverPhotoId)
+        : undefined
+
+      saveSession(gallery.slug, {
+        gallery: {
+          id: gallery.id,
+          slug: gallery.slug,
+          title: gallery.title,
+          clientName: gallery.clientName,
+          message: gallery.message,
+          downloadEnabled: gallery.downloadEnabled,
+          coverTitle: gallery.coverTitle,
+          coverFont: gallery.coverFont,
+          logoVariant: gallery.logoVariant,
+          coverUrl: capa?.url ?? assinadas[0]?.url ?? null,
+          expiresAt: gallery.expiresAt,
+          coverIsVideo: Boolean((capa ?? assinadas[0])?.contentType?.startsWith('video/')),
+        },
+        photos: assinadas,
+        favorites: [],
+        expiresIn: 7200,
+        // Sem logToken: sem ele não se marca nem se regista nada.
+      })
+
+      // A introdução aparece uma vez por sessão; numa pré-visualização queremos
+      // vê-la sempre, que é justamente o que estamos a ir conferir.
+      try {
+        sessionStorage.removeItem(`nebula-intro-${gallery.slug}`)
+      } catch { /* sem sessionStorage a introdução aparece na mesma */ }
+
+      window.open(`${import.meta.env.BASE_URL}galeria/${gallery.slug}/ver`.replace('//', '/'), '_blank')
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setPreparando(false)
+    }
+  }
+
   if (!gallery) {
     return (
       <div className="container-px">
@@ -160,6 +230,13 @@ export default function GalleryEditor() {
       <div className="flex items-end justify-between flex-wrap gap-4 mb-3">
         <h1 className="text-3xl sm:text-4xl">{gallery.title}</h1>
         <div className="flex items-center gap-2">
+          <button
+            onClick={preVisualizar}
+            disabled={preparando}
+            className="px-6 py-3 rounded-full text-[11px] uppercase tracking-[0.18em] border border-white/20 text-titanium/70 hover:border-white/40 transition-all min-h-[44px] active:scale-95 disabled:opacity-50"
+          >
+            {preparando ? 'A preparar…' : 'Ver como o cliente'}
+          </button>
           <button
             onClick={() => patch({ published: !gallery.published })}
             disabled={saving}

@@ -30,13 +30,35 @@ export default function GalleryCover({ gallery, onEnter }: Props) {
     <section ref={ref} className="relative h-[100svh] overflow-hidden">
       {gallery.coverUrl ? (
         <motion.div style={reduced ? undefined : { scale }} className="absolute inset-0">
-          <img
-            src={gallery.coverUrl}
-            alt=""
-            // É o elemento de LCP desta página: nada de lazy.
-            fetchPriority="high"
-            className="w-full h-full object-cover"
-          />
+          {/*
+            Capa em vídeo: sem som, em ciclo e sem controlos — é cenário, não
+            conteúdo para ver. Quem pediu menos movimento no sistema recebe o
+            primeiro fotograma parado, porque um vídeo em ciclo é exatamente o
+            tipo de movimento de que essa preferência trata.
+          */}
+          {gallery.coverIsVideo ? (
+            <video
+              src={gallery.coverUrl}
+              // Sem `autoPlay` nem `loop` para quem pediu menos movimento: fica
+              // o primeiro fotograma parado. Pôr um <img> com o URL de um vídeo
+              // dava uma capa em branco, que era o que acontecia antes.
+              autoPlay={!reduced}
+              loop={!reduced}
+              muted
+              playsInline
+              preload="metadata"
+              aria-hidden="true"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <img
+              src={gallery.coverUrl}
+              alt=""
+              // É o elemento de LCP desta página: nada de lazy.
+              fetchPriority="high"
+              className="w-full h-full object-cover"
+            />
+          )}
         </motion.div>
       ) : (
         <div className="absolute inset-0 bg-gray-dark" />

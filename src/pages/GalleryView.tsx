@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Download, Heart, Package, Play, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download, Heart, Package, Pause, Play, X } from 'lucide-react'
 import Seo from '../lib/Seo'
 import { loadSession, clearSession } from '../lib/gallery/session'
 import { ROUTES } from '../lib/i18n/routes'
@@ -88,11 +88,27 @@ export default function GalleryView() {
     setShowIntro(false)
   }, [slug])
 
-  const close = useCallback(() => setOpen(null), [])
+  // Apresentação: avança sozinha de 4 em 4 segundos enquanto o visualizador
+  // estiver aberto. Para em qualquer vídeo — deixar um filme a ser interrompido
+  // a meio por um temporizador não é uma apresentação, é uma avaria.
+  const [slideshow, setSlideshow] = useState(false)
+
+  const close = useCallback(() => {
+    setSlideshow(false)
+    setOpen(null)
+  }, [])
   const step = useCallback(
     (delta: number) => setOpen((i) => (i === null ? null : (i + delta + photos.length) % photos.length)),
     [photos.length],
   )
+
+  useEffect(() => {
+    if (!slideshow || open === null) return
+    const atual = photos[open]
+    if (atual && isVideo(atual)) return
+    const t = setTimeout(() => step(1), 4000)
+    return () => clearTimeout(t)
+  }, [slideshow, open, photos, step])
 
   // Navegação por teclado no lightbox.
   useEffect(() => {
@@ -433,6 +449,16 @@ export default function GalleryView() {
                 {(open ?? 0) + 1} / {photos.length}
               </span>
               <div className="flex items-center gap-1">
+                {photos.length > 1 && (
+                  <button
+                    onClick={() => setSlideshow((v) => !v)}
+                    aria-pressed={slideshow}
+                    aria-label={slideshow ? t.gallery.stopSlideshow : t.gallery.slideshow}
+                    className={`p-3 transition-colors ${slideshow ? 'text-titanium' : 'text-titanium/60 hover:text-titanium'}`}
+                  >
+                    {slideshow ? <Pause size={20} /> : <Play size={20} />}
+                  </button>
+                )}
                 <button
                   onClick={() => alternarFavorita(current.id)}
                   aria-pressed={favoritas.has(current.id)}

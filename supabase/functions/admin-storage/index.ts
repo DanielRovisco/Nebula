@@ -8,6 +8,11 @@
 //   { action: 'delete', keys: [...] }
 //     → apaga objetos do R2.
 //
+//   { action: 'read-urls', keys: [...] }
+//     → devolve GETs pré-assinados de curta duração. Serve para o painel
+//       pré-visualizar uma galeria exatamente como o cliente a vê, sem ter de
+//       saber a password dele.
+//
 // Deploy:  supabase functions deploy admin-storage
 // (SEM --no-verify-jwt: o gateway do Supabase valida o token antes de chegar
 // aqui, e a verificação abaixo confirma que é mesmo um utilizador válido.)
@@ -16,6 +21,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { cors, deleteObjects, json, presign, type BucketKind } from '../_shared/r2.ts'
 
 const UPLOAD_TTL = 60 * 15 // 15 min para começar o upload
+const READ_TTL = 60 * 60 * 2 // 2h, igual ao que o cliente recebe
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
@@ -61,6 +67,15 @@ Deno.serve(async (req) => {
 
     const url = await presign(key, 'PUT', UPLOAD_TTL, { 'content-type': contentType }, bucket)
     return json({ key, url })
+  }
+
+  if (body.action === 'read-urls') {
+    const keys = Array.isArray(body.keys) ? body.keys.map(String) : []
+    // Limite defensivo: uma galeria são centenas de ficheiros, não milhares, e
+    // assinar sem tecto era um convite a usar isto como oráculo de URLs.
+    if (!keys.length || keys.length > 1000) return json({ error: 'bad_request' }, 400)
+    const urls = await Promise.all(keys.map((k) => presign(k, 'GET', READ_TTL, undefined, bucket)))
+    return json({ urls })
   }
 
   if (body.action === 'delete') {

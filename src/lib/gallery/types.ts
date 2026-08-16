@@ -65,6 +65,8 @@ export interface GalleryAccess {
     coverUrl: string | null
     /** Data em que a galeria fecha. Null = sem prazo. */
     expiresAt?: string | null
+    /** A capa é um vídeo e deve ser reproduzida em ciclo. */
+    coverIsVideo?: boolean
   }
   photos: SignedPhoto[]
   /** Ids das fotografias que o cliente já marcou como favoritas. */

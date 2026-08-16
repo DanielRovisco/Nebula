@@ -264,6 +264,17 @@ export const demoApi = {
     save(s)
   },
 
+  async storageUsed(): Promise<number> {
+    await wait(120)
+    return load().photos.reduce((soma, p) => soma + (p.sizeBytes ?? 0), 0)
+  },
+
+  async readUrls(keys: string[]): Promise<string[]> {
+    // Na demonstração os "caminhos" já são URLs locais.
+    await wait(80)
+    return keys
+  },
+
   async listFavorites(galleryId: string): Promise<string[]> {
     await wait(150)
     return load().favorites?.[galleryId] ?? []
@@ -310,6 +321,9 @@ export const demoApi = {
           s.photos.find((p) => p.galleryId === g.id)?.storagePath ??
           null,
         expiresAt: g.expiresAt,
+        coverIsVideo: Boolean(
+          s.photos.find((p) => p.id === g.coverPhotoId)?.contentType?.startsWith('video/'),
+        ),
       },
       expiresIn: 7200,
       // Na demonstração o "token" é só o id da galeria — não há nada a assinar.

@@ -6,17 +6,26 @@ import type { Gallery } from '../../lib/gallery/types'
 import { SITE_URL } from '../../lib/site'
 import NewGalleryForm from './NewGalleryForm'
 
+/** 10 GB é o que o plano gratuito do Cloudflare R2 dá. */
+const LIMITE_BYTES = 10 * 1024 ** 3
+
+const gb = (bytes: number) => (bytes / 1024 ** 3).toFixed(bytes > 1024 ** 3 ? 1 : 2)
+
 export default function GalleryList() {
   const [galleries, setGalleries] = useState<Gallery[] | null>(null)
+  const [usado, setUsado] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
 
-  const refresh = () =>
+  const refresh = () => {
     api
       .listGalleries()
       .then(setGalleries)
       .catch((e) => setError((e as Error).message))
+    // O espaço é informação secundária: se falhar, não estraga a lista.
+    api.storageUsed().then(setUsado).catch(() => setUsado(null))
+  }
 
   useEffect(() => {
     refresh()
@@ -40,6 +49,18 @@ export default function GalleryList() {
           <h1 className="text-3xl sm:text-4xl">Galerias</h1>
           <p className="text-sm text-titanium/45 mt-2">
             {galleries ? `${galleries.length} no total` : 'A carregar…'}
+            {usado !== null && (
+              <>
+                {' · '}
+                {/*
+                  Amarelo a partir dos 80%: é onde ainda dá para agir com calma,
+                  apagando galerias antigas em vez de a meio de uma entrega.
+                */}
+                <span className={usado / LIMITE_BYTES > 0.8 ? 'text-amber-300/80' : ''}>
+                  {gb(usado)} GB de {LIMITE_BYTES / 1024 ** 3} GB usados
+                </span>
+              </>
+            )}
           </p>
         </div>
         <button

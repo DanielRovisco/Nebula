@@ -436,6 +436,29 @@ const realApi = {
     }))
   },
 
+  /**
+   * Bytes ocupados pelas fotografias de todas as galerias.
+   *
+   * Somado aqui e não na base de dados porque não há função agregada exposta —
+   * e algumas centenas de linhas com um número cada são um pedido barato.
+   */
+  async storageUsed(): Promise<number> {
+    const { data, error } = await supabase().from('photos').select('size_bytes')
+    if (error) throw new Error(error.message)
+    return (data ?? []).reduce((soma, r) => soma + ((r.size_bytes as number) ?? 0), 0)
+  },
+
+  /**
+   * URLs de leitura para o painel pré-visualizar a galeria como o cliente a vê.
+   * Passa pela Edge Function porque as credenciais do R2 nunca chegam ao
+   * browser — nem ao do admin.
+   */
+  async readUrls(keys: string[]): Promise<string[]> {
+    if (keys.length === 0) return []
+    const { urls } = await callAdmin<{ urls: string[] }>({ action: 'read-urls', keys })
+    return urls
+  },
+
   /** Ids das fotografias marcadas pelo cliente — lido no painel. */
   async listFavorites(galleryId: string): Promise<string[]> {
     const { data, error } = await supabase()

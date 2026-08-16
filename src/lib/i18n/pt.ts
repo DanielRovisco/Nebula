@@ -341,6 +341,8 @@ export const pt = {
     unchoose: 'Retirar das escolhidas',
     close: 'Fechar',
     prev: 'Anterior',
+    slideshow: 'Apresentação',
+    stopSlideshow: 'Parar apresentação',
     next: 'Seguinte',
     zipWarning:
       'Esta galeria é grande e o ZIP é montado na memória do dispositivo, o que pode falhar em telemóveis. Preferem descarregar assim mesmo?',

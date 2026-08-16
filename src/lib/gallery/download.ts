@@ -1,14 +1,50 @@
 import { zip } from 'fflate'
 import type { SignedPhoto } from './types'
 
+/**
+ * Busca com nova tentativa.
+ *
+ * Numa galeria de 300 ficheiros e numa ligação de telemóvel, uma falha isolada
+ * é quase certa — e sem isto essa falha deitava por terra o download inteiro,
+ * já com centenas de megabytes transferidos. Três tentativas, com espera a
+ * dobrar, resolvem a esmagadora maioria delas.
+ */
+async function fetchComRetry(url: string, signal?: AbortSignal, tentativas = 3): Promise<Response> {
+  let ultimoErro: unknown
+  for (let i = 0; i < tentativas; i++) {
+    if (signal?.aborted) throw new DOMException('Cancelado', 'AbortError')
+    try {
+      const res = await fetch(url, { signal })
+      if (res.ok) return res
+      // 4xx não melhora à segunda: o URL assinado expirou ou nunca foi válido.
+      if (res.status >= 400 && res.status < 500) throw new Error(`HTTP ${res.status}`)
+      ultimoErro = new Error(`HTTP ${res.status}`)
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') throw e
+      ultimoErro = e
+    }
+    await new Promise((r) => setTimeout(r, 500 * 2 ** i))
+  }
+  throw ultimoErro instanceof Error ? ultimoErro : new Error('Falha de rede.')
+}
+
 /** Descarrega um ficheiro único a partir de um URL assinado. */
 export async function downloadOne(photo: SignedPhoto) {
   if (!photo.url) throw new Error('Foto indisponível.')
-  const res = await fetch(photo.url)
-  if (!res.ok) throw new Error('Não foi possível descarregar a foto.')
+  const res = await fetchComRetry(photo.url)
   const blob = await res.blob()
   triggerSave(blob, photo.fileName)
 }
+
+/**
+ * O que já foi transferido nesta visita, por URL.
+ *
+ * Se o download falhar a meio e a pessoa tentar outra vez, os ficheiros já
+ * obtidos não voltam a ser pedidos — recomeça-se de onde ficou em vez de do
+ * princípio. Vive só em memória: fechar o separador limpa tudo, o que também
+ * impede a galeria inteira de ficar guardada sem ninguém pedir.
+ */
+const jaObtidos = new Map<string, Uint8Array>()
 
 export interface ZipProgress {
   done: number
@@ -45,9 +81,13 @@ export async function downloadAll(
   for (const photo of photos) {
     if (signal?.aborted) throw new DOMException('Cancelado', 'AbortError')
     if (!photo.url) continue
-    const res = await fetch(photo.url, { signal })
-    if (!res.ok) throw new Error(`Falhou ao obter ${photo.fileName}.`)
-    const buf = new Uint8Array(await res.arrayBuffer())
+
+    let buf = jaObtidos.get(photo.url)
+    if (!buf) {
+      const res = await fetchComRetry(photo.url, signal)
+      buf = new Uint8Array(await res.arrayBuffer())
+      jaObtidos.set(photo.url, buf)
+    }
 
     // Nomes repetidos dentro do ZIP silenciariam ficheiros: desambigua.
     let name = photo.fileName

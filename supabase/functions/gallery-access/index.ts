@@ -111,6 +111,8 @@ Deno.serve(async (req) => {
       // Sem capa escolhida, a primeira foto serve — uma galeria nunca abre num
       // ecrã vazio.
       coverUrl: cover?.url ?? signed[0]?.url ?? null,
+      // Uma capa em vídeo é reproduzida em ciclo; uma imagem é uma imagem.
+      coverIsVideo: Boolean((cover ?? signed[0])?.contentType?.startsWith('video/')),
       // Quando a galeria fecha. Null = sem prazo.
       expiresAt: gallery.expires_at ?? null,
     },
