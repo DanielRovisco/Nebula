@@ -8,10 +8,12 @@ import CountUp from '../lib/CountUp'
 import Seo from '../lib/Seo'
 import { asset } from '../lib/asset'
 import { CONTACT, absoluteUrl } from '../lib/site'
-import { useSiteSettings } from '../lib/site-content/useSiteContent'
 
+// O `id` casa com as categorias de /servicos: o cartão abre logo a categoria
+// certa no acordeão, em vez de cair sempre na primeira.
 const SERVICES = [
   {
+    id: 'casamentos',
     title: 'Casamentos',
     tagline: 'A vossa história de amor, contada para sempre.',
     image: 'forest-bride',
@@ -19,6 +21,7 @@ const SERVICES = [
     imgPos: 'object-top',
   },
   {
+    id: 'maternidade',
     title: 'Maternidade',
     tagline: 'Celebrar a espera. Eternizar o início.',
     image: 'maternity-railway',
@@ -26,6 +29,7 @@ const SERVICES = [
     imgPos: 'object-center',
   },
   {
+    id: 'eventos',
     title: 'Eventos',
     tagline: 'Coberturas à medida de cada ocasião.',
     image: 'baby-balloons',
@@ -60,6 +64,12 @@ const STEPS = [
   },
 ]
 
+const STATS: { value: string; countTo?: number; suffix?: string; label: string }[] = [
+  { value: '20+', countTo: 20, suffix: '+', label: 'Histórias contadas' },
+  { value: '3', label: 'Criadores visuais' },
+  { value: '360°', label: 'Foto, vídeo e criação de conteúdo' },
+]
+
 const HEADLINE = [
   { text: 'Histórias', delay: 0.3 },
   { text: 'que nascem', delay: 0.46 },
@@ -68,9 +78,6 @@ const HEADLINE = [
 
 export default function Home() {
   const reduced = useReducedMotion()
-  // Números e nota do hero vêm do painel, com os valores do código como ponto
-  // de partida — a página abre cheia sem esperar pela rede.
-  const { stats: STATS, heroNote } = useSiteSettings()
   const heroRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
   const imgScale = useTransform(scrollYProgress, [0, 1], [1, 1.18])
@@ -146,7 +153,7 @@ export default function Home() {
               Marcar Sessão
               <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
             </Link>
-            <span className="label-sm opacity-70">{heroNote}</span>
+            <span className="label-sm opacity-70">Datas 2026 disponíveis</span>
           </motion.div>
         </motion.div>
 
@@ -205,7 +212,7 @@ export default function Home() {
             {SERVICES.map((s, i) => (
               <Reveal key={s.title} delay={i * 0.1}>
                 <Link
-                  to="/servicos"
+                  to={`/servicos#${s.id}`}
                   className="block relative rounded-2xl overflow-hidden group"
                   style={{ height: 'clamp(48vh, 60vh, 68vh)' }}
                 >

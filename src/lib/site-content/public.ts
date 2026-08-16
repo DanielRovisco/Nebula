@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, type SiteCategory, type SitePhoto, type SiteSettings } from './types'
+import type { SiteCategory, SitePhoto } from './types'
 
 /**
  * Leitura do conteúdo público do site.
@@ -67,14 +67,3 @@ export async function fetchPortfolio(): Promise<{
     })),
   }
 }
-
-export async function fetchSettings(): Promise<Partial<SiteSettings>> {
-  if (DEMO) return {}
-  const rows = await rest<{ key: string; value: unknown }[]>('site_settings?select=key,value')
-  if (!rows) return {}
-  const out: Record<string, unknown> = {}
-  for (const r of rows) out[r.key] = r.value
-  return out as Partial<SiteSettings>
-}
-
-export { DEFAULT_SETTINGS }

@@ -253,17 +253,8 @@ create table if not exists site_photos (
 
 create index if not exists site_photos_idx on site_photos (sort_order);
 
--- Textos e números soltos do site (estatísticas, contactos). Um sítio só, em
--- vez de uma tabela por cada coisinha editável.
-create table if not exists site_settings (
-  key text primary key,
-  value jsonb not null,
-  updated_at timestamptz not null default now()
-);
-
 alter table site_categories enable row level security;
 alter table site_photos enable row level security;
-alter table site_settings enable row level security;
 
 -- Leitura pública: é isto que o site mostra a quem o visita.
 drop policy if exists "todos leem categorias" on site_categories;
@@ -274,10 +265,6 @@ drop policy if exists "todos leem fotos do site" on site_photos;
 create policy "todos leem fotos do site" on site_photos
   for select to anon, authenticated using (published);
 
-drop policy if exists "todos leem definicoes" on site_settings;
-create policy "todos leem definicoes" on site_settings
-  for select to anon, authenticated using (true);
-
 -- Escrita só para quem fez login no painel.
 drop policy if exists "admin escreve categorias" on site_categories;
 create policy "admin escreve categorias" on site_categories
@@ -285,10 +272,6 @@ create policy "admin escreve categorias" on site_categories
 
 drop policy if exists "admin escreve fotos do site" on site_photos;
 create policy "admin escreve fotos do site" on site_photos
-  for all to authenticated using (true) with check (true);
-
-drop policy if exists "admin escreve definicoes" on site_settings;
-create policy "admin escreve definicoes" on site_settings
   for all to authenticated using (true) with check (true);
 
 -- Categorias de arranque, iguais às que o site já mostra.

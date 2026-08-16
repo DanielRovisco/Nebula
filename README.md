@@ -89,8 +89,7 @@ desligados e o conteúdo é entregue estático.
 `/admin` tem dois separadores:
 
 - **Galerias** — as entregas privadas a clientes (ver secção seguinte).
-- **Site** — o conteúdo público: fotos e categorias do portfólio, números da
-  página inicial e a nota do hero.
+- **Site** — o conteúdo público: as fotos e as categorias do portfólio.
 
 ### Separador Site
 

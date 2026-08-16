@@ -1,6 +1,6 @@
 import { DEMO, supabase } from '../gallery/config'
 import { THUMB_EDGE, THUMB_QUALITY, callAdmin, putToR2, resize } from '../gallery/api'
-import { DEFAULT_SETTINGS, type SiteCategory, type SitePhoto, type SiteSettings } from './types'
+import type { SiteCategory, SitePhoto } from './types'
 
 export { publicUrl } from './public'
 
@@ -24,13 +24,11 @@ const rowToPhoto = (r: Record<string, unknown>): SitePhoto => ({
   published: r.published !== false,
 })
 
-import { fetchSettings } from './public'
-
 // ─── Administração ────────────────────────────────────────────────────────
 
 // Versão de demonstração: tudo em memória, para o painel do site poder ser
 // experimentado sem Supabase configurado.
-const demoStore: { categories: SiteCategory[]; photos: SitePhoto[]; settings: Partial<SiteSettings> } = {
+const demoStore: { categories: SiteCategory[]; photos: SitePhoto[] } = {
   categories: [
     { id: 'c1', slug: 'casamentos', label: 'Casamentos', sortOrder: 1 },
     { id: 'c2', slug: 'maternidade', label: 'Maternidade', sortOrder: 2 },
@@ -51,7 +49,6 @@ const demoStore: { categories: SiteCategory[]; photos: SitePhoto[]; settings: Pa
     sortOrder: i,
     published: true,
   })),
-  settings: {},
 }
 
 const demoWait = (ms = 200) => new Promise((r) => setTimeout(r, ms))
@@ -100,14 +97,6 @@ const demoSiteAdmin = {
       const p = demoStore.photos.find((x) => x.id === id)
       if (p) p.sortOrder = i
     })
-  },
-  async getSettings(): Promise<SiteSettings> {
-    await demoWait()
-    return { ...DEFAULT_SETTINGS, ...demoStore.settings }
-  },
-  async saveSetting(key: keyof SiteSettings, value: unknown) {
-    await demoWait(120)
-    ;(demoStore.settings as Record<string, unknown>)[key] = value
   },
 }
 
@@ -191,18 +180,6 @@ const realSiteAdmin = {
     await Promise.all(
       orderedIds.map((id, i) => sb.from('site_photos').update({ sort_order: i }).eq('id', id)),
     )
-  },
-
-  async getSettings(): Promise<SiteSettings> {
-    const stored = await fetchSettings()
-    return { ...DEFAULT_SETTINGS, ...stored }
-  },
-
-  async saveSetting(key: keyof SiteSettings, value: unknown) {
-    const { error } = await supabase()
-      .from('site_settings')
-      .upsert({ key, value, updated_at: new Date().toISOString() })
-    if (error) throw new Error(error.message)
   },
 }
 

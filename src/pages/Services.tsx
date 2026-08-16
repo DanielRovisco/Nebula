@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Check, ChevronDown } from 'lucide-react'
 import Reveal from '../lib/Reveal'
@@ -72,8 +72,43 @@ const CATEGORIES = [
   },
 ]
 
+/** Só abrimos a categoria pedida se ela existir — o hash vem do URL. */
+function categoriaDoHash(hash: string) {
+  const id = decodeURIComponent(hash.replace('#', ''))
+  return CATEGORIES.some((c) => c.id === id) ? id : null
+}
+
 export default function Services() {
-  const [open, setOpen] = useState<string>('casamentos')
+  const { hash } = useLocation()
+  // Vindo de um cartão da página inicial (/servicos#maternidade), abre logo essa
+  // categoria em vez da primeira.
+  const [open, setOpen] = useState<string>(() => categoriaDoHash(hash) ?? 'casamentos')
+  const refs = useRef<Record<string, HTMLDivElement | null>>({})
+
+  // Se o hash mudar sem sair da página (clicar noutro cartão a partir daqui),
+  // acompanha-o já no render — sem efeito a disparar um segundo render.
+  const [hashVisto, setHashVisto] = useState(hash)
+  if (hash !== hashVisto) {
+    setHashVisto(hash)
+    const id = categoriaDoHash(hash)
+    if (id && id !== open) setOpen(id)
+  }
+
+  useEffect(() => {
+    const id = categoriaDoHash(hash)
+    if (!id) return
+    // Duas razões para o atraso: o ScrollToTop corre na mesma passagem e
+    // desfaria o salto, e o painel ainda está a abrir — esperamos que assente
+    // antes de medir. O desconto de 96px tira a categoria de debaixo da barra
+    // fixa do topo.
+    const t = setTimeout(() => {
+      const el = refs.current[id]
+      if (!el) return
+      const topo = el.getBoundingClientRect().top + window.scrollY - 96
+      window.scrollTo({ top: Math.max(0, topo), behavior: 'smooth' })
+    }, 150)
+    return () => clearTimeout(t)
+  }, [hash])
 
   return (
     <div className="pt-28 sm:pt-36 pb-20 sm:pb-28">
@@ -99,7 +134,14 @@ export default function Services() {
           {CATEGORIES.map((cat, idx) => {
             const isOpen = open === cat.id
             return (
-              <div key={cat.id} className={`bg-eerie${idx > 0 ? ' border-t border-white/10' : ''}`}>
+              <div
+                key={cat.id}
+                id={cat.id}
+                ref={(el) => {
+                  refs.current[cat.id] = el
+                }}
+                className={`bg-eerie${idx > 0 ? ' border-t border-white/10' : ''}`}
+              >
                 {/* Trigger */}
                 <button
                   onClick={() => setOpen(isOpen ? '' : cat.id)}

@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Eye, EyeOff, Maximize2, Plus, Trash2, Upload } from 'lucide-react'
 import { siteAdmin, publicUrl, uploadSitePhoto, SITE_EDGE } from '../../lib/site-content/api'
-import type { SiteCategory, SitePhoto, SiteSettings } from '../../lib/site-content/types'
-import { DEFAULT_SETTINGS } from '../../lib/site-content/types'
+import type { SiteCategory, SitePhoto } from '../../lib/site-content/types'
 import { DEMO } from '../../lib/gallery/config'
 import { slugify } from '../../lib/gallery/helpers'
 import { asset } from '../../lib/asset'
@@ -19,7 +18,6 @@ const thumbUrl = (p: SitePhoto) =>
 export default function SiteAdmin() {
   const [categories, setCategories] = useState<SiteCategory[]>([])
   const [photos, setPhotos] = useState<SitePhoto[]>([])
-  const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [upload, setUpload] = useState<{ done: number; total: number } | null>(null)
@@ -29,12 +27,11 @@ export default function SiteAdmin() {
 
   useEffect(() => {
     let vivo = true
-    Promise.all([siteAdmin.listCategories(), siteAdmin.listPhotos(), siteAdmin.getSettings()])
-      .then(([c, p, s]) => {
+    Promise.all([siteAdmin.listCategories(), siteAdmin.listPhotos()])
+      .then(([c, p]) => {
         if (!vivo) return
         setCategories(c)
         setPhotos(p)
-        setSettings(s)
       })
       .catch((e) => vivo && setError((e as Error).message))
     return () => {
@@ -328,82 +325,6 @@ export default function SiteAdmin() {
         )}
       </section>
 
-      {/* ── Números da página inicial ───────────────────────── */}
-      <section className="mb-14 max-w-2xl">
-        <h2 className="text-xl mb-2">Números da página inicial</h2>
-        <p className="text-xs text-titanium/35 mb-6 leading-relaxed">
-          A faixa de três valores por baixo dos serviços. Preenche "conta até"
-          para o número subir de zero quando o visitante lá chega.
-        </p>
-
-        <div className="space-y-4">
-          {settings.stats.map((s, i) => (
-            <div key={i} className="border border-white/10 rounded-2xl p-4 grid sm:grid-cols-[1fr_2fr_1fr] gap-4">
-              <div>
-                <label className="label-sm block mb-1.5">Valor</label>
-                <input
-                  defaultValue={s.value}
-                  onBlur={(e) => {
-                    const stats = settings.stats.map((x, j) => (j === i ? { ...x, value: e.target.value } : x))
-                    setSettings({ ...settings, stats })
-                    guardar(() => siteAdmin.saveSetting('stats', stats))
-                  }}
-                  className={`${field} text-sm py-1.5`}
-                />
-              </div>
-              <div>
-                <label className="label-sm block mb-1.5">Etiqueta</label>
-                <input
-                  defaultValue={s.label}
-                  onBlur={(e) => {
-                    const stats = settings.stats.map((x, j) => (j === i ? { ...x, label: e.target.value } : x))
-                    setSettings({ ...settings, stats })
-                    guardar(() => siteAdmin.saveSetting('stats', stats))
-                  }}
-                  className={`${field} text-sm py-1.5`}
-                />
-              </div>
-              <div>
-                <label className="label-sm block mb-1.5">Conta até</label>
-                <input
-                  type="number"
-                  defaultValue={s.countTo ?? ''}
-                  onBlur={(e) => {
-                    const n = e.target.value ? Number(e.target.value) : undefined
-                    const stats = settings.stats.map((x, j) =>
-                      j === i ? { ...x, countTo: n, suffix: n ? (x.suffix ?? '+') : undefined } : x,
-                    )
-                    setSettings({ ...settings, stats })
-                    guardar(() => siteAdmin.saveSetting('stats', stats))
-                  }}
-                  className={`${field} text-sm py-1.5`}
-                  placeholder="—"
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-6">
-          <label className="label-sm block mb-2.5" htmlFor="hero-note">
-            Nota no hero
-          </label>
-          <input
-            id="hero-note"
-            defaultValue={settings.heroNote}
-            onBlur={(e) => {
-              setSettings({ ...settings, heroNote: e.target.value })
-              guardar(() => siteAdmin.saveSetting('heroNote', e.target.value))
-            }}
-            className={field}
-            placeholder="Datas 2026 disponíveis"
-          />
-          <p className="text-[10px] text-titanium/25 mt-2">
-            Ao lado do botão "Marcar Sessão". É o sítio onde uma data
-            desatualizada mais se nota.
-          </p>
-        </div>
-      </section>
     </div>
   )
 }

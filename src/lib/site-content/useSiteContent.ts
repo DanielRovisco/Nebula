@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchPortfolio, fetchSettings, publicUrl } from './public'
-import { DEFAULT_SETTINGS, type SiteSettings } from './types'
+import { fetchPortfolio, publicUrl } from './public'
 
 export interface PortfolioItem {
   id: string
@@ -52,19 +51,4 @@ export function usePortfolio(fallback: {
   }, [])
 
   return data
-}
-
-/** Definições do site, com os valores do código como ponto de partida. */
-export function useSiteSettings(): SiteSettings {
-  const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS)
-
-  useEffect(() => {
-    let vivo = true
-    fetchSettings().then((s) => vivo && Object.keys(s).length && setSettings({ ...DEFAULT_SETTINGS, ...s }))
-    return () => {
-      vivo = false
-    }
-  }, [])
-
-  return settings
 }
