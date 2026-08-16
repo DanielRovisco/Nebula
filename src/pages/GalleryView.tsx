@@ -64,6 +64,9 @@ export default function GalleryView() {
   const [favoritas, setFavoritas] = useState<Set<string>>(
     () => new Set(loadSession(slug)?.favorites ?? []),
   )
+  // Original ou versão web. Fica ao lado dos botões porque muda o que eles
+  // fazem — e não num menu escondido, que ninguém encontraria.
+  const [web, setWeb] = useState(false)
   const [zipping, setZipping] = useState<ZipProgress | null>(null)
   const [error, setError] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
@@ -172,7 +175,8 @@ export default function GalleryView() {
         access.gallery.title,
         setZipping,
         abortRef.current.signal,
-        t.gallery.chosenSuffix,
+        [t.gallery.chosenSuffix, web ? t.gallery.webSuffix : ''].filter(Boolean).join('-'),
+        web,
       )
       if (access.logToken) api.logEvent(access.logToken, { kind: 'download_favorites' })
     } catch (err) {
@@ -192,7 +196,14 @@ export default function GalleryView() {
     setError(null)
     abortRef.current = new AbortController()
     try {
-      await downloadAll(photos, access.gallery.title, setZipping, abortRef.current.signal)
+      await downloadAll(
+        photos,
+        access.gallery.title,
+        setZipping,
+        abortRef.current.signal,
+        web ? t.gallery.webSuffix : undefined,
+        web,
+      )
       if (access.logToken) api.logEvent(access.logToken, { kind: 'download_all' })
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
@@ -207,7 +218,7 @@ export default function GalleryView() {
   async function handleDownloadOne(index: number) {
     setError(null)
     try {
-      await downloadOne(photos[index])
+      await downloadOne(photos[index], web)
       if (access?.logToken) {
         api.logEvent(access.logToken, {
           kind: 'download_one',
@@ -317,6 +328,27 @@ export default function GalleryView() {
                 {t.gallery.cancel}
               </button>
             )}
+            {gallery.downloadEnabled && photos.length > 0 && (
+              <div className="inline-flex items-center gap-1 border border-white/12 rounded-full p-1">
+                <span className="label-sm px-3 hidden sm:inline">{t.gallery.sizeLabel}</span>
+                {[
+                  { valor: false, texto: t.gallery.sizeOriginal },
+                  { valor: true, texto: t.gallery.sizeWeb },
+                ].map((op) => (
+                  <button
+                    key={op.texto}
+                    onClick={() => setWeb(op.valor)}
+                    aria-pressed={web === op.valor}
+                    className={`px-4 py-2 rounded-full text-[10px] uppercase tracking-[0.14em] transition-colors ${
+                      web === op.valor ? 'bg-white/10 text-titanium' : 'text-titanium/45 hover:text-titanium/75'
+                    }`}
+                  >
+                    {op.texto}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <button
               onClick={() => {
                 clearSession(slug)

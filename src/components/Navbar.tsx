@@ -51,7 +51,7 @@ export default function Navbar() {
               alt="NEBULA"
               width={2795}
               height={577}
-              className="h-7 sm:h-8 w-auto"
+              className="h-7 sm:h-8 w-auto logo-hover"
             />
           </Link>
 

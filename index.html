@@ -2,7 +2,12 @@
 <html lang="pt">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/brand/logo-symbol-white.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <!-- Pinta a barra do browser em Android e a barra de estado no iOS. -->
+    <meta name="theme-color" content="#191919" />
+    <meta name="apple-mobile-web-app-title" content="NEBULA" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="NEBULA — Fotógrafo e videógrafo para casamentos, maternidade e eventos em Lisboa e Portalegre. Fotografia editorial e vídeo cinematográfico 4K. Narrativa visual com rigor e autenticidade." />
     <meta name="robots" content="index, follow" />
@@ -27,12 +32,18 @@
       scanner do browser não o descobre no HTML. Este preload arranca o
       download em paralelo com o bundle em vez de depois dele.
     -->
+    <!--
+      O preload tem de anunciar o mesmo formato que o <picture> vai escolher,
+      senão o browser descarrega duas vezes: uma para o preload e outra para a
+      imagem que acaba por usar. Daí o AVIF aqui e o `type` a dizê-lo — quem não
+      o souber ler ignora este preload e segue pelo caminho normal.
+    -->
     <link
       rel="preload"
       as="image"
-      type="image/webp"
-      href="/brand/portfolio/hero-beach-dress-1440.webp"
-      imagesrcset="/brand/portfolio/hero-beach-dress-480.webp 480w, /brand/portfolio/hero-beach-dress-960.webp 960w, /brand/portfolio/hero-beach-dress-1440.webp 1440w"
+      type="image/avif"
+      href="/brand/portfolio/hero-beach-dress-1440.avif"
+      imagesrcset="/brand/portfolio/hero-beach-dress-480.avif 480w, /brand/portfolio/hero-beach-dress-960.avif 960w, /brand/portfolio/hero-beach-dress-1440.avif 1440w"
       imagesizes="100vw"
       fetchpriority="high"
     />

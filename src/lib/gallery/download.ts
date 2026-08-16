@@ -29,11 +29,15 @@ async function fetchComRetry(url: string, signal?: AbortSignal, tentativas = 3):
 }
 
 /** Descarrega um ficheiro único a partir de um URL assinado. */
-export async function downloadOne(photo: SignedPhoto) {
+export async function downloadOne(photo: SignedPhoto, web = false) {
   if (!photo.url) throw new Error('Foto indisponível.')
   const res = await fetchComRetry(photo.url)
-  const blob = await res.blob()
-  triggerSave(blob, photo.fileName)
+  if (!web) {
+    triggerSave(await res.blob(), photo.fileName)
+    return
+  }
+  const reduzido = await paraWeb(new Uint8Array(await res.arrayBuffer()), photo.contentType)
+  triggerSave(new Blob([reduzido.buffer as ArrayBuffer]), photo.fileName)
 }
 
 /**
@@ -62,6 +66,41 @@ export interface ZipProgress {
  */
 export const ZIP_WARN_BYTES = 1_500_000_000
 
+/** Lado maior da versão "web". Chega para publicar em qualquer lado. */
+export const WEB_EDGE = 2048
+
+/**
+ * Reduz um ficheiro já descarregado para a versão web.
+ *
+ * Feito no browser, sobre o que já veio da rede — não há segunda cópia guardada
+ * no R2 nem espaço gasto a dobrar. Vídeos passam intactos: recodificar vídeo
+ * aqui não é viável, e entregar um vídeo pela metade era pior do que entregá-lo
+ * inteiro.
+ */
+async function paraWeb(dados: Uint8Array, contentType: string | null): Promise<Uint8Array> {
+  if (contentType?.startsWith('video/')) return dados
+  try {
+    const copia = new Uint8Array(dados)
+    const bitmap = await createImageBitmap(new Blob([copia.buffer as ArrayBuffer]))
+    const escala = Math.min(1, WEB_EDGE / Math.max(bitmap.width, bitmap.height))
+    if (escala === 1) {
+      bitmap.close()
+      return dados
+    }
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.round(bitmap.width * escala)
+    canvas.height = Math.round(bitmap.height * escala)
+    canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+    bitmap.close()
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', 0.85))
+    if (!blob) return dados
+    return new Uint8Array(await blob.arrayBuffer())
+  } catch {
+    // Formato que o browser não descodifica: entrega-se o original.
+    return dados
+  }
+}
+
 export async function downloadAll(
   photos: SignedPhoto[],
   galleryTitle: string,
@@ -73,6 +112,8 @@ export async function downloadAll(
    * ambos chamados "ana-e-tiago.zip", ninguém sabe qual é qual.
    */
   sufixo?: string,
+  /** Reduz cada fotografia para 2048px antes de a meter no ZIP. */
+  web = false,
 ) {
   const files: Record<string, Uint8Array> = {}
   const used = new Set<string>()
@@ -88,6 +129,9 @@ export async function downloadAll(
       buf = new Uint8Array(await res.arrayBuffer())
       jaObtidos.set(photo.url, buf)
     }
+    // A redução fica fora da cache: o que se guarda é o que veio da rede, para
+    // trocar de tamanho não obrigar a descarregar tudo outra vez.
+    const conteudo = web ? await paraWeb(buf, photo.contentType) : buf
 
     // Nomes repetidos dentro do ZIP silenciariam ficheiros: desambigua.
     let name = photo.fileName
@@ -100,7 +144,7 @@ export async function downloadAll(
       name = `${stem}-${n}${ext}`
     }
     used.add(name)
-    files[name] = buf
+    files[name] = conteudo
 
     onProgress({ done: ++done, total: photos.length, phase: 'a descarregar' })
   }

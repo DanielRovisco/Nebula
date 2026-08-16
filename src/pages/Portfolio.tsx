@@ -1,13 +1,17 @@
 import { useCallback, useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { flushSync } from 'react-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
 import Seo from '../lib/Seo'
 import Lightbox from '../components/Lightbox'
-import { useT } from '../lib/i18n'
+import GridCursor from '../components/GridCursor'
+import { useLink, useT } from '../lib/i18n'
+import Breadcrumbs from '../components/Breadcrumbs'
+import { breadcrumbJsonLd } from '../lib/breadcrumbJsonLd'
 import { comTransicao } from '../lib/viewTransition'
-import { absoluteUrl } from '../lib/site'
+import { SITE_URL, absoluteUrl } from '../lib/site'
 import { usePortfolio } from '../lib/site-content/useSiteContent'
 
 // Conteúdo de reserva: é o que o site mostra enquanto (ou caso) não haja nada
@@ -47,8 +51,14 @@ const GRID_SIZES = '(max-width: 768px) 50vw, 33vw'
 const SHORT = 'h-[26vh] sm:h-[33vh]'
 const TALL = 'h-[calc(52vh_+_0.5rem)] sm:h-[calc(66vh_+_1rem)]'
 
+/** "Casamentos" → "casamentos", para casar com o hash vindo dos serviços. */
+const slug = (s: string) =>
+  s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-')
+
 export default function Portfolio() {
   const t = useT()
+  const link = useLink()
+  const { hash } = useLocation()
   const reduced = useReducedMotion()
 
   // As fotos do código entram como reserva; se houver portfólio carregado no
@@ -73,7 +83,26 @@ export default function Portfolio() {
   )
 
   const { categories, items } = usePortfolio(fallback)
-  const [filter, setFilter] = useState('')
+
+  // Chegando de /servicos com #casamentos, a grelha abre já nessa categoria. O
+  // hash traz o slug; as categorias vêm do painel com o nome por extenso.
+  //
+  // O hash é lido no render, não num efeito: assim a grelha nunca chega a ser
+  // desenhada com tudo antes de encolher para a categoria pedida.
+  const doHash = (() => {
+    const pedida = decodeURIComponent(hash.replace('#', ''))
+    return pedida ? categories.find((c) => slug(c) === pedida) : undefined
+  })()
+
+  const [escolhido, setFilter] = useState('')
+  const [hashVisto, setHashVisto] = useState(hash)
+  if (hash !== hashVisto) {
+    setHashVisto(hash)
+    if (doHash) setFilter(doHash)
+  }
+  // Na primeira vinda o `hashVisto` já nasce igual ao hash, por isso é aqui que
+  // ele conta.
+  const filter = escolhido || doHash || ''
 
   // O filtro "Todos" é o único cujo nome é nosso — as categorias vêm do painel
   // e são iguais nas duas línguas, porque são as mesmas fotografias.
@@ -124,9 +153,23 @@ export default function Portfolio() {
         title={t.portfolio.seoTitle}
         description={t.portfolio.seoDescription}
         image={absoluteUrl('/brand/portfolio/palace-dome-1440.webp')}
+        jsonLd={[
+          breadcrumbJsonLd([
+            { nome: t.nav.home, caminho: link('home') },
+            { nome: t.nav.portfolio, caminho: link('portfolio') },
+          ]),
+          {
+            '@context': 'https://schema.org',
+            '@type': 'ImageGallery',
+            name: t.portfolio.seoTitle,
+            description: t.portfolio.seoDescription,
+            url: `${SITE_URL}${link('portfolio')}`,
+          },
+        ]}
       />
 
       <section className="container-px mb-12 sm:mb-16">
+        <Breadcrumbs items={[{ label: t.nav.portfolio }]} />
         <Reveal>
           <span className="label-sm">{t.portfolio.label}</span>
           <h1 className="mt-4 max-w-3xl leading-[1.05]" style={{ fontSize: 'clamp(2.2rem, 6vw, 5rem)' }}>
@@ -157,7 +200,7 @@ export default function Portfolio() {
       </section>
 
       <section className="container-px">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
+        <div data-cursor-grid className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
           {filtered.map((item, i) => (
             <motion.div
               // `layout` animations em 14 cards ao mesmo tempo eram o ponto mais
@@ -206,6 +249,9 @@ export default function Portfolio() {
           ))}
         </div>
       </section>
+
+      {/* Sobre a grelha, o cursor do sistema dá lugar a uma bola com "Ver". */}
+      {aberta === null && <GridCursor texto={t.portfolio.cursorView} />}
 
       {aberta !== null && filtered[aberta] && (
         <Lightbox

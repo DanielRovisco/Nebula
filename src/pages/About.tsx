@@ -5,6 +5,8 @@ import Picture from '../lib/Picture'
 import Seo from '../lib/Seo'
 import { CONTACT, absoluteUrl } from '../lib/site'
 import { useLink, useT } from '../lib/i18n'
+import Breadcrumbs from '../components/Breadcrumbs'
+import { breadcrumbJsonLd } from '../lib/breadcrumbJsonLd'
 
 // Os nomes das pessoas não se traduzem; os cargos sim.
 const TEAM = [
@@ -28,11 +30,16 @@ export default function About() {
       <Seo
         title={t.about.seoTitle}
         description={t.about.seoDescription}
+        jsonLd={breadcrumbJsonLd([
+          { nome: t.nav.home, caminho: link('home') },
+          { nome: t.nav.about, caminho: link('about') },
+        ])}
         image={absoluteUrl('/brand/portfolio/palace-dome-1440.webp')}
       />
 
       {/* Header */}
       <section className="container-px mb-14 sm:mb-28">
+        <Breadcrumbs items={[{ label: t.nav.about }]} />
         <Reveal>
           <span className="label-sm">{t.about.label}</span>
           <h1 className="mt-4 max-w-3xl leading-[1.05]" style={{ fontSize: 'clamp(2.2rem, 6vw, 5rem)' }}>

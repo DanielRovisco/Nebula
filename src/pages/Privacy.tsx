@@ -3,6 +3,7 @@ import Reveal from '../lib/Reveal'
 import Seo from '../lib/Seo'
 import { CONTACT } from '../lib/site'
 import { useLink, useT } from '../lib/i18n'
+import Breadcrumbs from '../components/Breadcrumbs'
 
 /**
  * Política de privacidade.
@@ -25,6 +26,7 @@ export default function Privacy() {
       <Seo title={t.privacy.seoTitle} description={t.privacy.seoDescription} />
 
       <section className="container-px mb-14 sm:mb-20">
+        <Breadcrumbs items={[{ label: t.footer.privacy }]} />
         <Reveal>
           <span className="label-sm">{t.privacy.label}</span>
           <h1 className="mt-4 max-w-3xl leading-[1.05]" style={{ fontSize: 'clamp(2rem, 5vw, 4rem)' }}>

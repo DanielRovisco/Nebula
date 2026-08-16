@@ -5,8 +5,10 @@ import { ArrowRight, Check, ChevronDown } from 'lucide-react'
 import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
 import Seo from '../lib/Seo'
-import { absoluteUrl } from '../lib/site'
+import { SITE_URL, absoluteUrl } from '../lib/site'
 import { useLink, useT } from '../lib/i18n'
+import Breadcrumbs from '../components/Breadcrumbs'
+import { breadcrumbJsonLd } from '../lib/breadcrumbJsonLd'
 
 /**
  * A estrutura dos packs vive aqui; os nomes e os itens vêm do dicionário. Assim
@@ -94,10 +96,30 @@ export default function Services() {
         title={t.services.seoTitle}
         description={t.services.seoDescription}
         image={absoluteUrl('/brand/portfolio/forest-bride-1440.webp')}
+        jsonLd={[
+          breadcrumbJsonLd([
+            { nome: t.nav.home, caminho: link('home') },
+            { nome: t.nav.services, caminho: link('services') },
+          ]),
+          // Um `Service` por categoria. Sem preços: declarar uma oferta sem
+          // valor é pior do que não a declarar.
+          ...CATEGORIES.map((cat) => ({
+            '@context': 'https://schema.org',
+            '@type': 'Service',
+            name: t.home.services[cat.id].title,
+            description: t.home.services[cat.id].tagline,
+            serviceType: t.home.services[cat.id].title,
+            provider: { '@type': 'LocalBusiness', name: 'NEBULA', '@id': `${SITE_URL}/` },
+            areaServed: { '@type': 'Country', name: 'Portugal' },
+            image: absoluteUrl(`/brand/portfolio/${cat.image}-1440.webp`),
+            url: `${SITE_URL}${link('services')}#${cat.id}`,
+          })),
+        ]}
       />
 
       {/* Header */}
       <section className="container-px mb-12 sm:mb-24">
+        <Breadcrumbs items={[{ label: t.nav.services }]} />
         <Reveal>
           <span className="label-sm">{t.services.label}</span>
           <h1 className="mt-4 max-w-3xl leading-[1.05]" style={{ fontSize: 'clamp(2.2rem, 6vw, 5rem)' }}>
@@ -199,6 +221,18 @@ export default function Services() {
                             </div>
                           ))}
                         </div>
+
+                        {/*
+                          Quem acaba de ler o que está incluído quer ver como
+                          fica — e o portfólio abre já filtrado por esta
+                          categoria, em vez de o obrigar a procurar o filtro.
+                        */}
+                        <Link
+                          to={`${link('portfolio')}#${cat.id}`}
+                          className="mt-6 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all"
+                        >
+                          {t.services.seeWork} <ArrowRight size={12} />
+                        </Link>
                       </div>
                     </motion.div>
                   )}

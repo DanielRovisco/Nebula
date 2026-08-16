@@ -8,7 +8,8 @@
 //   npm run images
 //
 // Para cada original produz, em public/brand/portfolio/:
-//   <nome>-{480,960,1440}.webp   — servidos via srcset
+//   <nome>-{480,960,1440}.avif   — servidos via srcset, primeira escolha
+//   <nome>-{480,960,1440}.webp   — servidos via srcset, para quem não lê AVIF
 //   <nome>.jpg                   — fallback recomprimido para browsers sem WebP
 //
 // Os derivados são versionados no repo para que o deploy do GitHub Pages não
@@ -48,6 +49,16 @@ for (const file of files) {
       .webp({ quality: 78, effort: 6 })
       .toFile(out)
     after += (await stat(out)).size
+
+    // AVIF a acompanhar cada WebP: ~25% mais leve com a mesma qualidade
+    // aparente. O <picture> oferece-o primeiro e quem não o souber ler cai no
+    // WebP — daí não substituir, acrescentar.
+    const avif = join(OUT, `${name}-${width}.avif`)
+    await sharp(input)
+      .resize({ width: target, withoutEnlargement: true })
+      .avif({ quality: 55, effort: 4 })
+      .toFile(avif)
+    after += (await stat(avif)).size
   }
 
   const fallback = join(OUT, `${name}.jpg`)

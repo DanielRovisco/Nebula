@@ -113,6 +113,24 @@ body::after {
   animation-duration: 300ms;
 }
 
+/*
+  O símbolo do logo respira ao passar o rato. Discreto de propósito: é a marca,
+  não um botão — e quem tem menos movimento ativo não vê nada disto (a regra
+  geral de prefers-reduced-motion, mais abaixo, zera a transição).
+*/
+@layer components {
+  .logo-hover {
+    transition: opacity 0.4s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @media (hover: hover) {
+    .logo-hover:hover {
+      opacity: 0.75;
+      transform: scale(1.03);
+    }
+  }
+}
+
 ::selection {
   background: var(--titanium);
   color: var(--eerie);

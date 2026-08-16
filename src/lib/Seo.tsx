@@ -12,6 +12,12 @@ interface SeoProps {
   image?: string
   /** Páginas que não devem entrar no índice (404, privacidade). */
   noindex?: boolean
+  /**
+   * Dados estruturados desta página (schema.org). O `LocalBusiness` do negócio
+   * está no index.html e vale para o site todo; isto acrescenta o que é próprio
+   * de cada página — o serviço, a coleção de imagens, as migalhas.
+   */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[]
 }
 
 function setMeta(selector: string, attr: 'name' | 'property', key: string, content: string) {
@@ -26,11 +32,11 @@ function setMeta(selector: string, attr: 'name' | 'property', key: string, conte
 
 /**
  * Metadados por rota. Numa SPA o HTML servido é sempre o mesmo, por isso o
- * title/description/canonical são escritos no cliente — o que cobre partilhas
- * e o Googlebot (que executa JS). Um pré-render estático seria mais robusto
- * para crawlers que não executam JS, mas exigiria mudar o modelo de build.
+ * title/description/canonical são escritos no cliente — e a pré-renderização
+ * (scripts/prerender.mjs) grava o resultado no HTML publicado, para não
+ * dependerem de o visitante executar JavaScript.
  */
-export default function Seo({ title, description, image, noindex = false }: SeoProps) {
+export default function Seo({ title, description, image, noindex = false, jsonLd }: SeoProps) {
   const { pathname } = useLocation()
 
   useEffect(() => {
@@ -65,6 +71,19 @@ export default function Seo({ title, description, image, noindex = false }: SeoP
     }
     canonical.href = url
 
+    // Um único <script> gerido por nós, substituído a cada página. Vários
+    // acumulados dariam ao Google a soma dos dados de todas as páginas por onde
+    // o visitante passou.
+    const idJson = 'seo-jsonld'
+    document.getElementById(idJson)?.remove()
+    if (jsonLd) {
+      const el = document.createElement('script')
+      el.id = idJson
+      el.type = 'application/ld+json'
+      el.textContent = JSON.stringify(jsonLd)
+      document.head.appendChild(el)
+    }
+
     // Idioma da página e as suas alternativas. Sem isto o Google trata as duas
     // versões como conteúdo duplicado em vez de traduções uma da outra, e a
     // inglesa arrisca-se a nunca aparecer a quem procura em inglês.
@@ -90,7 +109,7 @@ export default function Seo({ title, description, image, noindex = false }: SeoP
       }
       link.href = href
     }
-  }, [title, description, image, noindex, pathname])
+  }, [title, description, image, noindex, jsonLd, pathname])
 
   return null
 }

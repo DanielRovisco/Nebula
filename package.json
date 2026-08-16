@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "images": "node scripts/optimize-images.mjs",
     "setup:check": "node scripts/check-setup.mjs",
-    "prerender": "node scripts/prerender.mjs"
+    "prerender": "node scripts/prerender.mjs",
+    "icons": "node scripts/icons.mjs"
   },
   "dependencies": {
     "@fontsource-variable/montserrat": "^5.3.0",

@@ -6,6 +6,9 @@ import Seo from '../lib/Seo'
 import InstagramIcon from '../lib/InstagramIcon'
 import { CONTACT } from '../lib/site'
 import { useLink, useT } from '../lib/i18n'
+import Breadcrumbs from '../components/Breadcrumbs'
+import { breadcrumbJsonLd } from '../lib/breadcrumbJsonLd'
+import { useTestimonials } from '../lib/site-content/useSiteContent'
 import { track } from '../lib/track'
 
 // Endpoint opcional de recolha de formulários (Formspree, Web3Forms, etc.).
@@ -52,6 +55,7 @@ export default function Contact() {
   const link = useLink()
   const navigate = useNavigate()
   const servicos = SERVICE_KEYS.map((k) => t.home.services[k].title)
+  const destaque = useTestimonials()[0]
   const [status, setStatus] = useState<Status>('idle')
 
   // Data e local do evento são opcionais — quem ainda não tem data marcada não
@@ -185,10 +189,15 @@ export default function Contact() {
       <Seo
         title={t.contact.seoTitle}
         description={t.contact.seoDescription}
+        jsonLd={breadcrumbJsonLd([
+          { nome: t.nav.home, caminho: link('home') },
+          { nome: t.nav.contact, caminho: link('contact') },
+        ])}
       />
 
       {/* Header */}
       <section className="container-px mb-12 sm:mb-20">
+        <Breadcrumbs items={[{ label: t.nav.contact }]} />
         <Reveal>
           <span className="label-sm">{t.contact.label}</span>
           <h1 className="mt-4 max-w-2xl leading-[1.05]" style={{ fontSize: 'clamp(2.2rem, 6vw, 5rem)' }}>
@@ -244,6 +253,29 @@ export default function Contact() {
                 <p className="text-sm text-titanium/55 leading-relaxed">{t.contact.how}</p>
               </div>
             </div>
+
+            {/*
+              Um testemunho ao lado do formulário. É aqui que a decisão é
+              tomada, e é aqui que ler outra pessoa a dizer que correu bem pesa
+              mais do que em qualquer outro sítio do site. Sem testemunhos
+              carregados no painel, não aparece nada.
+            */}
+            {destaque && (
+              <figure className="border border-white/10 rounded-2xl p-6 sm:p-7">
+                <span aria-hidden="true" className="font-serif text-titanium/15 leading-none text-4xl">
+                  &ldquo;
+                </span>
+                <blockquote className="text-sm text-titanium/65 leading-relaxed mt-1">
+                  {destaque.quote}
+                </blockquote>
+                <figcaption className="mt-5 pt-4 border-t border-white/[0.08] text-sm">
+                  <span className="text-titanium/85">{destaque.author}</span>
+                  {destaque.context && (
+                    <span className="block text-xs text-titanium/35 mt-1">{destaque.context}</span>
+                  )}
+                </figcaption>
+              </figure>
+            )}
           </div>
         </Reveal>
 

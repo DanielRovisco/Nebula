@@ -30,13 +30,16 @@ export default function Picture({
   style,
   priority = false,
 }: PictureProps) {
-  const webp = WIDTHS.map((w) => `${asset(`/brand/portfolio/${name}-${w}.webp`)} ${w}w`).join(', ')
+  const srcset = (ext: string) =>
+    WIDTHS.map((w) => `${asset(`/brand/portfolio/${name}-${w}.${ext}`)} ${w}w`).join(', ')
 
   return (
     // `contents` mantém o <picture> fora do layout: o <img> continua a
     // dimensionar-se contra o contentor real (h-full/absolute inset-0).
     <picture className="contents">
-      <source type="image/webp" srcSet={webp} sizes={sizes} />
+      {/* A ordem é a preferência: o browser fica pelo primeiro que souber ler. */}
+      <source type="image/avif" srcSet={srcset('avif')} sizes={sizes} />
+      <source type="image/webp" srcSet={srcset('webp')} sizes={sizes} />
       <img
         src={asset(`/brand/portfolio/${name}.jpg`)}
         alt={alt}
