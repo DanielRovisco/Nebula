@@ -1,0 +1,1 @@
+import{n as e}from"./site-Bjuc_9Cl.js";function t(t){return{"@context":`https://schema.org`,"@type":`BreadcrumbList`,itemListElement:t.map((t,n)=>({"@type":`ListItem`,position:n+1,name:t.nome,item:`${e}${t.caminho}`}))}}export{t};
