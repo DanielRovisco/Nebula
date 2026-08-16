@@ -8,6 +8,11 @@ Portalegre.
 **Deploy:** GitHub Pages em `https://danielrovisco.github.io/Nebula/`, automático
 a cada push para `main` (`.github/workflows/deploy.yml`).
 
+> **A pôr de pé pela primeira vez?** `ARRANQUE.md` tem a lista completa e por
+> ordem do que é preciso fazer fora do código — domínio, Supabase, R2, secrets,
+> formulário e estatísticas. Este ficheiro explica o porquê; esse é a lista de
+> tarefas.
+
 ## Desenvolvimento
 
 ```bash
