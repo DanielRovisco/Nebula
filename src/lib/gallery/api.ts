@@ -436,6 +436,16 @@ const realApi = {
     }))
   },
 
+  /** Ids das fotografias marcadas pelo cliente — lido no painel. */
+  async listFavorites(galleryId: string): Promise<string[]> {
+    const { data, error } = await supabase()
+      .from('gallery_favorites')
+      .select('photo_id')
+      .eq('gallery_id', galleryId)
+    if (error) throw new Error(error.message)
+    return (data ?? []).map((r) => r.photo_id as string)
+  },
+
   async logEvent(token: string, body: Record<string, unknown>) {
     // Best-effort: o registo nunca deve estragar o download do cliente.
     try {
@@ -449,6 +459,26 @@ const realApi = {
         body: JSON.stringify({ token, ...body }),
       })
     } catch { /* ignora */ }
+  },
+
+  /**
+   * Marca ou desmarca uma fotografia como favorita do cliente.
+   *
+   * Ao contrário do registo de atividade, aqui o resultado interessa: se falhar,
+   * o coração tem de voltar atrás, senão o cliente fica a pensar que escolheu
+   * uma fotografia que nós nunca vamos ver.
+   */
+  async setFavorite(token: string, photoId: string, on: boolean) {
+    const res = await fetch(functionsUrl('gallery-favorite'), {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        apikey: anonKey(),
+        Authorization: `Bearer ${anonKey()}`,
+      },
+      body: JSON.stringify({ token, photoId, on }),
+    })
+    if (!res.ok) throw new Error('favorite_failed')
   },
 
   async access(slug: string, password: string): Promise<GalleryAccess> {

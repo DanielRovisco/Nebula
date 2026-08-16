@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Download, Package, Play, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download, Heart, Package, Play, X } from 'lucide-react'
 import Seo from '../lib/Seo'
 import { loadSession, clearSession } from '../lib/gallery/session'
 import { downloadAll, downloadOne, ZIP_WARN_BYTES, type ZipProgress } from '../lib/gallery/download'
@@ -13,6 +13,36 @@ import GalleryCover from './gallery/GalleryCover'
 
 /** A introdução aparece uma vez por sessão e por galeria. */
 const introKey = (slug: string) => `nebula-intro-${slug}`
+
+const DIA = 864e5
+
+/**
+ * Aviso de que a galeria tem prazo.
+ *
+ * Uma galeria que fecha sem avisar é um cliente que perde as fotografias do
+ * casamento. A partir de 30 dias é só uma informação discreta; a menos de 14
+ * passa a destacado, que é quando ainda dá para fazer alguma coisa.
+ */
+function avisoDeValidade(expiresAt?: string | null) {
+  if (!expiresAt) return null
+  const fim = new Date(expiresAt)
+  if (Number.isNaN(fim.getTime())) return null
+
+  const dias = Math.ceil((fim.getTime() - Date.now()) / DIA)
+  if (dias <= 0) return null
+
+  const data = fim.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' })
+  if (dias > 30) {
+    return { urgente: false, texto: `Esta galeria fica disponível até ${data}.` }
+  }
+  return {
+    urgente: true,
+    texto:
+      dias === 1
+        ? `Último dia: esta galeria fecha amanhã (${data}). Descarreguem tudo o que quiserem guardar.`
+        : `Esta galeria fecha daqui a ${dias} dias, a ${data}. Descarreguem tudo o que quiserem guardar — depois disso os ficheiros deixam de estar acessíveis.`,
+  }
+}
 
 export default function GalleryView() {
   const { slug = '' } = useParams()
@@ -29,6 +59,11 @@ export default function GalleryView() {
     }
   })
   const [open, setOpen] = useState<number | null>(null)
+  // Fotografias marcadas pelo cliente. Arranca com o que veio da sessão para os
+  // corações não aparecerem vazios a cada visita.
+  const [favoritas, setFavoritas] = useState<Set<string>>(
+    () => new Set(loadSession(slug)?.favorites ?? []),
+  )
   const [zipping, setZipping] = useState<ZipProgress | null>(null)
   const [error, setError] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
@@ -75,6 +110,33 @@ export default function GalleryView() {
     }
   }, [open, close, step])
 
+  /**
+   * Marca ou desmarca uma fotografia. O coração muda já, antes da resposta —
+   * esperar pela rede a cada toque tornava a escolha de 30 fotografias num
+   * exercício de paciência. Se o pedido falhar, volta atrás e diz porquê.
+   */
+  async function alternarFavorita(photoId: string) {
+    if (!access?.logToken) return
+    const marcar = !favoritas.has(photoId)
+    setFavoritas((atual) => {
+      const proximo = new Set(atual)
+      if (marcar) proximo.add(photoId)
+      else proximo.delete(photoId)
+      return proximo
+    })
+    try {
+      await api.setFavorite(access.logToken, photoId, marcar)
+    } catch {
+      setFavoritas((atual) => {
+        const proximo = new Set(atual)
+        if (marcar) proximo.delete(photoId)
+        else proximo.add(photoId)
+        return proximo
+      })
+      setError('Não foi possível guardar essa escolha. Voltem a entrar e tentem de novo.')
+    }
+  }
+
   async function handleDownloadAll() {
     if (!access) return
     if (totalBytes > ZIP_WARN_BYTES) {
@@ -119,6 +181,7 @@ export default function GalleryView() {
 
   const { gallery } = access
   const current = open !== null ? photos[open] : null
+  const aviso = avisoDeValidade(gallery.expiresAt)
 
   return (
     <div className="min-h-screen">
@@ -150,6 +213,20 @@ export default function GalleryView() {
           </div>
         )}
 
+        {aviso && (
+          <div className="container-px mb-8">
+            <div
+              className={`rounded-xl p-4 text-xs leading-relaxed border ${
+                aviso.urgente
+                  ? 'border-amber-400/30 bg-amber-400/[0.07] text-amber-100/85'
+                  : 'border-white/10 text-titanium/45'
+              }`}
+            >
+              {aviso.texto}
+            </div>
+          </div>
+        )}
+
         <section className="container-px mb-10 sm:mb-14">
           {gallery.message && (
             <p className="text-sm text-titanium/55 leading-relaxed max-w-lg mb-8">
@@ -161,6 +238,12 @@ export default function GalleryView() {
             <span className="label-sm">
               {photos.length} {photos.length === 1 ? 'ficheiro' : 'ficheiros'}
             </span>
+            {favoritas.size > 0 && (
+              <span className="label-sm inline-flex items-center gap-1.5 text-titanium/60">
+                <Heart size={11} fill="currentColor" />
+                {favoritas.size} {favoritas.size === 1 ? 'escolhida' : 'escolhidas'}
+              </span>
+            )}
             {gallery.downloadEnabled && photos.length > 0 && (
               <button
                 onClick={handleDownloadAll}
@@ -258,6 +341,28 @@ export default function GalleryView() {
                       <Download size={15} />
                     </button>
                   )}
+
+                  {/*
+                    Uma vez marcada, a fotografia mostra o coração sempre — a
+                    escolha tem de se ver de relance, sem passar o rato por cima
+                    de 200 fotografias para saber o que já foi escolhido.
+                  */}
+                  <button
+                    onClick={() => alternarFavorita(photo.id)}
+                    aria-pressed={favoritas.has(photo.id)}
+                    aria-label={
+                      favoritas.has(photo.id)
+                        ? `Retirar ${photo.fileName} das escolhidas`
+                        : `Escolher ${photo.fileName}`
+                    }
+                    className={`absolute bottom-1.5 left-1.5 p-2.5 rounded-full bg-eerie/70 hover:bg-eerie/90 transition-all active:scale-90 ${
+                      favoritas.has(photo.id)
+                        ? 'text-titanium'
+                        : 'text-titanium/85 sm:opacity-0 sm:group-hover:opacity-100'
+                    }`}
+                  >
+                    <Heart size={15} fill={favoritas.has(photo.id) ? 'currentColor' : 'none'} />
+                  </button>
                 </motion.div>
               ))}
             </div>
@@ -291,6 +396,16 @@ export default function GalleryView() {
                 {(open ?? 0) + 1} / {photos.length}
               </span>
               <div className="flex items-center gap-1">
+                <button
+                  onClick={() => alternarFavorita(current.id)}
+                  aria-pressed={favoritas.has(current.id)}
+                  className={`p-3 transition-colors ${
+                    favoritas.has(current.id) ? 'text-titanium' : 'text-titanium/60 hover:text-titanium'
+                  }`}
+                  aria-label={favoritas.has(current.id) ? 'Retirar das escolhidas' : 'Escolher esta'}
+                >
+                  <Heart size={20} fill={favoritas.has(current.id) ? 'currentColor' : 'none'} />
+                </button>
                 {gallery.downloadEnabled && (
                   <button
                     onClick={() => handleDownloadOne(open!)}

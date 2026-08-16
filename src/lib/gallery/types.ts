@@ -63,8 +63,12 @@ export interface GalleryAccess {
     logoVariant: LogoVariant
     /** URL assinado da foto de capa, quando houver. */
     coverUrl: string | null
+    /** Data em que a galeria fecha. Null = sem prazo. */
+    expiresAt?: string | null
   }
   photos: SignedPhoto[]
+  /** Ids das fotografias que o cliente já marcou como favoritas. */
+  favorites?: string[]
   /** Segundos de validade dos URLs assinados, a contar da resposta. */
   expiresIn: number
   /** Comprovativo para registar downloads. Sozinho não abre ficheiros. */

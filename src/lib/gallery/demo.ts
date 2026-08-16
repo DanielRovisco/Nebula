@@ -19,6 +19,8 @@ interface DemoState {
   galleries: (Gallery & { password: string })[]
   photos: Photo[]
   events: (GalleryEvent & { galleryId: string })[]
+  /** Ids das fotos marcadas pelo cliente, por galeria. */
+  favorites: Record<string, string[]>
 }
 
 function seed(): DemoState {
@@ -76,14 +78,15 @@ function seed(): DemoState {
     { id: 2, galleryId: 'demo-1', kind: 'download_one', fileName: 'forest-bride.jpg', at: new Date(agora - 36e5 * 3).toISOString() },
     { id: 1, galleryId: 'demo-1', kind: 'open', fileName: null, at: new Date(agora - 36e5 * 4).toISOString() },
   ]
-  return { galleries, photos, events }
+  return { galleries, photos, events, favorites: {} }
 }
 
 function load(): DemoState {
   try {
     const raw = sessionStorage.getItem(KEY)
-    // `events` é recente: um estado gravado antes disto não o tem.
-    if (raw) return { events: [], ...JSON.parse(raw) }
+    // `events` e `favorites` são recentes: um estado gravado antes disto não os
+    // tem, e sem estes valores por omissão a galeria rebentava ao lê-los.
+    if (raw) return { events: [], favorites: {}, ...JSON.parse(raw) }
   } catch { /* sessionStorage indisponível — segue com dados novos */ }
   const s = seed()
   save(s)
@@ -261,6 +264,21 @@ export const demoApi = {
     save(s)
   },
 
+  async listFavorites(galleryId: string): Promise<string[]> {
+    await wait(150)
+    return load().favorites?.[galleryId] ?? []
+  },
+
+  async setFavorite(token: string, photoId: string, on: boolean) {
+    const s = load()
+    s.favorites = s.favorites ?? {}
+    const atual = new Set(s.favorites[token] ?? [])
+    if (on) atual.add(photoId)
+    else atual.delete(photoId)
+    s.favorites[token] = [...atual]
+    save(s)
+  },
+
   async access(slug: string, password: string): Promise<GalleryAccess> {
     await wait(500)
     const s = load()
@@ -291,6 +309,7 @@ export const demoApi = {
           s.photos.find((p) => p.id === g.coverPhotoId)?.storagePath ??
           s.photos.find((p) => p.galleryId === g.id)?.storagePath ??
           null,
+        expiresAt: g.expiresAt,
       },
       expiresIn: 7200,
       // Na demonstração o "token" é só o id da galeria — não há nada a assinar.
@@ -308,6 +327,7 @@ export const demoApi = {
           url: p.storagePath,
           thumbUrl: p.thumbPath,
         })),
+      favorites: s.favorites?.[g.id] ?? [],
     }
   },
 }

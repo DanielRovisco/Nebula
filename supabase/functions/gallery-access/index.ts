@@ -77,6 +77,13 @@ Deno.serve(async (req) => {
     })),
   )
 
+  // Fotografias que o cliente já marcou. Sem isto os corações apareciam todos
+  // vazios a cada visita e a escolha parecia perdida.
+  const { data: favoritas } = await admin
+    .from('gallery_favorites')
+    .select('photo_id')
+    .eq('gallery_id', gallery.id)
+
   // A abertura da galeria fica registada. Se falhar, não é motivo para negar
   // o acesso a quem acertou na password.
   admin
@@ -104,7 +111,10 @@ Deno.serve(async (req) => {
       // Sem capa escolhida, a primeira foto serve — uma galeria nunca abre num
       // ecrã vazio.
       coverUrl: cover?.url ?? signed[0]?.url ?? null,
+      // Quando a galeria fecha. Null = sem prazo.
+      expiresAt: gallery.expires_at ?? null,
     },
+    favorites: (favoritas ?? []).map((f) => f.photo_id as string),
     expiresIn: SIGNED_URL_TTL,
     // Comprovativo para o cliente poder registar downloads. Sozinho não abre
     // ficheiro nenhum.

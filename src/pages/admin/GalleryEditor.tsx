@@ -9,6 +9,7 @@ import { DELIVERY_EDGE } from '../../lib/gallery/api'
 import { COVER_FONTS, LOGO_VARIANTS } from '../../lib/gallery/cover'
 import { isVideo, type CoverFont, type LogoVariant } from '../../lib/gallery/types'
 import GalleryActivity from './GalleryActivity'
+import GalleryFavorites from './GalleryFavorites'
 
 export default function GalleryEditor() {
   const { id = '' } = useParams()
@@ -454,6 +455,11 @@ export default function GalleryEditor() {
               }
               className={`${field} [color-scheme:dark]`}
             />
+            <p className="text-[10px] text-titanium/25 mt-1.5 leading-relaxed">
+              Depois desta data a galeria deixa de abrir. O cliente vê o prazo
+              na galeria, e a partir de 30 dias antes o aviso passa a destacado
+              — ninguém deve perder as fotografias por não ter sido avisado.
+            </p>
           </div>
         </div>
 
@@ -485,6 +491,8 @@ export default function GalleryEditor() {
       </section>
 
       {/* ── Atividade ───────────────────────────────────────── */}
+      <GalleryFavorites galleryId={gallery.id} photos={photos} />
+
       <GalleryActivity galleryId={gallery.id} />
 
       {/* ── Password ────────────────────────────────────────── */}

@@ -159,7 +159,9 @@ returns table (
   cover_photo_id uuid,
   cover_title text,
   cover_font text,
-  logo_variant text
+  logo_variant text,
+  -- Vai para o cliente para a galeria poder avisar até quando está disponível.
+  expires_at timestamptz
 ) language plpgsql security definer
   set search_path = public, extensions as $$
 declare
@@ -178,7 +180,8 @@ begin
 
   return query
   select g.id, g.slug, g.title, g.client_name, g.message, g.download_enabled,
-         g.cover_photo_id, g.cover_title, g.cover_font, g.logo_variant
+         g.cover_photo_id, g.cover_title, g.cover_font, g.logo_variant,
+         g.expires_at
   from galleries g
   where g.slug = p_slug
     and g.published = true
@@ -218,6 +221,33 @@ create policy "admin lê eventos" on gallery_events
 
 -- Ninguém escreve aqui a partir do browser: os eventos entram pela Edge
 -- Function, que exige o comprovativo de acesso emitido depois da password.
+
+-- ─── Favoritas do cliente ───────────────────────────────────────────────────
+-- O cliente marca as fotografias que quer (para o álbum, para ampliar, para o
+-- que for) e nós vemos a lista no painel. É a alternativa a receber por email
+-- uma lista de nomes de ficheiro.
+--
+-- Não há utilizadores nas galerias — quem entrou com a password é "o cliente".
+-- Por isso a marca é da galeria, não de uma pessoa: a chave primária impede a
+-- mesma fotografia de ser marcada duas vezes.
+
+create table if not exists gallery_favorites (
+  gallery_id uuid not null references galleries(id) on delete cascade,
+  photo_id uuid not null references photos(id) on delete cascade,
+  at timestamptz not null default now(),
+  primary key (gallery_id, photo_id)
+);
+
+create index if not exists gallery_favorites_idx on gallery_favorites (gallery_id);
+
+alter table gallery_favorites enable row level security;
+
+drop policy if exists "admin lê favoritas" on gallery_favorites;
+create policy "admin lê favoritas" on gallery_favorites
+  for select to authenticated using (true);
+
+-- Tal como nos eventos, a escrita é exclusiva da Edge Function com o
+-- comprovativo de acesso — do browser, sem sessão, não se marca nada.
 
 -- ─── Conteúdo do site ───────────────────────────────────────────────────────
 -- Ao contrário das galerias de cliente, isto é público: o site lê-o sem estar
