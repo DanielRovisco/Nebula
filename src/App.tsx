@@ -5,6 +5,7 @@ import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ScrollProgress from './components/ScrollProgress'
 import FloatingActions from './components/FloatingActions'
+import Analytics from './lib/Analytics'
 import SmoothScroll from './lib/SmoothScroll'
 import PageTransition from './lib/PageTransition'
 import ScrollToTop from './lib/ScrollToTop'
@@ -67,6 +68,8 @@ export default function App() {
 
   return (
     <SmoothScroll>
+      {/* Fora do painel e das galerias: não se medem visitas a páginas privadas. */}
+      <Analytics />
       <ScrollProgress />
       <ScrollToTop />
       <Navbar />

@@ -253,8 +253,27 @@ create table if not exists site_photos (
 
 create index if not exists site_photos_idx on site_photos (sort_order);
 
+-- Testemunhos de clientes. Escritos à mão no painel a partir do que os clientes
+-- nos enviam — não há recolha automática, e é de propósito: um testemunho que
+-- ninguém verificou vale menos do que nenhum.
+create table if not exists site_testimonials (
+  id uuid primary key default gen_random_uuid(),
+  -- Quem assina. Nomes próprios chegam ("Ana & Miguel").
+  author text not null,
+  -- Contexto: "Casamento na Quinta do Sanguinhal, setembro de 2026".
+  context text not null default '',
+  quote text not null,
+  sort_order int not null default 0,
+  -- Permite preparar um testemunho e só o mostrar quando o cliente autorizar.
+  published boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists site_testimonials_idx on site_testimonials (sort_order);
+
 alter table site_categories enable row level security;
 alter table site_photos enable row level security;
+alter table site_testimonials enable row level security;
 
 -- Leitura pública: é isto que o site mostra a quem o visita.
 drop policy if exists "todos leem categorias" on site_categories;
@@ -265,6 +284,10 @@ drop policy if exists "todos leem fotos do site" on site_photos;
 create policy "todos leem fotos do site" on site_photos
   for select to anon, authenticated using (published);
 
+drop policy if exists "todos leem testemunhos" on site_testimonials;
+create policy "todos leem testemunhos" on site_testimonials
+  for select to anon, authenticated using (published);
+
 -- Escrita só para quem fez login no painel.
 drop policy if exists "admin escreve categorias" on site_categories;
 create policy "admin escreve categorias" on site_categories
@@ -272,6 +295,10 @@ create policy "admin escreve categorias" on site_categories
 
 drop policy if exists "admin escreve fotos do site" on site_photos;
 create policy "admin escreve fotos do site" on site_photos
+  for all to authenticated using (true) with check (true);
+
+drop policy if exists "admin escreve testemunhos" on site_testimonials;
+create policy "admin escreve testemunhos" on site_testimonials
   for all to authenticated using (true) with check (true);
 
 -- Categorias de arranque, iguais às que o site já mostra.

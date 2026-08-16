@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Eye, EyeOff, Maximize2, Plus, Trash2, Upload } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Eye, EyeOff, Maximize2, Plus, Trash2, Upload } from 'lucide-react'
 import { siteAdmin, publicUrl, uploadSitePhoto, SITE_EDGE } from '../../lib/site-content/api'
-import type { SiteCategory, SitePhoto } from '../../lib/site-content/types'
+import type { SiteCategory, SitePhoto, Testimonial } from '../../lib/site-content/types'
 import { DEMO } from '../../lib/gallery/config'
 import { slugify } from '../../lib/gallery/helpers'
 import { asset } from '../../lib/asset'
@@ -18,6 +18,7 @@ const thumbUrl = (p: SitePhoto) =>
 export default function SiteAdmin() {
   const [categories, setCategories] = useState<SiteCategory[]>([])
   const [photos, setPhotos] = useState<SitePhoto[]>([])
+  const [testemunhos, setTestemunhos] = useState<Testimonial[]>([])
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [upload, setUpload] = useState<{ done: number; total: number } | null>(null)
@@ -27,11 +28,12 @@ export default function SiteAdmin() {
 
   useEffect(() => {
     let vivo = true
-    Promise.all([siteAdmin.listCategories(), siteAdmin.listPhotos()])
-      .then(([c, p]) => {
+    Promise.all([siteAdmin.listCategories(), siteAdmin.listPhotos(), siteAdmin.listTestimonials()])
+      .then(([c, p, t]) => {
         if (!vivo) return
         setCategories(c)
         setPhotos(p)
+        setTestemunhos(t)
       })
       .catch((e) => vivo && setError((e as Error).message))
     return () => {
@@ -96,6 +98,15 @@ export default function SiteAdmin() {
     next.splice(to, 0, m)
     setPhotos(next)
     siteAdmin.reorderPhotos(next.map((p) => p.id)).catch((e) => setError((e as Error).message))
+  }
+
+  function moverTestemunho(from: number, to: number) {
+    if (to < 0 || to >= testemunhos.length) return
+    const next = [...testemunhos]
+    const [m] = next.splice(from, 1)
+    next.splice(to, 0, m)
+    setTestemunhos(next)
+    siteAdmin.reorderTestimonials(next.map((t) => t.id)).catch((e) => setError((e as Error).message))
   }
 
   return (
@@ -325,6 +336,134 @@ export default function SiteAdmin() {
         )}
       </section>
 
+      {/* ── Testemunhos ─────────────────────────────────────── */}
+      <section className="mb-14 max-w-3xl">
+        <h2 className="text-xl mb-2">
+          Testemunhos <span className="text-titanium/35 text-base">({testemunhos.length})</span>
+        </h2>
+        <p className="text-xs text-titanium/35 mb-6 leading-relaxed">
+          Aparecem na página inicial, antes do último convite ao contacto.
+          Enquanto não houver nenhum publicado, a secção não existe no site.
+          Escreve o que o cliente vos disse, com o nome que ele autorizou — e
+          pede-lhe essa autorização antes de publicar.
+        </p>
+
+        <ul className="space-y-3 mb-6">
+          {testemunhos.map((t, i) => (
+            <li
+              key={t.id}
+              className={`border border-white/10 rounded-2xl p-5 ${t.published ? '' : 'opacity-50'}`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex flex-col gap-1 pt-1">
+                  <button
+                    onClick={() => moverTestemunho(i, i - 1)}
+                    disabled={i === 0}
+                    aria-label="Mover para cima"
+                    className="p-1 text-titanium/40 hover:text-titanium disabled:opacity-20"
+                  >
+                    <ChevronUp size={14} />
+                  </button>
+                  <button
+                    onClick={() => moverTestemunho(i, i + 1)}
+                    disabled={i === testemunhos.length - 1}
+                    aria-label="Mover para baixo"
+                    className="p-1 text-titanium/40 hover:text-titanium disabled:opacity-20"
+                  >
+                    <ChevronDown size={14} />
+                  </button>
+                </div>
+
+                <div className="flex-1 space-y-3 min-w-0">
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <input
+                      defaultValue={t.author}
+                      onBlur={(e) =>
+                        e.target.value.trim() !== t.author &&
+                        e.target.value.trim() &&
+                        guardar(() => siteAdmin.updateTestimonial(t.id, { author: e.target.value.trim() }))
+                      }
+                      className={`${field} text-sm py-1.5`}
+                      placeholder="Ana & Miguel"
+                      aria-label="Quem assina"
+                    />
+                    <input
+                      defaultValue={t.context}
+                      onBlur={(e) =>
+                        e.target.value !== t.context &&
+                        guardar(() => siteAdmin.updateTestimonial(t.id, { context: e.target.value }))
+                      }
+                      className={`${field} text-sm py-1.5`}
+                      placeholder="Casamento na Quinta X, setembro 2026"
+                      aria-label="Contexto"
+                    />
+                  </div>
+                  <textarea
+                    defaultValue={t.quote}
+                    rows={3}
+                    onBlur={(e) =>
+                      e.target.value.trim() !== t.quote &&
+                      e.target.value.trim() &&
+                      guardar(() => siteAdmin.updateTestimonial(t.id, { quote: e.target.value.trim() }))
+                    }
+                    className={`${field} text-sm py-1.5 resize-none`}
+                    placeholder="O que o cliente escreveu."
+                    aria-label="Testemunho"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={() =>
+                      guardar(() => siteAdmin.updateTestimonial(t.id, { published: !t.published }))
+                    }
+                    aria-label={t.published ? 'Esconder do site' : 'Mostrar no site'}
+                    className="p-2 text-titanium/40 hover:text-titanium transition-colors"
+                  >
+                    {t.published ? <Eye size={14} /> : <EyeOff size={14} />}
+                  </button>
+                  <button
+                    onClick={() =>
+                      window.confirm(`Apagar o testemunho de ${t.author}?`) &&
+                      guardar(() => siteAdmin.deleteTestimonial(t.id), 'Testemunho apagado.')
+                    }
+                    aria-label="Apagar testemunho"
+                    className="p-2 text-titanium/30 hover:text-red-300 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            </li>
+          ))}
+          {testemunhos.length === 0 && (
+            <li className="border border-dashed border-white/15 rounded-2xl p-10 text-center text-sm text-titanium/45">
+              Ainda sem testemunhos — a secção não aparece no site.
+            </li>
+          )}
+        </ul>
+
+        <button
+          onClick={() =>
+            guardar(
+              () =>
+                siteAdmin.createTestimonial({
+                  author: 'Novo cliente',
+                  context: '',
+                  quote: 'Escreve aqui o que o cliente disse.',
+                  sortOrder: testemunhos.length,
+                  // Nasce escondido: ninguém quer um testemunho por preencher
+                  // publicado no site durante o tempo que leva a escrevê-lo.
+                  published: false,
+                }),
+              'Testemunho criado — está escondido até o publicares.',
+            )
+          }
+          className="inline-flex items-center gap-2 border border-white/20 px-5 py-3 rounded-full text-[11px] uppercase tracking-[0.18em] text-titanium/75 hover:border-white/40 transition-all min-h-[44px]"
+        >
+          <Plus size={14} /> Novo testemunho
+        </button>
+      </section>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { DEMO, supabase } from '../gallery/config'
 import { THUMB_EDGE, THUMB_QUALITY, callAdmin, putToR2, resize } from '../gallery/api'
-import type { SiteCategory, SitePhoto } from './types'
+import { DEMO_TESTIMONIAL } from './types'
+import type { SiteCategory, SitePhoto, Testimonial } from './types'
 
 export { publicUrl } from './public'
 
@@ -28,7 +29,12 @@ const rowToPhoto = (r: Record<string, unknown>): SitePhoto => ({
 
 // Versão de demonstração: tudo em memória, para o painel do site poder ser
 // experimentado sem Supabase configurado.
-const demoStore: { categories: SiteCategory[]; photos: SitePhoto[] } = {
+const demoStore: {
+  categories: SiteCategory[]
+  photos: SitePhoto[]
+  testimonials: Testimonial[]
+} = {
+  testimonials: [{ ...DEMO_TESTIMONIAL }],
   categories: [
     { id: 'c1', slug: 'casamentos', label: 'Casamentos', sortOrder: 1 },
     { id: 'c2', slug: 'maternidade', label: 'Maternidade', sortOrder: 2 },
@@ -96,6 +102,29 @@ const demoSiteAdmin = {
     orderedIds.forEach((id, i) => {
       const p = demoStore.photos.find((x) => x.id === id)
       if (p) p.sortOrder = i
+    })
+  },
+  async listTestimonials() {
+    await demoWait()
+    return [...demoStore.testimonials].sort((a, b) => a.sortOrder - b.sortOrder)
+  },
+  async createTestimonial(t: Omit<Testimonial, 'id'>) {
+    await demoWait(120)
+    demoStore.testimonials.push({ ...t, id: `t-${Date.now()}` })
+  },
+  async updateTestimonial(id: string, patch: Partial<Testimonial>) {
+    await demoWait(120)
+    const t = demoStore.testimonials.find((x) => x.id === id)
+    if (t) Object.assign(t, patch)
+  },
+  async deleteTestimonial(id: string) {
+    await demoWait(120)
+    demoStore.testimonials = demoStore.testimonials.filter((t) => t.id !== id)
+  },
+  async reorderTestimonials(orderedIds: string[]) {
+    orderedIds.forEach((id, i) => {
+      const t = demoStore.testimonials.find((x) => x.id === id)
+      if (t) t.sortOrder = i
     })
   },
 }
@@ -179,6 +208,59 @@ const realSiteAdmin = {
     const sb = supabase()
     await Promise.all(
       orderedIds.map((id, i) => sb.from('site_photos').update({ sort_order: i }).eq('id', id)),
+    )
+  },
+
+  /**
+   * No painel queremos ver também os testemunhos por publicar, e o `fetch`
+   * público filtra por published — daí ir pelo SDK, que já leva a sessão.
+   */
+  async listTestimonials(): Promise<Testimonial[]> {
+    const { data, error } = await supabase()
+      .from('site_testimonials')
+      .select('*')
+      .order('sort_order')
+    if (error) throw new Error(error.message)
+    return (data ?? []).map((r: Record<string, unknown>) => ({
+      id: r.id as string,
+      author: r.author as string,
+      context: (r.context as string) ?? '',
+      quote: r.quote as string,
+      sortOrder: (r.sort_order as number) ?? 0,
+      published: r.published !== false,
+    }))
+  },
+
+  async createTestimonial(t: Omit<Testimonial, 'id'>) {
+    const { error } = await supabase().from('site_testimonials').insert({
+      author: t.author,
+      context: t.context,
+      quote: t.quote,
+      sort_order: t.sortOrder,
+      published: t.published,
+    })
+    if (error) throw new Error(error.message)
+  },
+
+  async updateTestimonial(id: string, patch: Partial<Testimonial>) {
+    const row: Record<string, unknown> = {}
+    if (patch.author !== undefined) row.author = patch.author
+    if (patch.context !== undefined) row.context = patch.context
+    if (patch.quote !== undefined) row.quote = patch.quote
+    if (patch.published !== undefined) row.published = patch.published
+    const { error } = await supabase().from('site_testimonials').update(row).eq('id', id)
+    if (error) throw new Error(error.message)
+  },
+
+  async deleteTestimonial(id: string) {
+    const { error } = await supabase().from('site_testimonials').delete().eq('id', id)
+    if (error) throw new Error(error.message)
+  },
+
+  async reorderTestimonials(orderedIds: string[]) {
+    const sb = supabase()
+    await Promise.all(
+      orderedIds.map((id, i) => sb.from('site_testimonials').update({ sort_order: i }).eq('id', id)),
     )
   },
 }

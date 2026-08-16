@@ -7,6 +7,7 @@ import Picture from '../lib/Picture'
 import CountUp from '../lib/CountUp'
 import Seo from '../lib/Seo'
 import SiteIntro from '../components/SiteIntro'
+import Testimonials from '../components/Testimonials'
 import { asset } from '../lib/asset'
 import { CONTACT, absoluteUrl } from '../lib/site'
 
@@ -378,6 +379,10 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── TESTEMUNHOS ─────────────────────────────────── */}
+      {/* Só se desenha se houver testemunhos carregados no painel. */}
+      <Testimonials />
 
       {/* ── CTA FINAL ────────────────────────────────────── */}
       <section className="py-20 sm:py-36 md:py-44">

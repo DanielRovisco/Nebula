@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { fetchPortfolio, publicUrl } from './public'
+import { fetchPortfolio, fetchTestimonials, publicUrl } from './public'
+import type { Testimonial } from './types'
 
 export interface PortfolioItem {
   id: string
@@ -51,4 +52,22 @@ export function usePortfolio(fallback: {
   }, [])
 
   return data
+}
+
+/**
+ * Testemunhos publicados. Começa vazio e a secção do site só aparece depois de
+ * haver testemunhos reais — não há elogios de reserva escritos por nós.
+ */
+export function useTestimonials(): Testimonial[] {
+  const [lista, setLista] = useState<Testimonial[]>([])
+
+  useEffect(() => {
+    let vivo = true
+    fetchTestimonials().then((t) => vivo && t.length && setLista(t))
+    return () => {
+      vivo = false
+    }
+  }, [])
+
+  return lista
 }

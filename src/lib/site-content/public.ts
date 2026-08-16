@@ -1,4 +1,5 @@
-import type { SiteCategory, SitePhoto } from './types'
+import { DEMO_TESTIMONIAL } from './types'
+import type { SiteCategory, SitePhoto, Testimonial } from './types'
 
 /**
  * Leitura do conteúdo público do site.
@@ -66,4 +67,28 @@ export async function fetchPortfolio(): Promise<{
       published: true,
     })),
   }
+}
+
+/**
+ * Testemunhos publicados, na ordem definida no painel.
+ *
+ * Devolve lista vazia quando não há nada configurado ou a leitura falha — e a
+ * secção do site simplesmente não aparece. Não há testemunhos de exemplo no
+ * código: inventar elogios de clientes que não existem seria mentir a quem nos
+ * está a avaliar.
+ */
+export async function fetchTestimonials(): Promise<Testimonial[]> {
+  if (DEMO) return [DEMO_TESTIMONIAL]
+  const rows = await rest<Record<string, unknown>[]>(
+    'site_testimonials?select=*&published=eq.true&order=sort_order',
+  )
+  if (!rows) return []
+  return rows.map((r) => ({
+    id: r.id as string,
+    author: r.author as string,
+    context: (r.context as string) ?? '',
+    quote: r.quote as string,
+    sortOrder: (r.sort_order as number) ?? 0,
+    published: true,
+  }))
 }
