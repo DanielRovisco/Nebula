@@ -55,7 +55,8 @@ Por omissão o formulário abre o cliente de email do visitante já preenchido
 Para receber as mensagens por HTTP em vez disso, definir
 `VITE_CONTACT_ENDPOINT` (ver `.env.example`) com o URL de um serviço de
 formulários — Formspree, Web3Forms ou equivalente. O formulário passa a
-submeter por `POST` em JSON (`name`, `email`, `service`, `message`) e o
+submeter por `POST` em JSON (`name`, `email`, `service`, `date`, `location`,
+`message`) e o
 visitante nunca sai do site. Em ambiente de deploy, a variável tem de ser
 definida como secret no workflow do GitHub Actions.
 
@@ -67,7 +68,7 @@ router em `src/main.tsx`). Dele derivam o `canonical`, o `og:image` e o
 `sitemap`.
 
 Cada página declara os seus metadados via `<Seo>`, que escreve
-`title`/`description`/`canonical`/Open Graph no cliente. Como é uma SPA, os
+`title`/`description`/`canonical`/`hreflang`/Open Graph no cliente. Como é uma SPA, os
 crawlers que não executam JavaScript vêem apenas os metadados do `index.html`
 — o Googlebot executa JS, mas se o SEO se tornar crítico o passo seguinte é
 pré-renderizar as rotas no build.
@@ -89,7 +90,8 @@ desligados e o conteúdo é entregue estático.
 `/admin` tem dois separadores:
 
 - **Galerias** — as entregas privadas a clientes (ver secção seguinte).
-- **Site** — o conteúdo público: as fotos e as categorias do portfólio.
+- **Site** — o conteúdo público: as fotos e as categorias do portfólio, e os
+  testemunhos de clientes.
 
 ### Separador Site
 
@@ -110,6 +112,34 @@ do código é renderizado no primeiro frame, sem esperar pela rede.
 O conteúdo público é lido por `fetch` direto ao PostgREST, não pelo SDK do
 Supabase: importar o SDK na página de portfólio arrastava 215 kB de JavaScript
 para uma página de marketing. O SDK fica reservado ao painel.
+
+**Testemunhos.** Não há nenhum escrito no código, e a secção da página inicial
+só existe depois de haver testemunhos publicados no painel. Cada testemunho
+nasce escondido: escreve-se com calma e publica-se quando o cliente autorizar o
+nome. Inventar elogios seria falsificar exatamente aquilo que a secção existe
+para provar.
+
+## Duas línguas
+
+O site existe em português e inglês, com um endereço próprio para cada página em
+cada língua (`/servicos` e `/en/services`). A língua sai do endereço — não há
+estado guardado — o que faz um link partilhado abrir na língua em que foi
+partilhado, e permite ao Google indexar as duas versões como traduções uma da
+outra (`hreflang`) em vez de conteúdo duplicado.
+
+Os textos vivem em `src/lib/i18n/pt.ts` e `en.ts`. **O inglês é tipado contra o
+português**: falta uma chave e o build falha. Ao escrever texto novo, escreve-se
+primeiro em `pt.ts` e o compilador encarrega-se de lembrar a tradução. O painel
+de administração fica só em português — é interno.
+
+## Estatísticas de visitas
+
+Sem `VITE_ANALYTICS_SRC` definido no build, o site não carrega script nenhum e
+não faz um único pedido a terceiros. Suporta ferramentas **sem cookies**
+(Plausible via `VITE_ANALYTICS_DOMAIN`, Umami via `VITE_ANALYTICS_ID`) — ver
+`.env.example`. É deliberado: sem cookies não há consentimento a pedir e o site
+dispensa o aviso. Pôr aqui Google Analytics obriga a um banner a sério e a mudar
+a política de privacidade.
 
 ## Galerias privadas
 
