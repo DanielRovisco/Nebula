@@ -75,7 +75,7 @@ export interface GalleryAccess {
   logToken?: string
 }
 
-export type EventKind = 'open' | 'download_all' | 'download_one'
+export type EventKind = 'open' | 'download_all' | 'download_one' | 'download_favorites'
 
 export interface GalleryEvent {
   id: number

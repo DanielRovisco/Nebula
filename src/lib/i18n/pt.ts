@@ -311,6 +311,8 @@ export const pt = {
     chosen: 'escolhida',
     chosenPlural: 'escolhidas',
     downloadAll: 'Descarregar tudo',
+    downloadChosen: 'Descarregar escolhidas',
+    chosenSuffix: 'escolhidas',
     cancel: 'Cancelar',
     exit: 'Sair',
     empty: 'Ainda não há ficheiros nesta galeria. Avisamos assim que estiverem prontos.',

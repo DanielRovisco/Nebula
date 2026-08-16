@@ -202,7 +202,7 @@ grant execute on function verify_gallery_password(text, text) to service_role;
 create table if not exists gallery_events (
   id bigserial primary key,
   gallery_id uuid not null references galleries(id) on delete cascade,
-  -- 'open' | 'download_all' | 'download_one'
+  -- 'open' | 'download_all' | 'download_one' | 'download_favorites'
   kind text not null check (kind in ('open', 'download_all', 'download_one')),
   -- Nome legível do ficheiro, para o registo continuar a fazer sentido mesmo
   -- depois de a foto ser apagada.
@@ -212,6 +212,14 @@ create table if not exists gallery_events (
 );
 
 create index if not exists gallery_events_idx on gallery_events (gallery_id, at desc);
+
+-- O download só das escolhidas é posterior à criação da tabela: quem já correu
+-- este ficheiro tem a restrição antiga, que recusaria o tipo novo. Recriá-la é
+-- a forma de este ficheiro continuar a poder ser corrido de novo sem estragar
+-- nada.
+alter table gallery_events drop constraint if exists gallery_events_kind_check;
+alter table gallery_events add constraint gallery_events_kind_check
+  check (kind in ('open', 'download_all', 'download_one', 'download_favorites'));
 
 alter table gallery_events enable row level security;
 

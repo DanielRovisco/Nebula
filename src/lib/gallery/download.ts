@@ -31,6 +31,12 @@ export async function downloadAll(
   galleryTitle: string,
   onProgress: (p: ZipProgress) => void,
   signal?: AbortSignal,
+  /**
+   * Acrescentado ao nome do ZIP. Serve para distinguir a entrega completa do
+   * download só das escolhidas: com dois ficheiros na pasta das transferências,
+   * ambos chamados "ana-e-tiago.zip", ninguém sabe qual é qual.
+   */
+  sufixo?: string,
 ) {
   const files: Record<string, Uint8Array> = {}
   const used = new Set<string>()
@@ -72,7 +78,7 @@ export async function downloadAll(
     })
   })
 
-  triggerSave(blob, `${slugify(galleryTitle)}.zip`)
+  triggerSave(blob, `${slugify(galleryTitle)}${sufixo ? `-${slugify(sufixo)}` : ''}.zip`)
 }
 
 function triggerSave(blob: Blob, fileName: string) {

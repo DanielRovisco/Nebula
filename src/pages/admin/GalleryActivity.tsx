@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Download, Eye, Package, RefreshCw } from 'lucide-react'
+import { Download, Eye, Heart, Package, RefreshCw } from 'lucide-react'
 import { api } from '../../lib/gallery/api'
 import type { GalleryEvent } from '../../lib/gallery/types'
 
@@ -20,6 +20,7 @@ function quando(iso: string) {
 const DESCRICAO: Record<GalleryEvent['kind'], { icon: typeof Eye; texto: (e: GalleryEvent) => string }> = {
   open: { icon: Eye, texto: () => 'Cliente abriu a galeria' },
   download_all: { icon: Package, texto: () => 'Cliente descarregou o álbum completo' },
+  download_favorites: { icon: Heart, texto: () => 'Cliente descarregou as fotografias escolhidas' },
   download_one: {
     icon: Download,
     texto: (e) => `Cliente descarregou ${e.fileName ?? 'um ficheiro'}`,

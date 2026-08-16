@@ -137,6 +137,36 @@ export default function GalleryView() {
     }
   }
 
+  /**
+   * ZIP só com as fotografias marcadas.
+   *
+   * Partilha o caminho do download completo — o que muda é a lista e o nome do
+   * ficheiro. Sem o sufixo, o cliente ficava com dois ZIP com o mesmo nome na
+   * pasta das transferências e sem saber qual era qual.
+   */
+  async function handleDownloadFavorites() {
+    if (!access) return
+    const escolhidas = photos.filter((p) => favoritas.has(p.id))
+    if (escolhidas.length === 0) return
+    setError(null)
+    abortRef.current = new AbortController()
+    try {
+      await downloadAll(
+        escolhidas,
+        access.gallery.title,
+        setZipping,
+        abortRef.current.signal,
+        t.gallery.chosenSuffix,
+      )
+      if (access.logToken) api.logEvent(access.logToken, { kind: 'download_favorites' })
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') setError(t.gallery.downloadFailed)
+    } finally {
+      setZipping(null)
+      abortRef.current = null
+    }
+  }
+
   async function handleDownloadAll() {
     if (!access) return
     if (totalBytes > ZIP_WARN_BYTES) {
@@ -249,6 +279,18 @@ export default function GalleryView() {
               >
                 <Package size={14} />
                 {zipping ? `${zipping.phase} ${zipping.done}/${zipping.total}` : t.gallery.downloadAll}
+              </button>
+            )}
+            {/* Só aparece depois de haver escolhas — um botão a dizer
+                "descarregar 0 escolhidas" não serve para nada. */}
+            {gallery.downloadEnabled && favoritas.size > 0 && (
+              <button
+                onClick={handleDownloadFavorites}
+                disabled={Boolean(zipping)}
+                className="inline-flex items-center gap-2.5 border border-white/25 px-6 py-3 rounded-full text-[11px] uppercase tracking-[0.18em] text-titanium/85 hover:border-white/50 hover:text-titanium active:scale-95 transition-all min-h-[44px] disabled:opacity-60 disabled:cursor-wait"
+              >
+                <Heart size={14} fill="currentColor" />
+                {t.gallery.downloadChosen} ({favoritas.size})
               </button>
             )}
             {zipping && (

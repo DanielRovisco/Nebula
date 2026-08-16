@@ -1,6 +1,7 @@
 // Edge Function: regista o que o cliente faz na galeria.
 //
 //   { token, kind: 'download_all' }
+//   { token, kind: 'download_favorites' }
 //   { token, kind: 'download_one', photoId, fileName }
 //
 // O token é o comprovativo emitido pela gallery-access a quem acertou na
@@ -13,7 +14,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { cors, json } from '../_shared/r2.ts'
 import { verifyAccessToken } from '../_shared/token.ts'
 
-const KINDS = new Set(['download_all', 'download_one'])
+const KINDS = new Set(['download_all', 'download_one', 'download_favorites'])
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })

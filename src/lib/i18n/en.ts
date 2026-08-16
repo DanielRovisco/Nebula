@@ -318,6 +318,8 @@ export const en: Dict = {
     chosen: 'chosen',
     chosenPlural: 'chosen',
     downloadAll: 'Download everything',
+    downloadChosen: 'Download chosen',
+    chosenSuffix: 'chosen',
     cancel: 'Cancel',
     exit: 'Sign out',
     empty: 'There are no files in this gallery yet. We will let you know as soon as they are ready.',
