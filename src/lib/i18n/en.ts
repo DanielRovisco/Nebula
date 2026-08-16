@@ -197,6 +197,13 @@ export const en: Dict = {
       'By sending this, your details are used only to answer this enquiry. There is more in our',
     privacyLink: 'privacy policy',
     submit: 'Send message',
+    draftRestored: 'We brought back what you had started writing.',
+    errors: {
+      name: 'Tell us your name.',
+      email: 'That email does not look complete.',
+      message: 'Write us a couple of lines about what you have in mind.',
+      pastDate: 'That date has already passed.',
+    },
     sending: 'Sending…',
     sentTitle: 'Message sent.',
     sentText: 'Thank you for writing — we will be in touch shortly.',
@@ -215,6 +222,18 @@ export const en: Dict = {
       location: 'Location',
       undefined_: '(to be decided)',
     },
+  },
+
+  thanks: {
+    seoTitle: 'Thank you — NEBULA',
+    seoDescription: 'We have your message.',
+    label: 'Received',
+    title: 'Thank you. We have your message.',
+    sent: 'We reply within 24 hours, usually well before that. If it is urgent, Instagram is the fastest way to reach us.',
+    mailto: 'We opened your email app with the message written — all that is left is to press send. If nothing opened, write to us directly.',
+    next: 'In the meantime',
+    seePortfolio: 'See the portfolio',
+    seeServices: 'Services & packages',
   },
 
   notFound: {
@@ -247,7 +266,7 @@ export const en: Dict = {
       {
         title: 'What we collect, and why',
         paragraphs: [
-          'Contact form. Your name, email, the type of service and, if you give them, the date and location of the event, along with whatever you write. They are used only to reply to you and prepare a proposal. The legal basis is your own enquiry — without this we cannot answer you.',
+          'Contact form. Your name, email, the type of service and, if you give them, the date and location of the event, along with whatever you write. They are used only to reply to you and prepare a proposal. The legal basis is your own enquiry — without this we cannot answer you. While you type, the text is kept in your own browser so it is not lost if you leave the page; it is deleted the moment you send, and never leaves your device before that.',
           'Private galleries. When you are a client, we create a password-protected gallery with the photographs and films from your session. We store the name that titles the gallery, the photographs you mark as favourites, and a technical record of when it was opened and what was downloaded. That record exists so we know the delivery arrived and can spot unauthorised access; we do not store your IP address or any device identifier.',
           'Site analytics. We use a cookie-free analytics tool that counts visits in aggregate and anonymously. You cannot be identified from it, nobody is tracked across sites, and that is why this site does not bother you with a cookie banner.',
           'We do not collect sensitive data, we make no automated decisions about you, and we never sell or pass your data to third parties for commercial purposes.',

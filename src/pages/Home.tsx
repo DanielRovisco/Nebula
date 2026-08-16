@@ -8,6 +8,7 @@ import CountUp from '../lib/CountUp'
 import Seo from '../lib/Seo'
 import SiteIntro from '../components/SiteIntro'
 import { useLink, useT } from '../lib/i18n'
+import { track } from '../lib/track'
 import Testimonials from '../components/Testimonials'
 import { asset } from '../lib/asset'
 import { CONTACT, absoluteUrl } from '../lib/site'
@@ -154,6 +155,7 @@ export default function Home() {
           >
             <Link
               to={link('contact')}
+              onClick={() => track('cta_marcar_sessao', { onde: 'hero' })}
               className="inline-flex items-center gap-3 bg-titanium text-eerie px-7 py-4 rounded-full text-[11px] sm:text-xs uppercase tracking-[0.18em] font-semibold group active:scale-95 hover:gap-5 transition-all min-h-[50px]"
             >
               {t.home.heroCta}
@@ -377,6 +379,7 @@ export default function Home() {
           <Reveal delay={0.2} className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               to={link('contact')}
+              onClick={() => track('cta_marcar_sessao', { onde: 'fim' })}
               className="inline-flex items-center gap-3 bg-titanium text-eerie px-9 py-5 rounded-full text-[11px] uppercase tracking-[0.2em] font-semibold group hover:gap-5 transition-all active:scale-95"
             >
               {t.home.ctaButton}
@@ -386,6 +389,7 @@ export default function Home() {
               href={CONTACT.instagramDm}
               target="_blank"
               rel="noreferrer"
+              onClick={() => track('cta_instagram', { onde: 'home' })}
               className="inline-flex items-center gap-3 border border-white/20 px-9 py-5 rounded-full text-[11px] uppercase tracking-[0.2em] hover:border-white/45 transition-colors active:scale-95"
             >
               {t.home.ctaInstagram}

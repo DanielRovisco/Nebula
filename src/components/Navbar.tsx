@@ -5,6 +5,7 @@ import { Menu, X } from 'lucide-react'
 import { asset } from '../lib/asset'
 import { CONTACT } from '../lib/site'
 import { useLang, useLink, useT } from '../lib/i18n'
+import { track } from '../lib/track'
 import { switchLang } from '../lib/i18n/routes'
 
 export default function Navbar() {
@@ -81,6 +82,7 @@ export default function Navbar() {
             ))}
             <Link
               to={link('contact')}
+              onClick={() => track('cta_marcar_sessao', { onde: 'navbar' })}
               className="ml-2 px-5 py-2.5 rounded-full border border-titanium/25 text-[11px] uppercase tracking-[0.18em] text-titanium/75 hover:bg-titanium hover:text-eerie hover:border-titanium transition-all duration-300 active:scale-95"
             >
               {t.nav.cta}

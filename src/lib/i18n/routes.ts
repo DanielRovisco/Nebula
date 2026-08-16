@@ -18,6 +18,7 @@ export const ROUTES = {
   contact: { pt: '/contacto', en: '/en/contact' },
   gallery: { pt: '/galeria', en: '/en/gallery' },
   privacy: { pt: '/privacidade', en: '/en/privacy' },
+  thanks: { pt: '/obrigado', en: '/en/thank-you' },
 } as const
 
 export type RouteKey = keyof typeof ROUTES

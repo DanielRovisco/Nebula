@@ -21,6 +21,7 @@ const GalleryAccess = lazy(() => import('./pages/GalleryAccess'))
 const GalleryView = lazy(() => import('./pages/GalleryView'))
 const Privacy = lazy(() => import('./pages/Privacy'))
 const NotFound = lazy(() => import('./pages/NotFound'))
+const Thanks = lazy(() => import('./pages/Thanks'))
 
 // O painel e o cliente de Supabase só são descarregados por quem lá vai —
 // não pesam na visita normal ao site.
@@ -105,6 +106,8 @@ export default function App() {
                 <Route path="/en/gallery/:slug/view" element={<GalleryView />} />
                 <Route path="/privacidade" element={<Privacy />} />
                 <Route path="/en/privacy" element={<Privacy />} />
+                <Route path="/obrigado" element={<Thanks />} />
+                <Route path="/en/thank-you" element={<Thanks />} />
                 {/* Qualquer outro caminho — inclui os que chegam pelo 404.html
                     do GitHub Pages, que reencaminha para dentro da aplicação. */}
                 <Route path="*" element={<NotFound />} />

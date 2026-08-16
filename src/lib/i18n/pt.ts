@@ -190,6 +190,13 @@ export const pt = {
     privacyNote: 'Ao enviar, os vossos dados são usados apenas para responder a este pedido. Sabem mais na',
     privacyLink: 'política de privacidade',
     submit: 'Enviar mensagem',
+    draftRestored: 'Recuperámos o que tinham começado a escrever.',
+    errors: {
+      name: 'Diz-nos como te chamas.',
+      email: 'Este email não parece estar completo.',
+      message: 'Escreve-nos duas linhas sobre o que imaginas.',
+      pastDate: 'Essa data já passou.',
+    },
     sending: 'A enviar…',
     sentTitle: 'Mensagem enviada.',
     sentText: 'Obrigado pelo contacto — respondemos em breve.',
@@ -208,6 +215,18 @@ export const pt = {
       location: 'Local',
       undefined_: '(por definir)',
     },
+  },
+
+  thanks: {
+    seoTitle: 'Obrigado — NEBULA',
+    seoDescription: 'Recebemos a vossa mensagem.',
+    label: 'Recebido',
+    title: 'Obrigado. Já temos a vossa mensagem.',
+    sent: 'Respondemos em menos de 24 horas, normalmente bem antes disso. Se for urgente, o Instagram é o caminho mais rápido.',
+    mailto: 'Abrimos o vosso programa de email com a mensagem escrita — falta só carregar em enviar. Se nada abriu, escrevam-nos diretamente.',
+    next: 'Entretanto',
+    seePortfolio: 'Ver o portfólio',
+    seeServices: 'Serviços & packs',
   },
 
   notFound: {
@@ -240,7 +259,7 @@ export const pt = {
       {
         title: 'Que dados recolhemos, e porquê',
         paragraphs: [
-          'Formulário de contacto. Nome, email, tipo de serviço e, se os indicares, a data e o local do evento, além da mensagem que escreveres. Servem apenas para te responder e preparar uma proposta. A base legal é o teu pedido — sem estes dados não conseguimos responder.',
+          'Formulário de contacto. Nome, email, tipo de serviço e, se os indicares, a data e o local do evento, além da mensagem que escreveres. Servem apenas para te responder e preparar uma proposta. A base legal é o teu pedido — sem estes dados não conseguimos responder. Enquanto escreves, o texto fica guardado no teu próprio browser para não se perder se saíres da página; é apagado assim que envias, e nunca sai do teu dispositivo antes disso.',
           'Galerias privadas. Quando és nosso cliente, criamos uma galeria protegida por password com as fotografias e os vídeos da tua sessão. Guardamos o nome que dá título à galeria, as fotografias que marcares como favoritas e um registo técnico de quando foi aberta e do que foi descarregado. Esse registo existe para percebermos se a entrega chegou bem e para detetarmos acessos indevidos; não guardamos o teu endereço IP nem qualquer identificador de dispositivo.',
           'Estatísticas do site. Usamos uma ferramenta de estatísticas sem cookies, que conta visitas de forma agregada e anónima. Não é possível identificar-te a partir dela, não seguimos ninguém entre sites, e é por isso que este site não te chateia com um aviso de cookies.',
           'Não recolhemos dados sensíveis, não fazemos decisões automatizadas sobre ti e nunca vendemos nem cedemos os teus dados a terceiros para fins comerciais.',
