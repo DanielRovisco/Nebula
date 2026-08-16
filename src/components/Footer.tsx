@@ -87,7 +87,12 @@ export default function Footer() {
 
       <div className="container-px mt-12 pt-6 border-t border-white/[0.08] flex flex-col sm:flex-row justify-between gap-2 text-xs text-titanium/30">
         <span>&copy; {new Date().getFullYear()} NEBULA. Todos os direitos reservados.</span>
-        <span>Fotografia &amp; Vídeo Cinematográfico · Lisboa & Portalegre</span>
+        <div className="flex items-center gap-4">
+          <Link to="/privacidade" className="hover:text-titanium/60 transition-colors">
+            Privacidade
+          </Link>
+          <span>Fotografia &amp; Vídeo · Lisboa & Portalegre</span>
+        </div>
       </div>
     </footer>
   )

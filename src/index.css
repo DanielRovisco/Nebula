@@ -79,6 +79,40 @@
   }
 }
 
+/*
+  Grão de filme sobre o site inteiro. É ruído gerado em SVG (feTurbulence), não
+  uma imagem — não pesa nada no carregamento e não há textura para ninguém ir
+  buscar. Fica por cima de tudo, mas transparente ao rato: nada deixa de ser
+  clicável por causa dele. O z-index é o mais alto do site de propósito — a
+  introdução (200) e o lightbox (150) também levam grão, senão o site parecia
+  mudar de material a meio.
+*/
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/*
+  Transição entre a miniatura do portfólio e a fotografia grande. O nome
+  `foto` é atribuído a um elemento de cada vez (ver Portfolio.tsx) — dois
+  elementos com o mesmo nome no mesmo instante e o browser desiste da animação.
+*/
+::view-transition-group(foto) {
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 300ms;
+}
+
 ::selection {
   background: var(--titanium);
   color: var(--eerie);

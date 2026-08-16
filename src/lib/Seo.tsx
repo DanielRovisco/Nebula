@@ -9,6 +9,8 @@ interface SeoProps {
   description: string
   /** Caminho absoluto da imagem de partilha (og:image). */
   image?: string
+  /** Páginas que não devem entrar no índice (404, privacidade). */
+  noindex?: boolean
 }
 
 function setMeta(selector: string, attr: 'name' | 'property', key: string, content: string) {
@@ -27,11 +29,21 @@ function setMeta(selector: string, attr: 'name' | 'property', key: string, conte
  * e o Googlebot (que executa JS). Um pré-render estático seria mais robusto
  * para crawlers que não executam JS, mas exigiria mudar o modelo de build.
  */
-export default function Seo({ title, description, image }: SeoProps) {
+export default function Seo({ title, description, image, noindex = false }: SeoProps) {
   const { pathname } = useLocation()
 
   useEffect(() => {
     document.title = title
+
+    // O index.html traz `index, follow`; aqui só se troca o valor, para não
+    // ficarem duas metas `robots` a dizer o contrário uma da outra. Ao sair da
+    // página o efeito repõe o valor original (ver o return).
+    setMeta(
+      'meta[name="robots"]',
+      'name',
+      'robots',
+      noindex ? 'noindex, follow' : 'index, follow',
+    )
 
     setMeta('meta[name="description"]', 'name', 'description', description)
     setMeta('meta[property="og:title"]', 'property', 'og:title', title)
@@ -51,7 +63,7 @@ export default function Seo({ title, description, image }: SeoProps) {
       document.head.appendChild(canonical)
     }
     canonical.href = url
-  }, [title, description, image, pathname])
+  }, [title, description, image, noindex, pathname])
 
   return null
 }

@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
-import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion'
-import { useRef } from 'react'
+import { AnimatePresence, motion, useScroll, useTransform, useReducedMotion } from 'framer-motion'
+import { useCallback, useRef, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
 import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
 import CountUp from '../lib/CountUp'
 import Seo from '../lib/Seo'
+import SiteIntro from '../components/SiteIntro'
 import { asset } from '../lib/asset'
 import { CONTACT, absoluteUrl } from '../lib/site'
 
@@ -76,9 +77,30 @@ const HEADLINE = [
   { text: 'em luz.', delay: 0.62 },
 ]
 
+/** A abertura aparece uma vez por sessão, não a cada visita à página inicial. */
+const INTRO_KEY = 'nebula-intro-site'
+
 export default function Home() {
   const reduced = useReducedMotion()
   const heroRef = useRef<HTMLDivElement>(null)
+
+  const [showIntro, setShowIntro] = useState(() => {
+    try {
+      return !sessionStorage.getItem(INTRO_KEY)
+    } catch {
+      // Sem sessionStorage (modo privado antigo, políticas apertadas) mostramos
+      // a abertura — repetida é melhor do que rebentar a página inicial.
+      return true
+    }
+  })
+
+  const endIntro = useCallback(() => {
+    try {
+      sessionStorage.setItem(INTRO_KEY, '1')
+    } catch { /* sem sessionStorage a abertura repete-se; não é grave */ }
+    setShowIntro(false)
+  }, [])
+
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
   const imgScale = useTransform(scrollYProgress, [0, 1], [1, 1.18])
   const textOpacity = useTransform(scrollYProgress, [0, 0.55], [1, 0])
@@ -86,6 +108,10 @@ export default function Home() {
 
   return (
     <div>
+      <AnimatePresence>
+        {showIntro && <SiteIntro key="intro" onDone={endIntro} />}
+      </AnimatePresence>
+
       <Seo
         title="NEBULA — Fotografia & Vídeo Cinematográfico em Lisboa"
         description="Fotógrafo e videógrafo para casamentos, maternidade e eventos em Lisboa e Portalegre. Fotografia editorial e vídeo cinematográfico 4K."

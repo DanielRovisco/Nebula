@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Mail, MapPin } from 'lucide-react'
 import Reveal from '../lib/Reveal'
@@ -22,8 +23,20 @@ export default function Contact() {
     name: '',
     email: '',
     service: 'Casamentos',
+    // Data e local do evento: são sempre as duas primeiras perguntas de
+    // qualquer orçamento. Ficam opcionais — quem ainda não tem data marcada não
+    // pode ficar impedido de escrever.
+    date: '',
+    location: '',
     message: '',
   })
+
+  /** Data no formato português, que é como ela vai ser lida no email. */
+  function dataLegivel() {
+    if (!form.date) return ''
+    const [ano, mes, dia] = form.date.split('-')
+    return `${dia}/${mes}/${ano}`
+  }
 
   function buildMailto() {
     const subject = `Pedido de ${form.service} — ${form.name}`
@@ -31,6 +44,8 @@ export default function Contact() {
       `Nome: ${form.name}`,
       `Email: ${form.email}`,
       `Serviço: ${form.service}`,
+      `Data do evento: ${dataLegivel() || '(por definir)'}`,
+      `Local: ${form.location || '(por definir)'}`,
       '',
       form.message,
     ].join('\n')
@@ -58,6 +73,8 @@ export default function Contact() {
           name: form.name,
           email: form.email,
           service: form.service,
+          date: dataLegivel(),
+          location: form.location,
           message: form.message,
         }),
       })
@@ -228,6 +245,37 @@ export default function Contact() {
                 </select>
               </div>
 
+              <div className="grid sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="label-sm block mb-3" htmlFor="contact-date">
+                    Data do evento <span className="normal-case tracking-normal text-titanium/25">(opcional)</span>
+                  </label>
+                  <input
+                    id="contact-date"
+                    name="date"
+                    type="date"
+                    // Datas passadas não fazem sentido num pedido de orçamento.
+                    min={new Date().toISOString().slice(0, 10)}
+                    value={form.date}
+                    onChange={(e) => setForm({ ...form, date: e.target.value })}
+                    className={`${inputClass} [color-scheme:dark]`}
+                  />
+                </div>
+                <div>
+                  <label className="label-sm block mb-3" htmlFor="contact-location">
+                    Local <span className="normal-case tracking-normal text-titanium/25">(opcional)</span>
+                  </label>
+                  <input
+                    id="contact-location"
+                    name="location"
+                    value={form.location}
+                    onChange={(e) => setForm({ ...form, location: e.target.value })}
+                    className={inputClass}
+                    placeholder="Quinta, igreja, cidade…"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="label-sm block mb-3" htmlFor="contact-message">Mensagem</label>
                 <textarea
@@ -238,9 +286,20 @@ export default function Contact() {
                   value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                   className="w-full bg-transparent border-b border-white/15 py-3 outline-none focus:border-titanium/60 transition-colors resize-none text-base placeholder:text-titanium/25"
-                  placeholder="Contai-nos sobre o vosso dia especial, data prevista, localização..."
+                  placeholder="Contai-nos sobre o vosso dia — o que imaginam, quantos convidados, se querem vídeo…"
                 />
               </div>
+
+              {/* O RGPD exige que se diga para que servem os dados no momento em
+                  que são pedidos, não só numa página escondida. */}
+              <p className="text-xs text-titanium/35 leading-relaxed">
+                Ao enviar, os vossos dados são usados apenas para responder a este
+                pedido. Sabem mais na{' '}
+                <Link to="/privacidade" className="underline underline-offset-4 hover:text-titanium/70">
+                  política de privacidade
+                </Link>
+                .
+              </p>
 
               {status === 'error' && (
                 <p role="alert" className="text-sm text-titanium/80 border border-white/15 rounded-xl p-4">

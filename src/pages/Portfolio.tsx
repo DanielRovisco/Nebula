@@ -1,8 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
 import Seo from '../lib/Seo'
+import Lightbox from '../components/Lightbox'
+import { comTransicao } from '../lib/viewTransition'
 import { absoluteUrl } from '../lib/site'
 import { usePortfolio } from '../lib/site-content/useSiteContent'
 
@@ -73,6 +76,40 @@ export default function Portfolio() {
   const filtros = ['Todos', ...categories]
   const filtered = filter === 'Todos' ? items : items.filter((i) => i.category === filter)
 
+  // Índice da fotografia aberta em grande, e id de quem detém o nome partilhado
+  // da transição na grelha. Só um elemento pode ter esse nome de cada vez: com
+  // a fotografia aberta é a do lightbox, fechada é a miniatura correspondente.
+  const [aberta, setAberta] = useState<number | null>(null)
+  const [foco, setFoco] = useState<string | null>(null)
+
+  const abrir = useCallback(
+    (i: number, id: string) => {
+      // Primeiro entrega-se o nome à miniatura, num render à parte: ela tem de
+      // já o ter quando o browser fotografa o "antes" da transição.
+      flushSync(() => setFoco(id))
+      comTransicao(() => flushSync(() => setAberta(i)), !reduced)
+    },
+    [reduced],
+  )
+
+  const fechar = useCallback(() => {
+    comTransicao(() => flushSync(() => setAberta(null)), !reduced)
+  }, [reduced])
+
+  // Navegar dá a volta nas pontas: da última salta para a primeira. Sem
+  // transição partilhada — aqui a fotografia é substituída, não deslocada.
+  const saltar = useCallback(
+    (passo: number) => {
+      setAberta((i) => {
+        if (i === null) return i
+        const proximo = (i + passo + filtered.length) % filtered.length
+        setFoco(filtered[proximo]?.id ?? null)
+        return proximo
+      })
+    },
+    [filtered],
+  )
+
   return (
     <div className="pt-28 sm:pt-36 pb-20 sm:pb-28">
       <Seo
@@ -126,7 +163,15 @@ export default function Portfolio() {
               transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.24) }}
               className={`overflow-hidden rounded-xl group${item.tall ? ' row-span-2' : ''}`}
             >
-              <div className={`relative overflow-hidden ${item.tall ? TALL : SHORT}`}>
+              <button
+                type="button"
+                onClick={() => abrir(i, item.id)}
+                aria-label={`Ver em grande: ${item.alt}`}
+                className={`relative overflow-hidden w-full block ${item.tall ? TALL : SHORT}`}
+                // O nome só está na miniatura enquanto o lightbox estiver
+                // fechado — de outro modo havia dois donos do mesmo nome.
+                style={aberta === null && foco === item.id ? { viewTransitionName: 'foto' } : undefined}
+              >
                 {item.localName ? (
                   <Picture
                     name={item.localName}
@@ -148,11 +193,22 @@ export default function Portfolio() {
                 <span className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 label-sm text-titanium/80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-500">
                   {item.category}
                 </span>
-              </div>
+              </button>
             </motion.div>
           ))}
         </div>
       </section>
+
+      {aberta !== null && filtered[aberta] && (
+        <Lightbox
+          item={filtered[aberta]}
+          index={aberta}
+          total={filtered.length}
+          onClose={fechar}
+          onPrev={() => saltar(-1)}
+          onNext={() => saltar(1)}
+        />
+      )}
     </div>
   )
 }
