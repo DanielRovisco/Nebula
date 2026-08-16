@@ -2,6 +2,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion
 import { useRef } from 'react'
 import { COVER_FONTS, LOGO_VARIANTS, coverFontSize } from '../../lib/gallery/cover'
 import type { GalleryAccess } from '../../lib/gallery/types'
+import { useT } from '../../lib/i18n'
 
 interface Props {
   gallery: GalleryAccess['gallery']
@@ -14,6 +15,7 @@ interface Props {
  * introdução.
  */
 export default function GalleryCover({ gallery, onEnter }: Props) {
+  const t = useT()
   const reduced = useReducedMotion()
   const ref = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
@@ -91,7 +93,7 @@ export default function GalleryCover({ gallery, onEnter }: Props) {
         onClick={onEnter}
         className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 px-6 py-3"
       >
-        <span className="label-sm">Ver galeria</span>
+        <span className="label-sm">{t.gallery.viewGallery}</span>
         <motion.span
           animate={reduced ? undefined : { y: [0, 7, 0] }}
           transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}

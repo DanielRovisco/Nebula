@@ -8,8 +8,12 @@ import { api } from '../lib/gallery/api'
 import { CONFIGURED, DEMO } from '../lib/gallery/config'
 import { loadSession, saveSession } from '../lib/gallery/session'
 import { CONTACT } from '../lib/site'
+import { useLang, useT } from '../lib/i18n'
+import { GALLERY_VIEW, ROUTES } from '../lib/i18n/routes'
 
 export default function GalleryAccess() {
+  const t = useT()
+  const lang = useLang()
   const { slug: slugParam } = useParams()
   const navigate = useNavigate()
   const [slug, setSlug] = useState(slugParam ?? '')
@@ -29,7 +33,7 @@ export default function GalleryAccess() {
     try {
       const access = await api.access(code, password)
       saveSession(code, access)
-      navigate(`/galeria/${code}/ver`)
+      navigate(`${ROUTES.gallery[lang]}/${code}/${GALLERY_VIEW[lang]}`)
     } catch (err) {
       setStatus((err as Error).message === 'invalid_credentials' ? 'error' : 'server')
     }
@@ -41,8 +45,8 @@ export default function GalleryAccess() {
   return (
     <div className="pt-28 sm:pt-36 pb-20 sm:pb-28 min-h-screen">
       <Seo
-        title="Galeria privada — NEBULA"
-        description="Acesso à galeria privada de clientes NEBULA."
+        title={t.galleryAccess.seoTitle}
+        description={t.galleryAccess.seoDescription}
       />
 
       <section className="container-px max-w-md mx-auto">
@@ -50,13 +54,12 @@ export default function GalleryAccess() {
           <div className="w-12 h-12 rounded-full border border-white/15 flex items-center justify-center mb-8">
             <Lock size={18} className="text-titanium/60" />
           </div>
-          <span className="label-sm">Área de clientes</span>
+          <span className="label-sm">{t.galleryAccess.label}</span>
           <h1 className="mt-4 leading-[1.05]" style={{ fontSize: 'clamp(2rem, 5vw, 3.2rem)' }}>
-            A vossa galeria privada.
+            {t.galleryAccess.title}
           </h1>
           <p className="text-sm text-titanium/50 leading-relaxed mt-5">
-            Introduzam o código e a password que vos enviámos. Se não os
-            tiverem à mão, é só dizer.
+            {t.galleryAccess.intro}
           </p>
         </Reveal>
 
@@ -71,9 +74,8 @@ export default function GalleryAccess() {
 
         {!DEMO && !CONFIGURED && (
           <div className="mt-8 border border-red-400/30 bg-red-400/[0.07] rounded-xl p-4 text-xs leading-relaxed text-red-100/80">
-            <strong className="block mb-1">Galerias por configurar</strong>
-            Faltam as variáveis do Supabase neste deploy, por isso o acesso está
-            indisponível. Ver o README.
+            <strong className="block mb-1">{t.galleryAccess.notConfiguredTitle}</strong>
+            {t.galleryAccess.notConfigured}
           </div>
         )}
 
@@ -81,7 +83,7 @@ export default function GalleryAccess() {
           <form onSubmit={submit} className="mt-10 space-y-7">
             <div>
               <label className="label-sm block mb-3" htmlFor="gallery-slug">
-                Código da galeria
+                {t.galleryAccess.code}
               </label>
               <input
                 id="gallery-slug"
@@ -93,12 +95,12 @@ export default function GalleryAccess() {
                 autoCorrect="off"
                 spellCheck={false}
                 className={`${inputClass} ${slugParam ? 'text-titanium/50' : ''}`}
-                placeholder="ex. ana-e-tiago"
+                placeholder={t.galleryAccess.codePlaceholder}
               />
             </div>
             <div>
               <label className="label-sm block mb-3" htmlFor="gallery-password">
-                Password
+                {t.galleryAccess.password}
               </label>
               <input
                 id="gallery-password"
@@ -119,20 +121,18 @@ export default function GalleryAccess() {
                 role="alert"
                 className="text-sm text-titanium/75 border border-white/15 rounded-xl p-4"
               >
-                Código ou password incorretos. Ao fim de várias tentativas
-                falhadas o acesso fica temporariamente bloqueado — se precisarem,{' '}
+                {t.galleryAccess.wrong}{' '}
                 <a href={`mailto:${CONTACT.email}`} className="underline break-all">
-                  escrevam-nos
+                  {t.galleryAccess.writeToUs}
                 </a>
                 .
               </motion.p>
             )}
             {status === 'server' && (
               <p role="alert" className="text-sm text-titanium/75 border border-white/15 rounded-xl p-4">
-                Não conseguimos verificar o acesso neste momento. Tentem daqui a
-                pouco ou{' '}
+                {t.galleryAccess.serverError}{' '}
                 <a href={`mailto:${CONTACT.email}`} className="underline break-all">
-                  falem connosco
+                  {t.galleryAccess.talkToUs}
                 </a>
                 .
               </p>
@@ -143,7 +143,7 @@ export default function GalleryAccess() {
               disabled={status === 'checking'}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-titanium text-eerie px-9 py-5 rounded-full text-[11px] uppercase tracking-[0.2em] font-semibold active:scale-95 transition-all min-h-[50px] disabled:opacity-60 disabled:cursor-wait"
             >
-              {status === 'checking' ? 'A verificar…' : 'Entrar'}
+              {status === 'checking' ? t.galleryAccess.checking : t.galleryAccess.enter}
             </button>
           </form>
         </Reveal>

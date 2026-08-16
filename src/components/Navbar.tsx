@@ -1,21 +1,28 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import { asset } from '../lib/asset'
 import { CONTACT } from '../lib/site'
-
-const LINKS = [
-  { to: '/', label: 'Home' },
-  { to: '/sobre', label: 'Sobre' },
-  { to: '/servicos', label: 'Serviços' },
-  { to: '/portfolio', label: 'Portfólio' },
-  { to: '/galeria', label: 'Galeria privada' },
-]
+import { useLang, useLink, useT } from '../lib/i18n'
+import { switchLang } from '../lib/i18n/routes'
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+  const t = useT()
+  const link = useLink()
+  const lang = useLang()
+  const { pathname } = useLocation()
+
+  const LINKS = [
+    { to: link('home'), label: t.nav.home },
+    { to: link('about'), label: t.nav.about },
+    { to: link('services'), label: t.nav.services },
+    { to: link('portfolio'), label: t.nav.portfolio },
+    { to: link('gallery'), label: t.nav.gallery },
+  ]
+  const homePath = link('home')
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -37,7 +44,7 @@ export default function Navbar() {
         }`}
       >
         <div className="container-px flex items-center justify-between py-5 sm:py-5">
-          <Link to="/" className="flex items-center z-50 relative" onClick={() => setOpen(false)}>
+          <Link to={homePath} className="flex items-center z-50 relative" onClick={() => setOpen(false)}>
             <img
               src={asset('/brand/logo-lettering-white.png')}
               alt="NEBULA"
@@ -53,7 +60,7 @@ export default function Navbar() {
               <NavLink
                 key={link.to}
                 to={link.to}
-                end={link.to === '/'}
+                end={link.to === homePath}
                 className={({ isActive }) =>
                   `relative text-[11px] uppercase tracking-[0.18em] transition-colors py-1 group ${
                     isActive ? 'text-titanium' : 'text-titanium/60 hover:text-titanium'
@@ -73,10 +80,24 @@ export default function Navbar() {
               </NavLink>
             ))}
             <Link
-              to="/contacto"
+              to={link('contact')}
               className="ml-2 px-5 py-2.5 rounded-full border border-titanium/25 text-[11px] uppercase tracking-[0.18em] text-titanium/75 hover:bg-titanium hover:text-eerie hover:border-titanium transition-all duration-300 active:scale-95"
             >
-              Marcar Sessão
+              {t.nav.cta}
+            </Link>
+
+            {/*
+              Seletor de idioma: leva à mesma página na outra língua, não à
+              inicial — quem está nos serviços em português quer os serviços em
+              inglês. `reloadDocument` fica de fora de propósito: é navegação
+              normal da aplicação.
+            */}
+            <Link
+              to={switchLang(pathname, lang === 'pt' ? 'en' : 'pt')}
+              aria-label={t.nav.langLabel}
+              className="text-[11px] uppercase tracking-[0.18em] text-titanium/45 hover:text-titanium transition-colors py-1"
+            >
+              {lang === 'pt' ? 'EN' : 'PT'}
             </Link>
           </nav>
 
@@ -84,7 +105,7 @@ export default function Navbar() {
           <button
             className="md:hidden relative z-50 text-titanium -mr-2 p-3 active:scale-90 transition-transform"
             onClick={() => setOpen((v) => !v)}
-            aria-label={open ? 'Fechar menu' : 'Abrir menu'}
+            aria-label={open ? t.nav.closeMenu : t.nav.openMenu}
           >
             <AnimatePresence mode="wait">
               {open ? (
@@ -117,7 +138,7 @@ export default function Navbar() {
             transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
             className="md:hidden fixed inset-0 z-40 bg-eerie flex flex-col items-center justify-center gap-2"
           >
-            {[...LINKS, { to: '/contacto', label: 'Contacto' }].map((link, i) => (
+            {[...LINKS, { to: link('contact'), label: t.nav.contact }].map((link, i) => (
               <motion.div
                 key={link.to}
                 initial={{ opacity: 0, y: 24 }}
@@ -126,7 +147,7 @@ export default function Navbar() {
               >
                 <NavLink
                   to={link.to}
-                  end={link.to === '/'}
+                  end={link.to === homePath}
                   onClick={() => setOpen(false)}
                   className={({ isActive }) =>
                     `block py-3 px-4 text-3xl sm:text-4xl font-semibold tracking-tight active:opacity-50 ${
@@ -143,8 +164,15 @@ export default function Navbar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
-              className="mt-8"
+              className="mt-8 flex flex-col items-center gap-4"
             >
+              <Link
+                to={switchLang(pathname, lang === 'pt' ? 'en' : 'pt')}
+                onClick={() => setOpen(false)}
+                className="text-[11px] uppercase tracking-[0.2em] text-titanium/45"
+              >
+                {lang === 'pt' ? 'English' : 'Português'}
+              </Link>
               <a
                 href={CONTACT.instagramDm}
                 target="_blank"

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { SITE_URL, absoluteUrl } from './site'
+import { langFromPath, switchLang } from './i18n/routes'
 
 const DEFAULT_OG = absoluteUrl('/brand/logo-mix-white.png')
 
@@ -63,6 +64,32 @@ export default function Seo({ title, description, image, noindex = false }: SeoP
       document.head.appendChild(canonical)
     }
     canonical.href = url
+
+    // Idioma da página e as suas alternativas. Sem isto o Google trata as duas
+    // versões como conteúdo duplicado em vez de traduções uma da outra, e a
+    // inglesa arrisca-se a nunca aparecer a quem procura em inglês.
+    const lang = langFromPath(pathname)
+    document.documentElement.lang = lang
+    setMeta('meta[property="og:locale"]', 'property', 'og:locale', lang === 'pt' ? 'pt_PT' : 'en_GB')
+
+    const alternativas: [string, string][] = [
+      ['pt-PT', `${SITE_URL}${switchLang(pathname, 'pt')}`],
+      ['en', `${SITE_URL}${switchLang(pathname, 'en')}`],
+      // Diz ao Google o que servir a quem não procura em nenhuma das duas.
+      ['x-default', `${SITE_URL}${switchLang(pathname, 'pt')}`],
+    ]
+    for (const [hreflang, href] of alternativas) {
+      let link = document.head.querySelector<HTMLLinkElement>(
+        `link[rel="alternate"][hreflang="${hreflang}"]`,
+      )
+      if (!link) {
+        link = document.createElement('link')
+        link.rel = 'alternate'
+        link.hreflang = hreflang
+        document.head.appendChild(link)
+      }
+      link.href = href
+    }
   }, [title, description, image, noindex, pathname])
 
   return null

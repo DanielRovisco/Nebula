@@ -1,4 +1,5 @@
 import Reveal from '../lib/Reveal'
+import { useT } from '../lib/i18n'
 import { useTestimonials } from '../lib/site-content/useSiteContent'
 
 /**
@@ -9,6 +10,7 @@ import { useTestimonials } from '../lib/site-content/useSiteContent'
  * que secção nenhuma, e inventar elogios estava fora de questão.
  */
 export default function Testimonials() {
+  const t = useT()
   const testemunhos = useTestimonials()
   if (testemunhos.length === 0) return null
 
@@ -19,8 +21,8 @@ export default function Testimonials() {
       <section className="py-16 sm:py-28">
         <div className="container-px">
           <Reveal className="mb-10 sm:mb-16">
-            <span className="label-sm">Quem já passou por aqui</span>
-            <h2 className="text-3xl sm:text-5xl mt-3">O que dizem de nós</h2>
+            <span className="label-sm">{t.testimonials.label}</span>
+            <h2 className="text-3xl sm:text-5xl mt-3">{t.testimonials.title}</h2>
           </Reveal>
 
           <div

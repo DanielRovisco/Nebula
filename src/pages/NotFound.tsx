@@ -3,13 +3,7 @@ import { ArrowRight } from 'lucide-react'
 import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
 import Seo from '../lib/Seo'
-
-const ATALHOS = [
-  { to: '/portfolio', label: 'Portfólio' },
-  { to: '/servicos', label: 'Serviços & packs' },
-  { to: '/sobre', label: 'Sobre nós' },
-  { to: '/galeria', label: 'Área de cliente' },
-]
+import { useLink, useT } from '../lib/i18n'
 
 /**
  * Rota desconhecida. Não é um beco: mostra os caminhos todos e uma fotografia,
@@ -17,26 +11,35 @@ const ATALHOS = [
  * links partidos como se fossem páginas do site.
  */
 export default function NotFound() {
+  const t = useT()
+  const link = useLink()
+
+  const ATALHOS = [
+    { to: link('portfolio'), label: t.nav.portfolio },
+    { to: link('services'), label: t.notFound.services },
+    { to: link('about'), label: t.about.label },
+    { to: link('gallery'), label: t.notFound.clientArea },
+  ]
+
   return (
     <div className="pt-28 sm:pt-36 pb-20 sm:pb-28">
       <Seo
-        title="Página não encontrada — NEBULA"
-        description="A página que procuras não existe ou mudou de sítio."
+        title={t.notFound.seoTitle}
+        description={t.notFound.seoDescription}
         noindex
       />
 
       <section className="container-px grid md:grid-cols-2 gap-10 sm:gap-16 items-center">
         <Reveal>
-          <span className="label-sm">Erro 404</span>
+          <span className="label-sm">{t.notFound.label}</span>
           <h1 className="mt-4 leading-[1.05]" style={{ fontSize: 'clamp(2.2rem, 6vw, 4.5rem)' }}>
-            Esta página perdeu-se no escuro.
+            {t.notFound.title}
           </h1>
           <p className="text-titanium/55 leading-relaxed mt-6 max-w-md">
-            O endereço não existe ou mudou de sítio. Fica aqui o caminho de volta
-            — e, já agora, o que vale mesmo a pena ver.
+            {t.notFound.text}
           </p>
 
-          <nav className="mt-10 flex flex-wrap gap-2.5" aria-label="Páginas principais">
+          <nav className="mt-10 flex flex-wrap gap-2.5" aria-label={t.notFound.navLabel}>
             {ATALHOS.map((a) => (
               <Link
                 key={a.to}
@@ -49,10 +52,10 @@ export default function NotFound() {
           </nav>
 
           <Link
-            to="/contacto"
+            to={link('contact')}
             className="mt-10 inline-flex items-center gap-3 bg-titanium text-eerie px-8 py-4 rounded-full text-[11px] uppercase tracking-[0.2em] font-semibold group hover:gap-5 transition-all active:scale-95"
           >
-            Falar connosco
+            {t.common.talkToUs}
             <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
           </Link>
         </Reveal>

@@ -55,12 +55,13 @@ export default function App() {
   // próprio logo centrado, e ter a navbar por cima punha dois logos NEBULA no
   // mesmo ecrã. O cliente está na entrega dele, não a navegar o site — o
   // caminho de volta é o link no fim da galeria.
-  if (/^\/galeria\/[^/]+\/ver$/.test(location.pathname)) {
+  if (/^\/(galeria\/[^/]+\/ver|en\/gallery\/[^/]+\/view)$/.test(location.pathname)) {
     return (
       <Suspense fallback={<Loading />}>
         <ScrollToTop />
         <Routes>
           <Route path="/galeria/:slug/ver" element={<GalleryView />} />
+          <Route path="/en/gallery/:slug/view" element={<GalleryView />} />
         </Routes>
       </Suspense>
     )
@@ -79,15 +80,31 @@ export default function App() {
             {/* min-h evita o Footer saltar para cima enquanto o chunk carrega. */}
             <Suspense fallback={<Loading />}>
               <Routes location={location}>
+                {/*
+                  As mesmas páginas em dois endereços — um por língua. A língua
+                  sai do endereço (ver lib/i18n), por isso não há aqui estado
+                  nenhum a passar: cada página lê a sua a partir do sítio onde
+                  está. É o que permite partilhar um link inglês e ele abrir em
+                  inglês, e o Google indexar as duas versões.
+                */}
                 <Route path="/" element={<Home />} />
+                <Route path="/en" element={<Home />} />
                 <Route path="/sobre" element={<About />} />
+                <Route path="/en/about" element={<About />} />
                 <Route path="/servicos" element={<Services />} />
+                <Route path="/en/services" element={<Services />} />
                 <Route path="/portfolio" element={<Portfolio />} />
+                <Route path="/en/portfolio" element={<Portfolio />} />
                 <Route path="/contacto" element={<Contact />} />
+                <Route path="/en/contact" element={<Contact />} />
                 <Route path="/galeria" element={<GalleryAccess />} />
                 <Route path="/galeria/:slug" element={<GalleryAccess />} />
                 <Route path="/galeria/:slug/ver" element={<GalleryView />} />
+                <Route path="/en/gallery" element={<GalleryAccess />} />
+                <Route path="/en/gallery/:slug" element={<GalleryAccess />} />
+                <Route path="/en/gallery/:slug/view" element={<GalleryView />} />
                 <Route path="/privacidade" element={<Privacy />} />
+                <Route path="/en/privacy" element={<Privacy />} />
                 {/* Qualquer outro caminho — inclui os que chegam pelo 404.html
                     do GitHub Pages, que reencaminha para dentro da aplicação. */}
                 <Route path="*" element={<NotFound />} />

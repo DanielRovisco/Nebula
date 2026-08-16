@@ -3,24 +3,27 @@ import { Mail } from 'lucide-react'
 import InstagramIcon from '../lib/InstagramIcon'
 import { asset } from '../lib/asset'
 import { CONTACT } from '../lib/site'
-
-const NAV = [
-  { to: '/sobre', label: 'Sobre' },
-  { to: '/servicos', label: 'Serviços' },
-  { to: '/portfolio', label: 'Portfólio' },
-  { to: '/contacto', label: 'Contacto' },
-  { to: '/galeria', label: 'Galeria privada' },
-]
+import { useLink, useT } from '../lib/i18n'
 
 export default function Footer() {
+  const t = useT()
+  const link = useLink()
+
+  const NAV = [
+    { to: link('about'), label: t.nav.about },
+    { to: link('services'), label: t.nav.services },
+    { to: link('portfolio'), label: t.nav.portfolio },
+    { to: link('contact'), label: t.nav.contact },
+    { to: link('gallery'), label: t.nav.gallery },
+  ]
+
   return (
     <footer className="bg-eerie border-t border-white/[0.08] pt-14 sm:pt-20 pb-8">
       <div className="container-px grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 sm:gap-12">
         <div className="sm:col-span-2">
           <img src={asset('/brand/logo-mix-white.png')} alt="NEBULA" width={2795} height={2599} className="h-9 sm:h-10 w-auto mb-5" />
           <p className="text-titanium/50 text-sm max-w-xs leading-relaxed">
-            Produtora audiovisual especializada em fotografia editorial e vídeo
-            cinematográfico. Capturamos histórias, não apenas momentos.
+            {t.footer.tagline}
           </p>
           <a
             href={CONTACT.instagram}
@@ -34,7 +37,7 @@ export default function Footer() {
         </div>
 
         <div>
-          <h4 className="label-sm mb-5">Navegação</h4>
+          <h4 className="label-sm mb-5">{t.footer.navLabel}</h4>
           <ul className="flex flex-col gap-0.5 text-sm">
             {NAV.map((n) => (
               <li key={n.to}>
@@ -50,7 +53,7 @@ export default function Footer() {
         </div>
 
         <div>
-          <h4 className="label-sm mb-5">Contacto</h4>
+          <h4 className="label-sm mb-5">{t.footer.contactLabel}</h4>
           <ul className="flex flex-col gap-0.5 text-sm">
             <li>
               {/*
@@ -78,7 +81,7 @@ export default function Footer() {
                   <circle cx="12" cy="12" r="4"/>
                   <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none"/>
                 </svg>
-                DM no Instagram
+                {t.contact.instagramDm}
               </a>
             </li>
           </ul>
@@ -86,12 +89,12 @@ export default function Footer() {
       </div>
 
       <div className="container-px mt-12 pt-6 border-t border-white/[0.08] flex flex-col sm:flex-row justify-between gap-2 text-xs text-titanium/30">
-        <span>&copy; {new Date().getFullYear()} NEBULA. Todos os direitos reservados.</span>
+        <span>&copy; {new Date().getFullYear()} NEBULA. {t.footer.rights}</span>
         <div className="flex items-center gap-4">
-          <Link to="/privacidade" className="hover:text-titanium/60 transition-colors">
-            Privacidade
+          <Link to={link('privacy')} className="hover:text-titanium/60 transition-colors">
+            {t.footer.privacy}
           </Link>
-          <span>Fotografia &amp; Vídeo · Lisboa & Portalegre</span>
+          <span>{t.footer.trade}</span>
         </div>
       </div>
     </footer>

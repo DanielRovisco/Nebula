@@ -5,6 +5,7 @@ import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
 import Seo from '../lib/Seo'
 import Lightbox from '../components/Lightbox'
+import { useT } from '../lib/i18n'
 import { comTransicao } from '../lib/viewTransition'
 import { absoluteUrl } from '../lib/site'
 import { usePortfolio } from '../lib/site-content/useSiteContent'
@@ -47,6 +48,7 @@ const SHORT = 'h-[26vh] sm:h-[33vh]'
 const TALL = 'h-[calc(52vh_+_0.5rem)] sm:h-[calc(66vh_+_1rem)]'
 
 export default function Portfolio() {
+  const t = useT()
   const reduced = useReducedMotion()
 
   // As fotos do código entram como reserva; se houver portfólio carregado no
@@ -71,10 +73,13 @@ export default function Portfolio() {
   )
 
   const { categories, items } = usePortfolio(fallback)
-  const [filter, setFilter] = useState('Todos')
+  const [filter, setFilter] = useState('')
 
-  const filtros = ['Todos', ...categories]
-  const filtered = filter === 'Todos' ? items : items.filter((i) => i.category === filter)
+  // O filtro "Todos" é o único cujo nome é nosso — as categorias vêm do painel
+  // e são iguais nas duas línguas, porque são as mesmas fotografias.
+  const TODOS = t.portfolio.all
+  const filtros = [TODOS, ...categories]
+  const filtered = filter === TODOS ? items : items.filter((i) => i.category === filter)
 
   // Índice da fotografia aberta em grande, e id de quem detém o nome partilhado
   // da transição na grelha. Só um elemento pode ter esse nome de cada vez: com
@@ -113,16 +118,16 @@ export default function Portfolio() {
   return (
     <div className="pt-28 sm:pt-36 pb-20 sm:pb-28">
       <Seo
-        title="Portfólio — NEBULA Fotografia & Vídeo"
-        description="Galeria de casamentos, maternidade e eventos fotografados pela NEBULA em Lisboa, Portalegre e restante Portugal."
+        title={t.portfolio.seoTitle}
+        description={t.portfolio.seoDescription}
         image={absoluteUrl('/brand/portfolio/palace-dome-1440.webp')}
       />
 
       <section className="container-px mb-12 sm:mb-16">
         <Reveal>
-          <span className="label-sm">Portfólio</span>
+          <span className="label-sm">{t.portfolio.label}</span>
           <h1 className="mt-4 max-w-3xl leading-[1.05]" style={{ fontSize: 'clamp(2.2rem, 6vw, 5rem)' }}>
-            Cada imagem, um fragmento de história.
+            {t.portfolio.title}
           </h1>
         </Reveal>
       </section>
@@ -130,15 +135,15 @@ export default function Portfolio() {
       <section
         className="container-px mb-10 sm:mb-14 flex gap-2.5 flex-wrap"
         role="group"
-        aria-label="Filtrar portfólio por categoria"
+        aria-label={t.portfolio.filterLabel}
       >
         {filtros.map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            aria-pressed={filter === f}
+            aria-pressed={(filter || TODOS) === f}
             className={`px-6 sm:px-7 py-3 rounded-full text-[11px] sm:text-xs uppercase tracking-[0.12em] border transition-all duration-300 active:scale-95 min-h-[44px] ${
-              filter === f
+              (filter || TODOS) === f
                 ? 'bg-titanium text-eerie border-titanium'
                 : 'border-white/15 text-titanium/60 hover:border-white/40 hover:text-titanium/85'
             }`}
@@ -166,7 +171,7 @@ export default function Portfolio() {
               <button
                 type="button"
                 onClick={() => abrir(i, item.id)}
-                aria-label={`Ver em grande: ${item.alt}`}
+                aria-label={`${t.portfolio.openLarge}: ${item.alt}`}
                 className={`relative overflow-hidden w-full block ${item.tall ? TALL : SHORT}`}
                 // O nome só está na miniatura enquanto o lightbox estiver
                 // fechado — de outro modo havia dois donos do mesmo nome.

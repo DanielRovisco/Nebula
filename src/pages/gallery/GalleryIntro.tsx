@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { asset } from '../../lib/asset'
+import { useT } from '../../lib/i18n'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
@@ -20,6 +21,7 @@ interface Props {
  * `prefers-reduced-motion`.
  */
 export default function GalleryIntro({ clientName, title, onDone }: Props) {
+  const t = useT()
   const reduced = useReducedMotion()
 
   useEffect(() => {
@@ -71,7 +73,7 @@ export default function GalleryIntro({ clientName, title, onDone }: Props) {
           transition={{ duration: 1, delay: 1.5, ease: EASE }}
           className="label-sm text-center"
         >
-          {saudacao ? `Bem-vindos, ${saudacao}` : 'Bem-vindos'}
+          {saudacao ? t.gallery.welcomeNamed(saudacao) : t.gallery.welcome}
         </motion.p>
       </div>
 
@@ -93,7 +95,7 @@ export default function GalleryIntro({ clientName, title, onDone }: Props) {
         transition={{ duration: 0.8, delay: 2.5 }}
         className="label-sm mt-12 text-titanium/25"
       >
-        Toquem para avançar
+        {t.gallery.tapToContinue}
       </motion.p>
     </motion.div>
   )

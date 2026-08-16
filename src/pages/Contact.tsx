@@ -6,6 +6,7 @@ import Reveal from '../lib/Reveal'
 import Seo from '../lib/Seo'
 import InstagramIcon from '../lib/InstagramIcon'
 import { CONTACT } from '../lib/site'
+import { useLink, useT } from '../lib/i18n'
 
 // Endpoint opcional de recolha de formulários (Formspree, Web3Forms, etc.).
 // Se estiver definido, a mensagem é submetida por POST e o visitante nunca sai
@@ -13,16 +14,21 @@ import { CONTACT } from '../lib/site'
 // que funciona sempre e sem serviços de terceiros, mas exige um passo extra.
 const ENDPOINT = import.meta.env.VITE_CONTACT_ENDPOINT as string | undefined
 
-const SERVICES = ['Casamentos', 'Maternidade', 'Eventos'] as const
+// Os valores do <select> seguem a língua do visitante: é o que vai no email,
+// e um pedido em inglês a dizer "Casamentos" lê-se mal dos dois lados.
+const SERVICE_KEYS = ['casamentos', 'maternidade', 'eventos'] as const
 
 type Status = 'idle' | 'sending' | 'sent' | 'mailto' | 'error'
 
 export default function Contact() {
+  const t = useT()
+  const link = useLink()
+  const servicos = SERVICE_KEYS.map((k) => t.home.services[k].title)
   const [status, setStatus] = useState<Status>('idle')
   const [form, setForm] = useState({
     name: '',
     email: '',
-    service: 'Casamentos',
+    service: '',
     // Data e local do evento: são sempre as duas primeiras perguntas de
     // qualquer orçamento. Ficam opcionais — quem ainda não tem data marcada não
     // pode ficar impedido de escrever.
@@ -39,13 +45,14 @@ export default function Contact() {
   }
 
   function buildMailto() {
-    const subject = `Pedido de ${form.service} — ${form.name}`
+    const m = t.contact.mailBody
+    const subject = t.contact.mailSubject(form.service || servicos[0], form.name)
     const body = [
-      `Nome: ${form.name}`,
-      `Email: ${form.email}`,
-      `Serviço: ${form.service}`,
-      `Data do evento: ${dataLegivel() || '(por definir)'}`,
-      `Local: ${form.location || '(por definir)'}`,
+      `${m.name}: ${form.name}`,
+      `${m.email}: ${form.email}`,
+      `${m.service}: ${form.service || servicos[0]}`,
+      `${m.date}: ${dataLegivel() || m.undefined_}`,
+      `${m.location}: ${form.location || m.undefined_}`,
       '',
       form.message,
     ].join('\n')
@@ -59,7 +66,7 @@ export default function Contact() {
       // Abre o cliente de email já preenchido. Não há como confirmar o envio a
       // partir daqui, por isso o texto de sucesso reflete exatamente isso em
       // vez de afirmar que a mensagem chegou.
-      window.location.href = buildMailto()
+      window.location.assign(buildMailto())
       setStatus('mailto')
       return
     }
@@ -72,7 +79,7 @@ export default function Contact() {
         body: JSON.stringify({
           name: form.name,
           email: form.email,
-          service: form.service,
+          service: form.service || servicos[0],
           date: dataLegivel(),
           location: form.location,
           message: form.message,
@@ -91,16 +98,16 @@ export default function Contact() {
   return (
     <div className="pt-28 sm:pt-36 pb-20 sm:pb-28">
       <Seo
-        title="Contacto — NEBULA Fotografia & Vídeo"
-        description="Fale connosco por email ou Instagram sobre o vosso casamento, sessão de maternidade ou evento. Lisboa e Portalegre. Resposta em menos de 24 horas."
+        title={t.contact.seoTitle}
+        description={t.contact.seoDescription}
       />
 
       {/* Header */}
       <section className="container-px mb-12 sm:mb-20">
         <Reveal>
-          <span className="label-sm">Contacto</span>
+          <span className="label-sm">{t.contact.label}</span>
           <h1 className="mt-4 max-w-2xl leading-[1.05]" style={{ fontSize: 'clamp(2.2rem, 6vw, 5rem)' }}>
-            Vamos falar sobre o vosso projeto.
+            {t.contact.title}
           </h1>
         </Reveal>
       </section>
@@ -111,7 +118,7 @@ export default function Contact() {
           <div className="space-y-8">
             {/* Quick contact box */}
             <div className="border border-white/10 rounded-2xl p-6 sm:p-7 hover:border-white/20 transition-colors space-y-3">
-              <p className="label-sm mb-4">Resposta rápida</p>
+              <p className="label-sm mb-4">{t.contact.quickLabel}</p>
               <a
                 href={CONTACT.instagramDm}
                 target="_blank"
@@ -134,24 +141,21 @@ export default function Contact() {
                   <div className="text-titanium/90 break-all">{CONTACT.email}</div>
                 </div>
               </a>
-              <p className="text-titanium/35 text-xs pt-1">Respondemos em menos de 24 horas</p>
+              <p className="text-titanium/35 text-xs pt-1">{t.contact.replyTime}</p>
             </div>
 
             {/* Other contact details */}
             <div className="space-y-5">
               <div>
-                <p className="label-sm mb-2">Localização</p>
+                <p className="label-sm mb-2">{t.contact.locationLabel}</p>
                 <p className="flex items-center gap-3 text-sm sm:text-base py-1 text-titanium/80">
                   <MapPin size={16} className="shrink-0 text-titanium/40" />
-                  Lisboa & Portalegre, Portugal
+                  {t.contact.location}
                 </p>
               </div>
               <div>
-                <p className="label-sm mb-2">Como falar connosco</p>
-                <p className="text-sm text-titanium/55 leading-relaxed">
-                  Todo o contacto é feito por email ou Instagram — é onde
-                  respondemos mais depressa e onde fica registo da conversa.
-                </p>
+                <p className="label-sm mb-2">{t.contact.howLabel}</p>
+                <p className="text-sm text-titanium/55 leading-relaxed">{t.contact.how}</p>
               </div>
             </div>
           </div>
@@ -172,26 +176,21 @@ export default function Contact() {
               </div>
               {status === 'sent' ? (
                 <>
-                  <h2 className="text-2xl mb-3">Mensagem enviada.</h2>
-                  <p className="text-titanium/55 text-sm">
-                    Obrigado pelo contacto — respondemos em breve.
-                  </p>
+                  <h2 className="text-2xl mb-3">{t.contact.sentTitle}</h2>
+                  <p className="text-titanium/55 text-sm">{t.contact.sentText}</p>
                 </>
               ) : (
                 <>
-                  <h2 className="text-2xl mb-3">Falta só enviar.</h2>
-                  <p className="text-titanium/55 text-sm">
-                    Abrimos o vosso programa de email com a mensagem já escrita.
-                    Basta premir enviar.
-                  </p>
+                  <h2 className="text-2xl mb-3">{t.contact.mailtoTitle}</h2>
+                  <p className="text-titanium/55 text-sm">{t.contact.mailtoText}</p>
                   <p className="text-titanium/40 text-xs mt-5">
-                    Não abriu nada? Escrevam-nos para{' '}
+                    {t.contact.mailtoFallback}{' '}
                     <a href={`mailto:${CONTACT.email}`} className="underline break-all">
                       {CONTACT.email}
                     </a>{' '}
-                    ou por{' '}
+                    {t.contact.or}{' '}
                     <a href={CONTACT.instagramDm} target="_blank" rel="noreferrer" className="underline">
-                      DM no Instagram
+                      {t.contact.instagramDm}
                     </a>
                     .
                   </p>
@@ -202,7 +201,7 @@ export default function Contact() {
             <form onSubmit={handleSubmit} className="space-y-7">
               <div className="grid sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="label-sm block mb-3" htmlFor="contact-name">Nome</label>
+                  <label className="label-sm block mb-3" htmlFor="contact-name">{t.contact.name}</label>
                   <input
                     id="contact-name"
                     name="name"
@@ -211,11 +210,11 @@ export default function Contact() {
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     className={inputClass}
-                    placeholder="O vosso nome"
+                    placeholder={t.contact.namePlaceholder}
                   />
                 </div>
                 <div>
-                  <label className="label-sm block mb-3" htmlFor="contact-email">Email</label>
+                  <label className="label-sm block mb-3" htmlFor="contact-email">{t.contact.email}</label>
                   <input
                     id="contact-email"
                     name="email"
@@ -231,15 +230,15 @@ export default function Contact() {
               </div>
 
               <div>
-                <label className="label-sm block mb-3" htmlFor="contact-service">Serviço</label>
+                <label className="label-sm block mb-3" htmlFor="contact-service">{t.contact.service}</label>
                 <select
                   id="contact-service"
                   name="service"
-                  value={form.service}
+                  value={form.service || servicos[0]}
                   onChange={(e) => setForm({ ...form, service: e.target.value })}
                   className="w-full bg-eerie border-b border-white/15 py-3 text-base outline-none focus:border-titanium/60 transition-colors text-titanium/80"
                 >
-                  {SERVICES.map((s) => (
+                  {servicos.map((s) => (
                     <option key={s}>{s}</option>
                   ))}
                 </select>
@@ -248,7 +247,8 @@ export default function Contact() {
               <div className="grid sm:grid-cols-2 gap-6">
                 <div>
                   <label className="label-sm block mb-3" htmlFor="contact-date">
-                    Data do evento <span className="normal-case tracking-normal text-titanium/25">(opcional)</span>
+                    {t.contact.date}{' '}
+                    <span className="normal-case tracking-normal text-titanium/25">{t.contact.optional}</span>
                   </label>
                   <input
                     id="contact-date"
@@ -263,7 +263,8 @@ export default function Contact() {
                 </div>
                 <div>
                   <label className="label-sm block mb-3" htmlFor="contact-location">
-                    Local <span className="normal-case tracking-normal text-titanium/25">(opcional)</span>
+                    {t.contact.location_}{' '}
+                    <span className="normal-case tracking-normal text-titanium/25">{t.contact.optional}</span>
                   </label>
                   <input
                     id="contact-location"
@@ -271,13 +272,13 @@ export default function Contact() {
                     value={form.location}
                     onChange={(e) => setForm({ ...form, location: e.target.value })}
                     className={inputClass}
-                    placeholder="Quinta, igreja, cidade…"
+                    placeholder={t.contact.locationPlaceholder}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="label-sm block mb-3" htmlFor="contact-message">Mensagem</label>
+                <label className="label-sm block mb-3" htmlFor="contact-message">{t.contact.message}</label>
                 <textarea
                   id="contact-message"
                   name="message"
@@ -286,30 +287,29 @@ export default function Contact() {
                   value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                   className="w-full bg-transparent border-b border-white/15 py-3 outline-none focus:border-titanium/60 transition-colors resize-none text-base placeholder:text-titanium/25"
-                  placeholder="Contai-nos sobre o vosso dia — o que imaginam, quantos convidados, se querem vídeo…"
+                  placeholder={t.contact.messagePlaceholder}
                 />
               </div>
 
               {/* O RGPD exige que se diga para que servem os dados no momento em
                   que são pedidos, não só numa página escondida. */}
               <p className="text-xs text-titanium/35 leading-relaxed">
-                Ao enviar, os vossos dados são usados apenas para responder a este
-                pedido. Sabem mais na{' '}
-                <Link to="/privacidade" className="underline underline-offset-4 hover:text-titanium/70">
-                  política de privacidade
+                {t.contact.privacyNote}{' '}
+                <Link to={link('privacy')} className="underline underline-offset-4 hover:text-titanium/70">
+                  {t.contact.privacyLink}
                 </Link>
                 .
               </p>
 
               {status === 'error' && (
                 <p role="alert" className="text-sm text-titanium/80 border border-white/15 rounded-xl p-4">
-                  Não conseguimos enviar a mensagem. Escrevam-nos diretamente para{' '}
+                  {t.contact.errorText}{' '}
                   <a href={`mailto:${CONTACT.email}`} className="underline break-all">
                     {CONTACT.email}
                   </a>{' '}
-                  ou por{' '}
+                  {t.contact.or}{' '}
                   <a href={CONTACT.instagramDm} target="_blank" rel="noreferrer" className="underline">
-                    DM no Instagram
+                    {t.contact.instagramDm}
                   </a>
                   .
                 </p>
@@ -320,7 +320,7 @@ export default function Contact() {
                 disabled={status === 'sending'}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-titanium text-eerie px-9 py-5 rounded-full text-[11px] uppercase tracking-[0.2em] font-semibold group active:scale-95 hover:gap-5 transition-all min-h-[50px] disabled:opacity-60 disabled:cursor-wait"
               >
-                {status === 'sending' ? 'A enviar…' : 'Enviar mensagem'}
+                {status === 'sending' ? t.contact.sending : t.contact.submit}
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="transition-transform group-hover:translate-x-1" aria-hidden="true">
                   <line x1="22" y1="2" x2="11" y2="13" />
                   <polygon points="22 2 15 22 11 13 2 9 22 2" />

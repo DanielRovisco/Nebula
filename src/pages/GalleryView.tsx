@@ -4,11 +4,14 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Download, Heart, Package, Play, X } from 'lucide-react'
 import Seo from '../lib/Seo'
 import { loadSession, clearSession } from '../lib/gallery/session'
+import { ROUTES } from '../lib/i18n/routes'
 import { downloadAll, downloadOne, ZIP_WARN_BYTES, type ZipProgress } from '../lib/gallery/download'
 import { DEMO } from '../lib/gallery/config'
 import { api } from '../lib/gallery/api'
 import { isVideo, type GalleryAccess } from '../lib/gallery/types'
 import GalleryIntro from './gallery/GalleryIntro'
+import { useLang, useT } from '../lib/i18n'
+import type { Dict } from '../lib/i18n'
 import GalleryCover from './gallery/GalleryCover'
 
 /** A introdução aparece uma vez por sessão e por galeria. */
@@ -23,7 +26,7 @@ const DIA = 864e5
  * casamento. A partir de 30 dias é só uma informação discreta; a menos de 14
  * passa a destacado, que é quando ainda dá para fazer alguma coisa.
  */
-function avisoDeValidade(expiresAt?: string | null) {
+function avisoDeValidade(expiresAt: string | null | undefined, t: Dict, locale: string) {
   if (!expiresAt) return null
   const fim = new Date(expiresAt)
   if (Number.isNaN(fim.getTime())) return null
@@ -31,20 +34,17 @@ function avisoDeValidade(expiresAt?: string | null) {
   const dias = Math.ceil((fim.getTime() - Date.now()) / DIA)
   if (dias <= 0) return null
 
-  const data = fim.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' })
-  if (dias > 30) {
-    return { urgente: false, texto: `Esta galeria fica disponível até ${data}.` }
-  }
+  const data = fim.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
+  if (dias > 30) return { urgente: false, texto: t.gallery.availableUntil(data) }
   return {
     urgente: true,
-    texto:
-      dias === 1
-        ? `Último dia: esta galeria fecha amanhã (${data}). Descarreguem tudo o que quiserem guardar.`
-        : `Esta galeria fecha daqui a ${dias} dias, a ${data}. Descarreguem tudo o que quiserem guardar — depois disso os ficheiros deixam de estar acessíveis.`,
+    texto: dias === 1 ? t.gallery.lastDay(data) : t.gallery.closingIn(dias, data),
   }
 }
 
 export default function GalleryView() {
+  const t = useT()
+  const lang = useLang()
   const { slug = '' } = useParams()
   const navigate = useNavigate()
   const reduced = useReducedMotion()
@@ -72,8 +72,8 @@ export default function GalleryView() {
   useEffect(() => {
     // Sem sessão válida (nunca entrou, ou os URLs assinados expiraram) volta
     // ao pedido de password.
-    if (!access) navigate(`/galeria/${slug}`, { replace: true })
-  }, [access, slug, navigate])
+    if (!access) navigate(`${ROUTES.gallery[lang]}/${slug}`, { replace: true })
+  }, [access, slug, lang, navigate])
 
   const photos = useMemo(() => access?.photos ?? [], [access])
   const totalBytes = useMemo(
@@ -133,17 +133,14 @@ export default function GalleryView() {
         else proximo.add(photoId)
         return proximo
       })
-      setError('Não foi possível guardar essa escolha. Voltem a entrar e tentem de novo.')
+      setError(t.gallery.favoriteFailed)
     }
   }
 
   async function handleDownloadAll() {
     if (!access) return
     if (totalBytes > ZIP_WARN_BYTES) {
-      const go = window.confirm(
-        'Esta galeria é grande e o ZIP é montado na memória do dispositivo, ' +
-          'o que pode falhar em telemóveis. Preferem descarregar assim mesmo?',
-      )
+      const go = window.confirm(t.gallery.zipWarning)
       if (!go) return
     }
     setError(null)
@@ -153,7 +150,7 @@ export default function GalleryView() {
       if (access.logToken) api.logEvent(access.logToken, { kind: 'download_all' })
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
-        setError('O download falhou a meio. Os links podem ter expirado — voltem a entrar.')
+        setError(t.gallery.downloadFailed)
       }
     } finally {
       setZipping(null)
@@ -173,7 +170,7 @@ export default function GalleryView() {
         })
       }
     } catch {
-      setError('Não foi possível descarregar esse ficheiro. Voltem a entrar e tentem de novo.')
+      setError(t.gallery.downloadOneFailed)
     }
   }
 
@@ -181,11 +178,11 @@ export default function GalleryView() {
 
   const { gallery } = access
   const current = open !== null ? photos[open] : null
-  const aviso = avisoDeValidade(gallery.expiresAt)
+  const aviso = avisoDeValidade(gallery.expiresAt, t, lang === 'pt' ? 'pt-PT' : 'en-GB')
 
   return (
     <div className="min-h-screen">
-      <Seo title={`${gallery.title} — NEBULA`} description="Galeria privada de cliente." />
+      <Seo title={`${gallery.title} — NEBULA`} description={t.gallery.seoDescription} noindex />
 
       <AnimatePresence>
         {showIntro && (
@@ -236,12 +233,12 @@ export default function GalleryView() {
 
           <div className="flex flex-wrap items-center gap-3">
             <span className="label-sm">
-              {photos.length} {photos.length === 1 ? 'ficheiro' : 'ficheiros'}
+              {photos.length} {photos.length === 1 ? t.gallery.files : t.gallery.filesPlural}
             </span>
             {favoritas.size > 0 && (
               <span className="label-sm inline-flex items-center gap-1.5 text-titanium/60">
                 <Heart size={11} fill="currentColor" />
-                {favoritas.size} {favoritas.size === 1 ? 'escolhida' : 'escolhidas'}
+                {favoritas.size} {favoritas.size === 1 ? t.gallery.chosen : t.gallery.chosenPlural}
               </span>
             )}
             {gallery.downloadEnabled && photos.length > 0 && (
@@ -251,7 +248,7 @@ export default function GalleryView() {
                 className="inline-flex items-center gap-2.5 bg-titanium text-eerie px-6 py-3 rounded-full text-[11px] uppercase tracking-[0.18em] font-semibold active:scale-95 transition-all min-h-[44px] disabled:opacity-60 disabled:cursor-wait"
               >
                 <Package size={14} />
-                {zipping ? `${zipping.phase} ${zipping.done}/${zipping.total}` : 'Descarregar tudo'}
+                {zipping ? `${zipping.phase} ${zipping.done}/${zipping.total}` : t.gallery.downloadAll}
               </button>
             )}
             {zipping && (
@@ -259,17 +256,17 @@ export default function GalleryView() {
                 onClick={() => abortRef.current?.abort()}
                 className="text-[11px] uppercase tracking-[0.18em] text-titanium/50 underline px-3 py-2"
               >
-                Cancelar
+                {t.gallery.cancel}
               </button>
             )}
             <button
               onClick={() => {
                 clearSession(slug)
-                navigate(`/galeria/${slug}`)
+                navigate(`${ROUTES.gallery[lang]}/${slug}`)
               }}
               className="text-[11px] uppercase tracking-[0.18em] text-titanium/40 hover:text-titanium/70 transition-colors px-3 py-2 ml-auto"
             >
-              Sair
+              {t.gallery.exit}
             </button>
           </div>
 
@@ -293,7 +290,7 @@ export default function GalleryView() {
         <section className="container-px">
           {photos.length === 0 ? (
             <p className="text-sm text-titanium/45">
-              Ainda não há ficheiros nesta galeria. Avisamos assim que estiverem prontos.
+              {t.gallery.empty}
             </p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
@@ -309,7 +306,7 @@ export default function GalleryView() {
                   <button
                     onClick={() => setOpen(i)}
                     className="absolute inset-0 w-full h-full"
-                    aria-label={`Abrir ${photo.fileName}`}
+                    aria-label={`${t.gallery.open} ${photo.fileName}`}
                   >
                     <img
                       src={photo.thumbUrl ?? photo.url ?? ''}
@@ -335,7 +332,7 @@ export default function GalleryView() {
                   {gallery.downloadEnabled && (
                     <button
                       onClick={() => handleDownloadOne(i)}
-                      aria-label={`Descarregar ${photo.fileName}`}
+                      aria-label={`${t.gallery.download} ${photo.fileName}`}
                       className="absolute bottom-1.5 right-1.5 p-2.5 rounded-full bg-eerie/70 text-titanium/85 hover:text-titanium hover:bg-eerie/90 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
                     >
                       <Download size={15} />
@@ -350,11 +347,9 @@ export default function GalleryView() {
                   <button
                     onClick={() => alternarFavorita(photo.id)}
                     aria-pressed={favoritas.has(photo.id)}
-                    aria-label={
-                      favoritas.has(photo.id)
-                        ? `Retirar ${photo.fileName} das escolhidas`
-                        : `Escolher ${photo.fileName}`
-                    }
+                    aria-label={`${
+                      favoritas.has(photo.id) ? t.gallery.unchoose : t.gallery.choose
+                    }: ${photo.fileName}`}
                     className={`absolute bottom-1.5 left-1.5 p-2.5 rounded-full bg-eerie/70 hover:bg-eerie/90 transition-all active:scale-90 ${
                       favoritas.has(photo.id)
                         ? 'text-titanium'
@@ -370,8 +365,8 @@ export default function GalleryView() {
         </section>
 
         <div className="container-px mt-16">
-          <Link to="/" className="label-sm hover:text-titanium/70 transition-colors">
-            ← Voltar ao site
+          <Link to={ROUTES.home[lang]} className="label-sm hover:text-titanium/70 transition-colors">
+            {t.common.backToSite}
           </Link>
         </div>
       </div>
@@ -402,7 +397,7 @@ export default function GalleryView() {
                   className={`p-3 transition-colors ${
                     favoritas.has(current.id) ? 'text-titanium' : 'text-titanium/60 hover:text-titanium'
                   }`}
-                  aria-label={favoritas.has(current.id) ? 'Retirar das escolhidas' : 'Escolher esta'}
+                  aria-label={favoritas.has(current.id) ? t.gallery.unchoose : t.gallery.choose}
                 >
                   <Heart size={20} fill={favoritas.has(current.id) ? 'currentColor' : 'none'} />
                 </button>
@@ -410,7 +405,7 @@ export default function GalleryView() {
                   <button
                     onClick={() => handleDownloadOne(open!)}
                     className="p-3 text-titanium/60 hover:text-titanium transition-colors"
-                    aria-label="Descarregar este ficheiro"
+                    aria-label={t.gallery.download}
                   >
                     <Download size={20} />
                   </button>
@@ -418,7 +413,7 @@ export default function GalleryView() {
                 <button
                   onClick={close}
                   className="p-3 text-titanium/60 hover:text-titanium transition-colors"
-                  aria-label="Fechar"
+                  aria-label={t.gallery.close}
                 >
                   <X size={22} />
                 </button>
@@ -449,14 +444,14 @@ export default function GalleryView() {
               <>
                 <button
                   onClick={() => step(-1)}
-                  aria-label="Anterior"
+                  aria-label={t.gallery.prev}
                   className="absolute left-1 sm:left-4 top-1/2 -translate-y-1/2 p-4 text-titanium/50 hover:text-titanium transition-colors"
                 >
                   <ChevronLeft size={30} />
                 </button>
                 <button
                   onClick={() => step(1)}
-                  aria-label="Seguinte"
+                  aria-label={t.gallery.next}
                   className="absolute right-1 sm:right-4 top-1/2 -translate-y-1/2 p-4 text-titanium/50 hover:text-titanium transition-colors"
                 >
                   <ChevronRight size={30} />

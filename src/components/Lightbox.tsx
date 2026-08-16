@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import Picture from '../lib/Picture'
+import { useT } from '../lib/i18n'
 import type { PortfolioItem } from '../lib/site-content/useSiteContent'
 
 interface Props {
@@ -21,6 +22,8 @@ interface Props {
  * passava a ser uma imagem em cima de uma grelha de imagens.
  */
 export default function Lightbox({ item, index, total, onClose, onPrev, onNext }: Props) {
+  const t = useT()
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose()
@@ -56,7 +59,7 @@ export default function Lightbox({ item, index, total, onClose, onPrev, onNext }
         </span>
         <button
           onClick={onClose}
-          aria-label="Fechar"
+          aria-label={t.portfolio.close}
           className="w-11 h-11 rounded-full border border-white/15 flex items-center justify-center text-titanium/70 hover:text-titanium hover:border-white/40 transition-colors active:scale-95"
         >
           <X size={18} />
@@ -77,14 +80,14 @@ export default function Lightbox({ item, index, total, onClose, onPrev, onNext }
       <div className="flex items-center justify-center gap-4 pb-8 shrink-0">
         <button
           onClick={onPrev}
-          aria-label="Fotografia anterior"
+          aria-label={t.portfolio.prev}
           className="w-12 h-12 rounded-full border border-white/15 flex items-center justify-center text-titanium/70 hover:text-titanium hover:border-white/40 transition-colors active:scale-95"
         >
           <ChevronLeft size={20} />
         </button>
         <button
           onClick={onNext}
-          aria-label="Fotografia seguinte"
+          aria-label={t.portfolio.next}
           className="w-12 h-12 rounded-full border border-white/15 flex items-center justify-center text-titanium/70 hover:text-titanium hover:border-white/40 transition-colors active:scale-95"
         >
           <ChevronRight size={20} />
