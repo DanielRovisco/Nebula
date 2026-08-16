@@ -1,7 +1,13 @@
-// Fonte única de verdade para URL público e contactos.
-// Quando o domínio próprio estiver ativo, basta mudar SITE_URL (e o `base` no
-// vite.config.ts) — tudo o resto (canonical, og:image, sitemap, JSON-LD) segue.
-export const SITE_URL = 'https://danielrovisco.github.io/Nebula'
+import site from '../../site.config.json'
+
+/**
+ * URL público do site, sem barra no fim.
+ *
+ * Sai do `site.config.json`, que é também de onde saem o `base` do Vite e o
+ * `basename` do router — mudar de domínio é mudar esse ficheiro e mais nada.
+ * Daqui derivam os canonical, os og:image, as hreflang, o sitemap e o JSON-LD.
+ */
+export const SITE_URL = `${site.origin}${site.base}`.replace(/\/$/, '')
 
 export const CONTACT = {
   email: 'nebula.pdstudio@gmail.com',

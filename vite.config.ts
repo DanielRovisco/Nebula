@@ -1,10 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import site from './site.config.json' with { type: 'json' }
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/Nebula/',
+  // Vem do site.config.json, tal como o basename do router e o SITE_URL: mudar
+  // de domínio tem de ser uma alteração num sítio só, não uma caça a seis.
+  base: site.base,
   build: {
     rollupOptions: {
       output: {

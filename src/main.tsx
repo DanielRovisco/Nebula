@@ -15,10 +15,14 @@ import '@fontsource/cormorant-garamond/latin-400-italic.css'
 
 import './index.css'
 import App from './App.tsx'
+import site from '../site.config.json'
+
+// O router não quer a barra final que o Vite exige no `base`.
+const BASENAME = site.base.replace(/\/$/, '')
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter basename="/Nebula">
+    <BrowserRouter basename={BASENAME}>
       <App />
     </BrowserRouter>
   </StrictMode>,

@@ -27,7 +27,13 @@ import { join, extname, dirname } from 'node:path'
 import { chromium } from 'playwright'
 
 const DIST = new URL('../dist/', import.meta.url).pathname
-const BASE = '/Nebula/'
+// O mesmo `base` que o Vite e o router usam. Estava fixo aqui, e com um domínio
+// próprio (base "/") isso servia as páginas em /Nebula/ — o router via esse
+// prefixo como parte do caminho e gravava canonicals como
+// "https://nebula.pt/Nebula/".
+const BASE = JSON.parse(
+  await readFile(new URL('../site.config.json', import.meta.url).pathname, 'utf8'),
+).base
 const PORTA = 4183
 
 // Só páginas públicas. As galerias são privadas, o painel não deve ser

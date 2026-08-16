@@ -12,6 +12,7 @@ import { track } from '../lib/track'
 import Testimonials from '../components/Testimonials'
 import { asset } from '../lib/asset'
 import { CONTACT, absoluteUrl } from '../lib/site'
+import { businessJsonLd } from '../lib/businessJsonLd'
 
 // O `id` casa com as categorias de /servicos: o cartão abre logo a categoria
 // certa no acordeão, em vez de cair sempre na primeira.
@@ -97,6 +98,7 @@ export default function Home() {
         title={t.home.seoTitle}
         description={t.home.seoDescription}
         image={absoluteUrl('/brand/portfolio/hero-beach-dress-1440.webp')}
+        jsonLd={businessJsonLd}
       />
 
       {/* ── HERO ─────────────────────────────────────── */}

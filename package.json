@@ -6,14 +6,16 @@
   "scripts": {
     "dev": "vite",
     "demo": "vite --mode demo",
-    "build": "tsc -b && vite build && node scripts/prerender.mjs",
-    "build:demo": "tsc -b && vite build --mode demo && node scripts/prerender.mjs",
+    "build": "node scripts/gen-public.mjs && tsc -b && vite build && node scripts/prerender.mjs",
+    "build:demo": "node scripts/gen-public.mjs && tsc -b && vite build --mode demo && node scripts/prerender.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "images": "node scripts/optimize-images.mjs",
     "setup:check": "node scripts/check-setup.mjs",
     "prerender": "node scripts/prerender.mjs",
-    "icons": "node scripts/icons.mjs"
+    "icons": "node scripts/icons.mjs",
+    "gen": "node scripts/gen-public.mjs",
+    "setup": "node scripts/setup.mjs"
   },
   "dependencies": {
     "@fontsource-variable/montserrat": "^5.3.0",

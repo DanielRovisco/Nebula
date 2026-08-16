@@ -23,7 +23,10 @@ npm run setup:check  # diagnostica a configuração das galerias privadas
 npm run build    # tsc + build de produção para dist/
 npm run preview  # servir o build de produção localmente
 npm run lint
-npm run images   # regenerar derivados responsivos das fotografias
+npm run images   # regenerar derivados responsivos das fotografias (AVIF + WebP)
+npm run icons    # regenerar os ícones do site a partir do símbolo da marca
+npm run gen      # sitemap, robots, manifest e CNAME a partir do site.config.json
+npm run setup    # ligar o site ao Supabase e ao R2 (ver ARRANQUE.md)
 ```
 
 ## Imagens
@@ -67,10 +70,12 @@ definida como secret no workflow do GitHub Actions.
 
 ## SEO
 
-`src/lib/site.ts` tem o `SITE_URL` — é o único sítio a mudar quando houver
-domínio próprio (juntamente com o `base` no `vite.config.ts` e o `basename` do
-router em `src/main.tsx`). Dele derivam o `canonical`, o `og:image` e o
-`sitemap`.
+**Mudar de domínio é editar `site.config.json` e mais nada.** Dele saem o `base`
+do Vite, o `basename` do router, o `SITE_URL` (e com ele os canonical, og:image
+e hreflang), o `sitemap.xml`, o `robots.txt`, o `site.webmanifest`, o JSON-LD do
+negócio e o ficheiro `CNAME`. Os quatro ficheiros de `public/` são gerados por
+`npm run gen`, que corre sozinho antes de cada build — estavam escritos à mão e
+o sitemap já tinha catorze endereços a desatualizar-se em silêncio.
 
 Cada página declara os seus metadados via `<Seo>`, que escreve
 `title`/`description`/`canonical`/`hreflang`/Open Graph no cliente — e a

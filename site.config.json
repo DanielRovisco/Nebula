@@ -1,0 +1,16 @@
+{
+  "_comentario": [
+    "Identidade pública do site, num sítio só.",
+    "",
+    "Daqui saem o base do Vite, o basename do router, o SITE_URL usado nos",
+    "canonical/og/hreflang, o sitemap.xml e o manifest. Mudar de domínio é",
+    "mudar estes dois valores e correr `npm run build` — nada mais.",
+    "",
+    "Com domínio próprio (ex. nebula.pt):",
+    "  origin: \"https://nebula.pt\"",
+    "  base:   \"/\"",
+    "e criar public/CNAME com o domínio lá dentro (npm run dominio trata disso)."
+  ],
+  "origin": "https://danielrovisco.github.io",
+  "base": "/Nebula/"
+}
