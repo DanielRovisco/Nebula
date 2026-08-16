@@ -73,6 +73,20 @@ crawlers que não executam JavaScript vêem apenas os metadados do `index.html`
 — o Googlebot executa JS, mas se o SEO se tornar crítico o passo seguinte é
 pré-renderizar as rotas no build.
 
+**Pré-renderização.** O build acaba com `scripts/prerender.mjs`, que abre o
+site já construído num Chromium e guarda o HTML de cada página pública em
+`dist/<rota>/index.html`. Assim o título, a descrição, o canonical e as
+hreflang existem no HTML servido, sem depender de o cliente executar
+JavaScript — é o que faz as pré-visualizações de links do WhatsApp e do
+Instagram mostrarem a página certa. Requer o Chromium (`npx playwright install
+chromium`); localmente, `PLAYWRIGHT_CHROMIUM_PATH` aponta para um já instalado.
+No workflow o passo é tolerante a falhas: se a captura falhar, publica-se a
+versão SPA como antes.
+
+A captura corre com `prefers-reduced-motion` ativo, e é isso que faz o site
+entregar-se estático e completo. Um efeito lateral útil: qualquer animação que
+não respeite essa preferência aparece congelada no HTML e é apanhada ali.
+
 `public/robots.txt` está presente mas, num project site do GitHub Pages, os
 crawlers só leem o `robots.txt` da raiz do domínio (`danielrovisco.github.io`),
 que este repositório não controla. Passa a ser respeitado assim que houver
@@ -89,7 +103,11 @@ desligados e o conteúdo é entregue estático.
 
 `/admin` tem dois separadores:
 
-- **Galerias** — as entregas privadas a clientes (ver secção seguinte).
+- **Galerias** — as entregas privadas a clientes (ver secção seguinte). A lista
+  mostra o espaço já ocupado no R2, e cada galeria tem um botão **Ver como o
+  cliente** que abre a entrega tal como ele a vê, sem precisar da password
+  dele. Nessa pré-visualização não há comprovativo de acesso, por isso nada
+  fica registado nem marcado como escolha do cliente.
 - **Site** — o conteúdo público: as fotos e as categorias do portfólio, e os
   testemunhos de clientes.
 
