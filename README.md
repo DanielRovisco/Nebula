@@ -68,10 +68,8 @@ router em `src/main.tsx`). Dele derivam o `canonical`, o `og:image` e o
 `sitemap`.
 
 Cada página declara os seus metadados via `<Seo>`, que escreve
-`title`/`description`/`canonical`/`hreflang`/Open Graph no cliente. Como é uma SPA, os
-crawlers que não executam JavaScript vêem apenas os metadados do `index.html`
-— o Googlebot executa JS, mas se o SEO se tornar crítico o passo seguinte é
-pré-renderizar as rotas no build.
+`title`/`description`/`canonical`/`hreflang`/Open Graph no cliente — e a
+pré-renderização abaixo grava-os no HTML servido, para não dependerem disso.
 
 **Pré-renderização.** O build acaba com `scripts/prerender.mjs`, que abre o
 site já construído num Chromium e guarda o HTML de cada página pública em
