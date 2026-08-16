@@ -79,7 +79,10 @@ export default function Portfolio() {
   // e são iguais nas duas línguas, porque são as mesmas fotografias.
   const TODOS = t.portfolio.all
   const filtros = [TODOS, ...categories]
-  const filtered = filter === TODOS ? items : items.filter((i) => i.category === filter)
+  // `filter` arranca vazio para não fixar o nome do filtro "Todos" numa língua.
+  // Vazio significa "sem filtro" e tem de mostrar tudo: tratá-lo como uma
+  // categoria a sério deixava a grelha sem uma única fotografia.
+  const filtered = !filter || filter === TODOS ? items : items.filter((i) => i.category === filter)
 
   // Índice da fotografia aberta em grande, e id de quem detém o nome partilhado
   // da transição na grelha. Só um elemento pode ter esse nome de cada vez: com

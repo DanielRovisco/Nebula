@@ -20,16 +20,25 @@ jobs:
 
       - run: npm ci
 
+      # Necessário para a pré-renderização: as páginas públicas são capturadas
+      # num browser verdadeiro depois do build (ver scripts/prerender.mjs).
+      - run: npx playwright install --with-deps chromium
+
       # ⚠️ TEMPORÁRIO — galerias em modo de demonstração no site publicado.
       #
       # Serve para explorar o painel e a galeria do cliente sem login e sem
       # Supabase. Os dados são falsos e vivem no browser de quem visita: não há
       # fotografias de clientes envolvidas, e por isso não há nada exposto.
       #
-      # ANTES DE LIGAR O SUPABASE A SÉRIO: apagar este bloco e voltar a
-      # `npm run build`, senão o site publicado continua a servir galerias de
-      # brincar em vez das verdadeiras.
-      - run: npm run build:demo
+      # ANTES DE LIGAR O SUPABASE A SÉRIO: trocar `--mode demo` por um build
+      # normal, senão o site publicado continua a servir galerias de brincar em
+      # vez das verdadeiras.
+      #
+      # O build e a pré-renderização ficam em passos separados de propósito: se
+      # a captura falhar, o site é publicado na mesma como aplicação de página
+      # única, que é o que já era antes disto. Perder metadados nas partilhas é
+      # mau; deixar de publicar é pior.
+      - run: npx tsc -b && npx vite build --mode demo
         env:
           # Vazias enquanto não houver conta de estatísticas: sem SRC o site não
           # carrega script nenhum (ver src/lib/Analytics.tsx).
@@ -37,6 +46,8 @@ jobs:
           VITE_ANALYTICS_DOMAIN: ${{ secrets.VITE_ANALYTICS_DOMAIN }}
           VITE_ANALYTICS_ID: ${{ secrets.VITE_ANALYTICS_ID }}
           VITE_CONTACT_ENDPOINT: ${{ secrets.VITE_CONTACT_ENDPOINT }}
+
+      - run: npm run prerender || echo "::warning::Pré-renderização falhou; publica-se a versão SPA."
 
       - uses: peaceiris/actions-gh-pages@v4
         with:

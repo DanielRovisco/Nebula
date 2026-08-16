@@ -121,8 +121,14 @@ export default function Home() {
           style={reduced ? undefined : { opacity: textOpacity, y: textY }}
           className="absolute inset-0 flex flex-col justify-end container-px pb-14 sm:pb-24"
         >
+          {/*
+            `initial={false}` com movimento reduzido, tal como no Reveal: sem
+            isto a opacidade ficava em 0 e o crachá, o botão e o indicador de
+            scroll do hero ficavam invisíveis para quem tem essa preferência
+            ativa — apanhado ao pré-renderizar as páginas.
+          */}
           <motion.div
-            initial={{ opacity: 0, y: 8 }}
+            initial={reduced ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="flex items-center gap-3 mb-7 sm:mb-9"
@@ -148,7 +154,7 @@ export default function Home() {
           </h1>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={reduced ? false : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1.0 }}
             className="mt-8 sm:mt-10 flex flex-wrap items-center gap-4 sm:gap-6"
@@ -166,7 +172,7 @@ export default function Home() {
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={reduced ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.6, duration: 1 }}
           className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-0"

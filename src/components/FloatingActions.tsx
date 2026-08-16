@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { CONTACT } from '../lib/site'
 
 export default function FloatingActions() {
+  const reduced = useReducedMotion()
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -16,7 +17,7 @@ export default function FloatingActions() {
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8, y: 16 }}
+          initial={reduced ? false : { opacity: 0, scale: 0.8, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: 16 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
