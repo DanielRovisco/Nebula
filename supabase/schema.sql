@@ -65,7 +65,11 @@ alter table galleries
 
 alter table photos
   -- Distingue foto de vídeo sem depender da extensão do nome do ficheiro.
-  add column if not exists content_type text;
+  add column if not exists content_type text,
+  -- Quando a fotografia foi tirada, lido do EXIF durante o upload. Permite
+  -- ordenar a galeria pela ordem em que o dia aconteceu, em vez de por nomes de
+  -- ficheiro que, com duas máquinas, não têm relação nenhuma entre si.
+  add column if not exists taken_at timestamptz;
 
 create index if not exists photos_gallery_idx on photos (gallery_id, sort_order);
 create index if not exists galleries_slug_idx on galleries (slug);

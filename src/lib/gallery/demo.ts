@@ -70,6 +70,8 @@ function seed(): DemoState {
     width: 1440,
     height: 1920,
     sizeBytes: 420_000,
+    // Uma hora entre cada, para a ordenação por data ter o que ordenar.
+    takenAt: new Date(Date.now() - 864e5 * 3 + i * 36e5).toISOString(),
     sortOrder: i,
   }))
   const agora = Date.now()
@@ -217,6 +219,7 @@ export const demoApi = {
         thumbPath: url,
         fileName: file.name,
         contentType: file.type || null,
+        takenAt: null,
         width: null,
         height: null,
         sizeBytes: file.size,
@@ -232,6 +235,17 @@ export const demoApi = {
     const s = load()
     s.photos = s.photos.filter((p) => p.id !== photoId)
     save(s)
+  },
+
+  async sortByTakenAt(galleryId: string, photos: Photo[]) {
+    const ordenadas = [...photos].sort((a, b) => {
+      if (a.takenAt && b.takenAt) return a.takenAt.localeCompare(b.takenAt)
+      if (a.takenAt) return -1
+      if (b.takenAt) return 1
+      return a.sortOrder - b.sortOrder
+    })
+    await this.reorderPhotos(galleryId, ordenadas.map((p) => p.id))
+    return ordenadas
   },
 
   async reorderPhotos(galleryId: string, orderedIds: string[]) {

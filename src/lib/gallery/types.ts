@@ -31,6 +31,8 @@ export interface Photo {
   width: number | null
   height: number | null
   sizeBytes: number | null
+  /** Quando foi tirada, lido do EXIF no upload. Null quando não há EXIF. */
+  takenAt: string | null
   sortOrder: number
 }
 

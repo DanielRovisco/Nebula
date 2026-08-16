@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ChevronLeft, ChevronRight, Play, Star, Trash2, Upload } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Clock, Play, Star, Trash2, Upload } from 'lucide-react'
 import { api } from '../../lib/gallery/api'
 import type { Gallery, Photo } from '../../lib/gallery/types'
 import { SITE_URL } from '../../lib/site'
@@ -124,6 +124,27 @@ export default function GalleryEditor() {
     next.splice(to, 0, moved)
     setPhotos(next)
     api.reorderPhotos(id, next.map((p) => p.id)).catch((e) => setError((e as Error).message))
+  }
+
+  /**
+   * Põe a galeria pela ordem em que o dia aconteceu, usando a hora lida do
+   * EXIF de cada fotografia. Com duas máquinas no mesmo casamento, os nomes de
+   * ficheiro não têm relação nenhuma entre si e a ordem por nome conta o dia
+   * aos saltos.
+   */
+  async function ordenarPorData() {
+    if (!gallery) return
+    setSaving(true)
+    setError(null)
+    try {
+      setPhotos(await api.sortByTakenAt(gallery.id, photos))
+      flash('Ordenadas pela hora em que foram tiradas.')
+    } catch (e) {
+      setError((e as Error).message)
+      load()
+    } finally {
+      setSaving(false)
+    }
   }
 
   function onDrop(target: number) {
@@ -270,6 +291,19 @@ export default function GalleryEditor() {
           <h2 className="text-xl">
             Fotografias <span className="text-titanium/35 text-base">({photos.length})</span>
           </h2>
+          {/*
+            Só faz sentido oferecer se houver datas para ordenar: fotografias
+            exportadas sem EXIF e vídeos não trazem nenhuma.
+          */}
+          {photos.some((p) => p.takenAt) && (
+            <button
+              onClick={ordenarPorData}
+              disabled={saving}
+              className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-titanium/45 hover:text-titanium/80 transition-colors px-3 py-2 disabled:opacity-40"
+            >
+              <Clock size={12} /> Ordenar por data da fotografia
+            </button>
+          )}
           <button
             onClick={() => fileInput.current?.click()}
             disabled={Boolean(upload)}

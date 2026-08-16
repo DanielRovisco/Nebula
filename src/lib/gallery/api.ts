@@ -1,4 +1,5 @@
 import { DEMO, anonKey, functionsUrl, supabase } from './config'
+import { dataDaFotografia } from './exif'
 import { demoApi } from './demo'
 import type { Gallery, GalleryAccess, GalleryEvent, GalleryPatch, NewGallery, Photo } from './types'
 
@@ -148,6 +149,7 @@ const rowToGallery = (r: Record<string, unknown>): Gallery => ({
 })
 
 const rowToPhoto = (r: Record<string, unknown>): Photo => ({
+  takenAt: (r.taken_at as string) ?? null,
   id: r.id as string,
   galleryId: r.gallery_id as string,
   storagePath: r.storage_path as string,
@@ -315,6 +317,10 @@ const realApi = {
     for (const file of files) {
       const video = file.type.startsWith('video/')
 
+      // Lido do ficheiro original, antes de qualquer redução: o canvas por onde
+      // a redução passa não leva metadados nenhuns.
+      const takenAt = await dataDaFotografia(file)
+
       // A foto de entrega: reduzida se pedido, senão o ficheiro tal e qual.
       // Vídeos sobem sempre intactos — recodificar vídeo no browser não é
       // viável, e reduzir um vídeo não é coisa que se faça sem o dono ver.
@@ -383,6 +389,7 @@ const realApi = {
         width,
         height,
         size_bytes: payload.size,
+        taken_at: takenAt,
         sort_order: order++,
       })
       if (error) {
@@ -411,6 +418,24 @@ const realApi = {
     }
     const { error } = await sb.from('photos').delete().eq('id', photoId)
     if (error) throw new Error(error.message)
+  },
+
+  /**
+   * Reordena pela hora a que cada fotografia foi tirada.
+   *
+   * As que não trazem data ficam no fim, pela ordem que já tinham: um vídeo ou
+   * um ficheiro exportado sem EXIF não deve ir parar ao princípio do dia só
+   * porque não sabemos quando foi.
+   */
+  async sortByTakenAt(galleryId: string, photos: Photo[]) {
+    const ordenadas = [...photos].sort((a, b) => {
+      if (a.takenAt && b.takenAt) return a.takenAt.localeCompare(b.takenAt)
+      if (a.takenAt) return -1
+      if (b.takenAt) return 1
+      return a.sortOrder - b.sortOrder
+    })
+    await this.reorderPhotos(galleryId, ordenadas.map((p) => p.id))
+    return ordenadas
   },
 
   async reorderPhotos(_galleryId: string, orderedIds: string[]) {
