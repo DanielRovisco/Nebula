@@ -1,4 +1,9 @@
+# Gerado por scripts/gen-public.mjs. Não editar à mão.
 User-agent: *
 Allow: /
+# O painel e as galerias de cliente não têm nada que ser indexados.
+Disallow: /Nebula/admin
+Disallow: /Nebula/galeria
+Disallow: /Nebula/en/gallery
 
 Sitemap: https://danielrovisco.github.io/Nebula/sitemap.xml
