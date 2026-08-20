@@ -22,7 +22,9 @@ npm install
    assim que os nameservers mudam, e não é um erro suave — fica inacessível até
    se desfazer.
 3. Criar conta na Cloudflare, **Add a site** → `proj3ctnebula.pt` → plano
-   **Free**. Apagar os registos de parking que ela importar da Amen.
+   **Free**. A zona **não está vazia** — a Amen inclui serviço de email e os
+   registos dele têm de sobreviver à migração. O inventário completo, com o que
+   se apaga e o que se mantém, está em [`docs/dns.md`](docs/dns.md).
 4. Copiar os dois nameservers que a Cloudflare dá e colá-los na Amen, a
    substituir os dela. Voltar à Cloudflare e clicar *Check nameservers now*.
 
