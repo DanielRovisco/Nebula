@@ -3,114 +3,114 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://danielrovisco.github.io/Nebula</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://danielrovisco.github.io/Nebula" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://danielrovisco.github.io/Nebula/en" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://danielrovisco.github.io/Nebula" />
+    <loc>https://proj3ctnebula.pt/</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/" />
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://danielrovisco.github.io/Nebula/portfolio</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://danielrovisco.github.io/Nebula/portfolio" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://danielrovisco.github.io/Nebula/en/portfolio" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://danielrovisco.github.io/Nebula/portfolio" />
+    <loc>https://proj3ctnebula.pt/portfolio</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/portfolio" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/portfolio" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/portfolio" />
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://danielrovisco.github.io/Nebula/servicos</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://danielrovisco.github.io/Nebula/servicos" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://danielrovisco.github.io/Nebula/en/services" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://danielrovisco.github.io/Nebula/servicos" />
+    <loc>https://proj3ctnebula.pt/servicos</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/servicos" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/services" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/servicos" />
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://danielrovisco.github.io/Nebula/sobre</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://danielrovisco.github.io/Nebula/sobre" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://danielrovisco.github.io/Nebula/en/about" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://danielrovisco.github.io/Nebula/sobre" />
+    <loc>https://proj3ctnebula.pt/sobre</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/sobre" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/about" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/sobre" />
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://danielrovisco.github.io/Nebula/contacto</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://danielrovisco.github.io/Nebula/contacto" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://danielrovisco.github.io/Nebula/en/contact" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://danielrovisco.github.io/Nebula/contacto" />
+    <loc>https://proj3ctnebula.pt/contacto</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/contacto" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/contact" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/contacto" />
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://danielrovisco.github.io/Nebula/galeria</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://danielrovisco.github.io/Nebula/galeria" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://danielrovisco.github.io/Nebula/en/gallery" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://danielrovisco.github.io/Nebula/galeria" />
+    <loc>https://proj3ctnebula.pt/galeria</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/galeria" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/gallery" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/galeria" />
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://danielrovisco.github.io/Nebula/privacidade</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://danielrovisco.github.io/Nebula/privacidade" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://danielrovisco.github.io/Nebula/en/privacy" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://danielrovisco.github.io/Nebula/privacidade" />
+    <loc>https://proj3ctnebula.pt/privacidade</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/privacidade" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/privacy" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/privacidade" />
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
-    <loc>https://danielrovisco.github.io/Nebula/en</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://danielrovisco.github.io/Nebula" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://danielrovisco.github.io/Nebula/en" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://danielrovisco.github.io/Nebula" />
+    <loc>https://proj3ctnebula.pt/en</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/" />
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://danielrovisco.github.io/Nebula/en/portfolio</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://danielrovisco.github.io/Nebula/portfolio" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://danielrovisco.github.io/Nebula/en/portfolio" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://danielrovisco.github.io/Nebula/portfolio" />
+    <loc>https://proj3ctnebula.pt/en/portfolio</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/portfolio" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/portfolio" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/portfolio" />
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://danielrovisco.github.io/Nebula/en/services</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://danielrovisco.github.io/Nebula/servicos" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://danielrovisco.github.io/Nebula/en/services" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://danielrovisco.github.io/Nebula/servicos" />
+    <loc>https://proj3ctnebula.pt/en/services</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/servicos" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/services" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/servicos" />
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://danielrovisco.github.io/Nebula/en/about</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://danielrovisco.github.io/Nebula/sobre" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://danielrovisco.github.io/Nebula/en/about" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://danielrovisco.github.io/Nebula/sobre" />
+    <loc>https://proj3ctnebula.pt/en/about</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/sobre" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/about" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/sobre" />
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://danielrovisco.github.io/Nebula/en/contact</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://danielrovisco.github.io/Nebula/contacto" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://danielrovisco.github.io/Nebula/en/contact" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://danielrovisco.github.io/Nebula/contacto" />
+    <loc>https://proj3ctnebula.pt/en/contact</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/contacto" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/contact" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/contacto" />
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://danielrovisco.github.io/Nebula/en/gallery</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://danielrovisco.github.io/Nebula/galeria" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://danielrovisco.github.io/Nebula/en/gallery" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://danielrovisco.github.io/Nebula/galeria" />
+    <loc>https://proj3ctnebula.pt/en/gallery</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/galeria" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/gallery" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/galeria" />
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://danielrovisco.github.io/Nebula/en/privacy</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://danielrovisco.github.io/Nebula/privacidade" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://danielrovisco.github.io/Nebula/en/privacy" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://danielrovisco.github.io/Nebula/privacidade" />
+    <loc>https://proj3ctnebula.pt/en/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/privacidade" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/privacy" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/privacidade" />
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
