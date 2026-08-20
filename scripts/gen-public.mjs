@@ -17,7 +17,18 @@ const raiz = new URL('../', import.meta.url).pathname
 const site = JSON.parse(await readFile(raiz + 'site.config.json', 'utf8'))
 const origin = site.origin.replace(/\/$/, '')
 const base = site.base.endsWith('/') ? site.base : `${site.base}/`
-const url = (caminho) => `${origin}${base}${caminho.replace(/^\//, '')}`.replace(/\/$/, '') || `${origin}${base}`
+/*
+  Sub-páginas sem barra final (/sobre, não /sobre/), mas a inicial mantém a
+  dela: o canonical escrito pelo Seo.tsx é `https://dominio/`, e um sitemap a
+  dizer `https://dominio` estaria a declarar um endereço diferente do que a
+  própria página diz ser o seu. Só se nota quando o `base` é a raiz — com
+  `/Nebula/` a barra vinha do próprio base.
+*/
+const url = (caminho) => {
+  const completo = `${origin}${base}${caminho.replace(/^\//, '')}`
+  const semBarra = completo.replace(/\/$/, '')
+  return semBarra === origin ? `${origin}/` : semBarra
+}
 
 /**
  * As rotas públicas, com a prioridade que cada uma merece. A galeria entra

@@ -11,6 +11,6 @@
     "  base:   \"/\"",
     "e criar public/CNAME com o domínio lá dentro (npm run dominio trata disso)."
   ],
-  "origin": "https://danielrovisco.github.io",
-  "base": "/Nebula/"
+  "origin": "https://proj3ctnebula.pt",
+  "base": "/"
 }
