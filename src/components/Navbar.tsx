@@ -93,11 +93,14 @@ export default function Navbar() {
               inicial — quem está nos serviços em português quer os serviços em
               inglês. `reloadDocument` fica de fora de propósito: é navegação
               normal da aplicação.
+
+              O alvo de 44px não é decorativo: com `py-1` ficava em 20×25,
+              metade do mínimo recomendado para um controlo autónomo.
             */}
             <Link
               to={switchLang(pathname, lang === 'pt' ? 'en' : 'pt')}
               aria-label={t.nav.langLabel}
-              className="text-[11px] uppercase tracking-[0.18em] text-titanium/45 hover:text-titanium transition-colors py-1"
+              className="text-[11px] uppercase tracking-[0.18em] text-titanium/60 hover:text-titanium transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
               {lang === 'pt' ? 'EN' : 'PT'}
             </Link>
@@ -171,7 +174,7 @@ export default function Navbar() {
               <Link
                 to={switchLang(pathname, lang === 'pt' ? 'en' : 'pt')}
                 onClick={() => setOpen(false)}
-                className="text-[11px] uppercase tracking-[0.2em] text-titanium/45"
+                className="text-[11px] uppercase tracking-[0.2em] text-titanium/60"
               >
                 {lang === 'pt' ? 'English' : 'Português'}
               </Link>

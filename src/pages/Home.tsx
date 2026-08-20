@@ -169,7 +169,7 @@ export default function Home() {
               {t.home.heroCta}
               <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
             </Link>
-            <span className="label-sm opacity-70">{t.home.heroNote}</span>
+            <span className="label-sm">{t.home.heroNote}</span>
           </motion.div>
         </motion.div>
 
@@ -199,7 +199,7 @@ export default function Home() {
               {t.home.manifesto[0]}
             </p>
             <p
-              className="font-serif italic leading-[1.12] text-titanium/45 mt-1 sm:mt-2"
+              className="font-serif italic leading-[1.12] text-titanium/60 mt-1 sm:mt-2"
               style={{ fontSize: 'clamp(2rem, 5.5vw, 5rem)' }}
             >
               {t.home.manifesto[1]}
@@ -241,7 +241,7 @@ export default function Home() {
                   <div className="absolute inset-0 bg-gradient-to-t from-eerie/95 via-eerie/25 to-transparent" />
 
                   <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-7">
-                    <span className="font-mono text-[10px] text-titanium/30 tracking-[0.3em] mb-3 block">
+                    <span className="font-mono text-[10px] text-titanium/55 tracking-[0.3em] mb-3 block">
                       0{i + 1}
                     </span>
                     <h3
@@ -253,7 +253,7 @@ export default function Home() {
                     <p className="text-[13px] text-titanium/55 leading-relaxed max-w-[220px]">
                       {t.home.services[s.id].tagline}
                     </p>
-                    <div className="flex items-center gap-2 mt-5 label-sm text-titanium/45 group-hover:text-titanium/75 group-hover:gap-3 transition-all duration-300">
+                    <div className="flex items-center gap-2 mt-5 label-sm text-titanium/60 group-hover:text-titanium/75 group-hover:gap-3 transition-all duration-300">
                       {t.common.exploreMore}
                       <ArrowRight size={11} />
                     </div>
@@ -359,7 +359,7 @@ export default function Home() {
             {t.home.steps.map((step, i) => (
               <Reveal key={STEP_NUMBERS[i]} delay={i * 0.12}>
                 <div className="border-t border-white/[0.12] pt-6 sm:pt-7">
-                  <span className="font-mono text-[11px] text-titanium/25 tracking-[0.3em]">{STEP_NUMBERS[i]}</span>
+                  <span className="font-mono text-[11px] text-titanium/55 tracking-[0.3em]">{STEP_NUMBERS[i]}</span>
                   <h3 className="text-xl sm:text-2xl mt-4 mb-3">{step.title}</h3>
                   <p className="text-sm text-titanium/50 leading-relaxed">{step.desc}</p>
                 </div>

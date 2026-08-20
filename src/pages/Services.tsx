@@ -148,7 +148,7 @@ export default function Services() {
                   className="w-full flex items-center justify-between py-6 sm:py-9 px-6 sm:px-10 text-left group active:bg-white/[0.02]"
                 >
                   <div className="flex items-center gap-5 sm:gap-10 min-w-0">
-                    <span className="font-mono text-xs text-titanium/25 tracking-[0.25em] hidden sm:block">
+                    <span className="font-mono text-xs text-titanium/55 tracking-[0.25em] hidden sm:block">
                       0{idx + 1}
                     </span>
                     <div className="min-w-0">
@@ -158,7 +158,7 @@ export default function Services() {
                       >
                         {t.home.services[cat.id].title}
                       </h2>
-                      <p className="text-titanium/45 text-xs sm:text-sm mt-1">
+                      <p className="text-titanium/60 text-xs sm:text-sm mt-1">
                         {t.home.services[cat.id].tagline}
                       </p>
                     </div>

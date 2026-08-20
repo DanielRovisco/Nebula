@@ -131,6 +131,20 @@ body::after {
   }
 }
 
+/*
+  Anel de foco para quem navega por teclado.
+  
+  Faltava por completo em alguns botões e links — o do sistema é removido pelo
+  reset do Tailwind e nem todos os elementos tinham um `focus:` próprio. Com
+  `:focus-visible`, só aparece a quem navega por teclado; quem usa rato não vê
+  anel nenhum ao clicar.
+*/
+:focus-visible {
+  outline: 2px solid rgba(252, 255, 240, 0.85);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
 ::selection {
   background: var(--titanium);
   color: var(--eerie);
@@ -169,12 +183,17 @@ body::after {
     background: rgba(252, 255, 240, 0.1);
   }
 
+  /*
+    0.55 e não 0.4: a 10px, quatro décimas dão 3.78:1 sobre o fundo do site —
+    abaixo dos 4.5:1 que a norma exige para texto normal, e mesmo à vista
+    desarmada é pouco ao sol. Medido, não estimado.
+  */
   .label-sm {
     font-family: "Montserrat Variable", Montserrat, system-ui, sans-serif;
     font-size: 0.65rem;
     letter-spacing: 0.28em;
     text-transform: uppercase;
-    color: rgba(252, 255, 240, 0.4);
+    color: rgba(252, 255, 240, 0.55);
   }
 }
 

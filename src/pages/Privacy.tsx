@@ -32,7 +32,7 @@ export default function Privacy() {
           <h1 className="mt-4 max-w-3xl leading-[1.05]" style={{ fontSize: 'clamp(2rem, 5vw, 4rem)' }}>
             {t.privacy.title}
           </h1>
-          <p className="text-titanium/45 text-sm mt-6">
+          <p className="text-titanium/60 text-sm mt-6">
             {t.privacy.updated} {t.privacy.updatedAt}
           </p>
         </Reveal>
@@ -68,7 +68,7 @@ export default function Privacy() {
                   <ul className="space-y-2 pt-1">
                     {s.list.map((item) => (
                       <li key={item} className="flex gap-3">
-                        <span className="text-titanium/25 shrink-0">—</span>
+                        <span className="text-titanium/55 shrink-0">—</span>
                         {item}
                       </li>
                     ))}

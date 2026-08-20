@@ -182,7 +182,7 @@ export default function Contact() {
   }
 
   const inputClass =
-    'w-full bg-transparent border-b border-white/15 py-3 text-base outline-none focus:border-titanium/60 transition-colors placeholder:text-titanium/25'
+    'w-full bg-transparent border-b border-white/15 py-3 text-base outline-none focus:border-titanium/60 transition-colors placeholder:text-titanium/55'
 
   return (
     <div className="pt-28 sm:pt-36 pb-20 sm:pb-28">
@@ -236,7 +236,7 @@ export default function Contact() {
                   <div className="text-titanium/90 break-all">{CONTACT.email}</div>
                 </div>
               </a>
-              <p className="text-titanium/35 text-xs pt-1">{t.contact.replyTime}</p>
+              <p className="text-titanium/55 text-xs pt-1">{t.contact.replyTime}</p>
             </div>
 
             {/* Other contact details */}
@@ -244,7 +244,7 @@ export default function Contact() {
               <div>
                 <p className="label-sm mb-2">{t.contact.locationLabel}</p>
                 <p className="flex items-center gap-3 text-sm sm:text-base py-1 text-titanium/80">
-                  <MapPin size={16} className="shrink-0 text-titanium/40" />
+                  <MapPin size={16} className="shrink-0 text-titanium/55" />
                   {t.contact.location}
                 </p>
               </div>
@@ -271,7 +271,7 @@ export default function Contact() {
                 <figcaption className="mt-5 pt-4 border-t border-white/[0.08] text-sm">
                   <span className="text-titanium/85">{destaque.author}</span>
                   {destaque.context && (
-                    <span className="block text-xs text-titanium/35 mt-1">{destaque.context}</span>
+                    <span className="block text-xs text-titanium/55 mt-1">{destaque.context}</span>
                   )}
                 </figcaption>
               </figure>
@@ -288,7 +288,7 @@ export default function Contact() {
             className="space-y-7"
           >
             {rascunho && (
-              <p className="text-xs text-titanium/40 border border-white/10 rounded-xl p-3">
+              <p className="text-xs text-titanium/55 border border-white/10 rounded-xl p-3">
                 {t.contact.draftRestored}
               </p>
             )}
@@ -370,7 +370,7 @@ export default function Contact() {
               <div>
                 <label className="label-sm block mb-3" htmlFor="contact-date">
                   {t.contact.date}{' '}
-                  <span className="normal-case tracking-normal text-titanium/25">{t.contact.optional}</span>
+                  <span className="normal-case tracking-normal text-titanium/55">{t.contact.optional}</span>
                 </label>
                 <input
                   id="contact-date"
@@ -389,7 +389,7 @@ export default function Contact() {
               <div>
                 <label className="label-sm block mb-3" htmlFor="contact-location">
                   {t.contact.location_}{' '}
-                  <span className="normal-case tracking-normal text-titanium/25">{t.contact.optional}</span>
+                  <span className="normal-case tracking-normal text-titanium/55">{t.contact.optional}</span>
                 </label>
                 <input
                   id="contact-location"
@@ -414,7 +414,7 @@ export default function Contact() {
                 onBlur={() => visitar('message')}
                 aria-invalid={Boolean(erro('message'))}
                 aria-describedby={erro('message') ? 'erro-message' : undefined}
-                className="w-full bg-transparent border-b border-white/15 py-3 outline-none focus:border-titanium/60 transition-colors resize-none text-base placeholder:text-titanium/25"
+                className="w-full bg-transparent border-b border-white/15 py-3 outline-none focus:border-titanium/60 transition-colors resize-none text-base placeholder:text-titanium/55"
                 placeholder={t.contact.messagePlaceholder}
               />
               {erro('message') && (
@@ -424,7 +424,7 @@ export default function Contact() {
 
             {/* O RGPD exige que se diga para que servem os dados no momento em
                 que são pedidos, não só numa página escondida. */}
-            <p className="text-xs text-titanium/35 leading-relaxed">
+            <p className="text-xs text-titanium/55 leading-relaxed">
               {t.contact.privacyNote}{' '}
               <Link to={link('privacy')} className="underline underline-offset-4 hover:text-titanium/70">
                 {t.contact.privacyLink}

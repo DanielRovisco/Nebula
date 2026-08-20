@@ -46,7 +46,7 @@ export default function Testimonials() {
                   <figcaption className="mt-7 pt-5 border-t border-white/[0.08]">
                     <span className="block text-titanium/90">{t.author}</span>
                     {t.context && (
-                      <span className="block text-xs text-titanium/35 mt-1">{t.context}</span>
+                      <span className="block text-xs text-titanium/55 mt-1">{t.context}</span>
                     )}
                   </figcaption>
                 </figure>

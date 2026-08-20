@@ -40,7 +40,7 @@ export default function GalleryAccess() {
   }
 
   const inputClass =
-    'w-full bg-transparent border-b border-white/15 py-3 text-base outline-none focus:border-titanium/60 transition-colors placeholder:text-titanium/25'
+    'w-full bg-transparent border-b border-white/15 py-3 text-base outline-none focus:border-titanium/60 transition-colors placeholder:text-titanium/55'
 
   return (
     <div className="pt-28 sm:pt-36 pb-20 sm:pb-28 min-h-screen">

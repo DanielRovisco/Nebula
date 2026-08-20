@@ -25,7 +25,7 @@ export default function Breadcrumbs({ items }: { items: Migalha[] }) {
 
   return (
     <nav aria-label="Migalhas" className="mb-6">
-      <ol className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-titanium/35">
+      <ol className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-titanium/55">
         <li>
           <Link to={link('home')} className="hover:text-titanium/70 transition-colors">
             {t.nav.home}
@@ -33,7 +33,7 @@ export default function Breadcrumbs({ items }: { items: Migalha[] }) {
         </li>
         {items.map((m) => (
           <li key={m.label} className="flex items-center gap-2">
-            <span aria-hidden="true" className="text-titanium/20">
+            <span aria-hidden="true" className="text-titanium/60">
               /
             </span>
             {m.to ? (

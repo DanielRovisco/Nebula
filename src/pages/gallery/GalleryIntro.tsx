@@ -93,7 +93,7 @@ export default function GalleryIntro({ clientName, title, onDone }: Props) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 2.5 }}
-        className="label-sm mt-12 text-titanium/25"
+        className="label-sm mt-12 text-titanium/55"
       >
         {t.gallery.tapToContinue}
       </motion.p>

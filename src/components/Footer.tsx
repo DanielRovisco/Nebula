@@ -29,7 +29,7 @@ export default function Footer() {
             href={CONTACT.instagram}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 mt-5 text-titanium/40 hover:text-titanium/70 transition-colors text-xs"
+            className="inline-flex items-center gap-2 mt-5 text-titanium/55 hover:text-titanium/70 transition-colors text-xs"
           >
             <InstagramIcon size={14} />
             {CONTACT.instagramHandle}
@@ -37,7 +37,7 @@ export default function Footer() {
         </div>
 
         <div>
-          <h4 className="label-sm mb-5">{t.footer.navLabel}</h4>
+          <h2 className="label-sm mb-5">{t.footer.navLabel}</h2>
           <ul className="flex flex-col gap-0.5 text-sm">
             {NAV.map((n) => (
               <li key={n.to}>
@@ -53,7 +53,7 @@ export default function Footer() {
         </div>
 
         <div>
-          <h4 className="label-sm mb-5">{t.footer.contactLabel}</h4>
+          <h2 className="label-sm mb-5">{t.footer.contactLabel}</h2>
           <ul className="flex flex-col gap-0.5 text-sm">
             <li>
               {/*
@@ -88,7 +88,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="container-px mt-12 pt-6 border-t border-white/[0.08] flex flex-col sm:flex-row justify-between gap-2 text-xs text-titanium/30">
+      <div className="container-px mt-12 pt-6 border-t border-white/[0.08] flex flex-col sm:flex-row justify-between gap-2 text-xs text-titanium/55">
         <span>&copy; {new Date().getFullYear()} NEBULA. {t.footer.rights}</span>
         <div className="flex items-center gap-4">
           <Link to={link('privacy')} className="hover:text-titanium/60 transition-colors">

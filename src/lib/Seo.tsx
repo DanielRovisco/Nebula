@@ -39,6 +39,14 @@ function setMeta(selector: string, attr: 'name' | 'property', key: string, conte
 export default function Seo({ title, description, image, noindex = false, jsonLd }: SeoProps) {
   const { pathname } = useLocation()
 
+  /*
+    As páginas passam o `jsonLd` como objeto literal, criado de novo a cada
+    render. Em lista de dependências isso é sempre uma referência diferente e o
+    efeito voltava a correr em cada render — a remover e a repor o <script> do
+    schema. Comparado como texto, só corre quando o conteúdo muda mesmo.
+  */
+  const jsonLdTexto = jsonLd ? JSON.stringify(jsonLd) : ''
+
   useEffect(() => {
     document.title = title
 
@@ -76,11 +84,11 @@ export default function Seo({ title, description, image, noindex = false, jsonLd
     // o visitante passou.
     const idJson = 'seo-jsonld'
     document.getElementById(idJson)?.remove()
-    if (jsonLd) {
+    if (jsonLdTexto) {
       const el = document.createElement('script')
       el.id = idJson
       el.type = 'application/ld+json'
-      el.textContent = JSON.stringify(jsonLd)
+      el.textContent = jsonLdTexto
       document.head.appendChild(el)
     }
 
@@ -109,7 +117,7 @@ export default function Seo({ title, description, image, noindex = false, jsonLd
       }
       link.href = href
     }
-  }, [title, description, image, noindex, jsonLd, pathname])
+  }, [title, description, image, noindex, jsonLdTexto, pathname])
 
   return null
 }

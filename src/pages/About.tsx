@@ -116,7 +116,7 @@ export default function About() {
                 </div>
                 <h3 className="text-2xl mb-1">{m.name}</h3>
                 <p className="text-titanium/65 text-sm">{t.about.team[m.key].role}</p>
-                <p className="text-titanium/38 text-xs mt-1">{t.about.team[m.key].sub}</p>
+                <p className="text-titanium/55 text-xs mt-1">{t.about.team[m.key].sub}</p>
               </div>
             </Reveal>
           ))}

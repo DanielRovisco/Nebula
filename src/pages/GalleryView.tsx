@@ -273,7 +273,7 @@ export default function GalleryView() {
               className={`rounded-xl p-4 text-xs leading-relaxed border ${
                 aviso.urgente
                   ? 'border-amber-400/30 bg-amber-400/[0.07] text-amber-100/85'
-                  : 'border-white/10 text-titanium/45'
+                  : 'border-white/10 text-titanium/60'
               }`}
             >
               {aviso.texto}
@@ -340,7 +340,7 @@ export default function GalleryView() {
                     onClick={() => setWeb(op.valor)}
                     aria-pressed={web === op.valor}
                     className={`px-4 py-2 rounded-full text-[10px] uppercase tracking-[0.14em] transition-colors ${
-                      web === op.valor ? 'bg-white/10 text-titanium' : 'text-titanium/45 hover:text-titanium/75'
+                      web === op.valor ? 'bg-white/10 text-titanium' : 'text-titanium/60 hover:text-titanium/75'
                     }`}
                   >
                     {op.texto}
@@ -354,7 +354,7 @@ export default function GalleryView() {
                 clearSession(slug)
                 navigate(`${ROUTES.gallery[lang]}/${slug}`)
               }}
-              className="text-[11px] uppercase tracking-[0.18em] text-titanium/40 hover:text-titanium/70 transition-colors px-3 py-2 ml-auto"
+              className="text-[11px] uppercase tracking-[0.18em] text-titanium/55 hover:text-titanium/70 transition-colors px-3 py-2 ml-auto"
             >
               {t.gallery.exit}
             </button>
@@ -379,7 +379,7 @@ export default function GalleryView() {
         {/* ── Grelha ───────────────────────────────────────── */}
         <section className="container-px">
           {photos.length === 0 ? (
-            <p className="text-sm text-titanium/45">
+            <p className="text-sm text-titanium/60">
               {t.gallery.empty}
             </p>
           ) : (
