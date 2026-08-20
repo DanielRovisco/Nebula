@@ -6,8 +6,8 @@
     "canonical/og/hreflang, o sitemap.xml e o manifest. Mudar de domínio é",
     "mudar estes dois valores e correr `npm run build` — nada mais.",
     "",
-    "Com domínio próprio (ex. nebula.pt):",
-    "  origin: \"https://nebula.pt\"",
+    "Com domínio próprio:",
+    "  origin: \"https://proj3ctnebula.pt\"",
     "  base:   \"/\"",
     "e criar public/CNAME com o domínio lá dentro (npm run dominio trata disso)."
   ],

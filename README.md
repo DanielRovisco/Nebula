@@ -238,7 +238,7 @@ o teste completo: login, pedir um upload assinado, escrever mesmo no R2 e
 apagar o ficheiro de teste.
 
 ```bash
-ADMIN_EMAIL=eu@nebula.pt ADMIN_PASSWORD=... npm run setup:check
+ADMIN_EMAIL=eu@proj3ctnebula.pt ADMIN_PASSWORD=... npm run setup:check
 ```
 
 **1. Supabase**

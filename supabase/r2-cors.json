@@ -1,6 +1,8 @@
 [
   {
     "AllowedOrigins": [
+      "https://proj3ctnebula.pt",
+      "https://www.proj3ctnebula.pt",
       "https://danielrovisco.github.io",
       "http://localhost:5173"
     ],

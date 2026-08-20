@@ -14,31 +14,48 @@ São **seis passos manuais**. O resto corre em dois comandos.
 npm install
 ```
 
-## 1. Domínio  *(manual — ~10 min)*
+## 1. Domínio  *(manual — ~30 min, quase tudo à espera)*
 
-1. **Comprar** `nebula.pt` num registrar (Amen, PTisp, Cloudflare Registrar).
-   ~15 €/ano.
-2. Na zona DNS do domínio:
-   - 4 registos `A`: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`,
-     `185.199.111.153`
+1. ~~Comprar o domínio.~~ **Feito:** `proj3ctnebula.pt`, registado na Amen.
+2. **Cancelar o pedido de DNSSEC na Amen.** Tem de ser antes da troca de
+   nameservers: com o DNSSEC activo do lado antigo, o domínio deixa de resolver
+   assim que os nameservers mudam, e não é um erro suave — fica inacessível até
+   se desfazer.
+3. Criar conta na Cloudflare, **Add a site** → `proj3ctnebula.pt` → plano
+   **Free**. Apagar os registos de parking que ela importar da Amen.
+4. Copiar os dois nameservers que a Cloudflare dá e colá-los na Amen, a
+   substituir os dela. Voltar à Cloudflare e clicar *Check nameservers now*.
+
+   Os nameservers vão para a Cloudflare, mas o **registo do domínio fica na
+   Amen** — é lá que se renova. São coisas diferentes.
+
+5. Já no painel da Cloudflare, criar os registos do GitHub Pages:
+   - 4 registos `A` em `@`: `185.199.108.153`, `185.199.109.153`,
+     `185.199.110.153`, `185.199.111.153`
    - `CNAME` de `www` → `danielrovisco.github.io`
-3. GitHub → Settings → Pages → Custom domain → escrever o domínio → esperar a
+
+   **Nuvem cinzenta (DNS only)** em todos. Com o proxy da Cloudflare ligado, o
+   GitHub não consegue emitir o certificado.
+
+6. GitHub → Settings → Pages → Custom domain → escrever o domínio → esperar a
    verificação → ligar **Enforce HTTPS**.
-4. No repositório, editar `site.config.json`:
+7. No repositório, editar `site.config.json`:
    ```json
-   { "origin": "https://nebula.pt", "base": "/" }
+   { "origin": "https://proj3ctnebula.pt", "base": "/" }
    ```
-   e correr `npm run build`.
+   e correr `npm run build`. **Só depois do domínio já responder** — a partir
+   desse commit o endereço `danielrovisco.github.io/Nebula/` deixa de servir o
+   site, porque os ficheiros passam a ser procurados na raiz.
 
    **É só isto.** O `base` do Vite, o `basename` do router, os canonical, as
    hreflang, o sitemap, o robots, o manifest, o JSON-LD do negócio e o ficheiro
    `CNAME` saem todos daí. Já testei a troca ponta a ponta: com
-   `nebula.pt` + `/`, as doze páginas saem com os endereços certos e o `CNAME`
+   `proj3ctnebula.pt` + `/`, as doze páginas saem com os endereços certos e o `CNAME`
    aparece sozinho no `dist`.
 
 ## 2. Email profissional  *(manual — ~15 min)*
 
-Caixa no domínio (`geral@nebula.pt`). O Zoho Mail tem plano gratuito para um
+Caixa no domínio (`geral@proj3ctnebula.pt`). O Zoho Mail tem plano gratuito para um
 domínio. Depois é mudar `CONTACT.email` em `src/lib/site.ts` — uma linha.
 
 Sem domínio verificado não vale a pena tentar emails automáticos: vão para spam.
@@ -58,7 +75,16 @@ Sem domínio verificado não vale a pena tentar emails automáticos: vão para s
 
 1. Criar conta, ativar o R2 (pede cartão, não cobra dentro dos 10 GB).
 2. Bucket **privado** `galleries` — sem acesso público.
-3. Bucket **público** `nebula-site` — ativar *Public access* e copiar o URL.
+3. Bucket **público** `nebula-site` — Settings → *Custom Domain* →
+   `cdn.proj3ctnebula.pt`. A Cloudflare cria o registo sozinha, já que o
+   domínio é uma zona da mesma conta.
+
+   **Não usar o endereço `r2.dev`.** É o atalho óbvio e é uma armadilha: a
+   própria Cloudflare diz que não serve para produção — tem limite variável de
+   pedidos, devolve `429` acima de umas centenas por segundo e estrangula a
+   largura de banda. Num site que serve dezenas de imagens por visita, é o pior
+   sítio possível para apanhar um limite. O domínio próprio não tem nada disso
+   e é igualmente gratuito.
 4. R2 → Manage API Tokens → Object Read & Write. Guardar **Access Key ID**,
    **Secret** e o **Account ID**.
 5. No bucket privado, Settings → CORS policy → colar o conteúdo de
