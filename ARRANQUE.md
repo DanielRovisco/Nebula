@@ -107,7 +107,10 @@ Sem domínio verificado não vale a pena tentar emails automáticos: vão para s
 ## 5. Ligar tudo  *(automático — 1 comando)*
 
 ```bash
-npm i -g supabase && supabase login && supabase link
+# O CLI do Supabase já não se instala com `npm -g` — eles bloquearam.
+# Windows: scoop install supabase   |   macOS: brew install supabase/tap/supabase
+# Ou nada: o `npm run setup` usa o npx sozinho se não encontrar o CLI.
+supabase login && supabase link      # com npx, se for o caso: npx supabase login
 npm run setup
 ```
 

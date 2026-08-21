@@ -14,7 +14,7 @@
 import { createInterface } from 'node:readline/promises'
 import { stdin, stdout } from 'node:process'
 import { execFileSync, execSync } from 'node:child_process'
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile, writeFile, unlink } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
@@ -44,14 +44,37 @@ async function pergunta(texto, { obrigatorio = true, atual = '' } = {}) {
   }
 }
 
+/*
+  `command -v` é do shell do Unix e não existe no Windows, onde devolvia
+  sempre erro — ou seja, dizia "não instalado" mesmo com o programa presente,
+  e o passo era saltado sem explicação possível. No Windows pergunta-se ao
+  `where`.
+*/
 function temComando(cmd) {
+  const procura = process.platform === 'win32' ? 'where' : 'command -v'
   try {
-    execSync(`command -v ${cmd}`, { stdio: 'ignore' })
+    execSync(`${procura} ${cmd}`, { stdio: 'ignore' })
     return true
   } catch {
     return false
   }
 }
+
+/*
+  O CLI do Supabase já não se instala globalmente pelo npm — eles bloquearam.
+  Ou está no PATH (Scoop, Homebrew, binário), ou se chama pelo `npx`, que o
+  descarrega na hora. O `npx` no Windows é um .cmd, e o Node recusa-se a
+  executar .cmd sem shell desde a correcção de segurança do ano passado.
+*/
+const win = process.platform === 'win32'
+const CLI = temComando('supabase')
+  ? { exe: 'supabase', pre: [], shell: false }
+  : temComando('npx')
+    ? { exe: win ? 'npx.cmd' : 'npx', pre: ['--yes', 'supabase'], shell: win }
+    : null
+
+const supa = (args, opcoes = {}) =>
+  execFileSync(CLI.exe, [...CLI.pre, ...args], { stdio: 'inherit', shell: CLI.shell, ...opcoes })
 
 /** Lê o .env.local que já exista, para a segunda corrida não repetir perguntas. */
 async function lerEnv() {
@@ -128,10 +151,12 @@ if (dbUrl && temComando('psql')) {
 // ─── 3. Secrets e funções ──────────────────────────────────────────────────
 titulo('3. Credenciais do R2 e Edge Functions')
 
-if (!temComando('supabase')) {
-  aviso('o CLI do Supabase não está instalado.')
-  console.log(cor('90', '    npm i -g supabase && supabase login && supabase link'))
-  console.log(cor('90', '    Depois volta a correr `npm run setup`.'))
+if (!CLI) {
+  aviso('não encontrei o CLI do Supabase nem o npx.')
+  console.log(cor('90', '    O npm install -g supabase já não é suportado por eles.'))
+  console.log(cor('90', '    Windows:  scoop install supabase'))
+  console.log(cor('90', '    macOS:    brew install supabase/tap/supabase'))
+  console.log(cor('90', '    Depois:   supabase login && supabase link'))
 } else {
   const accountId = await pergunta('R2 Account ID')
   const keyId = await pergunta('R2 Access Key ID')
@@ -147,24 +172,33 @@ if (!temComando('supabase')) {
     atual: 'eu',
   })
 
+  /*
+    Os segredos vão num ficheiro e não na linha de comando. Duas razões: uma
+    linha de comando é visível na lista de processos e fica no histórico da
+    shell, e o secret do R2 pode trazer caracteres que o shell do Windows
+    interpretaria. O ficheiro é apagado a seguir, aconteça o que acontecer.
+  */
+  const ficheiroSecrets = raiz + '.r2-secrets.tmp'
   try {
-    execFileSync(
-      'supabase',
+    await writeFile(
+      ficheiroSecrets,
       [
-        'secrets',
-        'set',
         `R2_ACCOUNT_ID=${accountId}`,
         `R2_ACCESS_KEY_ID=${keyId}`,
         `R2_SECRET_ACCESS_KEY=${secret}`,
         `R2_BUCKET=${bucket}`,
         `R2_PUBLIC_BUCKET=${bucketPublico}`,
         `R2_JURISDICTION=${jurisdicao}`,
-      ],
-      { stdio: 'inherit' },
+        '',
+      ].join('\n'),
+      { mode: 0o600 },
     )
+    supa(['secrets', 'set', '--env-file', ficheiroSecrets])
     ok('secrets guardados no Supabase')
   } catch {
     erro('não foi possível guardar os secrets (o projeto está ligado com `supabase link`?)')
+  } finally {
+    await unlink(ficheiroSecrets).catch(() => {})
   }
 
   // As três primeiras são chamadas pelo cliente, que é anónimo: quem autoriza é
@@ -177,9 +211,7 @@ if (!temComando('supabase')) {
   ]
   for (const [nome, semJwt] of funcoes) {
     try {
-      execFileSync('supabase', ['functions', 'deploy', nome, ...(semJwt ? ['--no-verify-jwt'] : [])], {
-        stdio: 'inherit',
-      })
+      supa(['functions', 'deploy', nome, ...(semJwt ? ['--no-verify-jwt'] : [])])
       ok(`função ${nome} publicada`)
     } catch {
       erro(`falhou a publicar ${nome}`)

@@ -25,3 +25,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Ficheiro temporário do `npm run setup`, com os segredos do R2. É apagado
+# a seguir a serem enviados, mas se o setup for interrompido a meio pode
+# sobrar — e não pode ir para o repositório por acidente.
+.r2-secrets.tmp
