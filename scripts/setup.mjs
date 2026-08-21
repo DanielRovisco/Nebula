@@ -67,14 +67,33 @@ function temComando(cmd) {
   executar .cmd sem shell desde a correcção de segurança do ano passado.
 */
 const win = process.platform === 'win32'
+
+/*
+  `shell: win` nos dois ramos, e não só no do npx. Em Windows tanto o
+  `supabase` instalado como o `npx` são ficheiros .cmd, e o Node recusa-se a
+  executar .cmd sem shell desde a correcção de segurança do ano passado — a
+  chamada morre antes de arrancar, sem uma linha de output, o que faz o erro
+  parecer do Supabase quando é da forma de o chamar.
+*/
 const CLI = temComando('supabase')
-  ? { exe: 'supabase', pre: [], shell: false }
+  ? { exe: win ? 'supabase.cmd' : 'supabase', pre: [], shell: win }
   : temComando('npx')
     ? { exe: win ? 'npx.cmd' : 'npx', pre: ['--yes', 'supabase'], shell: win }
     : null
 
+/*
+  Com shell ligado, o Node junta os argumentos numa linha só sem os proteger.
+  Um caminho com espaços — e `C:\Users\Nome Apelido\...` é vulgar — partia-se
+  em dois. Aspas em quem precisa delas.
+*/
+const proteger = (a) => (CLI.shell && /[\s&|<>^]/.test(a) ? `"${a}"` : a)
+
 const supa = (args, opcoes = {}) =>
-  execFileSync(CLI.exe, [...CLI.pre, ...args], { stdio: 'inherit', shell: CLI.shell, ...opcoes })
+  execFileSync(CLI.exe, [...CLI.pre, ...args].map(proteger), {
+    stdio: 'inherit',
+    shell: CLI.shell,
+    ...opcoes,
+  })
 
 /*
   Um "falhou" sem mais nada é pior do que não dizer nada: dá a entender que
