@@ -88,12 +88,18 @@ const CLI = temComando('supabase')
 */
 const proteger = (a) => (CLI.shell && /[\s&|<>^]/.test(a) ? `"${a}"` : a)
 
-const supa = (args, opcoes = {}) =>
-  execFileSync(CLI.exe, [...CLI.pre, ...args].map(proteger), {
-    stdio: 'inherit',
-    shell: CLI.shell,
-    ...opcoes,
-  })
+/*
+  Com shell, monta-se a linha aqui em vez de passar um array com
+  `shell: true` — é essa combinação que o Node assinala como DEP0190, porque
+  junta os argumentos sem os escapar. Fazendo a linha nós, as aspas do
+  `proteger` são realmente aplicadas e o aviso deixa de fazer sentido.
+*/
+const supa = (args, opcoes = {}) => {
+  const todos = [...CLI.pre, ...args]
+  return CLI.shell
+    ? execSync([CLI.exe, ...todos].map(proteger).join(' '), { stdio: 'inherit', ...opcoes })
+    : execFileSync(CLI.exe, todos, { stdio: 'inherit', ...opcoes })
+}
 
 /*
   Um "falhou" sem mais nada é pior do que não dizer nada: dá a entender que
