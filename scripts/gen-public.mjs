@@ -1,5 +1,5 @@
 /**
- * Gera o `sitemap.xml`, o `robots.txt`, o `site.webmanifest` e o `CNAME` a
+ * Gera o `sitemap.xml`, o `robots.txt`, o `404.html`, o `site.webmanifest` e o `CNAME` a
  * partir do `site.config.json` e da tabela de rotas.
  *
  * Estavam os quatro escritos à mão, e o sitemap já tinha catorze endereços que
@@ -124,6 +124,41 @@ const manifest = {
   ],
 }
 
+/*
+  O 404 do GitHub Pages é o que faz as rotas internas funcionarem quando se
+  abre uma directamente: o servidor não tem `/admin/index.html`, devolve o
+  404, e este guarda o caminho na query para o index.html o repor.
+
+  Quantos segmentos do caminho ficam de fora do embrulho depende da base —
+  um em `/Nebula/`, nenhum na raiz — e estava escrito à mão. Com a base na
+  raiz e o número do projeto antigo, `/admin/` era reescrito para `/admin/?/`,
+  que volta a ser 404, que volta a reescrever: um ciclo que não pára e vai
+  acumulando `~and~` no endereço até ele ficar do tamanho do ecrã.
+*/
+const segmentos = base.split('/').filter(Boolean).length
+const html404 = `<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <title>NEBULA</title>
+    <!-- Gerado por scripts/gen-public.mjs a partir de site.config.json. Não editar à mão. -->
+    <script>
+      var l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, ${1 + segmentos}).join('/') +
+        '/?/' +
+        l.pathname.slice(1).split('/').slice(${segmentos}).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>
+`
+await writeFile(raiz + 'public/404.html', html404)
+
 await writeFile(raiz + 'public/sitemap.xml', sitemap)
 await writeFile(raiz + 'public/robots.txt', robots)
 await writeFile(raiz + 'public/site.webmanifest', JSON.stringify(manifest, null, 2) + '\n')
@@ -141,5 +176,6 @@ if (dominioProprio) {
 console.log(`Gerados a partir de site.config.json (${origin}${base}):`)
 console.log(`  sitemap.xml       ${ROTAS.length} endereços`)
 console.log('  robots.txt')
+console.log(`  404.html          (${segmentos} segmento(s) de base)`)
 console.log('  site.webmanifest')
 console.log(`  CNAME             ${dominioProprio ? 'sim' : 'não (ainda em github.io)'}`)
