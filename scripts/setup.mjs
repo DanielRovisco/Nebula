@@ -264,7 +264,13 @@ console.log(cor('90', await readFile(raiz + 'supabase/r2-cors.json', 'utf8')))
 // ─── 5. Verificação ────────────────────────────────────────────────────────
 titulo('5. Confirmação')
 console.log('  Para verificar tudo de ponta a ponta:')
-console.log(cor('90', '    ADMIN_EMAIL=... ADMIN_PASSWORD=... npm run setup:check'))
+// A forma `VAR=valor comando` é do shell do Unix: no PowerShell o `npm` não
+// chega a receber nada e o teste falha a dizer que faltam credenciais.
+if (win) {
+  console.log(cor('90', '    $env:ADMIN_EMAIL="..."; $env:ADMIN_PASSWORD="..."; npm run setup:check'))
+} else {
+  console.log(cor('90', '    ADMIN_EMAIL=... ADMIN_PASSWORD=... npm run setup:check'))
+}
 console.log('\n  Falta ainda, no GitHub (Settings → Secrets → Actions):')
 console.log(cor('90', '    VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_R2_PUBLIC_URL'))
 console.log('\n  E dizer-me para tirar o modo de demonstração do deploy.\n')

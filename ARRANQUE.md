@@ -129,6 +129,7 @@ Para confirmar que ficou tudo de pé:
 
 ```bash
 ADMIN_EMAIL=... ADMIN_PASSWORD=... npm run setup:check
+# PowerShell: $env:ADMIN_EMAIL="..."; $env:ADMIN_PASSWORD="..."; npm run setup:check
 ```
 
 Faz login a sério, pede um upload assinado, escreve mesmo no R2 e apaga o
