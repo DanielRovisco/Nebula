@@ -53,6 +53,17 @@ site — sem sentido nenhum. Apagado.
 Mais tarde junta-se-lhes `cdn` → bucket público do R2, criado pela própria
 Cloudflare quando se liga o domínio ao bucket.
 
+### A importação automática trouxe 3 de 13
+
+Ao adicionar o domínio, a Cloudflare varre a zona antiga e importa o que
+encontra. Aqui trouxe só o `MX`, o `SRV` e o `TXT` — faltaram os quatro `A`, o
+`www` e os cinco CNAME de email. Os dez tiveram de ser escritos à mão.
+
+Fica registado porque a varredura tem ar de ter corrido bem: não avisa do que
+não trouxe, e a lista curta parece uma lista completa. Se um dia for preciso
+repetir isto, conferir contra a tabela acima antes de trocar os nameservers —
+depois da troca, é esta zona que manda, e o que lhe faltar deixa de existir.
+
 ### Tudo em DNS only, sem excepção
 
 A Cloudflare liga o proxy (nuvem laranja) por defeito ao importar. Nestes
