@@ -39,6 +39,15 @@ const step = (n, t) => console.log(`\n\x1b[1m${n}. ${t}\x1b[0m`)
 // ─── 1. Variáveis ────────────────────────────────────────────────────────
 step(1, 'Variáveis do site')
 if (!URL_) bad('VITE_SUPABASE_URL em falta', 'Supabase → Project Settings → API → Project URL, para .env.local')
+// O URL tem de ser a raiz do projeto. Com `/rest/v1` colado no fim — que é o
+// que a página do Supabase mostra — falha tudo o resto e nada aponta para aqui.
+else if (/\/(rest|auth|storage|functions|realtime)\/v\d+$/.test(URL_))
+  bad(
+    `VITE_SUPABASE_URL tem um caminho a mais: ${URL_}`,
+    `Deixa só a raiz: ${URL_.replace(/\/(rest|auth|storage|functions|realtime)\/v\d+$/, '')}`,
+  )
+else if (!/^https:\/\/[^/]+$/.test(URL_))
+  bad(`VITE_SUPABASE_URL não parece a raiz do projeto: ${URL_}`, 'Deve ser https://<ref>.supabase.co e nada mais')
 else ok(`VITE_SUPABASE_URL = ${URL_}`)
 if (!ANON) bad('VITE_SUPABASE_ANON_KEY em falta', 'Supabase → Project Settings → API → anon public')
 else ok(`VITE_SUPABASE_ANON_KEY = ${ANON.slice(0, 12)}…`)
@@ -58,7 +67,10 @@ const rest = (path, init = {}) =>
 step(2, 'Projeto Supabase')
 try {
   const res = await rest('/rest/v1/')
-  if (res.ok || res.status === 401 || res.status === 404) ok(`responde (HTTP ${res.status})`)
+  // Um 404 na raiz deixou de contar como bom sinal: era o que deixava passar
+  // um URL com caminho a mais, e o problema só aparecia três passos à frente.
+  if (res.ok || res.status === 401) ok(`responde (HTTP ${res.status})`)
+  else if (res.status === 404) bad('respondeu 404 na raiz', 'O URL do projeto está errado — confirma que não tem caminho')
   else bad(`respondeu HTTP ${res.status}`, 'O projeto pode estar pausado — abre-o no dashboard para acordar')
 } catch (e) {
   bad(`não respondeu: ${e.message}`, 'Confirma o URL, ou o projeto pode estar pausado')

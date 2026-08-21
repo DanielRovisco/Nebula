@@ -139,7 +139,20 @@ const env = await lerEnv()
 // ─── 1. Variáveis do site ──────────────────────────────────────────────────
 titulo('1. Variáveis do site (.env.local)')
 
-const supabaseUrl = await pergunta('Project URL do Supabase', { atual: env.VITE_SUPABASE_URL })
+/*
+  A página do Supabase mostra hoje o endereço da API REST — acaba em
+  `/rest/v1` — e é esse que se copia por instinto. O que o site precisa é da
+  raiz. Colado com o caminho, tudo o que se constrói a partir dali fica torto:
+  o schema parece não existir, as funções parecem não estar publicadas e o
+  login dá 404. Um erro só, com quatro sintomas que apontam para lados
+  diferentes. Limpa-se aqui, em vez de se confiar em quem copia.
+*/
+const limpaUrlSupabase = (u) =>
+  u.trim().replace(/\/+$/, '').replace(/\/(rest|auth|storage|functions|realtime)\/v\d+$/, '')
+
+const supabaseUrl = limpaUrlSupabase(
+  await pergunta('Project URL do Supabase', { atual: env.VITE_SUPABASE_URL }),
+)
 const anonKey = await pergunta('Chave anon do Supabase', { atual: env.VITE_SUPABASE_ANON_KEY })
 const r2Public = await pergunta('URL público do bucket do site', {
   obrigatorio: false,
