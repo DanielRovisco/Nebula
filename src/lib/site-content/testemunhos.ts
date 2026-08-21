@@ -30,18 +30,12 @@ export const TESTEMUNHOS: Testimonial[] = [
     published: true,
   },
   {
-    /*
-      Por publicar por uma razão só: falta o nome de quem o escreveu.
-      Um elogio sem assinatura lê-se como inventado, e o preço não é ficar
-      um cartão a menos — é lançar a dúvida sobre os outros dois, que são
-      verdadeiros e têm nome. Basta pôr o nome aqui e `published: true`.
-    */
-    id: 'sessao-editorial',
-    author: '',
-    context: 'Sessão editorial',
+    id: 'mariana-roberto',
+    author: 'Mariana Roberto',
+    context: 'Retratos',
     quote:
       'Gostei imenso de estar convosco. Sendo sincera, não estava à espera de me sentir tão confortável como senti. Gostei muito da vossa vibe, e sem dúvida que quero voltar a repetir.',
     sortOrder: 2,
-    published: false,
+    published: true,
   },
 ]

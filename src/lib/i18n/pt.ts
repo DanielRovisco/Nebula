@@ -74,6 +74,8 @@ export const pt = {
   testimonials: {
     label: 'Quem já passou por aqui',
     title: 'O que dizem de nós',
+    previous: 'Testemunho anterior',
+    next: 'Testemunho seguinte',
   },
 
   about: {

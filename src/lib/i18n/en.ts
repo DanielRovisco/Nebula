@@ -78,8 +78,10 @@ export const en: Dict = {
   },
 
   testimonials: {
-    label: 'Couples we have worked with',
+    label: 'People we have worked with',
     title: 'What they say about us',
+    previous: 'Previous testimonial',
+    next: 'Next testimonial',
   },
 
   about: {

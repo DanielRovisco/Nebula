@@ -184,6 +184,21 @@ body::after {
   }
 
   /*
+    A faixa dos testemunhos esconde a barra de deslocamento: com os cartões a
+    sangrar até à margem, uma barra cinzenta por baixo lia-se como um erro de
+    desenho e não como um controlo. Esconder a barra não retira nada a
+    ninguém — a faixa continua a arrastar-se com o dedo, com a roda do rato,
+    com as setas do teclado e com os botões que estão ao lado do título.
+  */
+  .faixa-testemunhos {
+    scrollbar-width: none;
+    scroll-padding-left: clamp(1.25rem, 6vw, 6rem);
+  }
+  .faixa-testemunhos::-webkit-scrollbar {
+    display: none;
+  }
+
+  /*
     0.55 e não 0.4: a 10px, quatro décimas dão 3.78:1 sobre o fundo do site —
     abaixo dos 4.5:1 que a norma exige para texto normal, e mesmo à vista
     desarmada é pouco ao sol. Medido, não estimado.
