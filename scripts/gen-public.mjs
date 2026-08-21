@@ -33,8 +33,9 @@ const url = (caminho) => {
 }
 
 /**
- * As rotas públicas, com a prioridade que cada uma merece. A galeria entra
- * porque é a porta de entrada dos clientes; as galerias em si, o painel, a
+ * As rotas públicas, com a prioridade que cada uma merece. A porta das galerias
+ * fica de fora: está proibida no robots.txt, e listar no sitemap uma página que
+ * se proíbe indexar é uma contradição. As galerias em si, o painel, a
  * página de obrigado e a 404 ficam de fora — são privadas ou noindex.
  */
 const ROTAS = [
@@ -43,14 +44,12 @@ const ROTAS = [
   ['/servicos', 'monthly', '0.9'],
   ['/sobre', 'yearly', '0.7'],
   ['/contacto', 'yearly', '0.8'],
-  ['/galeria', 'yearly', '0.5'],
   ['/privacidade', 'yearly', '0.2'],
   ['/en', 'monthly', '0.9'],
   ['/en/portfolio', 'monthly', '0.8'],
   ['/en/services', 'monthly', '0.8'],
   ['/en/about', 'yearly', '0.6'],
   ['/en/contact', 'yearly', '0.7'],
-  ['/en/gallery', 'yearly', '0.4'],
   ['/en/privacy', 'yearly', '0.2'],
 ]
 
@@ -93,7 +92,11 @@ ${alternativas(caminho)}
 const robots = `# Gerado por scripts/gen-public.mjs. Não editar à mão.
 User-agent: *
 Allow: /
-# O painel e as galerias de cliente não têm nada que ser indexados.
+# O painel e as galerias de cliente não têm nada que ser indexados. A porta de
+# entrada (/galeria) entra na mesma proibição: barrá-la barra também tudo o que
+# vem depois dela, e uma página que só pede password não ganha nada em aparecer
+# numa pesquisa. Por isso também não vai no sitemap — pedir que indexem e
+# proibir a indexação da mesma página é uma contradição que o Google reporta.
 Disallow: ${base}admin
 Disallow: ${base}galeria
 Disallow: ${base}en/gallery

@@ -43,14 +43,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://proj3ctnebula.pt/galeria</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/galeria" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/gallery" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/galeria" />
-    <changefreq>yearly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://proj3ctnebula.pt/privacidade</loc>
     <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/privacidade" />
     <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/privacy" />
@@ -97,14 +89,6 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/contacto" />
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://proj3ctnebula.pt/en/gallery</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/galeria" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/gallery" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/galeria" />
-    <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://proj3ctnebula.pt/en/privacy</loc>
