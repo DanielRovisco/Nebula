@@ -20,25 +20,28 @@ const SERVICES = [
   {
     id: 'casamentos',
     image: 'forest-bride',
-    alt: 'Noiva em vestido longo entre árvores, fotografia de casamento editorial',
+    alt: 'Sessão editorial em vestido longo branco, entre árvores',
     imgPos: 'object-top',
   },
   {
     id: 'maternidade',
-    image: 'maternity-railway',
-    alt: 'Sessão de maternidade ao ar livre junto a uma linha de ferro',
+    image: 'maternity-sunset-couple',
+    alt: 'Casal à espera de bebé, ao pôr do sol',
+    // Centrada, e não afinada na vertical: a foto é mais larga que o cartão em
+    // proporção, por isso o recorte come pelos lados e um `object-[50%_65%]`
+    // não mexeria um pixel. O casal está ao centro, que é o que interessa.
     imgPos: 'object-center',
   },
   {
     id: 'eventos',
     image: 'baby-balloons',
-    alt: 'Bebé rodeado de balões durante uma festa de família',
-    imgPos: 'object-[50%_15%]',
+    alt: 'Retrato de bebé rodeado de balões',
+    imgPos: 'object-[50%_72%]',
   },
 ] as const
 
 const GALLERY = [
-  { name: 'palace-dome', alt: 'Cúpula de palácio fotografada de baixo durante um casamento', pos: 'center center' },
+  { name: 'palace-dome', alt: 'Retrato sob a cúpula de um palácio, em contraluz', pos: 'center center' },
   { name: 'editorial-dramatic', alt: 'Retrato editorial com iluminação dramática', pos: 'center 20%' },
   { name: 'maternity-sunset-couple', alt: 'Casal à espera de bebé ao pôr do sol', pos: 'center 30%' },
   { name: 'hero-beach-dress', alt: 'Vestido a esvoaçar numa praia ao final do dia', pos: 'center 25%' },
