@@ -25,14 +25,16 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join, extname, dirname } from 'node:path'
 import { chromium } from 'playwright'
+import { fileURLToPath } from 'node:url'
 
-const DIST = new URL('../dist/', import.meta.url).pathname
+// Ver a nota em scripts/setup.mjs: `.pathname` parte caminhos no Windows.
+const DIST = fileURLToPath(new URL('../dist/', import.meta.url))
 // O mesmo `base` que o Vite e o router usam. Estava fixo aqui, e com um domínio
 // próprio (base "/") isso servia as páginas em /Nebula/ — o router via esse
 // prefixo como parte do caminho e gravava canonicals como
 // "https://proj3ctnebula.pt/Nebula/".
 const BASE = JSON.parse(
-  await readFile(new URL('../site.config.json', import.meta.url).pathname, 'utf8'),
+  await readFile(fileURLToPath(new URL('../site.config.json', import.meta.url)), 'utf8'),
 ).base
 const PORTA = 4183
 

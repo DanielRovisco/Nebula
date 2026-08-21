@@ -16,8 +16,15 @@ import { stdin, stdout } from 'node:process'
 import { execFileSync, execSync } from 'node:child_process'
 import { readFile, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 
-const raiz = new URL('../', import.meta.url).pathname
+/*
+  fileURLToPath e não `.pathname`: no Windows o pathname de um file:// vem
+  como `/C:/Users/...`, com barra à frente, e o Windows lê isso como raiz da
+  unidade actual — juntava-lhe outro `C:` e dava `C:\C:\Users\...`. Em Linux
+  o pathname calha ser um caminho válido, por isso nada disto aparecia aqui.
+*/
+const raiz = fileURLToPath(new URL('../', import.meta.url))
 const rl = createInterface({ input: stdin, output: stdout })
 
 const cor = (c, s) => `[${c}m${s}[0m`

@@ -10,9 +10,10 @@
  */
 import sharp from 'sharp'
 import { mkdir } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
 
-const ORIGEM = new URL('../public/brand/logo-symbol-white.png', import.meta.url).pathname
-const DESTINO = new URL('../public/icons/', import.meta.url).pathname
+const ORIGEM = fileURLToPath(new URL('../public/brand/logo-symbol-white.png', import.meta.url))
+const DESTINO = fileURLToPath(new URL('../public/icons/', import.meta.url))
 const FUNDO = { r: 0x19, g: 0x19, b: 0x19, alpha: 1 }
 
 /**

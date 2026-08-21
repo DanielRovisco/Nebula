@@ -12,8 +12,10 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { unlink } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
 
-const raiz = new URL('../', import.meta.url).pathname
+// Ver a nota em scripts/setup.mjs: `.pathname` parte caminhos no Windows.
+const raiz = fileURLToPath(new URL('../', import.meta.url))
 const site = JSON.parse(await readFile(raiz + 'site.config.json', 'utf8'))
 const origin = site.origin.replace(/\/$/, '')
 const base = site.base.endsWith('/') ? site.base : `${site.base}/`
