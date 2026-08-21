@@ -158,12 +158,11 @@ export default function Contact() {
       return
     }
 
-    limparRascunho()
-
     if (!ENDPOINT) {
       // Abre o cliente de email já preenchido. Não há como confirmar o envio a
       // partir daqui, por isso o texto de sucesso reflete exatamente isso em
       // vez de afirmar que a mensagem chegou.
+      limparRascunho()
       window.location.assign(buildMailto())
       track('formulario_email')
       navigate(link('thanks'), { state: { via: 'email' } })
@@ -184,7 +183,28 @@ export default function Contact() {
           message: form.message,
         }),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) {
+        /*
+          O serviço recusou. A razão vem no corpo e é o que distingue um
+          formulário por confirmar de um captcha exigido ou de uma quota
+          esgotada — sem ela ficam todos com o mesmo "não deu", e não há por
+          onde começar. Vai para a consola: a quem visita não interessa, e a
+          quem mantém o site é a única pista.
+        */
+        const corpo: { errors?: { message?: string }[]; error?: string } | null = await res
+          .json()
+          .catch(() => null)
+        const razao = corpo?.errors?.map((x) => x.message).filter(Boolean).join('; ') || corpo?.error || ''
+        console.error(`Formulário recusado pelo serviço: HTTP ${res.status}${razao ? ` — ${razao}` : ''}`)
+        throw new Error(`HTTP ${res.status}`)
+      }
+      /*
+        O rascunho só se apaga depois de a mensagem estar entregue. Apagá-lo
+        antes de enviar significa que uma falha de rede leva com ela o texto
+        que a pessoa acabou de escrever — e é justamente quando ela mais
+        precisa de o ter.
+      */
+      limparRascunho()
       track('formulario_enviado', { servico: form.service || servicos[0] })
       navigate(link('thanks'), { state: { via: 'form' } })
     } catch {
