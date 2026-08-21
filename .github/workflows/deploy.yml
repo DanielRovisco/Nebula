@@ -24,22 +24,40 @@ jobs:
       # num browser verdadeiro depois do build (ver scripts/prerender.mjs).
       - run: npx playwright install --with-deps chromium
 
-      # ⚠️ TEMPORÁRIO — galerias em modo de demonstração no site publicado.
-      #
-      # Serve para explorar o painel e a galeria do cliente sem login e sem
-      # Supabase. Os dados são falsos e vivem no browser de quem visita: não há
-      # fotografias de clientes envolvidas, e por isso não há nada exposto.
-      #
-      # ANTES DE LIGAR O SUPABASE A SÉRIO: trocar `--mode demo` por um build
-      # normal, senão o site publicado continua a servir galerias de brincar em
-      # vez das verdadeiras.
-      #
+      # As chaves do Supabase entram no build, e sem elas o site publicado sobe
+      # sem forma de falar com a base de dados: o painel não abre e as galerias
+      # de cliente não carregam. Falhar aqui, com o motivo escrito, é melhor do
+      # que publicar isso e deixar alguém descobri-lo pelo link que já entregou.
+      - name: Confirmar que os secrets existem
+        env:
+          URL: ${{ secrets.VITE_SUPABASE_URL }}
+          ANON: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          R2: ${{ secrets.VITE_R2_PUBLIC_URL }}
+        run: |
+          falta=""
+          [ -z "$URL" ] && falta="$falta VITE_SUPABASE_URL"
+          [ -z "$ANON" ] && falta="$falta VITE_SUPABASE_ANON_KEY"
+          if [ -n "$falta" ]; then
+            echo "::error::Faltam secrets:$falta — Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+          case "$URL" in
+            */rest/v1|*/auth/v1|*/) echo "::error::VITE_SUPABASE_URL tem caminho a mais; deve ser só https://<ref>.supabase.co"; exit 1 ;;
+          esac
+          # O R2 público só serve fotografias carregadas pelo painel. O site
+          # marketing usa as imagens do repositório, por isso isto avisa e segue.
+          [ -z "$R2" ] && echo "::warning::VITE_R2_PUBLIC_URL vazio: fotografias carregadas pelo painel não aparecem."
+          echo "Secrets presentes."
+
       # O build e a pré-renderização ficam em passos separados de propósito: se
       # a captura falhar, o site é publicado na mesma como aplicação de página
       # única, que é o que já era antes disto. Perder metadados nas partilhas é
       # mau; deixar de publicar é pior.
-      - run: npx tsc -b && npx vite build --mode demo
+      - run: npx tsc -b && npx vite build
         env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_R2_PUBLIC_URL: ${{ secrets.VITE_R2_PUBLIC_URL }}
           # Vazias enquanto não houver conta de estatísticas: sem SRC o site não
           # carrega script nenhum (ver src/lib/Analytics.tsx).
           VITE_ANALYTICS_SRC: ${{ secrets.VITE_ANALYTICS_SRC }}

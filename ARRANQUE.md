@@ -148,9 +148,11 @@ Settings → Secrets and variables → Actions → New repository secret:
 | `VITE_ANALYTICS_SRC` | script de estatísticas (passo 8) |
 | `VITE_ANALYTICS_DOMAIN` **ou** `VITE_ANALYTICS_ID` | conforme a ferramenta |
 
-Depois disto, **diz-me** e eu tiro o modo de demonstração do workflow de deploy.
-Não o faço antes: sem os secrets, o site publicado ficava com um painel que não
-abre e galerias que não funcionam.
+~~Depois disto, diz-me e eu tiro o modo de demonstração do workflow.~~
+**Feito.** O deploy compila com o Supabase a sério, e verifica os secrets antes
+de compilar: sem `VITE_SUPABASE_URL` ou `VITE_SUPABASE_ANON_KEY`, falha com o
+motivo escrito em vez de publicar um site com o painel fechado e as galerias
+mudas.
 
 ## 7. Formulário  *(manual — ~5 min)*
 
