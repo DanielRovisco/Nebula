@@ -1,7 +1,11 @@
 # Gerado por scripts/gen-public.mjs. Não editar à mão.
 User-agent: *
 Allow: /
-# O painel e as galerias de cliente não têm nada que ser indexados.
+# O painel e as galerias de cliente não têm nada que ser indexados. A porta de
+# entrada (/galeria) entra na mesma proibição: barrá-la barra também tudo o que
+# vem depois dela, e uma página que só pede password não ganha nada em aparecer
+# numa pesquisa. Por isso também não vai no sitemap — pedir que indexem e
+# proibir a indexação da mesma página é uma contradição que o Google reporta.
 Disallow: /admin
 Disallow: /galeria
 Disallow: /en/gallery
