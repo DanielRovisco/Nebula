@@ -34,7 +34,7 @@ export const en: Dict = {
   home: {
     seoTitle: 'NEBULA — Wedding Photography & Film in Portugal',
     seoDescription:
-      'Wedding photographer and videographer in Lisbon and the Alentejo. Editorial photography and 4K cinematic film for weddings, maternity and events.',
+      'Wedding photographer and videographer in Lisbon and the Alentejo. Editorial photography and 4K cinematic film for weddings, maternity, portraits and events.',
     place: 'Lisbon & Portalegre',
     headline: ['Stories', 'born', 'in light.'],
     heroCta: 'Book a session',
@@ -46,6 +46,7 @@ export const en: Dict = {
     services: {
       casamentos: { title: 'Weddings', tagline: 'Your love story, told to last.' },
       maternidade: { title: 'Maternity', tagline: 'Celebrating the wait. Keeping the beginning.' },
+      retratos: { title: 'Portraits', tagline: 'Editorial, studio or outdoors. Who you are, in a frame.' },
       eventos: { title: 'Events', tagline: 'Coverage shaped around each occasion.' },
     },
     stats: {
@@ -127,7 +128,7 @@ export const en: Dict = {
   services: {
     seoTitle: 'Services & Packages — NEBULA Photography & Film',
     seoDescription:
-      'Photography and film packages for weddings, maternity and events: 4K video, drone, pre-wedding, private online gallery and a 24-hour sneak peek.',
+      'Photography and film packages for weddings, maternity, portraits and events: 4K video, drone, pre-wedding, private online gallery and a 24-hour sneak peek.',
     label: 'Services',
     title: 'A story and an experience, not just hours of coverage.',
     seeWork: 'See work in this category',
@@ -154,6 +155,7 @@ export const en: Dict = {
       nebula: 'Nebula',
       cinemaFoto: 'Cinema & Photo',
       intimo: 'Intimate',
+      editorial: 'Editorial',
       foto: 'Photo',
       fotoVideo: 'Photo + Film',
     },
@@ -177,7 +179,7 @@ export const en: Dict = {
   contact: {
     seoTitle: 'Contact — NEBULA Photography & Film',
     seoDescription:
-      'Talk to us by email or Instagram about your wedding, maternity session or event. Lisbon and the Alentejo. We reply within 24 hours.',
+      'Talk to us by email or Instagram about your wedding, maternity session, portraits or event. Lisbon and the Alentejo. We reply within 24 hours.',
     label: 'Contact',
     title: 'Let’s talk about your day.',
     quickLabel: 'Quickest reply',

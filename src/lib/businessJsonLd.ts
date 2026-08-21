@@ -16,7 +16,7 @@ export const businessJsonLd = {
   '@id': `${SITE_URL}/`,
   name: 'NEBULA',
   description:
-    'Produtora audiovisual especializada em fotografia editorial e vídeo cinematográfico para casamentos, maternidade e eventos.',
+    'Produtora audiovisual especializada em fotografia editorial e vídeo cinematográfico para casamentos, maternidade, retratos e eventos.',
   url: `${SITE_URL}/`,
   logo: absoluteUrl('/brand/logo-symbol-white.png'),
   image: absoluteUrl('/brand/portfolio/hero-beach-dress-1440.webp'),

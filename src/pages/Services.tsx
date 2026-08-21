@@ -42,6 +42,17 @@ const CATEGORIES = [
     ],
   },
   {
+    id: 'retratos',
+    portfolio: 'retratos',
+    image: 'editorial-dramatic',
+    alt: 'Retrato editorial com iluminação dramática',
+    imgPos: 'object-[50%_20%]',
+    packs: [
+      { name: 'foto', items: ['photoSession', 'privateGallery'] },
+      { name: 'editorial', items: ['photoEditorial', 'privateGallery', 'sneakPeek'] },
+    ],
+  },
+  {
     id: 'eventos',
     // Os trabalhos que ilustram este serviço vivem em "Retratos".
     portfolio: 'retratos',

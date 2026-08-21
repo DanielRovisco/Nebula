@@ -33,6 +33,12 @@ const SERVICES = [
     imgPos: 'object-center',
   },
   {
+    id: 'retratos',
+    image: 'editorial-dramatic',
+    alt: 'Retrato editorial com iluminação dramática',
+    imgPos: 'object-[50%_20%]',
+  },
+  {
     id: 'eventos',
     image: 'baby-balloons',
     alt: 'Retrato de bebé rodeado de balões',
@@ -227,7 +233,7 @@ export default function Home() {
             <h2 className="text-3xl sm:text-5xl mt-3">{t.home.servicesTitle}</h2>
           </Reveal>
 
-          <div className="grid md:grid-cols-3 gap-4 sm:gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             {SERVICES.map((s, i) => (
               <Reveal key={s.id} delay={i * 0.1}>
                 <Link

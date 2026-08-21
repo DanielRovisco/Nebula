@@ -28,7 +28,7 @@ export const pt = {
   home: {
     seoTitle: 'NEBULA — Fotografia & Vídeo Cinematográfico em Lisboa',
     seoDescription:
-      'Fotógrafo e videógrafo para casamentos, maternidade e eventos em Lisboa e Portalegre. Fotografia editorial e vídeo cinematográfico 4K.',
+      'Fotógrafo e videógrafo para casamentos, maternidade, retratos e eventos em Lisboa e Portalegre. Fotografia editorial e vídeo cinematográfico 4K.',
     place: 'Lisboa & Portalegre',
     headline: ['Histórias', 'que nascem', 'em luz.'],
     heroCta: 'Marcar Sessão',
@@ -40,6 +40,7 @@ export const pt = {
     services: {
       casamentos: { title: 'Casamentos', tagline: 'A vossa história de amor, contada para sempre.' },
       maternidade: { title: 'Maternidade', tagline: 'Celebrar a espera. Eternizar o início.' },
+      retratos: { title: 'Retratos', tagline: 'Editorial, estúdio ou exterior. Quem és, em imagem.' },
       eventos: { title: 'Eventos', tagline: 'Coberturas à medida de cada ocasião.' },
     },
     stats: {
@@ -121,7 +122,7 @@ export const pt = {
   services: {
     seoTitle: 'Serviços & Packs — NEBULA Fotografia & Vídeo',
     seoDescription:
-      'Packs de fotografia e vídeo para casamentos, maternidade e eventos: vídeo 4K, drone, pré-wedding, galeria online privada e sneak peek em 24h.',
+      'Packs de fotografia e vídeo para casamentos, maternidade, retratos e eventos: vídeo 4K, drone, pré-wedding, galeria online privada e sneak peek em 24h.',
     label: 'Serviços',
     title: 'Narrativa e experiência, não apenas horas de serviço.',
     seeWork: 'Ver trabalhos desta categoria',
@@ -148,6 +149,7 @@ export const pt = {
       nebula: 'Nebula',
       cinemaFoto: 'Cinema & Foto',
       intimo: 'Íntimo',
+      editorial: 'Editorial',
       foto: 'Foto',
       fotoVideo: 'Foto + Vídeo',
     },
@@ -156,7 +158,7 @@ export const pt = {
   portfolio: {
     seoTitle: 'Portfólio — NEBULA Fotografia & Vídeo',
     seoDescription:
-      'Galeria de casamentos, maternidade e eventos fotografados pela NEBULA em Lisboa, Portalegre e restante Portugal.',
+      'Galeria de retratos, maternidade e casamentos fotografados pela NEBULA em Lisboa, Portalegre e restante Portugal.',
     label: 'Portfólio',
     title: 'Cada imagem, um fragmento de história.',
     all: 'Todos',
@@ -171,7 +173,7 @@ export const pt = {
   contact: {
     seoTitle: 'Contacto — NEBULA Fotografia & Vídeo',
     seoDescription:
-      'Fale connosco por email ou Instagram sobre o vosso casamento, sessão de maternidade ou evento. Lisboa e Portalegre. Resposta em menos de 24 horas.',
+      'Fale connosco por email ou Instagram sobre o vosso casamento, sessão de maternidade, retratos ou evento. Lisboa e Portalegre. Resposta em menos de 24 horas.',
     label: 'Contacto',
     title: 'Vamos falar sobre o vosso projeto.',
     quickLabel: 'Resposta rápida',
