@@ -76,7 +76,18 @@ Sem domínio verificado não vale a pena tentar emails automáticos: vão para s
 ## 4. Cloudflare R2  *(manual — ~10 min)*
 
 1. Criar conta, ativar o R2 (pede cartão, não cobra dentro dos 10 GB).
-2. Bucket **privado** `galleries` — sem acesso público.
+2. Bucket **privado** `galleries` — sem acesso público, e em
+   **Location → Specify jurisdiction → EU**.
+
+   Não é o mesmo que o *Automatic*, que coloca o bucket na Europa Ocidental
+   como sugestão e sem garantia de lá ficar. Guardamos fotografias de pessoas
+   identificáveis; a jurisdição é uma restrição vinculativa e simplifica a
+   política de privacidade. **É permanente** — não se muda sem apagar o bucket.
+
+   Buckets com jurisdição respondem noutro endereço de API
+   (`<conta>.eu.r2...`). O `npm run setup` pergunta pela jurisdição e guarda-a
+   como secret; sem isso os uploads falhavam com "bucket não encontrado", que
+   manda procurar no sítio errado.
 3. Bucket **público** `nebula-site` — Settings → *Custom Domain* →
    `cdn.proj3ctnebula.pt`. A Cloudflare cria o registo sozinha, já que o
    domínio é uma zona da mesma conta.

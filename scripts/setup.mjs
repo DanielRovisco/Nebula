@@ -131,6 +131,14 @@ if (!temComando('supabase')) {
   const secret = await pergunta('R2 Secret Access Key')
   const bucket = await pergunta('Bucket privado (galerias)', { atual: 'galleries' })
   const bucketPublico = await pergunta('Bucket público (site)', { atual: 'nebula-site' })
+  // Buckets criados com jurisdição respondem noutro endereço. Assinar contra o
+  // errado devolve "bucket não encontrado", que manda procurar no sítio errado.
+  console.log(cor('90', '  Se criaste os buckets com "Specify jurisdiction", escreve a jurisdição'))
+  console.log(cor('90', '  (eu). Se escolheste "Automatic", deixa vazio.'))
+  const jurisdicao = await pergunta('Jurisdição do R2 (vazio se Automatic)', {
+    obrigatorio: false,
+    atual: 'eu',
+  })
 
   try {
     execFileSync(
@@ -143,6 +151,7 @@ if (!temComando('supabase')) {
         `R2_SECRET_ACCESS_KEY=${secret}`,
         `R2_BUCKET=${bucket}`,
         `R2_PUBLIC_BUCKET=${bucketPublico}`,
+        `R2_JURISDICTION=${jurisdicao}`,
       ],
       { stdio: 'inherit' },
     )

@@ -7,6 +7,7 @@
 //
 // Secrets necessários:
 //   R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET
+//   R2_JURISDICTION (opcional: 'eu' ou 'fedramp')
 import { AwsClient } from 'https://esm.sh/aws4fetch@1.0.20'
 
 const accountId = Deno.env.get('R2_ACCOUNT_ID')!
@@ -21,7 +22,15 @@ const BUCKETS = {
 
 export type BucketKind = keyof typeof BUCKETS
 
-export const R2_ENDPOINT = `https://${accountId}.r2.cloudflarestorage.com`
+/*
+  Buckets criados com jurisdição — o nosso é da União Europeia, porque guarda
+  fotografias de pessoas identificáveis — respondem noutro endereço:
+  `<conta>.eu.r2...` em vez de `<conta>.r2...`. Assinar contra o endereço
+  errado não dá um erro de permissões que se perceba: dá "bucket não
+  encontrado", como se o bucket não existisse de todo.
+*/
+const jurisdicao = Deno.env.get('R2_JURISDICTION')?.trim().toLowerCase()
+export const R2_ENDPOINT = `https://${accountId}${jurisdicao ? `.${jurisdicao}` : ''}.r2.cloudflarestorage.com`
 
 const client = new AwsClient({
   accessKeyId: Deno.env.get('R2_ACCESS_KEY_ID')!,
