@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchPortfolio, fetchTestimonials, publicUrl } from './public'
 import type { Testimonial } from './types'
+import { TESTEMUNHOS } from './testemunhos'
 
 export interface PortfolioItem {
   id: string
@@ -55,11 +56,19 @@ export function usePortfolio(fallback: {
 }
 
 /**
- * Testemunhos publicados. Começa vazio e a secção do site só aparece depois de
- * haver testemunhos reais — não há elogios de reserva escritos por nós.
+ * Testemunhos publicados. Os do código aparecem já no primeiro render; se o
+ * painel tiver os seus, substituem-nos quando chegarem — o mesmo que o
+ * portfólio faz.
+ *
+ * Continua a não haver elogios de reserva escritos por nós: os que estão no
+ * código são reais e assinados (ver testemunhos.ts). Sem nenhum publicado, a
+ * secção inteira desaparece do site em vez de ficar um espaço a dizer
+ * "em breve".
  */
 export function useTestimonials(): Testimonial[] {
-  const [lista, setLista] = useState<Testimonial[]>([])
+  const [lista, setLista] = useState<Testimonial[]>(() =>
+    TESTEMUNHOS.filter((t) => t.published),
+  )
 
   useEffect(() => {
     let vivo = true

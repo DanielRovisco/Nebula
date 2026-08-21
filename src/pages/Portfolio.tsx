@@ -24,23 +24,29 @@ const FALLBACK: {
   tall?: boolean
   pos: string
 }[] = [
-  { name: 'palace-dome', alt: 'Cúpula de palácio fotografada de baixo durante um casamento', category: 'Casamentos', tall: true, pos: 'center center' },
-  { name: 'forest-bride', alt: 'Noiva em vestido longo entre árvores', category: 'Casamentos', pos: 'center 20%' },
-  { name: 'hero-beach-dress', alt: 'Vestido de noiva a esvoaçar numa praia ao final do dia', category: 'Casamentos', pos: 'center 25%' },
+  { name: 'palace-dome', alt: 'Retrato sob a cúpula de um palácio, em contraluz', category: 'Retratos', tall: true, pos: 'center center' },
+  { name: 'forest-bride', alt: 'Sessão editorial em vestido longo branco, entre árvores', category: 'Retratos', pos: 'center 20%' },
+  { name: 'hero-beach-dress', alt: 'Vestido longo branco numa praia, entre falésias', category: 'Retratos', pos: 'center 25%' },
   { name: 'gender-reveal-beach', alt: 'Revelação do sexo do bebé numa praia', category: 'Maternidade', pos: 'center center' },
   { name: 'maternity-railway', alt: 'Sessão de maternidade junto a uma linha de ferro', category: 'Maternidade', tall: true, pos: 'center center' },
   { name: 'maternity-sunset-couple', alt: 'Casal à espera de bebé ao pôr do sol', category: 'Maternidade', pos: 'center 30%' },
-  { name: 'baby-balloons', alt: 'Bebé rodeado de balões durante uma festa de família', category: 'Eventos', pos: 'center 15%' },
-  { name: 'editorial-studio-1', alt: 'Retrato editorial em estúdio', category: 'Eventos', pos: 'center center' },
-  { name: 'editorial-dramatic', alt: 'Retrato editorial com iluminação dramática', category: 'Eventos', tall: true, pos: 'center 20%' },
-  { name: 'editorial-blue-dress', alt: 'Retrato editorial de vestido azul', category: 'Eventos', pos: 'center 15%' },
-  { name: 'editorial-purple', alt: 'Retrato editorial em tons de violeta', category: 'Eventos', pos: 'center 20%' },
-  { name: 'editorial-lake', alt: 'Sessão editorial junto a um lago', category: 'Eventos', pos: 'center center' },
-  { name: 'editorial-studio-2', alt: 'Segundo retrato editorial em estúdio', category: 'Eventos', pos: 'center 25%' },
-  { name: 'editorial-autumn', alt: 'Sessão de casamento em cenário de outono', category: 'Casamentos', pos: 'center 30%' },
+  { name: 'baby-balloons', alt: 'Retrato de bebé rodeado de balões', category: 'Retratos', pos: 'center 15%' },
+  { name: 'editorial-studio-1', alt: 'Retrato editorial em estúdio', category: 'Retratos', pos: 'center center' },
+  { name: 'editorial-dramatic', alt: 'Retrato editorial com iluminação dramática', category: 'Retratos', tall: true, pos: 'center 20%' },
+  { name: 'editorial-blue-dress', alt: 'Retrato editorial de vestido azul', category: 'Retratos', pos: 'center 15%' },
+  { name: 'editorial-purple', alt: 'Retrato editorial em tons de violeta', category: 'Retratos', pos: 'center 20%' },
+  { name: 'editorial-lake', alt: 'Sessão editorial junto a um lago', category: 'Retratos', pos: 'center center' },
+  { name: 'editorial-studio-2', alt: 'Segundo retrato editorial em estúdio', category: 'Retratos', pos: 'center 25%' },
+  { name: 'editorial-autumn', alt: 'Sessão editorial em folhas de outono', category: 'Retratos', pos: 'center 30%' },
 ]
 
-const FALLBACK_CATEGORIES = ['Casamentos', 'Maternidade', 'Eventos']
+/*
+  Não há categoria de casamentos porque não há, ainda, uma fotografia de
+  casamento no portfólio. As que aqui estavam eram sessões editoriais e uma de
+  maternidade — mostrá-las sob esse nome era vender como casamento trabalho que
+  não o é. Volta a existir no dia em que houver fotografias para lá pôr.
+*/
+const FALLBACK_CATEGORIES = ['Retratos', 'Maternidade']
 
 // Duas colunas até md, três a partir daí — nunca uma imagem a ocupar a largura
 // toda, por isso 50vw cobre todo o intervalo de telemóvel e tablet.

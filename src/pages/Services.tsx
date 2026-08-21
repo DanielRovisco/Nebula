@@ -18,8 +18,10 @@ import { breadcrumbJsonLd } from '../lib/breadcrumbJsonLd'
 const CATEGORIES = [
   {
     id: 'casamentos',
+    // Sem correspondência no portfólio: ainda não há fotografias de casamento.
+    portfolio: null,
     image: 'forest-bride',
-    alt: 'Noiva em vestido longo entre árvores',
+    alt: 'Sessão editorial em vestido longo branco, entre árvores',
     imgPos: 'object-top',
     packs: [
       { name: 'essencia', items: ['photoEditorial', 'privateGallery', 'sneakPeek'] },
@@ -29,6 +31,7 @@ const CATEGORIES = [
   },
   {
     id: 'maternidade',
+    portfolio: 'maternidade',
     image: 'maternity-railway',
     alt: 'Sessão de maternidade junto a uma linha de ferro',
     imgPos: 'object-center',
@@ -40,6 +43,8 @@ const CATEGORIES = [
   },
   {
     id: 'eventos',
+    // Os trabalhos que ilustram este serviço vivem em "Retratos".
+    portfolio: 'retratos',
     image: 'baby-balloons',
     alt: 'Bebé rodeado de balões durante uma festa de família',
     imgPos: 'object-[50%_15%]',
@@ -226,13 +231,21 @@ export default function Services() {
                           Quem acaba de ler o que está incluído quer ver como
                           fica — e o portfólio abre já filtrado por esta
                           categoria, em vez de o obrigar a procurar o filtro.
+
+                          Só aparece quando o serviço tem mesmo uma categoria
+                          correspondente. Um hash que não casa com categoria
+                          nenhuma não dá erro: mostra o portfólio inteiro, sem
+                          filtro, como se a ligação não tivesse feito nada — e
+                          quem clicou fica sem perceber porquê.
                         */}
-                        <Link
-                          to={`${link('portfolio')}#${cat.id}`}
-                          className="mt-6 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all"
-                        >
-                          {t.services.seeWork} <ArrowRight size={12} />
-                        </Link>
+                        {cat.portfolio && (
+                          <Link
+                            to={`${link('portfolio')}#${cat.portfolio}`}
+                            className="mt-6 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all"
+                          >
+                            {t.services.seeWork} <ArrowRight size={12} />
+                          </Link>
+                        )}
                       </div>
                     </motion.div>
                   )}
