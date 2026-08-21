@@ -1,4 +1,4 @@
-import { DEMO_TESTIMONIAL } from './types'
+import { TESTEMUNHOS } from './testemunhos'
 import type { SiteCategory, SitePhoto, Testimonial } from './types'
 
 /**
@@ -73,12 +73,17 @@ export async function fetchPortfolio(): Promise<{
  * Testemunhos publicados, na ordem definida no painel.
  *
  * Devolve lista vazia quando não há nada configurado ou a leitura falha — e a
- * secção do site simplesmente não aparece. Não há testemunhos de exemplo no
- * código: inventar elogios de clientes que não existem seria mentir a quem nos
- * está a avaliar.
+ * secção do site simplesmente não aparece. Continua a não haver elogios
+ * inventados por nós em lado nenhum.
+ *
+ * No modo de demonstração devolve os testemunhos reais do código. Devolvia
+ * antes um cartão de exemplo, o que fazia sentido enquanto não havia
+ * testemunhos nenhuns — mas assim que passaram a existir, esse exemplo
+ * sobrepunha-se-lhes e o site publicado mostrava "Exemplo" no lugar de dois
+ * elogios verdadeiros e assinados.
  */
 export async function fetchTestimonials(): Promise<Testimonial[]> {
-  if (DEMO) return [DEMO_TESTIMONIAL]
+  if (DEMO) return TESTEMUNHOS.filter((t) => t.published)
   const rows = await rest<Record<string, unknown>[]>(
     'site_testimonials?select=*&published=eq.true&order=sort_order',
   )
