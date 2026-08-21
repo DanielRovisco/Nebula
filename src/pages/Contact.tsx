@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Mail, MapPin } from 'lucide-react'
 import Reveal from '../lib/Reveal'
@@ -8,7 +8,6 @@ import { CONTACT } from '../lib/site'
 import { useLink, useT } from '../lib/i18n'
 import Breadcrumbs from '../components/Breadcrumbs'
 import { breadcrumbJsonLd } from '../lib/breadcrumbJsonLd'
-import { useTestimonials } from '../lib/site-content/useSiteContent'
 import { track } from '../lib/track'
 
 // Endpoint opcional de recolha de formulários (Formspree, Web3Forms, etc.).
@@ -55,7 +54,6 @@ export default function Contact() {
   const link = useLink()
   const navigate = useNavigate()
   const servicos = SERVICE_KEYS.map((k) => t.home.services[k].title)
-  const destaque = useTestimonials()[0]
   const [status, setStatus] = useState<Status>('idle')
 
   // Data e local do evento são opcionais — quem ainda não tem data marcada não
@@ -98,6 +96,25 @@ export default function Contact() {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) erros.email = t.contact.errors.email
   if (form.message.trim().length < 10) erros.message = t.contact.errors.message
   if (form.date && form.date < new Date().toISOString().slice(0, 10)) erros.date = t.contact.errors.pastDate
+
+  /*
+    O campo de mensagem cresce com o texto em vez de ficar preso em cinco
+    linhas com barra de deslocamento por dentro. Quem escreve a descrever um
+    casamento escreve mais do que cabe numa caixa pequena, e não ver o que já
+    escreveu faz reler e encurtar — perde-se justamente o detalhe que ajuda a
+    responder bem.
+
+    A altura é medida a partir do `scrollHeight`, e o `auto` antes é o que
+    permite a caixa também encolher quando se apaga texto: sem ele, o
+    scrollHeight nunca desce.
+  */
+  const areaRef = useRef<HTMLTextAreaElement>(null)
+  useEffect(() => {
+    const el = areaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [form.message])
 
   const erro = (campo: keyof Campos) => (tocado[campo] ? erros[campo] : undefined)
   const visitar = (campo: keyof Campos) => setTocado((v) => ({ ...v, [campo]: true }))
@@ -254,28 +271,6 @@ export default function Contact() {
               </div>
             </div>
 
-            {/*
-              Um testemunho ao lado do formulário. É aqui que a decisão é
-              tomada, e é aqui que ler outra pessoa a dizer que correu bem pesa
-              mais do que em qualquer outro sítio do site. Sem testemunhos
-              carregados no painel, não aparece nada.
-            */}
-            {destaque && (
-              <figure className="border border-white/10 rounded-2xl p-6 sm:p-7">
-                <span aria-hidden="true" className="font-serif text-titanium/15 leading-none text-4xl">
-                  &ldquo;
-                </span>
-                <blockquote className="text-sm text-titanium/65 leading-relaxed mt-1">
-                  {destaque.quote}
-                </blockquote>
-                <figcaption className="mt-5 pt-4 border-t border-white/[0.08] text-sm">
-                  <span className="text-titanium/85">{destaque.author}</span>
-                  {destaque.context && (
-                    <span className="block text-xs text-titanium/55 mt-1">{destaque.context}</span>
-                  )}
-                </figcaption>
-              </figure>
-            )}
           </div>
         </Reveal>
 
@@ -405,6 +400,7 @@ export default function Contact() {
             <div>
               <label className="label-sm block mb-3" htmlFor="contact-message">{t.contact.message}</label>
               <textarea
+                ref={areaRef}
                 id="contact-message"
                 name="message"
                 required
@@ -414,7 +410,7 @@ export default function Contact() {
                 onBlur={() => visitar('message')}
                 aria-invalid={Boolean(erro('message'))}
                 aria-describedby={erro('message') ? 'erro-message' : undefined}
-                className="w-full bg-transparent border-b border-white/15 py-3 outline-none focus:border-titanium/60 transition-colors resize-none text-base placeholder:text-titanium/55"
+                className="w-full bg-transparent border-b border-white/15 py-3 outline-none focus:border-titanium/60 transition-colors resize-none overflow-hidden text-base placeholder:text-titanium/55"
                 placeholder={t.contact.messagePlaceholder}
               />
               {erro('message') && (
