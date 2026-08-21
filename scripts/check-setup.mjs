@@ -147,8 +147,19 @@ if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
       token = body.access_token
       ok(`login como ${ADMIN_EMAIL}`)
     } else {
-      bad(`login falhou: ${body.error_description ?? body.msg ?? res.status}`,
-          'Authentication → Users → Add user (confirma o email se for pedido)')
+      const razao = String(body.error_description ?? body.msg ?? res.status)
+      /*
+        Três falhas de login com causas bem diferentes, e uma sugestão só a
+        mandar criar o utilizador servia mal duas delas — mandava criar de
+        novo quem já existia, e não dizia nada de útil a quem tinha desligado
+        o provider a mais ao fechar o registo.
+      */
+      const sugestao = /logins are disabled|provider.*disabled/i.test(razao)
+        ? 'Authentication → Sign In / Providers → Email: "Enable Email provider" LIGADO (é o que deixa entrar), "Allow new users to sign up" DESLIGADO (é o que fecha o registo). São interruptores diferentes.'
+        : /not confirmed|confirm/i.test(razao)
+          ? 'Authentication → Users → o utilizador está por confirmar: confirma-o ou recria com "Auto Confirm User"'
+          : 'Authentication → Users → Add user (confirma o email se for pedido), e verifica ADMIN_EMAIL/ADMIN_PASSWORD'
+      bad(`login falhou: ${razao}`, sugestao)
     }
   } catch (e) {
     bad(`login falhou: ${e.message}`)
