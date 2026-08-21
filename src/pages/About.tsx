@@ -126,9 +126,12 @@ export default function About() {
       {/* Instagram CTA */}
       <section className="container-px">
         <Reveal>
+          {/*
+            Sem etiqueta "Instagram" por cima: o botão em baixo passou a dizer
+            exactamente isso, e a palavra aparecia duas vezes no mesmo cartão.
+          */}
           <div className="border border-white/10 rounded-2xl p-8 sm:p-12 text-center">
-            <span className="label-sm">Instagram</span>
-            <h2 className="text-2xl sm:text-4xl mt-4 mb-4">{t.about.instagramTitle}</h2>
+            <h2 className="text-2xl sm:text-4xl mb-4">{t.about.instagramTitle}</h2>
             <p className="text-titanium/50 text-sm mb-8">
               {t.about.instagramText}{' '}
               <span className="text-titanium/80">@proj3ct.nebula</span>

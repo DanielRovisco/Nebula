@@ -68,7 +68,7 @@ export const pt = {
     ],
     ctaTitle: ['Vamos contar', 'a vossa história?'],
     ctaButton: 'Fala connosco',
-    ctaInstagram: 'Instagram DM',
+    ctaInstagram: 'Instagram',
   },
 
   testimonials: {
@@ -95,7 +95,7 @@ export const pt = {
     teamTitle: 'Quem está por detrás',
     instagramTitle: 'Segue a nossa história',
     instagramText: 'Bastidores, trabalhos recentes e momentos do dia-a-dia em',
-    instagramCta: 'Ver no Instagram',
+    instagramCta: 'Instagram',
     values: {
       creativity: {
         title: 'Criatividade',
@@ -208,7 +208,7 @@ export const pt = {
     mailtoText: 'Abrimos o vosso programa de email com a mensagem já escrita. Basta premir enviar.',
     mailtoFallback: 'Não abriu nada? Escrevam-nos para',
     or: 'ou por',
-    instagramDm: 'DM no Instagram',
+    instagramDm: 'Instagram',
     errorText: 'Não conseguimos enviar a mensagem. Escrevam-nos diretamente para',
     mailSubject: (servico: string, nome: string) => `Pedido de ${servico} — ${nome}`,
     mailBody: {

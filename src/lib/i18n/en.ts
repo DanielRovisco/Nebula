@@ -74,7 +74,7 @@ export const en: Dict = {
     ],
     ctaTitle: ['Shall we tell', 'your story?'],
     ctaButton: 'Get in touch',
-    ctaInstagram: 'Instagram DM',
+    ctaInstagram: 'Instagram',
   },
 
   testimonials: {
@@ -101,7 +101,7 @@ export const en: Dict = {
     teamTitle: 'Who is behind it',
     instagramTitle: 'Follow our story',
     instagramText: 'Behind the scenes, recent work and everyday moments at',
-    instagramCta: 'See our Instagram',
+    instagramCta: 'Instagram',
     values: {
       creativity: {
         title: 'Creativity',
@@ -215,7 +215,7 @@ export const en: Dict = {
     mailtoText: 'We have opened your email app with the message already written. Just press send.',
     mailtoFallback: 'Nothing opened? Write to us at',
     or: 'or by',
-    instagramDm: 'Instagram DM',
+    instagramDm: 'Instagram',
     errorText: 'We could not send your message. Please write to us directly at',
     mailSubject: (servico: string, nome: string) => `${servico} enquiry — ${nome}`,
     mailBody: {

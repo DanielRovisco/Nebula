@@ -27,7 +27,10 @@ export default function FloatingActions() {
             href={CONTACT.instagramDm}
             target="_blank"
             rel="noreferrer"
-            aria-label="Enviar mensagem no Instagram"
+            // O mesmo que o texto visível, e não uma frase mais completa: quem usa
+            // controlo por voz diz em voz alta o que lê no ecrã, e um nome
+            // acessível diferente do rótulo deixa o comando sem alvo.
+            aria-label="Instagram"
             // Em telemóvel só aparece o ícone, por isso o botão é um círculo
             // perfeito e centra. O padding assimétrico (pl-4 pr-5) só entra a
             // partir de sm, quando há texto ao lado para o justificar.
