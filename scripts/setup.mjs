@@ -76,6 +76,17 @@ const CLI = temComando('supabase')
 const supa = (args, opcoes = {}) =>
   execFileSync(CLI.exe, [...CLI.pre, ...args], { stdio: 'inherit', shell: CLI.shell, ...opcoes })
 
+/*
+  Um "falhou" sem mais nada é pior do que não dizer nada: dá a entender que
+  se sabe o que correu mal. Estas duas linhas mostram o comando exacto e a
+  razão, que é o que permite a quem está do outro lado resolver o problema.
+*/
+function porque(e) {
+  const partes = [e?.status !== undefined && e.status !== null ? `saiu com ${e.status}` : '', e?.code, e?.message]
+  return partes.filter(Boolean).join(' · ') || 'razão desconhecida'
+}
+const comandoEscrito = (args) => [CLI.exe, ...CLI.pre, ...args].join(' ')
+
 /** Lê o .env.local que já exista, para a segunda corrida não repetir perguntas. */
 async function lerEnv() {
   const caminho = raiz + '.env.local'
@@ -150,6 +161,7 @@ if (dbUrl && temComando('psql')) {
 
 // ─── 3. Secrets e funções ──────────────────────────────────────────────────
 titulo('3. Credenciais do R2 e Edge Functions')
+if (CLI) console.log(cor('90', `  CLI: ${[CLI.exe, ...CLI.pre].join(' ')}`))
 
 if (!CLI) {
   aviso('não encontrei o CLI do Supabase nem o npx.')
@@ -195,8 +207,12 @@ if (!CLI) {
     )
     supa(['secrets', 'set', '--env-file', ficheiroSecrets])
     ok('secrets guardados no Supabase')
-  } catch {
-    erro('não foi possível guardar os secrets (o projeto está ligado com `supabase link`?)')
+  } catch (e) {
+    erro('não foi possível guardar os secrets')
+    console.log(cor('90', `    comando: ${comandoEscrito(['secrets', 'set', '--env-file', '<ficheiro>'])}`))
+    console.log(cor('90', `    ${porque(e)}`))
+    console.log(cor('90', '    Se falar em project ref, falta `supabase link`.'))
+    console.log(cor('90', '    Se falar em token ou login, falta `supabase login`.'))
   } finally {
     await unlink(ficheiroSecrets).catch(() => {})
   }
@@ -213,8 +229,10 @@ if (!CLI) {
     try {
       supa(['functions', 'deploy', nome, ...(semJwt ? ['--no-verify-jwt'] : [])])
       ok(`função ${nome} publicada`)
-    } catch {
+    } catch (e) {
       erro(`falhou a publicar ${nome}`)
+      console.log(cor('90', `    comando: ${comandoEscrito(['functions', 'deploy', nome])}`))
+      console.log(cor('90', `    ${porque(e)}`))
     }
   }
 }
