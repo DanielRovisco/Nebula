@@ -243,6 +243,7 @@ export default function Portfolio() {
                     alt={item.alt}
                     loading="lazy"
                     decoding="async"
+                    style={{ objectPosition: item.pos }}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                 )}

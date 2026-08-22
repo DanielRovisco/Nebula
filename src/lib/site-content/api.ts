@@ -21,6 +21,7 @@ const rowToPhoto = (r: Record<string, unknown>): SitePhoto => ({
   width: (r.width as number) ?? null,
   height: (r.height as number) ?? null,
   tall: Boolean(r.tall),
+  pos: (r.pos as string) || '50% 50%',
   sortOrder: (r.sort_order as number) ?? 0,
   published: r.published !== false,
 })
@@ -52,6 +53,7 @@ const demoStore: {
     width: 1440,
     height: 1920,
     tall: i === 0,
+    pos: '50% 50%',
     sortOrder: i,
     published: true,
   })),
@@ -187,12 +189,13 @@ const realSiteAdmin = {
 
   async updatePhoto(
     id: string,
-    patch: Partial<Pick<SitePhoto, 'categoryId' | 'alt' | 'tall' | 'published' | 'sortOrder'>>,
+    patch: Partial<Pick<SitePhoto, 'categoryId' | 'alt' | 'tall' | 'pos' | 'published' | 'sortOrder'>>,
   ) {
     const update: Record<string, unknown> = {}
     if (patch.categoryId !== undefined) update.category_id = patch.categoryId
     if (patch.alt !== undefined) update.alt = patch.alt
     if (patch.tall !== undefined) update.tall = patch.tall
+    if (patch.pos !== undefined) update.pos = patch.pos
     if (patch.published !== undefined) update.published = patch.published
     if (patch.sortOrder !== undefined) update.sort_order = patch.sortOrder
     const { error } = await supabase().from('site_photos').update(update).eq('id', id)

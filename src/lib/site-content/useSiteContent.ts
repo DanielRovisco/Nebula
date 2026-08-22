@@ -11,7 +11,7 @@ export interface PortfolioItem {
   tall: boolean
   /** Só nas fotos que vêm do repositório: usa <Picture> com srcset local. */
   localName?: string
-  /** object-position das fotos locais, afinado à mão. */
+  /** Recorte da miniatura (`object-position`), afinado no painel. */
   pos?: string
 }
 
@@ -43,6 +43,7 @@ export function usePortfolio(fallback: {
           alt: p.alt,
           category: (p.categoryId && porId.get(p.categoryId)) || 'Outros',
           tall: p.tall,
+          pos: p.pos,
         })),
       })
     })

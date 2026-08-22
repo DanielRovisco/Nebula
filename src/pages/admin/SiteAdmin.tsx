@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Eye, EyeOff, Maximize2, Plus, Trash2, Upload } from 'lucide-react'
+import { useArrastar } from './useArrastar'
 import { siteAdmin, publicUrl, uploadSitePhoto, SITE_EDGE } from '../../lib/site-content/api'
 import type { SiteCategory, SitePhoto, Testimonial } from '../../lib/site-content/types'
 import { DEMO } from '../../lib/gallery/config'
@@ -91,6 +92,9 @@ export default function SiteAdmin() {
     }
   }
 
+  // Fotografia com os campos abertos por baixo da grelha. Uma de cada vez.
+  const [aberta, setAberta] = useState<string | null>(null)
+
   function mover(from: number, to: number) {
     if (to < 0 || to >= photos.length) return
     const next = [...photos]
@@ -98,6 +102,36 @@ export default function SiteAdmin() {
     next.splice(to, 0, m)
     setPhotos(next)
     siteAdmin.reorderPhotos(next.map((p) => p.id)).catch((e) => setError((e as Error).message))
+  }
+
+  const { aArrastar, propsDe } = useArrastar(mover)
+
+  /** "50% 30%" → { x: 50, y: 30 }. Aceita o formato antigo com palavras. */
+  function eixo(pos: string) {
+    const [x, y] = (pos || '50% 50%').split(/\s+/)
+    const n = (v: string, palavra: Record<string, number>) =>
+      v?.endsWith('%') ? Number(v.slice(0, -1)) : (palavra[v] ?? 50)
+    return {
+      x: n(x, { left: 0, center: 50, right: 100 }),
+      y: n(y, { top: 0, center: 50, bottom: 100 }),
+    }
+  }
+
+  /*
+    O cursor mexe-se em tempo real e só grava ao largar. Gravar a cada passo
+    seria uma escrita na base de dados por pixel arrastado — e a última a
+    chegar podia não ser a última a ser enviada, deixando um valor que já não
+    é o que está no ecrã.
+  */
+  function setPos(foto: SitePhoto, x: number, y: number) {
+    setPhotos((atuais) =>
+      atuais.map((f) => (f.id === foto.id ? { ...f, pos: `${x}% ${y}%` } : f)),
+    )
+  }
+
+  function gravarPos(foto: SitePhoto) {
+    const atual = photos.find((f) => f.id === foto.id)
+    if (atual) guardar(() => siteAdmin.updatePhoto(foto.id, { pos: atual.pos }))
   }
 
   function moverTestemunho(from: number, to: number) {
@@ -239,24 +273,47 @@ export default function SiteAdmin() {
             </p>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {photos.map((p, i) => (
-              <div
-                key={p.id}
-                className={`border border-white/10 rounded-2xl overflow-hidden ${
-                  p.published ? '' : 'opacity-50'
-                }`}
-              >
-                <div className="relative aspect-[4/3] bg-white/[0.04]">
-                  <img src={thumbUrl(p)} alt={p.alt} loading="lazy" className="w-full h-full object-cover" />
-                  <div className="absolute top-1.5 left-1.5 flex gap-1">
+          <>
+            <p className="text-xs text-titanium/40 mb-4">
+              Arrasta para reordenar, ou usa as setas — o arrasto não funciona
+              ao toque. Clica numa fotografia para lhe editar a categoria e a
+              descrição.
+            </p>
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
+              {photos.map((p, i) => (
+                <div
+                  key={p.id}
+                  {...propsDe(i)}
+                  className={`relative group rounded-lg overflow-hidden aspect-square bg-white/[0.04] cursor-grab active:cursor-grabbing ${
+                    aArrastar === i ? 'opacity-40' : ''
+                  } ${p.published ? '' : 'opacity-50'} ${
+                    aberta === p.id ? 'ring-2 ring-titanium/70' : ''
+                  }`}
+                >
+                  <button
+                    onClick={() => setAberta(aberta === p.id ? null : p.id)}
+                    aria-label={`Editar ${p.alt || 'fotografia'}`}
+                    aria-expanded={aberta === p.id}
+                    className="absolute inset-0 w-full h-full"
+                  >
+                    <img
+                      src={thumbUrl(p)}
+                      alt={p.alt}
+                      loading="lazy"
+                      className="w-full h-full object-cover pointer-events-none"
+                    />
+                  </button>
+                  <div className="absolute inset-0 bg-eerie/0 group-hover:bg-eerie/40 transition-colors pointer-events-none" />
+
+                  {/* Setas: é o que resta a quem está no telemóvel ou no teclado. */}
+                  <div className="absolute bottom-1 left-1 flex gap-1">
                     <button
                       onClick={() => mover(i, i - 1)}
                       disabled={i === 0}
                       aria-label="Mover para trás"
                       className="p-1.5 rounded-full bg-eerie/70 text-titanium/80 hover:text-titanium disabled:opacity-0"
                     >
-                      <ChevronLeft size={13} />
+                      <ChevronLeft size={12} />
                     </button>
                     <button
                       onClick={() => mover(i, i + 1)}
@@ -264,26 +321,27 @@ export default function SiteAdmin() {
                       aria-label="Mover para a frente"
                       className="p-1.5 rounded-full bg-eerie/70 text-titanium/80 hover:text-titanium disabled:opacity-0"
                     >
-                      <ChevronRight size={13} />
+                      <ChevronRight size={12} />
                     </button>
                   </div>
-                  <div className="absolute top-1.5 right-1.5 flex gap-1">
+
+                  <div className="absolute top-1 right-1 flex gap-1">
                     <button
                       onClick={() => guardar(() => siteAdmin.updatePhoto(p.id, { tall: !p.tall }))}
-                      title="Ocupar duas linhas na grelha"
+                      title="Ocupar duas linhas na grelha do site"
                       aria-label="Alternar destaque"
                       className={`p-1.5 rounded-full bg-eerie/70 transition-colors ${
                         p.tall ? 'text-amber-300' : 'text-titanium/60 hover:text-titanium'
                       }`}
                     >
-                      <Maximize2 size={13} />
+                      <Maximize2 size={12} />
                     </button>
                     <button
                       onClick={() => guardar(() => siteAdmin.updatePhoto(p.id, { published: !p.published }))}
                       aria-label={p.published ? 'Esconder do site' : 'Mostrar no site'}
                       className="p-1.5 rounded-full bg-eerie/70 text-titanium/60 hover:text-titanium transition-colors"
                     >
-                      {p.published ? <Eye size={13} /> : <EyeOff size={13} />}
+                      {p.published ? <Eye size={12} /> : <EyeOff size={12} />}
                     </button>
                     <button
                       onClick={() =>
@@ -293,46 +351,110 @@ export default function SiteAdmin() {
                       aria-label="Apagar foto"
                       className="p-1.5 rounded-full bg-eerie/70 text-titanium/60 hover:text-red-300 transition-colors"
                     >
-                      <Trash2 size={13} />
+                      <Trash2 size={12} />
                     </button>
                   </div>
                 </div>
+              ))}
+            </div>
 
-                <div className="p-4 space-y-3">
+            {/*
+              A edição vive fora da grelha, e não dentro de cada cartão: com os
+              campos por baixo de cada miniatura, catorze fotografias enchiam
+              três ecrãs e reordenar obrigava a percorrer tudo. Assim vê-se a
+              ordem toda de uma vez, e edita-se uma de cada vez.
+            */}
+            {(() => {
+              const p = photos.find((x) => x.id === aberta)
+              if (!p) return null
+              return (
+                <div className="mt-4 border border-white/15 rounded-xl p-4 grid sm:grid-cols-[13rem_1fr] gap-4 items-start">
                   <div>
-                    <label className="label-sm block mb-1.5">Categoria</label>
-                    <select
-                      value={p.categoryId ?? ''}
-                      onChange={(e) =>
-                        guardar(() => siteAdmin.updatePhoto(p.id, { categoryId: e.target.value || null }))
-                      }
-                      className={`${field} bg-eerie text-sm py-1.5`}
-                    >
-                      <option value="">Sem categoria</option>
-                      {categories.map((c) => (
-                        <option key={c.id} value={c.id}>{c.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="label-sm block mb-1.5">Descrição da imagem</label>
+                    {/*
+                      A pré-visualização mostra o corte a sério, com a mesma
+                      regra da grelha do site. Sem isto ajustava-se às cegas:
+                      os números não dizem nada, e o que se quer saber é se a
+                      cara ficou dentro.
+                    */}
+                    <div className="w-full aspect-square rounded-lg overflow-hidden bg-white/[0.04]">
+                      <img
+                        src={thumbUrl(p)}
+                        alt=""
+                        style={{ objectPosition: p.pos }}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <label className="label-sm block mt-3 mb-1" htmlFor={`px-${p.id}`}>
+                      Recorte — horizontal
+                    </label>
                     <input
-                      defaultValue={p.alt}
-                      onBlur={(e) =>
-                        e.target.value !== p.alt &&
-                        guardar(() => siteAdmin.updatePhoto(p.id, { alt: e.target.value }))
-                      }
-                      className={`${field} text-sm py-1.5`}
-                      placeholder="Noiva entre árvores"
+                      id={`px-${p.id}`}
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={eixo(p.pos).x}
+                      onChange={(e) => setPos(p, Number(e.target.value), eixo(p.pos).y)}
+                      onPointerUp={() => gravarPos(p)}
+                      onKeyUp={() => gravarPos(p)}
+                      className="w-full accent-titanium"
                     />
-                    <p className="text-[10px] text-titanium/25 mt-1.5">
-                      Lida por quem não vê a imagem, e pelo Google.
+                    <label className="label-sm block mt-2 mb-1" htmlFor={`py-${p.id}`}>
+                      Recorte — vertical
+                    </label>
+                    <input
+                      id={`py-${p.id}`}
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={eixo(p.pos).y}
+                      onChange={(e) => setPos(p, eixo(p.pos).x, Number(e.target.value))}
+                      onPointerUp={() => gravarPos(p)}
+                      onKeyUp={() => gravarPos(p)}
+                      className="w-full accent-titanium"
+                    />
+                    <p className="text-[10px] text-titanium/40 mt-1.5">
+                      Só afecta a miniatura na grelha. A fotografia aberta em
+                      grande mostra-se sempre inteira.
                     </p>
                   </div>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="label-sm block mb-1.5" htmlFor={`cat-${p.id}`}>Categoria</label>
+                      <select
+                        id={`cat-${p.id}`}
+                        value={p.categoryId ?? ''}
+                        onChange={(e) =>
+                          guardar(() => siteAdmin.updatePhoto(p.id, { categoryId: e.target.value || null }))
+                        }
+                        className={`${field} bg-eerie text-sm py-1.5`}
+                      >
+                        <option value="">Sem categoria</option>
+                        {categories.map((c) => (
+                          <option key={c.id} value={c.id}>{c.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="label-sm block mb-1.5" htmlFor={`alt-${p.id}`}>Descrição da imagem</label>
+                      <input
+                        id={`alt-${p.id}`}
+                        defaultValue={p.alt}
+                        onBlur={(e) =>
+                          e.target.value !== p.alt &&
+                          guardar(() => siteAdmin.updatePhoto(p.id, { alt: e.target.value }))
+                        }
+                        className={`${field} text-sm py-1.5`}
+                        placeholder="Retrato editorial em estúdio"
+                      />
+                      <p className="text-[10px] text-titanium/40 mt-1.5">
+                        Lida por quem não vê a imagem, e pelo Google.
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              )
+            })()}
+          </>
         )}
       </section>
 

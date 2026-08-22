@@ -41,6 +41,8 @@ export interface SitePhoto {
   width: number | null
   height: number | null
   tall: boolean
+  /** Recorte da miniatura, como `object-position` do CSS. */
+  pos: string
   sortOrder: number
   published: boolean
 }

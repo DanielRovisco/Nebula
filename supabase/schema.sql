@@ -288,10 +288,18 @@ create table if not exists site_photos (
   height int,
   -- Fotos altas ocupam duas linhas na grelha, como no portfólio atual.
   tall boolean not null default false,
+  -- Recorte da miniatura: um `object-position` de CSS, "50% 50%" ao centro.
+  -- Na grelha do site a fotografia é cortada para caber, e o que interessa
+  -- raramente está no meio — uma cara a dois terços da altura desaparecia.
+  pos text not null default '50% 50%',
   sort_order int not null default 0,
   published boolean not null default true,
   created_at timestamptz not null default now()
 );
+
+-- Para bases criadas antes desta coluna existir: o `create table if not exists`
+-- acima não toca numa tabela que já exista, por isso a coluna entra aqui.
+alter table site_photos add column if not exists pos text not null default '50% 50%';
 
 create index if not exists site_photos_idx on site_photos (sort_order);
 

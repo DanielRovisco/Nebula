@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ChevronLeft, ChevronRight, Clock, Play, Star, Trash2, Upload } from 'lucide-react'
+import { useArrastar } from './useArrastar'
 import { api } from '../../lib/gallery/api'
 import type { Gallery, Photo } from '../../lib/gallery/types'
 import { SITE_URL } from '../../lib/site'
@@ -23,7 +24,6 @@ export default function GalleryEditor() {
   const [upload, setUpload] = useState<{ done: number; total: number } | null>(null)
   const [newPassword, setNewPassword] = useState('')
   const [preparando, setPreparando] = useState(false)
-  const [dragIndex, setDragIndex] = useState<number | null>(null)
   // Ligado por omissão: uma galeria de entrega não precisa da resolução da
   // máquina, e reduzir é o que faz o armazenamento gratuito chegar.
   const [shrink, setShrink] = useState(true)
@@ -126,6 +126,8 @@ export default function GalleryEditor() {
     api.reorderPhotos(id, next.map((p) => p.id)).catch((e) => setError((e as Error).message))
   }
 
+  const { aArrastar, propsDe } = useArrastar(move)
+
   /**
    * Põe a galeria pela ordem em que o dia aconteceu, usando a hora lida do
    * EXIF de cada fotografia. Com duas máquinas no mesmo casamento, os nomes de
@@ -145,12 +147,6 @@ export default function GalleryEditor() {
     } finally {
       setSaving(false)
     }
-  }
-
-  function onDrop(target: number) {
-    if (dragIndex === null) return
-    move(dragIndex, target)
-    setDragIndex(null)
   }
 
   /**
@@ -369,13 +365,9 @@ export default function GalleryEditor() {
               {photos.map((photo, i) => (
                 <div
                   key={photo.id}
-                  draggable
-                  onDragStart={() => setDragIndex(i)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={() => onDrop(i)}
-                  onDragEnd={() => setDragIndex(null)}
+                  {...propsDe(i)}
                   className={`relative group rounded-lg overflow-hidden aspect-square bg-white/[0.04] cursor-grab active:cursor-grabbing ${
-                    dragIndex === i ? 'opacity-40' : ''
+                    aArrastar === i ? 'opacity-40' : ''
                   }`}
                 >
                   <img
