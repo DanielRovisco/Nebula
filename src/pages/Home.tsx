@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion, useScroll, useTransform, useReducedMotion } from 'framer-motion'
 import { useCallback, useRef, useState } from 'react'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Camera, Images, MessageSquare } from 'lucide-react'
 import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
 import CountUp from '../lib/CountUp'
@@ -58,6 +58,14 @@ const GALLERY = [
 // Só o que não é texto: os números dos passos, os valores das estatísticas e
 // o atraso de cada linha do título. As palavras vêm do dicionário da língua.
 const STEP_NUMBERS = ['01', '02', '03']
+
+/*
+  Um ícone por passo, no mesmo traço fino dos valores do Sobre — a mesma
+  linguagem nas duas páginas, em vez de dois desenhos diferentes para a mesma
+  ideia. Ficam ao lado do número, e não no lugar dele: o número diz a ordem, o
+  ícone diz o assunto.
+*/
+const STEP_ICONS = [MessageSquare, Camera, Images]
 const HEADLINE_DELAYS = [0.3, 0.46, 0.62]
 
 /** Os números não se traduzem; as legendas sim. */
@@ -393,7 +401,15 @@ export default function Home() {
             {t.home.steps.map((step, i) => (
               <Reveal key={STEP_NUMBERS[i]} delay={i * 0.12}>
                 <div className="border-t border-white/[0.12] pt-6 sm:pt-7">
-                  <span className="font-mono text-[11px] text-titanium/55 tracking-[0.3em]">{STEP_NUMBERS[i]}</span>
+                  <div className="flex items-center gap-3">
+                    {(() => {
+                      const Icone = STEP_ICONS[i]
+                      // Decorativo: o passo já se lê no número e no título, e
+                      // anunciá-lo seria repetir o que vem a seguir.
+                      return <Icone size={22} strokeWidth={1.3} aria-hidden="true" className="text-titanium/70 shrink-0" />
+                    })()}
+                    <span className="font-mono text-[11px] text-titanium/55 tracking-[0.3em]">{STEP_NUMBERS[i]}</span>
+                  </div>
                   <h3 className="text-xl sm:text-2xl mt-4 mb-3">{step.title}</h3>
                   <p className="text-sm text-titanium/50 leading-relaxed">{step.desc}</p>
                 </div>
