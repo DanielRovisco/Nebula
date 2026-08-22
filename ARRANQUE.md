@@ -156,12 +156,21 @@ mudas.
 
 ## 7. Formulário  *(manual — ~5 min)*
 
-Conta no [Formspree](https://formspree.io), criar um form, copiar o endpoint
-para o secret `VITE_CONTACT_ENDPOINT`. Sem isto o formulário abre o programa de
-email do visitante — funciona, mas perde quem não tem email no telemóvel.
+~~Conta no Formspree, criar um form, copiar o endpoint.~~ **Feito.**
 
-Com o domínio já verificado, ativar no painel deles a **Autoresponse** — é a
-resposta automática ao cliente, sem código nenhum do nosso lado.
+Duas coisas que custaram tempo e ficam escritas:
+
+- **Não ligar o reCAPTCHA no painel do Formspree.** O nosso formulário envia por
+  trás, sem passar pela caixa do captcha, e o serviço responde `403` com
+  *"In order to submit via AJAX, you need to set a custom key or reCAPTCHA must
+  be disabled"*. A protecção contra robôs é nossa — o campo-armadilha em
+  `Contact.tsx` — e não depende deles.
+- O endereço de envio é `https://formspree.io/f/<id>`. O `/forms/<id>` que
+  aparece na barra do browser é a página do painel, não o endereço de envio. O
+  deploy verifica isto e falha com a diferença escrita.
+
+Falta ainda ativar a **Autoresponse** no painel deles — a resposta automática a
+quem escreve, sem código nenhum do nosso lado.
 
 ## 8. Estatísticas  *(manual — ~5 min)*
 
