@@ -100,9 +100,14 @@ Sem domínio verificado não vale a pena tentar emails automáticos: vão para s
    e é igualmente gratuito.
 4. R2 → Manage API Tokens → Object Read & Write. Guardar **Access Key ID**,
    **Secret** e o **Account ID**.
-5. No bucket privado, Settings → CORS policy → colar o conteúdo de
+5. **Nos dois buckets**, Settings → CORS policy → colar o conteúdo de
    [`supabase/r2-cors.json`](supabase/r2-cors.json) (já está escrito, e já tem o
    domínio certo).
+
+   Nos dois, e não só no privado: as fotografias do portfólio são carregadas
+   para o bucket **público**, e sem CORS lá o browser recusa o upload antes
+   sequer de o tentar. O erro fala de "preflight" e de "Access-Control-Allow-
+   Origin", e não diz uma palavra sobre buckets.
 
 ## 5. Ligar tudo  *(automático — 1 comando)*
 

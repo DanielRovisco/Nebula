@@ -276,8 +276,10 @@ if (!CLI) {
 }
 
 // ─── 4. CORS ───────────────────────────────────────────────────────────────
-titulo('4. CORS do bucket privado')
-console.log('  Cola isto em R2 → o teu bucket → Settings → CORS policy:')
+titulo('4. CORS dos dois buckets')
+console.log('  Cola isto em R2 → Settings → CORS policy, nos DOIS buckets:')
+console.log(cor('90', '  o privado (galerias) e o público (fotografias do site).'))
+console.log(cor('90', '  Falta no público e os uploads do portfólio falham com erro de CORS.'))
 console.log(cor('90', await readFile(raiz + 'supabase/r2-cors.json', 'utf8')))
 
 // ─── 5. Verificação ────────────────────────────────────────────────────────
