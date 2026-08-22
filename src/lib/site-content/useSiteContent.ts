@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchPortfolio, fetchTestimonials, publicUrl } from './public'
+import { ehVideo } from './types'
 import type { Testimonial } from './types'
 
 export interface PortfolioItem {
@@ -13,6 +14,8 @@ export interface PortfolioItem {
   localName?: string
   /** Recorte da miniatura (`object-position`), afinado no painel. */
   pos?: string
+  /** Vídeo em vez de fotografia: muda a miniatura e o que abre em grande. */
+  video?: boolean
 }
 
 /**
@@ -44,6 +47,7 @@ export function usePortfolio(fallback: {
           category: (p.categoryId && porId.get(p.categoryId)) || 'Outros',
           tall: p.tall,
           pos: p.pos,
+          video: ehVideo(p),
         })),
       })
     })

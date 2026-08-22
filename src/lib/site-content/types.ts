@@ -43,6 +43,17 @@ export interface SitePhoto {
   tall: boolean
   /** Recorte da miniatura, como `object-position` do CSS. */
   pos: string
+  /** `image/jpeg`, `video/mp4`… É o que distingue um vídeo de uma fotografia. */
+  contentType: string | null
   sortOrder: number
   published: boolean
 }
+
+/**
+ * Vídeo ou fotografia.
+ *
+ * O tipo declarado manda; a extensão do nome é o que resta para ficheiros
+ * carregados antes de o tipo passar a ser guardado.
+ */
+export const ehVideo = (p: { contentType: string | null; storageKey?: string }) =>
+  p.contentType?.startsWith('video/') ?? /\.(mp4|mov|webm|m4v)$/i.test(p.storageKey ?? '')

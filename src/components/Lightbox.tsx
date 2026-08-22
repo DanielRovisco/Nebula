@@ -69,7 +69,23 @@ export default function Lightbox({ item, index, total, onClose, onPrev, onNext }
       {/* Clicar fora da fotografia fecha; na fotografia, não. */}
       <div className="flex-1 flex items-center justify-center px-4 pb-4 min-h-0" onClick={onClose}>
         <div onClick={(e) => e.stopPropagation()} style={{ viewTransitionName: 'foto' }}>
-          {item.localName ? (
+          {item.video ? (
+            /*
+              `controls` sempre: um vídeo sem barra não se pausa nem se
+              rebobina, e obrigar alguém a fechar a janela para o parar é
+              mau. Sem `autoPlay` com som — arranca calado e a tocar, que é o
+              que os browsers deixam fazer sem gesto do visitante.
+            */
+            <video
+              src={item.src}
+              poster={item.thumb || undefined}
+              controls
+              autoPlay
+              muted
+              playsInline
+              className={imagemClasse}
+            />
+          ) : item.localName ? (
             <Picture name={item.localName} alt={item.alt} sizes="92vw" className={imagemClasse} />
           ) : (
             <img src={item.src} alt={item.alt} decoding="async" className={imagemClasse} />

@@ -288,6 +288,9 @@ create table if not exists site_photos (
   height int,
   -- Fotos altas ocupam duas linhas na grelha, como no portfólio atual.
   tall boolean not null default false,
+  -- Tipo do ficheiro. É por aqui que se sabe que é vídeo — a extensão no nome
+  -- mente com facilidade, e o portfólio passa a aceitar os dois.
+  content_type text,
   -- Recorte da miniatura: um `object-position` de CSS, "50% 50%" ao centro.
   -- Na grelha do site a fotografia é cortada para caber, e o que interessa
   -- raramente está no meio — uma cara a dois terços da altura desaparecia.
@@ -300,6 +303,7 @@ create table if not exists site_photos (
 -- Para bases criadas antes desta coluna existir: o `create table if not exists`
 -- acima não toca numa tabela que já exista, por isso a coluna entra aqui.
 alter table site_photos add column if not exists pos text not null default '50% 50%';
+alter table site_photos add column if not exists content_type text;
 
 create index if not exists site_photos_idx on site_photos (sort_order);
 

@@ -22,6 +22,7 @@ const rowToPhoto = (r: Record<string, unknown>): SitePhoto => ({
   height: (r.height as number) ?? null,
   tall: Boolean(r.tall),
   pos: (r.pos as string) || '50% 50%',
+  contentType: (r.content_type as string) ?? null,
   sortOrder: (r.sort_order as number) ?? 0,
   published: r.published !== false,
 })
@@ -54,6 +55,7 @@ const demoStore: {
     height: 1920,
     tall: i === 0,
     pos: '50% 50%',
+    contentType: 'image/jpeg',
     sortOrder: i,
     published: true,
   })),
@@ -173,6 +175,7 @@ const realSiteAdmin = {
     alt: string
     width: number | null
     height: number | null
+    contentType: string | null
     sortOrder: number
   }) {
     const { error } = await supabase().from('site_photos').insert({
@@ -182,6 +185,7 @@ const realSiteAdmin = {
       alt: input.alt,
       width: input.width,
       height: input.height,
+      content_type: input.contentType,
       sort_order: input.sortOrder,
     })
     if (error) throw new Error(error.message)
@@ -281,6 +285,84 @@ export const siteAdmin = DEMO ? demoSiteAdmin : realSiteAdmin
  */
 export const SITE_EDGE = 1600
 
+/**
+ * Um fotograma do vídeo, para servir de miniatura.
+ *
+ * Sem isto a grelha do portfólio teria um retângulo preto onde devia estar a
+ * imagem: um `<video>` sem poster não mostra nada até alguém carregar em play.
+ * Procura-se um segundo lá para dentro — o primeiro fotograma é muitas vezes
+ * preto, de um fade de entrada.
+ */
+async function posterDeVideo(file: File): Promise<{ blob: Blob; width: number; height: number }> {
+  const url = URL.createObjectURL(file)
+  try {
+    const v = document.createElement('video')
+    v.src = url
+    v.muted = true
+    v.playsInline = true
+    v.preload = 'metadata'
+    await new Promise<void>((ok, falha) => {
+      v.onloadedmetadata = () => ok()
+      v.onerror = () => falha(new Error('não foi possível ler o vídeo'))
+    })
+    await new Promise<void>((ok) => {
+      v.onseeked = () => ok()
+      v.currentTime = Math.min(1, (v.duration || 2) / 2)
+    })
+    const escala = Math.min(1, THUMB_EDGE / Math.max(v.videoWidth, v.videoHeight))
+    const w = Math.round(v.videoWidth * escala)
+    const h = Math.round(v.videoHeight * escala)
+    const c = document.createElement('canvas')
+    c.width = w
+    c.height = h
+    c.getContext('2d')!.drawImage(v, 0, 0, w, h)
+    const blob = await new Promise<Blob | null>((r) => c.toBlob(r, 'image/webp', THUMB_QUALITY))
+    if (!blob) throw new Error('não foi possível gerar a miniatura do vídeo')
+    return { blob, width: v.videoWidth, height: v.videoHeight }
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
+/**
+ * Vídeo do portfólio: sobe tal como está, com um fotograma por miniatura.
+ *
+ * Ao contrário das fotografias, não é recomprimido — recomprimir vídeo no
+ * browser é lento e estraga-o. O tamanho do ficheiro é responsabilidade de
+ * quem o exporta.
+ */
+export async function uploadSiteVideo(file: File) {
+  const poster = await posterDeVideo(file)
+
+  const a = await callAdmin<{ key: string; url: string }>({
+    action: 'upload-url',
+    bucket: 'public',
+    galleryId: 'portfolio',
+    fileName: file.name,
+    contentType: file.type || 'video/mp4',
+    kind: 'full',
+  })
+  await putToR2(a.url, file, file.type || 'video/mp4')
+
+  const b = await callAdmin<{ key: string; url: string }>({
+    action: 'upload-url',
+    bucket: 'public',
+    galleryId: 'portfolio',
+    fileName: file.name.replace(/\.[^.]+$/, '.webp'),
+    contentType: 'image/webp',
+    kind: 'thumb',
+  })
+  await putToR2(b.url, poster.blob, 'image/webp')
+
+  return {
+    storageKey: a.key,
+    thumbKey: b.key,
+    width: poster.width,
+    height: poster.height,
+    contentType: file.type || 'video/mp4',
+  }
+}
+
 export async function uploadSitePhoto(file: File) {
   const full = await resize(file, SITE_EDGE, 'image/webp', 0.82)
   const thumb = await resize(file, THUMB_EDGE, 'image/webp', THUMB_QUALITY)
@@ -310,5 +392,6 @@ export async function uploadSitePhoto(file: File) {
     thumbKey: b.key,
     width: full.width,
     height: full.height,
+    contentType: 'image/webp',
   }
 }

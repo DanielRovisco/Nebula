@@ -63,6 +63,7 @@ export async function fetchPortfolio(): Promise<{
       height: (r.height as number) ?? null,
       tall: Boolean(r.tall),
       pos: (r.pos as string) || '50% 50%',
+      contentType: (r.content_type as string) ?? null,
       sortOrder: (r.sort_order as number) ?? 0,
       published: true,
     })),

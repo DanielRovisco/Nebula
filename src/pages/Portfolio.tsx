@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { flushSync } from 'react-dom'
 import { motion, useReducedMotion } from 'framer-motion'
+import { Play } from 'lucide-react'
 import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
 import Seo from '../lib/Seo'
@@ -246,6 +247,18 @@ export default function Portfolio() {
                     style={{ objectPosition: item.pos }}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
+                )}
+                {/*
+                  Um vídeo com o primeiro fotograma parado é indistinguível de
+                  uma fotografia. O símbolo diz o que vai acontecer ao clicar,
+                  antes de se clicar.
+                */}
+                {item.video && (
+                  <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="w-12 h-12 rounded-full bg-eerie/55 backdrop-blur-sm flex items-center justify-center">
+                      <Play size={17} className="text-titanium ml-0.5" fill="currentColor" />
+                    </span>
+                  </span>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-eerie/65 via-transparent to-transparent sm:from-eerie/0 sm:group-hover:from-eerie/35 transition-colors duration-500" />
                 <span className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 label-sm text-titanium/80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-500">

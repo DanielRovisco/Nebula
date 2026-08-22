@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Eye, EyeOff, Maximize2, Plus, Trash2, Upload } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Eye, EyeOff, Maximize2, Play, Plus, Trash2, Upload } from 'lucide-react'
 import { useArrastar } from './useArrastar'
-import { siteAdmin, publicUrl, uploadSitePhoto, SITE_EDGE } from '../../lib/site-content/api'
+import { ehVideo } from '../../lib/site-content/types'
+import { siteAdmin, publicUrl, uploadSitePhoto, uploadSiteVideo, SITE_EDGE } from '../../lib/site-content/api'
 import type { SiteCategory, SitePhoto, Testimonial } from '../../lib/site-content/types'
 import { DEMO } from '../../lib/gallery/config'
 import { slugify } from '../../lib/gallery/helpers'
@@ -62,14 +63,21 @@ export default function SiteAdmin() {
 
   async function handleFiles(list: FileList | null) {
     if (!list?.length) return
-    const files = Array.from(list).filter((f) => f.type.startsWith('image/'))
+    const files = Array.from(list).filter(
+      (f) => f.type.startsWith('image/') || f.type.startsWith('video/'),
+    )
     if (!files.length) return
     setError(null)
     setUpload({ done: 0, total: files.length })
     let ordem = photos.length
     try {
       for (const file of files) {
-        const up = await uploadSitePhoto(file)
+        // O vídeo sobe inteiro e leva um fotograma por miniatura; a fotografia
+        // é redimensionada. O tipo do ficheiro decide, e fica guardado — é o
+        // que faz a grelha saber o que há de mostrar.
+        const up = file.type.startsWith('video/')
+          ? await uploadSiteVideo(file)
+          : await uploadSitePhoto(file)
         await siteAdmin.addPhoto({
           ...up,
           thumbKey: up.thumbKey,
@@ -77,11 +85,12 @@ export default function SiteAdmin() {
           // Nome do ficheiro como ponto de partida — é melhor do que vazio, e o
           // texto alternativo é editável logo abaixo de cada foto.
           alt: file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '),
+          contentType: up.contentType,
           sortOrder: ordem++,
         })
         setUpload((u) => (u ? { ...u, done: u.done + 1 } : null))
       }
-      flash(`${files.length} ${files.length === 1 ? 'foto adicionada' : 'fotos adicionadas'}.`)
+      flash(`${files.length} ${files.length === 1 ? 'ficheiro adicionado' : 'ficheiros adicionados'}.`)
       recarregar()
     } catch (e) {
       setError((e as Error).message)
@@ -245,7 +254,7 @@ export default function SiteAdmin() {
           <input
             ref={fileInput}
             type="file"
-            accept="image/*"
+            accept="image/*,video/*"
             multiple
             hidden
             onChange={(e) => handleFiles(e.target.files)}
@@ -304,6 +313,13 @@ export default function SiteAdmin() {
                     />
                   </button>
                   <div className="absolute inset-0 bg-eerie/0 group-hover:bg-eerie/40 transition-colors pointer-events-none" />
+                  {ehVideo(p) && (
+                    <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <span className="w-8 h-8 rounded-full bg-eerie/60 flex items-center justify-center">
+                        <Play size={12} className="text-titanium ml-0.5" fill="currentColor" />
+                      </span>
+                    </span>
+                  )}
 
                   {/* Setas: é o que resta a quem está no telemóvel ou no teclado. */}
                   <div className="absolute bottom-1 left-1 flex gap-1">
