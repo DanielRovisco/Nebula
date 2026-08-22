@@ -16,12 +16,13 @@ import { businessJsonLd } from '../lib/businessJsonLd'
 
 // O `id` casa com as categorias de /servicos: o cartão abre logo a categoria
 // certa no acordeão, em vez de cair sempre na primeira.
-/*
-  Sem casamentos: ainda não há um casamento fotografado, e os packs voltam no
-  dia em que houver. Os textos ficam no dicionário à espera desse dia — repor o
-  cartão é acrescentar aqui as quatro linhas de volta.
-*/
 const SERVICES = [
+  {
+    id: 'casamentos',
+    image: 'forest-bride',
+    alt: 'Sessão editorial em vestido longo branco, entre árvores',
+    imgPos: 'object-top',
+  },
   {
     id: 'maternidade',
     image: 'maternity-sunset-couple',
@@ -232,7 +233,7 @@ export default function Home() {
             <h2 className="text-3xl sm:text-5xl mt-3">{t.home.servicesTitle}</h2>
           </Reveal>
 
-          <div className="grid md:grid-cols-3 gap-4 sm:gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             {SERVICES.map((s, i) => (
               <Reveal key={s.id} delay={i * 0.1}>
                 <Link
