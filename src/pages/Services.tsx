@@ -15,20 +15,12 @@ import { breadcrumbJsonLd } from '../lib/breadcrumbJsonLd'
  * acrescentar um item a um pack é uma linha em cada língua, e nunca fica um
  * pack meio traduzido.
  */
+/*
+  Casamentos fica de fora até haver um fotografado. Os packs (Essência, Origem,
+  Nebula) e os textos continuam no dicionário, para a categoria voltar sem se
+  reescrever nada.
+*/
 const CATEGORIES = [
-  {
-    id: 'casamentos',
-    // Sem correspondência no portfólio: ainda não há fotografias de casamento.
-    portfolio: null,
-    image: 'forest-bride',
-    alt: 'Sessão editorial em vestido longo branco, entre árvores',
-    imgPos: 'object-top',
-    packs: [
-      { name: 'essencia', items: ['photoEditorial', 'privateGallery', 'sneakPeek'] },
-      { name: 'origem', items: ['photoVideo4k', 'privateGallery', 'sneakPeek', 'preWedding'] },
-      { name: 'nebula', items: ['photoVideo4k', 'drone', 'preWedding', 'privateGallery', 'sneakPeek'] },
-    ],
-  },
   {
     id: 'maternidade',
     portfolio: 'maternidade',

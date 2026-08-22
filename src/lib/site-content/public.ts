@@ -1,4 +1,3 @@
-import { TESTEMUNHOS } from './testemunhos'
 import type { SiteCategory, SitePhoto, Testimonial } from './types'
 
 /**
@@ -76,14 +75,15 @@ export async function fetchPortfolio(): Promise<{
  * secção do site simplesmente não aparece. Continua a não haver elogios
  * inventados por nós em lado nenhum.
  *
- * No modo de demonstração devolve os testemunhos reais do código. Devolvia
- * antes um cartão de exemplo, o que fazia sentido enquanto não havia
- * testemunhos nenhuns — mas assim que passaram a existir, esse exemplo
- * sobrepunha-se-lhes e o site publicado mostrava "Exemplo" no lugar de dois
- * elogios verdadeiros e assinados.
+ * Em demonstração não devolve nada, e a secção desaparece. Chegou a devolver
+ * um cartão de exemplo, mas isso obrigava a importar o texto dele para aqui —
+ * e este ficheiro entra no pacote principal, ou seja, o exemplo passava a
+ * viajar para o browser de toda a gente só para nunca ser usado. A
+ * demonstração serve para explorar as galerias e o painel; os testemunhos não
+ * fazem falta nenhuma lá.
  */
 export async function fetchTestimonials(): Promise<Testimonial[]> {
-  if (DEMO) return TESTEMUNHOS.filter((t) => t.published)
+  if (DEMO) return []
   const rows = await rest<Record<string, unknown>[]>(
     'site_testimonials?select=*&published=eq.true&order=sort_order',
   )
