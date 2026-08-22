@@ -68,7 +68,7 @@ export default function Privacy() {
                   <ul className="space-y-2 pt-1">
                     {s.list.map((item) => (
                       <li key={item} className="flex gap-3">
-                        <span aria-hidden="true" className="text-titanium/40 shrink-0">·</span>
+                        <span aria-hidden="true" className="text-titanium/55 shrink-0">·</span>
                         {item}
                       </li>
                     ))}

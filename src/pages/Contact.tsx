@@ -239,20 +239,31 @@ export default function Contact() {
       />
 
       {/* Header */}
-      <section className="container-px mb-12 sm:mb-20">
+      {/*
+        Tudo dentro da mesma largura máxima. Sem ela, num ecrã de 1600px o
+        título ocupava metade e deixava a outra metade vazia, e as duas colunas
+        afastavam-se tanto que deixavam de se ler como uma página só.
+      */}
+      <section className="container-px max-w-6xl mx-auto mb-12 sm:mb-16">
         <Breadcrumbs items={[{ label: t.nav.contact }]} />
         <Reveal>
           <span className="label-sm">{t.contact.label}</span>
-          <h1 className="mt-4 max-w-2xl leading-[1.05]" style={{ fontSize: 'clamp(2.2rem, 6vw, 5rem)' }}>
+          <h1 className="mt-4 max-w-3xl leading-[1.05]" style={{ fontSize: 'clamp(2.2rem, 5vw, 4rem)' }}>
             {t.contact.title}
           </h1>
         </Reveal>
       </section>
 
-      <section className="container-px grid md:grid-cols-[1fr_1.3fr] gap-10 sm:gap-16">
+      {/*
+        A coluna da esquerda acaba antes do formulário e deixava um buraco por
+        baixo dela. Fica colada ao topo enquanto se percorre o formulário: os
+        contactos directos continuam à vista de quem está a meio de escrever e
+        decide que prefere mandar uma mensagem.
+      */}
+      <section className="container-px max-w-6xl mx-auto grid lg:grid-cols-[1fr_1.25fr] gap-10 lg:gap-14 items-start">
         {/* Left: info */}
         <Reveal>
-          <div className="space-y-8">
+          <div className="space-y-8 lg:sticky lg:top-28">
             {/* Quick contact box */}
             <div className="border border-white/10 rounded-2xl p-6 sm:p-7 hover:border-white/20 transition-colors space-y-3">
               <p className="label-sm mb-4">{t.contact.quickLabel}</p>
@@ -305,7 +316,7 @@ export default function Contact() {
           <form
             onSubmit={handleSubmit}
             noValidate
-            className="space-y-7"
+            className="space-y-6 lg:border lg:border-white/10 lg:rounded-2xl lg:p-8 xl:p-10"
           >
             {rascunho && (
               <p className="text-xs text-titanium/55 border border-white/10 rounded-xl p-3">
@@ -435,7 +446,7 @@ export default function Contact() {
                 onBlur={() => visitar('message')}
                 aria-invalid={Boolean(erro('message'))}
                 aria-describedby={erro('message') ? 'erro-message' : undefined}
-                className="w-full bg-transparent border-b border-white/15 py-3 outline-none focus:border-titanium/60 transition-colors resize-none overflow-hidden text-base placeholder:text-titanium/55"
+                className="w-full bg-white/[0.03] border border-white/15 rounded-xl px-4 py-3 outline-none focus:border-titanium/60 transition-colors resize-none overflow-hidden text-base placeholder:text-titanium/55"
                 placeholder={t.contact.messagePlaceholder}
               />
               {erro('message') && (

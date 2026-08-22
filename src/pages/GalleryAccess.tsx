@@ -42,14 +42,26 @@ export default function GalleryAccess() {
   const inputClass =
     'w-full bg-transparent border-b border-white/15 py-3 text-base outline-none focus:border-titanium/60 transition-colors placeholder:text-titanium/55'
 
+  /*
+    Centrado na vertical: a página tem pouco conteúdo e, encostada ao topo de
+    um ecrã inteiro, sobrava meia página vazia antes do rodapé. Assim fica no
+    meio, que é onde a vista já está.
+  */
   return (
-    <div className="pt-28 sm:pt-36 pb-20 sm:pb-28 min-h-screen">
+    <div className="pt-28 sm:pt-36 pb-20 sm:pb-28 min-h-screen flex items-center">
       <Seo
         title={t.galleryAccess.seoTitle}
         description={t.galleryAccess.seoDescription}
       />
 
-      <section className="container-px max-w-md mx-auto">
+      {/*
+        Num ecrã grande, uma coluna de 28rem ao meio deixava dois terços da
+        página vazios e fazia a entrada parecer um formulário de serviço, e
+        não a porta de uma galeria. A partir de lg abre em duas colunas: o
+        texto de um lado, o formulário do outro, dentro de um cartão que lhe
+        dá limite. Abaixo disso continua uma coluna só, que é o certo.
+      */}
+      <section className="container-px w-full max-w-md lg:max-w-5xl mx-auto grid lg:grid-cols-2 lg:gap-16 xl:gap-24 lg:items-center">
         <Reveal>
           <div className="w-12 h-12 rounded-full border border-white/15 flex items-center justify-center mb-8">
             <Lock size={18} className="text-titanium/60" />
@@ -79,8 +91,8 @@ export default function GalleryAccess() {
           </div>
         )}
 
-        <Reveal delay={0.12}>
-          <form onSubmit={submit} className="mt-10 space-y-7">
+        <Reveal delay={0.12} className="lg:border lg:border-white/10 lg:rounded-2xl lg:p-10">
+          <form onSubmit={submit} className="mt-10 lg:mt-0 space-y-7">
             <div>
               <label className="label-sm block mb-3" htmlFor="gallery-slug">
                 {t.galleryAccess.code}
