@@ -127,6 +127,20 @@ try {
 
     if (erros.length) throw new Error(`${rota}: ${erros.join(' | ')}`)
 
+    /*
+      O preload do hero vive no casco do site, logo aparece em todas as
+      páginas — e o hero só existe nas duas iniciais. Nas restantes, o browser
+      descarregava uma imagem de 1440px em prioridade alta que nunca chegava a
+      ser mostrada: largura de banda gasta, e a competir com o que a página
+      precisa mesmo. Sai de todas as outras.
+    */
+    const temHero = rota === '/' || rota === '/en'
+    if (!temHero) {
+      await page.evaluate(() => {
+        document.querySelectorAll('link[rel="preload"][as="image"]').forEach((el) => el.remove())
+      })
+    }
+
     const html = await page.evaluate(() => `<!doctype html>\n${document.documentElement.outerHTML}`)
     if (/opacity:\s*0[;"]/.test(html)) {
       throw new Error(`${rota}: apanhou uma animação a meio (opacity: 0 no HTML)`)
