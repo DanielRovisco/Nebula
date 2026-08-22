@@ -66,7 +66,7 @@ export default function GalleryFavorites({
           ? 'A carregar…'
           : escolhidas.length === 0
             ? 'O cliente ainda não marcou nenhuma fotografia.'
-            : 'Marcadas com coração na galeria — normalmente as que o cliente quer no álbum.'}
+            : 'Marcadas com coração na galeria. Normalmente as que o cliente quer no álbum.'}
       </p>
 
       {error && (

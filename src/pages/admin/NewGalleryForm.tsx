@@ -103,7 +103,7 @@ export default function NewGalleryForm({ onClose, onCreated }: Props) {
       </div>
 
       <p className="text-xs text-titanium/35 mt-5 leading-relaxed">
-        A galeria nasce como rascunho — não abre a ninguém até a publicares.
+        A galeria nasce como rascunho. Não abre a ninguém até a publicares.
         Guarda esta password: fica cifrada no servidor e não há forma de a
         voltar a ler, só de a substituir.
       </p>

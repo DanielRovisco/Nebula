@@ -239,7 +239,7 @@ export default function GalleryView() {
 
   return (
     <div className="min-h-screen">
-      <Seo title={`${gallery.title} — NEBULA`} description={t.gallery.seoDescription} noindex />
+      <Seo title={`${gallery.title} | NEBULA`} description={t.gallery.seoDescription} noindex />
 
       <AnimatePresence>
         {showIntro && (

@@ -53,7 +53,7 @@ export default function About() {
         <Reveal>
           <Picture
             name="palace-dome"
-            alt="Cúpula de palácio fotografada de baixo — trabalho da equipa NEBULA"
+            alt="Retrato sob a cúpula de um palácio, em contraluz"
             sizes="(max-width: 768px) 100vw, 50vw"
             className="w-full rounded-2xl object-cover object-center"
             style={{ height: 'clamp(40vh, 55vh, 65vh)' }}

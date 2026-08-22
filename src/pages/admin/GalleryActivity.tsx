@@ -73,7 +73,7 @@ export default function GalleryActivity({ galleryId }: { galleryId: string }) {
         {events === null
           ? 'A carregar…'
           : events.length === 0
-            ? 'Ainda não há registo — o cliente não abriu a galeria.'
+            ? 'Ainda não há registo. O cliente não abriu a galeria.'
             : `${aberturas} ${aberturas === 1 ? 'abertura' : 'aberturas'} · ${downloads} ${
                 downloads === 1 ? 'download' : 'downloads'
               }`}

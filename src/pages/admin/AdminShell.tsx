@@ -82,7 +82,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
             <div className="mt-6 border border-amber-400/30 bg-amber-400/[0.07] rounded-xl p-4 text-xs text-amber-100/80 leading-relaxed">
               <strong className="block mb-1">Modo de demonstração</strong>
               Normalmente entra-se direto, sem este ecrã. Se chegaste aqui foi
-              por teres saído — qualquer email serve e a password só precisa de
+              por teres saído. Qualquer email serve e a password só precisa de
               3 caracteres.
             </div>
           )}
@@ -190,7 +190,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
       {DEMO && (
         <div className="container-px mb-8">
           <div className="border border-amber-400/30 bg-amber-400/[0.07] rounded-xl p-3 text-xs text-amber-100/80">
-            Modo de demonstração — entrada sem password, dados falsos e nada é
+            Modo de demonstração. Entrada sem password, dados falsos e nada é
             guardado. No site publicado o painel exige sempre login.
           </div>
         </div>

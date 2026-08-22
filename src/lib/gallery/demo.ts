@@ -45,7 +45,7 @@ function seed(): DemoState {
     {
       id: 'demo-2',
       slug: 'maternidade-rita',
-      title: 'Maternidade — Rita',
+      title: 'Maternidade de Rita',
       clientName: 'Rita Sousa',
       message: null,
       coverPath: null,

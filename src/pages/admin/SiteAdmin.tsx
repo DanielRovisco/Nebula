@@ -158,7 +158,7 @@ export default function SiteAdmin() {
       <p className="text-sm text-titanium/45 mb-10 max-w-2xl leading-relaxed">
         O que aqui mudares aparece no site sem precisar de deploy. Enquanto não
         houver fotos carregadas, o portfólio continua a mostrar as que estão no
-        código — o site nunca fica vazio.
+        código. O site nunca fica vazio.
       </p>
 
       {notice && <p className="text-xs text-emerald-300/80 mb-5">{notice}</p>}
@@ -173,7 +173,7 @@ export default function SiteAdmin() {
         <h2 className="text-xl mb-2">Categorias do portfólio</h2>
         <p className="text-xs text-titanium/35 mb-6 leading-relaxed">
           São os filtros que aparecem por cima da grelha. Apagar uma categoria
-          não apaga as fotos — ficam sem categoria à espera de nova.
+          não apaga as fotos: ficam sem categoria à espera de nova.
         </p>
 
         <ul className="border border-white/10 rounded-2xl divide-y divide-white/[0.07] mb-5 overflow-hidden">
@@ -261,7 +261,7 @@ export default function SiteAdmin() {
           />
         </div>
         <p className="text-xs text-titanium/35 mb-6 leading-relaxed">
-          Reduzidas para {SITE_EDGE}px no upload — numa página pública o peso
+          Reduzidas para {SITE_EDGE}px no upload. Numa página pública o peso
           das imagens é o que separa um site rápido de um lento.
         </p>
 
@@ -278,13 +278,13 @@ export default function SiteAdmin() {
           <div className="border border-dashed border-white/15 rounded-2xl p-12 text-center">
             <Upload size={24} className="mx-auto text-titanium/25 mb-4" />
             <p className="text-sm text-titanium/45">
-              Sem fotos carregadas — o site mostra as que estão no código.
+              Sem fotos carregadas. O site mostra as que estão no código.
             </p>
           </div>
         ) : (
           <>
             <p className="text-xs text-titanium/40 mb-4">
-              Arrasta para reordenar, ou usa as setas — o arrasto não funciona
+              Arrasta para reordenar, ou usa as setas. O arrasto não funciona
               ao toque. Clica numa fotografia para lhe editar a categoria e a
               descrição.
             </p>
@@ -401,7 +401,7 @@ export default function SiteAdmin() {
                       />
                     </div>
                     <label className="label-sm block mt-3 mb-1" htmlFor={`px-${p.id}`}>
-                      Recorte — horizontal
+                      Recorte horizontal
                     </label>
                     <input
                       id={`px-${p.id}`}
@@ -415,7 +415,7 @@ export default function SiteAdmin() {
                       className="w-full accent-titanium"
                     />
                     <label className="label-sm block mt-2 mb-1" htmlFor={`py-${p.id}`}>
-                      Recorte — vertical
+                      Recorte vertical
                     </label>
                     <input
                       id={`py-${p.id}`}
@@ -482,7 +482,7 @@ export default function SiteAdmin() {
         <p className="text-xs text-titanium/35 mb-6 leading-relaxed">
           Aparecem na página inicial, antes do último convite ao contacto.
           Enquanto não houver nenhum publicado, a secção não existe no site.
-          Escreve o que o cliente vos disse, com o nome que ele autorizou — e
+          Escreve o que o cliente vos disse, com o nome que ele autorizou, e
           pede-lhe essa autorização antes de publicar.
         </p>
 
@@ -576,7 +576,7 @@ export default function SiteAdmin() {
           ))}
           {testemunhos.length === 0 && (
             <li className="border border-dashed border-white/15 rounded-2xl p-10 text-center text-sm text-titanium/45">
-              Ainda sem testemunhos — a secção não aparece no site.
+              Ainda sem testemunhos. A secção não aparece no site.
             </li>
           )}
         </ul>
@@ -594,7 +594,7 @@ export default function SiteAdmin() {
                   // publicado no site durante o tempo que leva a escrevê-lo.
                   published: false,
                 }),
-              'Testemunho criado — está escondido até o publicares.',
+              'Testemunho criado. Fica escondido até o publicares.',
             )
           }
           className="inline-flex items-center gap-2 border border-white/20 px-5 py-3 rounded-full text-[11px] uppercase tracking-[0.18em] text-titanium/75 hover:border-white/40 transition-all min-h-[44px]"

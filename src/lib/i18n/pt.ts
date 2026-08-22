@@ -26,11 +26,11 @@ export const pt = {
   },
 
   home: {
-    seoTitle: 'NEBULA — Fotografia & Vídeo Cinematográfico em Lisboa',
+    seoTitle: 'NEBULA | Fotografia & Vídeo Cinematográfico em Lisboa',
     seoDescription:
       'Fotógrafo e videógrafo para casamentos, maternidade, retratos e eventos em Lisboa e Portalegre. Fotografia editorial e vídeo cinematográfico 4K.',
     place: 'Lisboa & Portalegre',
-    headline: ['Histórias', 'que nascem', 'em luz.'],
+    headline: ['Fotografia', 'e vídeo,', 'em Portugal.'],
     heroCta: 'Marcar Sessão',
     heroNote: 'Datas 2026 disponíveis',
     manifesto: ['"Não fotografamos momentos.', 'Eternizamos sentimentos."'],
@@ -80,15 +80,14 @@ export const pt = {
   },
 
   about: {
-    seoTitle: 'Sobre nós — NEBULA Fotografia & Vídeo',
+    seoTitle: 'Sobre nós | NEBULA Fotografia & Vídeo',
     seoDescription:
       'Somos três criadores visuais entre Lisboa e Portalegre: fotografia editorial, vídeo cinematográfico 4K e drone. Criatividade, rigor e autenticidade.',
     label: 'Sobre nós',
     title: 'O nascimento de algo novo, em cada projeto.',
-    quote:
-      '"Assim como as nebulosas representam o nascimento de algo extraordinário, a NEBULA transforma momentos em narrativas visuais que duram para sempre."',
+    quote: 'O que podemos fazer por ti?',
     intro:
-      'Somos uma equipa de três pessoas dedicadas à produção audiovisual com rigor e autenticidade. Cada projeto é abordado como único — com a criatividade e a precisão que merece. Baseados em Lisboa e Portalegre, trabalhamos em todo o Portugal.',
+      'Somos uma equipa de três pessoas dedicadas à produção audiovisual com rigor e autenticidade. Cada projeto é abordado como único, com a criatividade e a precisão que merece. Baseados em Lisboa e Portalegre, trabalhamos em todo o Portugal.',
     contactLink: 'Fala connosco',
     valuesLabel: 'Valores',
     valuesTitle: 'O que nos guia',
@@ -100,7 +99,7 @@ export const pt = {
     values: {
       creativity: {
         title: 'Criatividade',
-        desc: 'Cada projeto é uma narrativa própria — nunca uma fórmula repetida. Desenhamos cada história a partir do zero.',
+        desc: 'Cada projeto é uma narrativa própria, nunca uma fórmula repetida. Desenhamos cada história a partir do zero.',
       },
       rigour: {
         title: 'Rigor',
@@ -108,7 +107,7 @@ export const pt = {
       },
       authenticity: {
         title: 'Autenticidade',
-        desc: 'Capturamos o real, sem artifícios — emoção genuína em cada fotograma, sem encenações.',
+        desc: 'Capturamos o real, sem artifícios. Emoção genuína em cada fotograma, sem encenações.',
       },
     },
     team: {
@@ -120,16 +119,16 @@ export const pt = {
   },
 
   services: {
-    seoTitle: 'Serviços & Packs — NEBULA Fotografia & Vídeo',
+    seoTitle: 'Serviços & Packs | NEBULA Fotografia & Vídeo',
     seoDescription:
       'Packs de fotografia e vídeo para casamentos, maternidade, retratos e eventos: vídeo 4K, drone, pré-wedding, galeria online privada e sneak peek em 24h.',
     label: 'Serviços',
-    title: 'Narrativa e experiência, não apenas horas de serviço.',
+    title: 'Escolhe o que precisas.',
     seeWork: 'Ver trabalhos desta categoria',
-    addonLabel: 'Adicional',
-    addonTitle: 'Vídeo 4K em qualquer pack',
+    addonLabel: 'À medida',
+    addonTitle: 'Monta o teu pack',
     addonText:
-      'Em qualquer pack, podes adicionar filmagem cinematográfica em 4K para uma narrativa ainda mais completa — fotografia e movimento, lado a lado.',
+      'Nenhum pack tem de ficar como está. Junta vídeo 4K, drone, mais horas ou uma segunda sessão. Diz-nos o que imaginas e fazemos as contas.',
     items: {
       photoEditorial: 'Fotografia editorial',
       privateGallery: 'Galeria online privada',
@@ -156,11 +155,11 @@ export const pt = {
   },
 
   portfolio: {
-    seoTitle: 'Portfólio — NEBULA Fotografia & Vídeo',
+    seoTitle: 'Portfólio | NEBULA Fotografia & Vídeo',
     seoDescription:
       'Galeria de retratos, maternidade e casamentos fotografados pela NEBULA em Lisboa, Portalegre e restante Portugal.',
     label: 'Portfólio',
-    title: 'Cada imagem, um fragmento de história.',
+    title: 'O nosso trabalho.',
     all: 'Todos',
     filterLabel: 'Filtrar portfólio por categoria',
     openLarge: 'Ver em grande',
@@ -171,7 +170,7 @@ export const pt = {
   },
 
   contact: {
-    seoTitle: 'Contacto — NEBULA Fotografia & Vídeo',
+    seoTitle: 'Contacto | NEBULA Fotografia & Vídeo',
     seoDescription:
       'Fale connosco por email ou Instagram sobre o vosso casamento, sessão de maternidade, retratos ou evento. Lisboa e Portalegre. Resposta em menos de 24 horas.',
     label: 'Contacto',
@@ -181,7 +180,7 @@ export const pt = {
     locationLabel: 'Localização',
     location: 'Lisboa & Portalegre, Portugal',
     howLabel: 'Como falar connosco',
-    how: 'Todo o contacto é feito por email ou Instagram — é onde respondemos mais depressa e onde fica registo da conversa.',
+    how: 'Todo o contacto é feito por email ou Instagram. É onde respondemos mais depressa e onde fica registo da conversa.',
     name: 'Nome',
     namePlaceholder: 'O vosso nome',
     email: 'Email',
@@ -192,7 +191,7 @@ export const pt = {
     locationPlaceholder: 'Quinta, igreja, cidade…',
     message: 'Mensagem',
     messagePlaceholder:
-      'Contai-nos sobre o vosso dia — o que imaginam, quantos convidados, se querem vídeo…',
+      'Contem-nos o que têm em mente: quando, onde, e o que gostavam de ter no fim.',
     privacyNote: 'Ao enviar, os vossos dados são usados apenas para responder a este pedido. Sabem mais na',
     privacyLink: 'política de privacidade',
     submit: 'Enviar mensagem',
@@ -205,14 +204,14 @@ export const pt = {
     },
     sending: 'A enviar…',
     sentTitle: 'Mensagem enviada.',
-    sentText: 'Obrigado pelo contacto — respondemos em breve.',
+    sentText: 'Obrigado pelo contacto. Respondemos em breve.',
     mailtoTitle: 'Falta só enviar.',
     mailtoText: 'Abrimos o vosso programa de email com a mensagem já escrita. Basta premir enviar.',
     mailtoFallback: 'Não abriu nada? Escrevam-nos para',
     or: 'ou por',
     instagramDm: 'Instagram',
     errorText: 'Não conseguimos enviar a mensagem. Escrevam-nos diretamente para',
-    mailSubject: (servico: string, nome: string) => `Pedido de ${servico} — ${nome}`,
+    mailSubject: (servico: string, nome: string) => `Pedido de ${servico}: ${nome}`,
     mailBody: {
       name: 'Nome',
       email: 'Email',
@@ -224,30 +223,30 @@ export const pt = {
   },
 
   thanks: {
-    seoTitle: 'Obrigado — NEBULA',
+    seoTitle: 'Obrigado | NEBULA',
     seoDescription: 'Recebemos a vossa mensagem.',
     label: 'Recebido',
     title: 'Obrigado. Já temos a vossa mensagem.',
     sent: 'Respondemos em menos de 24 horas, normalmente bem antes disso. Se for urgente, o Instagram é o caminho mais rápido.',
-    mailto: 'Abrimos o vosso programa de email com a mensagem escrita — falta só carregar em enviar. Se nada abriu, escrevam-nos diretamente.',
+    mailto: 'Abrimos o vosso programa de email com a mensagem escrita. Falta só carregar em enviar. Se nada abriu, escrevam-nos diretamente.',
     next: 'Entretanto',
     seePortfolio: 'Ver o portfólio',
     seeServices: 'Serviços & packs',
   },
 
   notFound: {
-    seoTitle: 'Página não encontrada — NEBULA',
+    seoTitle: 'Página não encontrada | NEBULA',
     seoDescription: 'A página que procuras não existe ou mudou de sítio.',
     label: 'Erro 404',
     title: 'Esta página perdeu-se no escuro.',
-    text: 'O endereço não existe ou mudou de sítio. Fica aqui o caminho de volta — e, já agora, o que vale mesmo a pena ver.',
+    text: 'O endereço não existe ou mudou de sítio. Fica aqui o caminho de volta, e já agora o que vale mesmo a pena ver.',
     navLabel: 'Páginas principais',
     services: 'Serviços & preços',
     clientArea: 'Área de cliente',
   },
 
   privacy: {
-    seoTitle: 'Política de privacidade — NEBULA',
+    seoTitle: 'Política de privacidade | NEBULA',
     seoDescription:
       'Como a NEBULA trata os dados pessoais recolhidos no site: formulário de contacto, galerias privadas de cliente e estatísticas sem cookies.',
     label: 'Privacidade',
@@ -265,7 +264,7 @@ export const pt = {
       {
         title: 'Que dados recolhemos, e porquê',
         paragraphs: [
-          'Formulário de contacto. Nome, email, tipo de serviço e, se os indicares, a data e o local do evento, além da mensagem que escreveres. Servem apenas para te responder e preparar uma proposta. A base legal é o teu pedido — sem estes dados não conseguimos responder. Enquanto escreves, o texto fica guardado no teu próprio browser para não se perder se saíres da página; é apagado assim que envias, e nunca sai do teu dispositivo antes disso.',
+          'Formulário de contacto. Nome, email, tipo de serviço e, se os indicares, a data e o local do evento, além da mensagem que escreveres. Servem apenas para te responder e preparar uma proposta. A base legal é o teu pedido: sem estes dados não conseguimos responder. Enquanto escreves, o texto fica guardado no teu próprio browser para não se perder se saíres da página; é apagado assim que envias, e nunca sai do teu dispositivo antes disso.',
           'Galerias privadas. Quando és nosso cliente, criamos uma galeria protegida por password com as fotografias e os vídeos da tua sessão. Guardamos o nome que dá título à galeria, as fotografias que marcares como favoritas e um registo técnico de quando foi aberta e do que foi descarregado. Esse registo existe para percebermos se a entrega chegou bem e para detetarmos acessos indevidos; não guardamos o teu endereço IP nem qualquer identificador de dispositivo.',
           'Estatísticas do site. Usamos uma ferramenta de estatísticas sem cookies, que conta visitas de forma agregada e anónima. Não é possível identificar-te a partir dela, não seguimos ninguém entre sites, e é por isso que este site não te chateia com um aviso de cookies.',
           'Não recolhemos dados sensíveis, não fazemos decisões automatizadas sobre ti e nunca vendemos nem cedemos os teus dados a terceiros para fins comerciais.',
@@ -277,11 +276,11 @@ export const pt = {
           'Para o site funcionar recorremos a fornecedores que tratam dados por nossa conta e apenas segundo as nossas instruções:',
         ],
         list: [
-          'GitHub Pages — alojamento do site.',
-          'Supabase — base de dados das galerias e autenticação do nosso painel.',
-          'Cloudflare R2 — armazenamento das fotografias e vídeos.',
-          'Serviço de envio do formulário — encaminha para o nosso email a mensagem que escreves.',
-          'Ferramenta de estatísticas sem cookies — contagem agregada de visitas.',
+          'GitHub Pages: alojamento do site.',
+          'Supabase: base de dados das galerias e autenticação do nosso painel.',
+          'Cloudflare R2: armazenamento das fotografias e vídeos.',
+          'Serviço de envio do formulário: encaminha para o nosso email a mensagem que escreves.',
+          'Ferramenta de estatísticas sem cookies: contagem agregada de visitas.',
         ],
         after:
           'Alguns destes fornecedores são norte-americanos e podem tratar dados fora da União Europeia, ao abrigo das cláusulas contratuais-tipo da Comissão Europeia.',
@@ -290,20 +289,20 @@ export const pt = {
         title: 'Quanto tempo ficam connosco',
         paragraphs: [
           'As mensagens de contacto ficam no nosso email enquanto durar a conversa e, se não avançar para trabalho, até um ano depois.',
-          'As galerias de cliente têm uma data de validade definida na entrega — normalmente alguns meses — e avisamos-te antes de fecharem, para teres tempo de descarregar tudo. Findo esse prazo, a galeria é fechada e os ficheiros são eliminados do nosso armazenamento. Guardamos os originais do trabalho enquanto for razoável para o nosso arquivo profissional.',
+          'As galerias de cliente têm uma data de validade definida na entrega, normalmente alguns meses, e avisamos-te antes de fecharem, para teres tempo de descarregar tudo. Findo esse prazo, a galeria é fechada e os ficheiros são eliminados do nosso armazenamento. Guardamos os originais do trabalho enquanto for razoável para o nosso arquivo profissional.',
         ],
       },
       {
         title: 'Fotografias e direitos de imagem',
         paragraphs: [
           'As fotografias e vídeos que fazemos são obras nossas, e é ao contrato de cada trabalho que cabe definir o que cada parte pode fazer com eles.',
-          'Só publicamos imagens onde apareças — no portfólio, no site ou nas redes sociais — se o tiveres autorizado. Se mudares de ideias, escreve-nos e retiramos as imagens dos nossos canais o mais depressa que conseguirmos.',
+          'Só publicamos imagens onde apareças, seja no portfólio, no site ou nas redes sociais, se o tiveres autorizado. Se mudares de ideias, escreve-nos e retiramos as imagens dos nossos canais o mais depressa que conseguirmos.',
         ],
       },
       {
         title: 'Os teus direitos',
         paragraphs: [
-          'Podes pedir-nos acesso aos teus dados, correção do que estiver errado, apagamento, limitação do tratamento, uma cópia em formato legível por computador, ou opor-te a determinado tratamento. Basta escreveres — respondemos no prazo de um mês:',
+          'Podes pedir-nos acesso aos teus dados, correção do que estiver errado, apagamento, limitação do tratamento, uma cópia em formato legível por computador, ou opor-te a determinado tratamento. Basta escreveres. Respondemos no prazo de um mês:',
           'Se achares que não tratámos o assunto como devíamos, tens o direito de apresentar reclamação à Comissão Nacional de Proteção de Dados (CNPD), a autoridade de controlo em Portugal.',
         ],
       },
@@ -311,7 +310,7 @@ export const pt = {
   },
 
   galleryAccess: {
-    seoTitle: 'Galeria privada — NEBULA',
+    seoTitle: 'Galeria privada | NEBULA',
     seoDescription: 'Acesso à galeria privada de clientes NEBULA.',
     label: 'Área de clientes',
     title: 'A vossa galeria privada.',
@@ -321,7 +320,7 @@ export const pt = {
     password: 'Password',
     enter: 'Entrar',
     checking: 'A verificar…',
-    wrong: 'Código ou password incorretos. Ao fim de várias tentativas falhadas o acesso fica temporariamente bloqueado — se precisarem,',
+    wrong: 'Código ou password incorretos. Ao fim de várias tentativas falhadas o acesso fica temporariamente bloqueado. Se precisarem,',
     writeToUs: 'escrevam-nos',
     serverError: 'Não conseguimos verificar o acesso neste momento. Tentem daqui a pouco ou',
     talkToUs: 'falem connosco',
@@ -356,14 +355,14 @@ export const pt = {
     next: 'Seguinte',
     zipWarning:
       'Esta galeria é grande e o ZIP é montado na memória do dispositivo, o que pode falhar em telemóveis. Preferem descarregar assim mesmo?',
-    downloadFailed: 'O download falhou a meio. Os links podem ter expirado — voltem a entrar.',
+    downloadFailed: 'O download falhou a meio. Os links podem ter expirado. Voltem a entrar.',
     downloadOneFailed: 'Não foi possível descarregar esse ficheiro. Voltem a entrar e tentem de novo.',
     favoriteFailed: 'Não foi possível guardar essa escolha. Voltem a entrar e tentem de novo.',
     availableUntil: (data: string) => `Esta galeria fica disponível até ${data}.`,
     lastDay: (data: string) =>
       `Último dia: esta galeria fecha amanhã (${data}). Descarreguem tudo o que quiserem guardar.`,
     closingIn: (dias: number, data: string) =>
-      `Esta galeria fecha daqui a ${dias} dias, a ${data}. Descarreguem tudo o que quiserem guardar — depois disso os ficheiros deixam de estar acessíveis.`,
+      `Esta galeria fecha daqui a ${dias} dias, a ${data}. Descarreguem tudo o que quiserem guardar. Depois disso, os ficheiros deixam de estar acessíveis.`,
     viewGallery: 'Ver galeria',
     welcome: 'Bem-vindos',
     welcomeNamed: (nome: string) => `Bem-vindos, ${nome}`,

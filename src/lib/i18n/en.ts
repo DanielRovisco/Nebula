@@ -32,11 +32,11 @@ export const en: Dict = {
   },
 
   home: {
-    seoTitle: 'NEBULA — Wedding Photography & Film in Portugal',
+    seoTitle: 'NEBULA | Wedding Photography & Film in Portugal',
     seoDescription:
       'Wedding photographer and videographer in Lisbon and the Alentejo. Editorial photography and 4K cinematic film for weddings, maternity, portraits and events.',
     place: 'Lisbon & Portalegre',
-    headline: ['Stories', 'born', 'in light.'],
+    headline: ['Photography', 'and film,', 'in Portugal.'],
     heroCta: 'Book a session',
     heroNote: '2026 dates available',
     manifesto: ['"We don’t photograph moments.', 'We make feelings last."'],
@@ -86,15 +86,14 @@ export const en: Dict = {
   },
 
   about: {
-    seoTitle: 'About us — NEBULA Photography & Film',
+    seoTitle: 'About us | NEBULA Photography & Film',
     seoDescription:
       'Three visual creators between Lisbon and the Alentejo: editorial photography, 4K cinematic film and drone. Creativity, craft and honesty.',
     label: 'About us',
     title: 'Something new is born in every project.',
-    quote:
-      '"Just as nebulae stand for the birth of something extraordinary, NEBULA turns moments into visual stories that last."',
+    quote: 'What can we do for you?',
     intro:
-      'We are a team of three, working in film and photography with care and honesty. Every project is treated as its own — with the creativity and the precision it deserves. Based in Lisbon and Portalegre, we work across Portugal.',
+      'We are a team of three, working in film and photography with care and honesty. Every project is treated as its own, with the creativity and the precision it deserves. Based in Lisbon and Portalegre, we work across Portugal.',
     contactLink: 'Get in touch',
     valuesLabel: 'Values',
     valuesTitle: 'What guides us',
@@ -106,7 +105,7 @@ export const en: Dict = {
     values: {
       creativity: {
         title: 'Creativity',
-        desc: 'Every project is its own story — never a formula repeated. We design each one from scratch.',
+        desc: 'Every project is its own story, never a formula repeated. We design each one from scratch.',
       },
       rigour: {
         title: 'Craft',
@@ -114,7 +113,7 @@ export const en: Dict = {
       },
       authenticity: {
         title: 'Honesty',
-        desc: 'We capture what is really there — genuine feeling in every frame, nothing staged.',
+        desc: 'We capture what is really there. Genuine feeling in every frame, nothing staged.',
       },
     },
     team: {
@@ -126,16 +125,16 @@ export const en: Dict = {
   },
 
   services: {
-    seoTitle: 'Services & Packages — NEBULA Photography & Film',
+    seoTitle: 'Services & Packages | NEBULA Photography & Film',
     seoDescription:
       'Photography and film packages for weddings, maternity, portraits and events: 4K video, drone, pre-wedding, private online gallery and a 24-hour sneak peek.',
     label: 'Services',
-    title: 'A story and an experience, not just hours of coverage.',
+    title: 'Choose what you need.',
     seeWork: 'See work in this category',
-    addonLabel: 'Add-on',
-    addonTitle: '4K film with any package',
+    addonLabel: 'Made to fit',
+    addonTitle: 'Build your own package',
     addonText:
-      'Cinematic 4K filming can be added to any package, for a fuller story — photography and movement, side by side.',
+      'No package has to stay as it is. Add 4K film, drone, more hours or a second session. Tell us what you have in mind and we will price it.',
     items: {
       photoEditorial: 'Editorial photography',
       privateGallery: 'Private online gallery',
@@ -162,11 +161,11 @@ export const en: Dict = {
   },
 
   portfolio: {
-    seoTitle: 'Portfolio — NEBULA Photography & Film',
+    seoTitle: 'Portfolio | NEBULA Photography & Film',
     seoDescription:
-      'Weddings, maternity sessions and events photographed by NEBULA in Lisbon, the Alentejo and across Portugal.',
+      'Portraits, maternity sessions and weddings photographed by NEBULA in Lisbon, Portalegre and across Portugal.',
     label: 'Portfolio',
-    title: 'Every image, a fragment of a story.',
+    title: 'Our work.',
     all: 'All',
     filterLabel: 'Filter portfolio by category',
     openLarge: 'View larger',
@@ -177,7 +176,7 @@ export const en: Dict = {
   },
 
   contact: {
-    seoTitle: 'Contact — NEBULA Photography & Film',
+    seoTitle: 'Contact | NEBULA Photography & Film',
     seoDescription:
       'Talk to us by email or Instagram about your wedding, maternity session, portraits or event. Lisbon and the Alentejo. We reply within 24 hours.',
     label: 'Contact',
@@ -187,7 +186,7 @@ export const en: Dict = {
     locationLabel: 'Based in',
     location: 'Lisbon & Portalegre, Portugal',
     howLabel: 'How to reach us',
-    how: 'We work by email and Instagram — that is where we answer fastest and where the conversation stays on record.',
+    how: 'We work by email and Instagram. That is where we answer fastest and where the conversation stays on record.',
     name: 'Name',
     namePlaceholder: 'Your name',
     email: 'Email',
@@ -198,7 +197,7 @@ export const en: Dict = {
     locationPlaceholder: 'Venue, church, town…',
     message: 'Message',
     messagePlaceholder:
-      'Tell us about your day — what you picture, how many guests, whether you want film…',
+      'Tell us what you have in mind: when, where, and what you would like to have at the end.',
     privacyNote:
       'By sending this, your details are used only to answer this enquiry. There is more in our',
     privacyLink: 'privacy policy',
@@ -212,14 +211,14 @@ export const en: Dict = {
     },
     sending: 'Sending…',
     sentTitle: 'Message sent.',
-    sentText: 'Thank you for writing — we will be in touch shortly.',
+    sentText: 'Thank you for writing. We will be in touch shortly.',
     mailtoTitle: 'One step left.',
     mailtoText: 'We have opened your email app with the message already written. Just press send.',
     mailtoFallback: 'Nothing opened? Write to us at',
     or: 'or by',
     instagramDm: 'Instagram',
     errorText: 'We could not send your message. Please write to us directly at',
-    mailSubject: (servico: string, nome: string) => `${servico} enquiry — ${nome}`,
+    mailSubject: (servico: string, nome: string) => `${servico} enquiry: ${nome}`,
     mailBody: {
       name: 'Name',
       email: 'Email',
@@ -231,30 +230,30 @@ export const en: Dict = {
   },
 
   thanks: {
-    seoTitle: 'Thank you — NEBULA',
+    seoTitle: 'Thank you | NEBULA',
     seoDescription: 'We have your message.',
     label: 'Received',
     title: 'Thank you. We have your message.',
     sent: 'We reply within 24 hours, usually well before that. If it is urgent, Instagram is the fastest way to reach us.',
-    mailto: 'We opened your email app with the message written — all that is left is to press send. If nothing opened, write to us directly.',
+    mailto: 'We opened your email app with the message written. All that is left is to press send. If nothing opened, write to us directly.',
     next: 'In the meantime',
     seePortfolio: 'See the portfolio',
     seeServices: 'Services & packages',
   },
 
   notFound: {
-    seoTitle: 'Page not found — NEBULA',
+    seoTitle: 'Page not found | NEBULA',
     seoDescription: 'The page you are looking for does not exist or has moved.',
     label: 'Error 404',
     title: 'This page got lost in the dark.',
-    text: 'That address does not exist, or it has moved. Here is the way back — and, while you are here, what is actually worth seeing.',
+    text: 'That address does not exist, or it has moved. Here is the way back, and while you are here, what is actually worth seeing.',
     navLabel: 'Main pages',
     services: 'Services & pricing',
     clientArea: 'Client area',
   },
 
   privacy: {
-    seoTitle: 'Privacy policy — NEBULA',
+    seoTitle: 'Privacy policy | NEBULA',
     seoDescription:
       'How NEBULA handles the personal data collected on this site: the contact form, private client galleries and cookie-free analytics.',
     label: 'Privacy',
@@ -272,7 +271,7 @@ export const en: Dict = {
       {
         title: 'What we collect, and why',
         paragraphs: [
-          'Contact form. Your name, email, the type of service and, if you give them, the date and location of the event, along with whatever you write. They are used only to reply to you and prepare a proposal. The legal basis is your own enquiry — without this we cannot answer you. While you type, the text is kept in your own browser so it is not lost if you leave the page; it is deleted the moment you send, and never leaves your device before that.',
+          'Contact form. Your name, email, the type of service and, if you give them, the date and location of the event, along with whatever you write. They are used only to reply to you and prepare a proposal. The legal basis is your own enquiry: without this we cannot answer you. While you type, the text is kept in your own browser so it is not lost if you leave the page; it is deleted the moment you send, and never leaves your device before that.',
           'Private galleries. When you are a client, we create a password-protected gallery with the photographs and films from your session. We store the name that titles the gallery, the photographs you mark as favourites, and a technical record of when it was opened and what was downloaded. That record exists so we know the delivery arrived and can spot unauthorised access; we do not store your IP address or any device identifier.',
           'Site analytics. We use a cookie-free analytics tool that counts visits in aggregate and anonymously. You cannot be identified from it, nobody is tracked across sites, and that is why this site does not bother you with a cookie banner.',
           'We do not collect sensitive data, we make no automated decisions about you, and we never sell or pass your data to third parties for commercial purposes.',
@@ -284,11 +283,11 @@ export const en: Dict = {
           'For the site to work we rely on providers who handle data on our behalf and only on our instructions:',
         ],
         list: [
-          'GitHub Pages — hosting for the site.',
-          'Supabase — the gallery database and the login for our admin panel.',
-          'Cloudflare R2 — storage for photographs and films.',
-          'Form delivery service — passes the message you write to our inbox.',
-          'Cookie-free analytics tool — aggregate visit counts.',
+          'GitHub Pages: hosting for the site.',
+          'Supabase: the gallery database and the login for our admin panel.',
+          'Cloudflare R2: storage for photographs and films.',
+          'Form delivery service: passes the message you write to our inbox.',
+          'Cookie-free analytics tool: aggregate visit counts.',
         ],
         after:
           'Some of these providers are US-based and may process data outside the European Union, under the European Commission’s standard contractual clauses.',
@@ -297,20 +296,20 @@ export const en: Dict = {
         title: 'How long we keep it',
         paragraphs: [
           'Contact messages stay in our inbox for as long as the conversation lasts and, if it does not turn into work, for up to a year afterwards.',
-          'Client galleries have an expiry date set at delivery — usually a few months — and we warn you before they close, so you have time to download everything. After that the gallery is closed and the files are deleted from our storage. We keep the original work for as long as is reasonable for our professional archive.',
+          'Client galleries have an expiry date set at delivery, usually a few months, and we warn you before they close, so you have time to download everything. After that the gallery is closed and the files are deleted from our storage. We keep the original work for as long as is reasonable for our professional archive.',
         ],
       },
       {
         title: 'Photographs and image rights',
         paragraphs: [
           'The photographs and films we make are our own work, and it is each job’s contract that sets out what either side may do with them.',
-          'We only publish images you appear in — in the portfolio, on the site or on social media — if you have agreed to it. If you change your mind, write to us and we will take them down from our channels as quickly as we can.',
+          'We only publish images you appear in, whether in the portfolio, on the site or on social media, if you have agreed to it. If you change your mind, write to us and we will take them down from our channels as quickly as we can.',
         ],
       },
       {
         title: 'Your rights',
         paragraphs: [
-          'You can ask us for access to your data, correction of anything wrong, deletion, restriction of processing, a machine-readable copy, or object to a particular use. Just write to us — we answer within one month:',
+          'You can ask us for access to your data, correction of anything wrong, deletion, restriction of processing, a machine-readable copy, or object to a particular use. Just write to us. We answer within one month:',
           'If you believe we have not handled it as we should, you have the right to complain to the Comissão Nacional de Proteção de Dados (CNPD), the supervisory authority in Portugal.',
         ],
       },
@@ -318,7 +317,7 @@ export const en: Dict = {
   },
 
   galleryAccess: {
-    seoTitle: 'Client gallery — NEBULA',
+    seoTitle: 'Client gallery | NEBULA',
     seoDescription: 'Access to your private NEBULA client gallery.',
     label: 'Client area',
     title: 'Your private gallery.',
@@ -328,7 +327,7 @@ export const en: Dict = {
     password: 'Password',
     enter: 'Enter',
     checking: 'Checking…',
-    wrong: 'Wrong code or password. After several failed attempts access is temporarily blocked — if you need us,',
+    wrong: 'Wrong code or password. After several failed attempts access is temporarily blocked. If you need us,',
     writeToUs: 'write to us',
     serverError: 'We cannot verify your access right now. Please try again shortly, or',
     talkToUs: 'get in touch',
@@ -363,14 +362,14 @@ export const en: Dict = {
     next: 'Next',
     zipWarning:
       'This gallery is large and the ZIP is assembled in your device memory, which can fail on phones. Would you like to download it anyway?',
-    downloadFailed: 'The download failed part-way. The links may have expired — please sign in again.',
+    downloadFailed: 'The download failed part-way. The links may have expired. Please sign in again.',
     downloadOneFailed: 'We could not download that file. Please sign in again and try once more.',
     favoriteFailed: 'We could not save that choice. Please sign in again and try once more.',
     availableUntil: (data: string) => `This gallery is available until ${data}.`,
     lastDay: (data: string) =>
       `Last day: this gallery closes tomorrow (${data}). Please download anything you want to keep.`,
     closingIn: (dias: number, data: string) =>
-      `This gallery closes in ${dias} days, on ${data}. Please download anything you want to keep — after that the files are no longer available.`,
+      `This gallery closes in ${dias} days, on ${data}. Please download anything you want to keep. After that the files are no longer available.`,
     viewGallery: 'View gallery',
     welcome: 'Welcome',
     welcomeNamed: (nome: string) => `Welcome, ${nome}`,

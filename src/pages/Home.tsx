@@ -135,7 +135,7 @@ export default function Home() {
         >
           <Picture
             name="hero-beach-dress"
-            alt="Vestido de noiva a esvoaçar numa praia ao final do dia — fotografia editorial NEBULA"
+            alt="Vestido longo branco numa praia, entre falésias, ao final do dia"
             sizes="100vw"
             priority
             className="w-full h-full object-cover object-[50%_25%]"
@@ -234,7 +234,7 @@ export default function Home() {
           <Reveal delay={0.22} className="mt-10 sm:mt-14">
             <p className="text-sm text-titanium/50 max-w-sm leading-relaxed">
               Cada projeto é uma narrativa única. Abordamos cada momento com
-              criatividade, rigor e autenticidade — sem fórmulas, sem repetições.
+              criatividade, rigor e autenticidade. Sem fórmulas, sem repetições.
             </p>
           </Reveal>
         </div>

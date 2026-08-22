@@ -271,7 +271,7 @@ export default function GalleryEditor() {
       <p className="text-xs text-titanium/30 mb-10">
         {gallery.published
           ? 'Está acessível a quem tiver o link e a password.'
-          : 'Em rascunho — não abre a ninguém, nem com a password certa.'}
+          : 'Em rascunho. Não abre a ninguém, nem com a password certa.'}
       </p>
 
       {notice && <p className="text-xs text-emerald-300/80 mb-5">{notice}</p>}
@@ -326,7 +326,7 @@ export default function GalleryEditor() {
             className="w-4 h-4 accent-[#fcfff0]"
           />
           <span className="text-xs text-titanium/50">
-            Reduzir fotos para {DELIVERY_EDGE}px no lado maior — ocupa 3 a 5
+            Reduzir fotos para {DELIVERY_EDGE}px no lado maior. Ocupa 3 a 5
             vezes menos, sem diferença visível para o cliente. Vídeos sobem
             sempre intactos.
           </span>
@@ -358,7 +358,7 @@ export default function GalleryEditor() {
         ) : (
           <>
             <p className="text-xs text-titanium/30 mb-4">
-              Arrasta para reordenar, ou usa as setas em cada foto — o arrasto
+              Arrasta para reordenar, ou usa as setas em cada foto. O arrasto
               não funciona ao toque. É esta a ordem que o cliente vê.
             </p>
             <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
@@ -444,7 +444,7 @@ export default function GalleryEditor() {
         <h2 className="text-xl mb-2">Capa</h2>
         <p className="text-xs text-titanium/35 mb-6 leading-relaxed">
           É o primeiro ecrã que o cliente vê. Escolhe a fotografia clicando na
-          estrela de uma das miniaturas acima — sem escolha, usa a primeira.
+          estrela de uma das miniaturas acima. Sem escolha, usa a primeira.
         </p>
 
         <div className="grid sm:grid-cols-2 gap-6">
@@ -561,7 +561,7 @@ export default function GalleryEditor() {
             <p className="text-[10px] text-titanium/25 mt-1.5 leading-relaxed">
               Depois desta data a galeria deixa de abrir. O cliente vê o prazo
               na galeria, e a partir de 30 dias antes o aviso passa a destacado
-              — ninguém deve perder as fotografias por não ter sido avisado.
+              Ninguém deve perder as fotografias por não ter sido avisado.
             </p>
           </div>
         </div>
@@ -602,7 +602,7 @@ export default function GalleryEditor() {
       <section className="mb-14 max-w-2xl">
         <h2 className="text-xl mb-2">Password</h2>
         <p className="text-xs text-titanium/35 mb-5 leading-relaxed">
-          A password atual não pode ser lida — está guardada cifrada. Se o
+          A password atual não pode ser lida: está guardada cifrada. Se o
           cliente a perder, define uma nova aqui.
         </p>
         <div className="flex items-end gap-3 flex-wrap">

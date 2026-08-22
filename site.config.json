@@ -4,7 +4,7 @@
     "",
     "Daqui saem o base do Vite, o basename do router, o SITE_URL usado nos",
     "canonical/og/hreflang, o sitemap.xml e o manifest. Mudar de domínio é",
-    "mudar estes dois valores e correr `npm run build` — nada mais.",
+    "mudar estes dois valores e correr `npm run build`, e mais nada.",
     "",
     "Com domínio próprio:",
     "  origin: \"https://proj3ctnebula.pt\"",

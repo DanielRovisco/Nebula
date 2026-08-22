@@ -27,7 +27,7 @@ export const DEMO_TESTIMONIAL: Testimonial = {
   author: 'Exemplo',
   context: 'É assim que um testemunho fica no site',
   quote:
-    'Aqui aparece o que os vossos clientes escreverem sobre o dia. Este texto é um exemplo da demonstração — os testemunhos reais escrevem-se no painel.',
+    'Aqui aparece o que os vossos clientes escreverem sobre o dia. Este texto é um exemplo da demonstração; os testemunhos reais escrevem-se no painel.',
   sortOrder: 0,
   published: true,
 }
