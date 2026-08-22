@@ -55,6 +55,20 @@ jobs:
             echo "::warning::VITE_CONTACT_ENDPOINT vazio: o formulário abre o programa de email em vez de enviar."
           else
             echo "VITE_CONTACT_ENDPOINT presente (${#FORM} caracteres)."
+            # O painel do Formspree vive em /forms/<id> e o endereço de envio é
+            # /f/<id>. Quem copia da barra do browser apanha o primeiro, e o
+            # site fica a enviar para uma página em vez de para o serviço.
+            case "$FORM" in
+              *formspree.io/forms/*)
+                echo "::error::VITE_CONTACT_ENDPOINT aponta para a página do painel (/forms/). O endereço de envio é https://formspree.io/f/<id>."
+                exit 1 ;;
+              *formspree.io/f/*) echo "Formato do endereço do Formspree: correcto." ;;
+              https://*) echo "Endereço de formulário não-Formspree; formato não verificado." ;;
+              *) echo "::error::VITE_CONTACT_ENDPOINT não começa por https://"; exit 1 ;;
+            esac
+            case "$FORM" in
+              */) echo "::warning::VITE_CONTACT_ENDPOINT acaba em barra; o serviço pode recusar." ;;
+            esac
           fi
           echo "Secrets presentes."
 
