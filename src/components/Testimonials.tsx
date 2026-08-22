@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Reveal from '../lib/Reveal'
 import { useT } from '../lib/i18n'
 import { useTestimonials } from '../lib/site-content/useSiteContent'
+import { useFaixa } from '../lib/useFaixa'
 
 /**
  * O que os clientes dizem, numa faixa que se arrasta para o lado.
@@ -19,6 +20,15 @@ export default function Testimonials() {
   const t = useT()
   const testemunhos = useTestimonials()
   const faixa = useRef<HTMLDivElement>(null)
+  /*
+    Movimento automático e arrasto com o rato, na mesma faixa que já existia.
+
+    Só a partir de quatro testemunhos: com três eles cabem todos num ecrã
+    largo, e uma faixa a andar sem ter para onde ir é ruído. Mais devagar do
+    que a das fotografias, porque isto é para ler — e pára com o rato em cima
+    ou com o teclado lá dentro, que é o que permite acabar a frase.
+  */
+  const auto = useFaixa(16, { ref: faixa, ativo: testemunhos.length > 3 })
   // Extremos da faixa, para não deixar setas activas que não fazem nada.
   const [naInicial, setNaInicial] = useState(true)
   const [naFinal, setNaFinal] = useState(false)
@@ -111,18 +121,36 @@ export default function Testimonials() {
           fora do ecrã ficava inalcançável para quem não usa rato nem toque.
         */}
         <div
-          ref={faixa}
+          {...auto.props}
           onScroll={aoDeslizar}
           tabIndex={desliza ? 0 : -1}
           role={desliza ? 'region' : undefined}
           aria-label={desliza ? t.testimonials.title : undefined}
           className={`faixa-testemunhos container-px flex gap-4 sm:gap-5 ${
-            varios ? 'overflow-x-auto snap-x snap-mandatory' : ''
+            /*
+              O encaixe sai quando a faixa anda sozinha: puxava-a de volta ao
+              cartão mais próximo a cada fotograma e o movimento não saía do
+              sítio. Parada, o encaixe é bom — é o que faz cada cartão ficar
+              inteiro no ecrã ao arrastar com o dedo.
+            */
+            varios
+              ? `overflow-x-auto cursor-grab active:cursor-grabbing select-none ${
+                  auto.ativo ? '' : 'snap-x snap-mandatory'
+                }`
+              : ''
           }`}
         >
-          {testemunhos.map((item, i) => (
+          {/*
+            Com movimento automático, a lista é desenhada duas vezes: é a
+            segunda passagem que deixa voltar ao princípio a meio sem se ver o
+            salto. A cópia fica escondida de quem lê por voz, senão ouvia cada
+            testemunho duas vezes seguidas.
+          */}
+          {(auto.ativo ? [0, 1] : [0]).map((passagem) =>
+            testemunhos.map((item, i) => (
             <Reveal
-              key={item.id}
+              key={`${passagem}-${item.id}`}
+              aria-hidden={passagem === 1 || undefined}
               delay={Math.min(i * 0.08, 0.24)}
               className={
                 /*
@@ -135,7 +163,7 @@ export default function Testimonials() {
                   nada para elas fazerem.
                 */
                 varios
-                  ? 'snap-start max-lg:shrink-0 w-[82vw] sm:w-[340px] lg:w-auto lg:flex-1'
+                  ? `snap-start w-[82vw] sm:w-[340px] ${auto.ativo ? 'shrink-0' : 'max-lg:shrink-0 lg:w-auto lg:flex-1'}`
                   : 'max-w-2xl'
               }
             >
@@ -154,7 +182,8 @@ export default function Testimonials() {
                 </figcaption>
               </figure>
             </Reveal>
-          ))}
+            )),
+          )}
         </div>
       </section>
     </>

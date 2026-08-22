@@ -13,6 +13,7 @@ import Testimonials from '../components/Testimonials'
 import { asset } from '../lib/asset'
 import { CONTACT, absoluteUrl } from '../lib/site'
 import { businessJsonLd } from '../lib/businessJsonLd'
+import { useFaixa, baralhar } from '../lib/useFaixa'
 
 // O `id` casa com as categorias de /servicos: o cartão abre logo a categoria
 // certa no acordeão, em vez de cair sempre na primeira.
@@ -74,6 +75,14 @@ export default function Home() {
   const link = useLink()
   const reduced = useReducedMotion()
   const heroRef = useRef<HTMLDivElement>(null)
+
+  /*
+    Ordem baralhada uma vez por visita. Numa fila que se percorre, as últimas
+    fotografias são as que quase ninguém chega a ver — e são tão boas como as
+    primeiras. Assim cada visita mostra outras à cabeça.
+  */
+  const [galeria] = useState(() => baralhar(GALLERY))
+  const faixa = useFaixa()
 
   const [showIntro, setShowIntro] = useState(() => {
     try {
@@ -338,20 +347,36 @@ export default function Home() {
           </Reveal>
         </div>
 
-        <div className="flex gap-3 sm:gap-4 overflow-x-auto px-[clamp(1.25rem,6vw,6rem)] pb-4 snap-x snap-mandatory [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
-          {GALLERY.map((item, i) => (
-            <Reveal key={item.name} delay={i * 0.06} className="shrink-0 snap-start">
-              <div className="w-[70vw] sm:w-[34vw] md:w-[27vw] overflow-hidden rounded-xl" style={{ height: 'clamp(48vh, 58vh, 65vh)' }}>
+        {/*
+          Sem `snap`: com a faixa a andar sozinha, o encaixe puxava-a de volta
+          ao cartão mais próximo a cada instante e o movimento saía aos
+          solavancos.
+
+          A segunda passagem é a mesma lista outra vez, escondida de quem lê
+          por voz — é ela que permite voltar ao princípio a meio sem se notar.
+        */}
+        <div
+          {...faixa.props}
+          className="flex gap-3 sm:gap-4 overflow-x-auto px-[clamp(1.25rem,6vw,6rem)] pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [-webkit-overflow-scrolling:touch] cursor-grab active:cursor-grabbing select-none"
+        >
+          {[0, 1].map((passagem) =>
+            galeria.map((item) => (
+              <div
+                key={`${passagem}-${item.name}`}
+                aria-hidden={passagem === 1 || undefined}
+                className="shrink-0 w-[70vw] sm:w-[34vw] md:w-[27vw] overflow-hidden rounded-xl"
+                style={{ height: 'clamp(48vh, 58vh, 65vh)' }}
+              >
                 <Picture
                   name={item.name}
-                  alt={item.alt}
+                  alt={passagem === 1 ? '' : item.alt}
                   sizes="(max-width: 640px) 70vw, (max-width: 768px) 34vw, 27vw"
                   style={{ objectPosition: item.pos }}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                  className="w-full h-full object-cover pointer-events-none"
                 />
               </div>
-            </Reveal>
-          ))}
+            )),
+          )}
         </div>
       </section>
 
