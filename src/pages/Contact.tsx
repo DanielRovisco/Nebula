@@ -68,15 +68,21 @@ export default function Contact() {
   // automático toca. E o instante em que o formulário apareceu — um humano não
   // escreve tudo isto em três segundos.
   const [armadilha, setArmadilha] = useState('')
-  // Um humano toca nos campos antes de enviar — mesmo com preenchimento
-  // automático, o browser dispara os eventos. Um robô que submeta o formulário
-  // por código nunca o faz.
-  //
-  // Cheguei a descartar também os envios feitos em menos de três segundos, e
-  // estava errado: alguém com o preenchimento automático do browser envia num
-  // instante, e o castigo era a mensagem desaparecer sem ninguém saber. Perder
-  // um pedido real é muito pior do que deixar passar spam.
-  const [interagiu, setInteragiu] = useState(false)
+  /*
+    Já não se exige ter havido escrita no formulário para o envio contar.
+
+    Era a segunda regra deste género a deitar fora mensagens verdadeiras. A
+    primeira descartava envios feitos em menos de três segundos e caía em cima
+    de quem usa preenchimento automático. Esta caía em cima de quem volta à
+    página com um rascunho guardado: o formulário aparece preenchido, a pessoa
+    carrega em enviar sem escrever nada de novo, e a mensagem era descartada —
+    com a página de agradecimento à frente, para ninguém dar por isso.
+
+    Fica só a armadilha: um campo escondido que só um robô preenche. É sinal
+    fiável, ao contrário de "não vi ninguém escrever", que é apenas a ausência
+    de um sinal. Perder um pedido real custa muito mais do que deixar passar
+    spam, que ainda leva com o filtro do serviço de formulários pela frente.
+  */
 
   // Guarda o que está escrito, para não se perder ao sair da página à procura
   // da data. Fica no dispositivo de quem escreve e nunca é enviado por si só.
@@ -153,7 +159,7 @@ export default function Contact() {
 
     // Robô apanhado: nem envia nem avisa. Dizer "detetámos um robô" só ensina
     // o próximo a contornar.
-    if (armadilha || !interagiu) {
+    if (armadilha) {
       navigate(link('thanks'), { state: { via: 'form' } })
       return
     }
@@ -299,7 +305,6 @@ export default function Contact() {
           <form
             onSubmit={handleSubmit}
             noValidate
-            onInput={() => setInteragiu(true)}
             className="space-y-7"
           >
             {rascunho && (
