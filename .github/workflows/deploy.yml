@@ -33,6 +33,7 @@ jobs:
           URL: ${{ secrets.VITE_SUPABASE_URL }}
           ANON: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           R2: ${{ secrets.VITE_R2_PUBLIC_URL }}
+          FORM: ${{ secrets.VITE_CONTACT_ENDPOINT }}
         run: |
           falta=""
           [ -z "$URL" ] && falta="$falta VITE_SUPABASE_URL"
@@ -47,6 +48,14 @@ jobs:
           # O R2 público só serve fotografias carregadas pelo painel. O site
           # marketing usa as imagens do repositório, por isso isto avisa e segue.
           [ -z "$R2" ] && echo "::warning::VITE_R2_PUBLIC_URL vazio: fotografias carregadas pelo painel não aparecem."
+          # O do formulário não é obrigatório — sem ele o site abre o programa
+          # de email do visitante, que funciona. Mas é indistinguível de "está
+          # configurado e falhou", por isso fica dito qual dos dois é.
+          if [ -z "$FORM" ]; then
+            echo "::warning::VITE_CONTACT_ENDPOINT vazio: o formulário abre o programa de email em vez de enviar."
+          else
+            echo "VITE_CONTACT_ENDPOINT presente (${#FORM} caracteres)."
+          fi
           echo "Secrets presentes."
 
       # O build e a pré-renderização ficam em passos separados de propósito: se
