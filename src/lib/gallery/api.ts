@@ -144,6 +144,7 @@ const rowToGallery = (r: Record<string, unknown>): Gallery => ({
   logoVariant: ((r.logo_variant as string) ?? 'white') as Gallery['logoVariant'],
   published: Boolean(r.published),
   downloadEnabled: Boolean(r.download_enabled),
+  lockAttempts: r.lock_attempts === undefined ? true : Boolean(r.lock_attempts),
   expiresAt: (r.expires_at as string) ?? null,
   createdAt: r.created_at as string,
 })
@@ -225,6 +226,7 @@ const realApi = {
         password_hash: 'pending',
         published: input.published ?? false,
         download_enabled: input.downloadEnabled ?? true,
+        lock_attempts: input.lockAttempts ?? true,
         expires_at: input.expiresAt ?? null,
         cover_title: input.coverTitle ?? null,
         cover_font: input.coverFont ?? 'serif',
@@ -259,6 +261,7 @@ const realApi = {
     if (patch.message !== undefined) update.message = patch.message || null
     if (patch.published !== undefined) update.published = patch.published
     if (patch.downloadEnabled !== undefined) update.download_enabled = patch.downloadEnabled
+    if (patch.lockAttempts !== undefined) update.lock_attempts = patch.lockAttempts
     if (patch.expiresAt !== undefined) update.expires_at = patch.expiresAt
     if (patch.coverPhotoId !== undefined) update.cover_photo_id = patch.coverPhotoId
     if (patch.coverTitle !== undefined) update.cover_title = patch.coverTitle || null

@@ -28,9 +28,15 @@ create table if not exists galleries (
   download_enabled boolean not null default true,
   -- Depois desta data a galeria deixa de abrir. Null = sem prazo.
   expires_at timestamptz,
+  -- Fecha o acesso ao fim de dez tentativas falhadas numa hora. Desliga-se no
+  -- painel, por galeria, para se poder testar uma entrega sem ficar trancado.
+  lock_attempts boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Para bases criadas antes desta coluna existir.
+alter table galleries add column if not exists lock_attempts boolean not null default true;
 
 create table if not exists photos (
   id uuid primary key default gen_random_uuid(),
@@ -129,7 +135,7 @@ drop view if exists galleries_admin;
 create view galleries_admin as
   select id, slug, title, client_name, message, cover_path, cover_photo_id,
          cover_title, cover_font, logo_variant, published, download_enabled,
-         expires_at, created_at, updated_at
+         lock_attempts, expires_at, created_at, updated_at
   from galleries;
 
 -- ─── Verificação de acesso do cliente ──────────────────────────────────────
@@ -170,25 +176,32 @@ returns table (
   set search_path = public, extensions as $$
 declare
   recent_failures int;
-  /*
-    Quantas falhas na última hora fecham o acesso, mesmo com a password certa.
-
-    Está alto de propósito, para não estorvar os testes. O valor de produção é
-    10: com ele, quem anda a adivinhar passwords desiste depressa, e é uma
-    linha a mudar aqui.
-
-    Mesmo assim, a defesa a sério é o comprimento da password gerada; este
-    travão é o segundo cadeado, não o primeiro.
-  */
-  max_falhas constant int := 100000;
+  travar boolean;
+  -- Falhas na última hora que fecham o acesso, mesmo com a password certa.
+  -- A defesa a sério é o comprimento da password gerada; isto é o segundo
+  -- cadeado, para quem anda a adivinhar desistir depressa.
+  max_falhas constant int := 10;
 begin
-  select count(*) into recent_failures
-  from access_attempts a
-  where lower(a.slug) = lower(p_slug) and not a.ok and a.at > now() - interval '1 hour';
+  /*
+    O travão liga-se e desliga-se por galeria, no painel. Serve para testar
+    uma entrega sem ficar fechado à décima tentativa.
 
-  if recent_failures >= max_falhas then
-    insert into access_attempts (slug, ok) values (p_slug, false);
-    return;
+    Um slug que não existe é tratado como se tivesse travão: senão, a
+    diferença entre bloquear e não bloquear dizia a quem está do lado de fora
+    se a galeria existe.
+  */
+  select g.lock_attempts into travar
+  from galleries g where lower(g.slug) = lower(p_slug);
+
+  if coalesce(travar, true) then
+    select count(*) into recent_failures
+    from access_attempts a
+    where lower(a.slug) = lower(p_slug) and not a.ok and a.at > now() - interval '1 hour';
+
+    if recent_failures >= max_falhas then
+      insert into access_attempts (slug, ok) values (p_slug, false);
+      return;
+    end if;
   end if;
 
   return query
@@ -317,6 +330,7 @@ create table if not exists site_photos (
 -- acima não toca numa tabela que já exista, por isso a coluna entra aqui.
 alter table site_photos add column if not exists pos text not null default '50% 50%';
 alter table site_photos add column if not exists content_type text;
+
 
 create index if not exists site_photos_idx on site_photos (sort_order);
 

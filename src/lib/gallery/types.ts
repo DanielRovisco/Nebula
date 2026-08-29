@@ -16,6 +16,8 @@ export interface Gallery {
   logoVariant: LogoVariant
   published: boolean
   downloadEnabled: boolean
+  /** Fecha o acesso ao fim de dez tentativas falhadas numa hora. */
+  lockAttempts: boolean
   expiresAt: string | null
   createdAt: string
   photoCount?: number
@@ -96,6 +98,7 @@ export type NewGallery = {
   password: string
   published?: boolean
   downloadEnabled?: boolean
+  lockAttempts?: boolean
   expiresAt?: string | null
   coverPhotoId?: string | null
   coverTitle?: string | null

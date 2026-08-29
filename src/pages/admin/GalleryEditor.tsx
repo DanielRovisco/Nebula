@@ -716,6 +716,27 @@ export default function GalleryEditor() {
           />
           <span className="text-sm text-titanium/70">Permitir download das fotografias</span>
         </label>
+
+        {/*
+          O travão de tentativas, por galeria. Existe para se poder testar uma
+          entrega sem ficar trancado à décima vez que se engana a password.
+        */}
+        <label className="flex items-start gap-3 mt-5 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={gallery.lockAttempts}
+            onChange={(e) => patch({ lockAttempts: e.target.checked })}
+            className="w-4 h-4 accent-[#fcfff0] mt-0.5"
+          />
+          <span className="text-sm text-titanium/70">
+            Fechar o acesso ao fim de 10 tentativas falhadas numa hora
+            <span className="block text-xs text-titanium/40 mt-1">
+              {gallery.lockAttempts
+                ? 'Protege contra quem anda a adivinhar a password. Desliga para testar.'
+                : 'Desligado: qualquer número de tentativas é aceite. Volta a ligar antes de entregar.'}
+            </span>
+          </span>
+        </label>
       </section>
 
       {/* ── Atividade ───────────────────────────────────────── */}
