@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Download, Heart, Package, Pause, Play, X } from 'lucide-react'
 import Seo from '../lib/Seo'
+import { linhasJustificadas } from '../lib/linhasJustificadas'
 import { loadSession, clearSession } from '../lib/gallery/session'
 import { ROUTES } from '../lib/i18n/routes'
 import { downloadAll, downloadOne, ZIP_WARN_BYTES, type ZipProgress } from '../lib/gallery/download'
@@ -48,6 +49,22 @@ export default function GalleryView() {
   const { slug = '' } = useParams()
   const navigate = useNavigate()
   const reduced = useReducedMotion()
+
+  /*
+    A largura é medida, não adivinhada: as linhas justificadas precisam de
+    saber com quantos pixels contam, e isso muda com o ecrã, com a barra de
+    deslocamento e com a rotação do telemóvel.
+  */
+  const grelhaRef = useRef<HTMLDivElement>(null)
+  const [larguraGrelha, setLarguraGrelha] = useState(0)
+  useEffect(() => {
+    const el = grelhaRef.current
+    if (!el) return
+    const obs = new ResizeObserver(() => setLarguraGrelha(el.clientWidth))
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
   // Estado inicial derivado da sessão guardada: evita um render vazio seguido
   // de setState dentro do efeito.
   const [access] = useState<GalleryAccess | null>(() => loadSession(slug))
@@ -79,6 +96,21 @@ export default function GalleryView() {
   }, [access, slug, lang, navigate])
 
   const photos = useMemo(() => access?.photos ?? [], [access])
+  /*
+    Alturas diferentes por ecrã: no telemóvel, linhas de 300px dariam uma
+    fotografia por linha e uma galeria de 200 com dois metros de altura.
+  */
+  const alturaAlvo = larguraGrelha < 480 ? 170 : larguraGrelha < 900 ? 230 : 300
+  const goteira = larguraGrelha < 640 ? 8 : 12
+  const linhas = useMemo(
+    () => linhasJustificadas(photos, larguraGrelha, alturaAlvo, goteira),
+    [photos, larguraGrelha, alturaAlvo, goteira],
+  )
+  // O índice original importa: é o que o lightbox usa para saber onde está.
+  const indicePorId = useMemo(
+    () => new Map(photos.map((f, i) => [f.id, i])),
+    [photos],
+  )
   const totalBytes = useMemo(
     () => photos.reduce((sum, p) => sum + (p.sizeBytes ?? 0), 0),
     [photos],
@@ -383,15 +415,27 @@ export default function GalleryView() {
               {t.gallery.empty}
             </p>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
-              {photos.map((photo, i) => (
+            <div ref={grelhaRef} className="flex flex-col gap-2 sm:gap-3">
+              {/*
+                Linhas justificadas em vez de uma grelha de quadrados. Cortar
+                tudo a 3:4 dava uma parede regular, mas roubava metade de cada
+                fotografia deitada e punha o enquadramento nas mãos do recorte
+                automático. Aqui cada uma mantém a forma que lhe foi dada.
+              */}
+              {linhas.map((linha, li) => (
+                <div key={li} className="flex gap-2 sm:gap-3">
+                  {linha.map((medida) => {
+                    const i = indicePorId.get(medida.id)!
+                    const photo = photos[i]
+                    return (
                 <motion.div
                   key={photo.id}
                   initial={reduced ? false : { opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true, margin: '-40px' }}
                   transition={{ duration: 0.5 }}
-                  className="relative overflow-hidden rounded-lg group aspect-[3/4] bg-white/[0.04]"
+                  style={{ width: medida.largura, height: medida.altura }}
+                  className="relative overflow-hidden rounded-lg group bg-white/[0.04] shrink-0"
                 >
                   <button
                     onClick={() => setOpen(i)}
@@ -449,6 +493,9 @@ export default function GalleryView() {
                     <Heart size={15} fill={favoritas.has(photo.id) ? 'currentColor' : 'none'} />
                   </button>
                 </motion.div>
+                    )
+                  })}
+                </div>
               ))}
             </div>
           )}

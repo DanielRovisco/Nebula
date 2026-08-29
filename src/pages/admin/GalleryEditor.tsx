@@ -43,6 +43,39 @@ export default function GalleryEditor() {
     load()
   }, [load])
 
+  /*
+    Endereços assinados para as miniaturas da grelha.
+
+    O bucket das galerias é privado de propósito: o que lá está são
+    fotografias de clientes, e o caminho do ficheiro não é password nenhuma.
+    A grelha usava o caminho directamente como `src`, o que dava uma imagem
+    partida em cada quadrado — e só aqui, porque a galeria do cliente já pedia
+    endereços assinados.
+
+    Vai num efeito à parte para a página abrir de imediato: os nomes, a ordem
+    e os botões não têm de esperar por assinaturas. Os endereços duram duas
+    horas (READ_TTL na função admin-storage), o que cobre uma sessão de
+    edição inteira sem os voltar a pedir.
+  */
+  const [thumbs, setThumbs] = useState<Record<string, string>>({})
+  useEffect(() => {
+    if (!photos.length) return
+    let vivo = true
+    const chaves = photos.map((f) => f.thumbPath ?? f.storagePath)
+    api
+      .readUrls(chaves)
+      .then((urls) => {
+        if (!vivo) return
+        setThumbs(Object.fromEntries(photos.map((f, i) => [f.id, urls[i]])))
+      })
+      .catch(() => {
+        /* sem miniaturas a grelha fica sem imagens, mas o resto funciona */
+      })
+    return () => {
+      vivo = false
+    }
+  }, [photos])
+
   function flash(msg: string) {
     setNotice(msg)
     setTimeout(() => setNotice(null), 2500)
@@ -371,7 +404,7 @@ export default function GalleryEditor() {
                   }`}
                 >
                   <img
-                    src={photo.thumbPath ?? photo.storagePath}
+                    src={thumbs[photo.id] ?? ''}
                     alt={photo.fileName}
                     loading="lazy"
                     className="w-full h-full object-cover pointer-events-none"
