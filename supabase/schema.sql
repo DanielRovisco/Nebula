@@ -4,7 +4,7 @@
 
 -- O pgcrypto dá-nos crypt() e gen_salt(). No Supabase já vem instalado no
 -- schema `extensions` (não no `public`), por isso não basta pedi-lo: as funções
--- abaixo têm de o procurar lá — ver o search_path de cada uma.
+-- abaixo têm de o procurar lá. Ver o search_path de cada uma.
 create schema if not exists extensions;
 create extension if not exists pgcrypto with schema extensions;
 
@@ -58,9 +58,9 @@ alter table galleries
   add column if not exists cover_photo_id uuid references photos(id) on delete set null,
   -- Texto centrado sobre a capa. Vazio = usa o título da galeria.
   add column if not exists cover_title text,
-  -- 'serif' | 'sans' | 'label' — ver COVER_FONTS no frontend.
+  -- 'serif' | 'sans' | 'label'. Ver COVER_FONTS no frontend.
   add column if not exists cover_font text not null default 'serif',
-  -- 'white' | 'black' | 'none' — qual dos logos aparece na capa.
+  -- 'white' | 'black' | 'none': qual dos logos aparece na capa.
   add column if not exists logo_variant text not null default 'white';
 
 alter table photos
@@ -113,7 +113,7 @@ create policy "admin escreve fotos" on photos
 -- ─── Password ───────────────────────────────────────────────────────────────
 -- Só o servidor faz hash e verificação. A app nunca recebe o hash: as políticas
 -- acima dão select em galleries a utilizadores autenticados, por isso o admin
--- veria a coluna — a view abaixo é o que a app usa, sem o hash.
+-- veria a coluna. A view abaixo é o que a app usa, sem o hash.
 
 create or replace function set_gallery_password(gallery_id uuid, new_password text)
 returns void language sql security definer
@@ -135,7 +135,7 @@ create view galleries_admin as
 -- ─── Verificação de acesso do cliente ──────────────────────────────────────
 -- Só a Edge Function (service role) pode chamar isto. Devolve a galeria apenas
 -- se estiver publicada, dentro do prazo e a password bater certo. A comparação
--- é feita pelo crypt() do Postgres — o hash nunca sai da base de dados.
+-- é feita pelo crypt() do Postgres, e o hash nunca sai da base de dados.
 
 create table if not exists access_attempts (
   id bigserial primary key,
@@ -170,14 +170,23 @@ returns table (
   set search_path = public, extensions as $$
 declare
   recent_failures int;
+  /*
+    Quantas falhas na última hora fecham o acesso, mesmo com a password certa.
+
+    Está alto de propósito, para não estorvar os testes. O valor de produção é
+    10: com ele, quem anda a adivinhar passwords desiste depressa, e é uma
+    linha a mudar aqui.
+
+    Mesmo assim, a defesa a sério é o comprimento da password gerada; este
+    travão é o segundo cadeado, não o primeiro.
+  */
+  max_falhas constant int := 100000;
 begin
-  -- Trava tentativas à força bruta: 10 falhas na última hora para o mesmo slug
-  -- e o acesso fica fechado, mesmo com a password correta.
   select count(*) into recent_failures
   from access_attempts a
   where lower(a.slug) = lower(p_slug) and not a.ok and a.at > now() - interval '1 hour';
 
-  if recent_failures >= 10 then
+  if recent_failures >= max_falhas then
     insert into access_attempts (slug, ok) values (p_slug, false);
     return;
   end if;
@@ -204,7 +213,7 @@ grant execute on function verify_gallery_password(text, text) to service_role;
 
 -- ─── Registo de atividade ───────────────────────────────────────────────────
 -- O que o cliente fez na galeria dele. Serve para o fotógrafo saber se a
--- entrega foi vista e descarregada — não para perfilar ninguém: guarda-se o
+-- entrega foi vista e descarregada, não para perfilar ninguém: guarda-se o
 -- que aconteceu e quando, e mais nada.
 
 create table if not exists gallery_events (
@@ -243,7 +252,7 @@ create policy "admin lê eventos" on gallery_events
 -- que for) e nós vemos a lista no painel. É a alternativa a receber por email
 -- uma lista de nomes de ficheiro.
 --
--- Não há utilizadores nas galerias — quem entrou com a password é "o cliente".
+-- Não há utilizadores nas galerias: quem entrou com a password é "o cliente".
 -- Por isso a marca é da galeria, não de uma pessoa: a chave primária impede a
 -- mesma fotografia de ser marcada duas vezes.
 
@@ -263,14 +272,14 @@ create policy "admin lê favoritas" on gallery_favorites
   for select to authenticated using (true);
 
 -- Tal como nos eventos, a escrita é exclusiva da Edge Function com o
--- comprovativo de acesso — do browser, sem sessão, não se marca nada.
+-- comprovativo de acesso. Do browser, sem sessão, não se marca nada.
 
 -- ─── Conteúdo do site ───────────────────────────────────────────────────────
 -- Ao contrário das galerias de cliente, isto é público: o site lê-o sem estar
 -- autenticado. Só o admin escreve.
 --
 -- As imagens do portfólio vivem num bucket R2 PÚBLICO (separado do privado das
--- galerias) — uma página pública não pode depender de URLs assinados, que
+-- galerias). Uma página pública não pode depender de URLs assinados, que
 -- expiram e não são cacheáveis nem indexáveis.
 
 create table if not exists site_categories (
@@ -292,12 +301,12 @@ create table if not exists site_photos (
   height int,
   -- Fotos altas ocupam duas linhas na grelha, como no portfólio atual.
   tall boolean not null default false,
-  -- Tipo do ficheiro. É por aqui que se sabe que é vídeo — a extensão no nome
+  -- Tipo do ficheiro. É por aqui que se sabe que é vídeo: a extensão no nome
   -- mente com facilidade, e o portfólio passa a aceitar os dois.
   content_type text,
   -- Recorte da miniatura: um `object-position` de CSS, "50% 50%" ao centro.
   -- Na grelha do site a fotografia é cortada para caber, e o que interessa
-  -- raramente está no meio — uma cara a dois terços da altura desaparecia.
+  -- raramente está no meio, e uma cara a dois terços da altura desaparecia.
   pos text not null default '50% 50%',
   sort_order int not null default 0,
   published boolean not null default true,
@@ -312,7 +321,7 @@ alter table site_photos add column if not exists content_type text;
 create index if not exists site_photos_idx on site_photos (sort_order);
 
 -- Testemunhos de clientes. Escritos à mão no painel a partir do que os clientes
--- nos enviam — não há recolha automática, e é de propósito: um testemunho que
+-- nos enviam. Não há recolha automática, e é de propósito: um testemunho que
 -- ninguém verificou vale menos do que nenhum.
 create table if not exists site_testimonials (
   id uuid primary key default gen_random_uuid(),
@@ -368,7 +377,7 @@ on conflict (slug) do nothing;
 
 -- ─── Storage ────────────────────────────────────────────────────────────────
 -- As fotografias NÃO vivem no Supabase: vivem num bucket privado do
--- Cloudflare R2, que tem 10 GB gratuitos e não cobra tráfego de saída — e o
+-- Cloudflare R2, que tem 10 GB gratuitos e não cobra tráfego de saída, e o
 -- tráfego é o custo real quando o produto é clientes a descarregar galerias.
 --
 -- O Supabase fica com a base de dados, a autenticação e as Edge Functions,

@@ -25,8 +25,8 @@ where slug is distinct from trim(both '-' from regexp_replace(
       '[^a-z0-9]+', '-', 'g'));
 
 -- 3. Limpar o bloqueio por tentativas falhadas.
---    Dez falhas na mesma hora fecham o acesso, mesmo com a password certa —
---    é a defesa contra quem anda a adivinhar. Depois de corrigir o código, as
+--    Dez falhas na mesma hora fecham o acesso, mesmo com a password certa.
+--    É a defesa contra quem anda a adivinhar. Depois de corrigir o código, as
 --    tentativas anteriores já não dizem nada.
 delete from access_attempts where not ok;
 
