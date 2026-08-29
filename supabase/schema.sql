@@ -175,7 +175,7 @@ begin
   -- e o acesso fica fechado, mesmo com a password correta.
   select count(*) into recent_failures
   from access_attempts a
-  where a.slug = p_slug and not a.ok and a.at > now() - interval '1 hour';
+  where lower(a.slug) = lower(p_slug) and not a.ok and a.at > now() - interval '1 hour';
 
   if recent_failures >= 10 then
     insert into access_attempts (slug, ok) values (p_slug, false);
@@ -187,7 +187,11 @@ begin
          g.cover_photo_id, g.cover_title, g.cover_font, g.logo_variant,
          g.expires_at
   from galleries g
-  where g.slug = p_slug
+  -- Comparação sem distinguir maiúsculas: o código chega em minúsculas do
+  -- lado do cliente, e houve galerias gravadas com maiúsculas por o editor do
+  -- painel não as limpar. Sem isto, uma galeria dessas recusava a password
+  -- certa e não havia como a abrir sem mexer na base de dados.
+  where lower(g.slug) = lower(p_slug)
     and g.published = true
     and (g.expires_at is null or g.expires_at > now())
     and g.password_hash = crypt(p_password, g.password_hash);

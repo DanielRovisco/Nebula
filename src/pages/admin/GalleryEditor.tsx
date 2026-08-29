@@ -10,6 +10,7 @@ import { suggestPassword } from '../../lib/gallery/helpers'
 import { DELIVERY_EDGE } from '../../lib/gallery/api'
 import { COVER_FONTS, LOGO_VARIANTS } from '../../lib/gallery/cover'
 import { isVideo, type CoverFont, type LogoVariant } from '../../lib/gallery/types'
+import { slugify } from '../../lib/gallery/helpers'
 import GalleryActivity from './GalleryActivity'
 import GalleryFavorites from './GalleryFavorites'
 
@@ -562,10 +563,24 @@ export default function GalleryEditor() {
           </div>
           <div>
             <label className="label-sm block mb-2.5" htmlFor="ge-slug">Código (URL)</label>
+            {/*
+              O código é limpo antes de ser guardado, tal como no formulário de
+              criação. Aqui era guardado tal como se escrevia — e como o acesso
+              compara em minúsculas, um código com maiúsculas, espaços ou "&"
+              deixava de bater certo consigo próprio: a galeria passava a
+              recusar a password certa e o link novo, sem dizer porquê.
+
+              O valor limpo volta ao campo, para se ver o que ficou gravado em
+              vez de se ficar a olhar para o que se escreveu.
+            */}
             <input
               id="ge-slug"
               defaultValue={gallery.slug}
-              onBlur={(e) => e.target.value !== gallery.slug && patch({ slug: e.target.value })}
+              onBlur={(e) => {
+                const limpo = slugify(e.target.value)
+                e.target.value = limpo
+                if (limpo && limpo !== gallery.slug) patch({ slug: limpo })
+              }}
               className={field}
             />
           </div>
