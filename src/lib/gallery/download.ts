@@ -66,6 +66,12 @@ export interface ZipProgress {
  */
 export const ZIP_WARN_BYTES = 1_500_000_000
 
+/*
+  A versão reduzida continua implementada, mas hoje nada a pede: o seletor de
+  tamanho saiu da galeria e descarrega-se sempre o original. Fica porque
+  voltar a oferecê-la é acrescentar um botão que passe `web: true`, e não
+  reescrever isto.
+*/
 /** Lado maior da versão "web". Chega para publicar em qualquer lado. */
 export const WEB_EDGE = 2048
 
