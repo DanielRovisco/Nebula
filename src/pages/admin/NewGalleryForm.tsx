@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { api } from '../../lib/gallery/api'
 import { slugify, suggestPassword } from '../../lib/gallery/helpers'
+import { guardarPassword } from '../../lib/gallery/partilha'
 
 interface Props {
   onClose: () => void
@@ -24,12 +25,15 @@ export default function NewGalleryForm({ onClose, onCreated }: Props) {
     setBusy(true)
     setError(null)
     try {
-      await api.createGallery({
+      const criada = await api.createGallery({
         title: title.trim(),
         slug: (slugTouched ? slug : slugify(title)).trim(),
         clientName: clientName.trim() || undefined,
         password,
       })
+      // Fica na sessão para o botão de copiar a poder usar sem a voltar a
+      // pedir: é a mesma que acabou de estar neste ecrã.
+      guardarPassword(criada.id, password)
       onCreated()
     } catch (err) {
       setError((err as Error).message)

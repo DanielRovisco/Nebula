@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ChevronLeft, ChevronRight, Clock, Play, Star, Trash2, Upload } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Clock, Copy, Play, Star, Trash2, Upload } from 'lucide-react'
 import { useArrastar } from './useArrastar'
 import { api } from '../../lib/gallery/api'
 import type { Gallery, Photo } from '../../lib/gallery/types'
@@ -11,6 +11,7 @@ import { DELIVERY_EDGE } from '../../lib/gallery/api'
 import { COVER_FONTS, LOGO_VARIANTS } from '../../lib/gallery/cover'
 import { isVideo, type CoverFont, type LogoVariant } from '../../lib/gallery/types'
 import { slugify } from '../../lib/gallery/helpers'
+import { guardarPassword, lerPassword, mensagemDePartilha } from '../../lib/gallery/partilha'
 import GalleryActivity from './GalleryActivity'
 import GalleryFavorites from './GalleryFavorites'
 
@@ -19,6 +20,9 @@ export default function GalleryEditor() {
   const navigate = useNavigate()
   const [gallery, setGallery] = useState<Gallery | null>(null)
   const [photos, setPhotos] = useState<Photo[]>([])
+  const [copiado, setCopiado] = useState<string | null>(null)
+  const [pedirPassword, setPedirPassword] = useState(false)
+  const [passwordParaCopiar, setPasswordParaCopiar] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -269,6 +273,29 @@ export default function GalleryEditor() {
     'w-full bg-transparent border-b border-white/15 py-2.5 outline-none focus:border-titanium/60 transition-colors placeholder:text-titanium/25'
   const link = `${SITE_URL}/galeria/${gallery.slug}`
 
+  async function copiar(password: string) {
+    try {
+      await navigator.clipboard.writeText(mensagemDePartilha(gallery!.title, link, password))
+      guardarPassword(gallery!.id, password)
+      setPedirPassword(false)
+      setCopiado('Copiado.')
+      setTimeout(() => setCopiado(null), 2500)
+    } catch {
+      setError('O browser não deixou copiar. Copia à mão o link e a password.')
+    }
+  }
+
+  function copiarParaCliente() {
+    const guardada = lerPassword(gallery!.id)
+    if (guardada) void copiar(guardada)
+    else setPedirPassword(true)
+  }
+
+  function confirmarCopia() {
+    const p = passwordParaCopiar.trim()
+    if (p) void copiar(p)
+  }
+
   return (
     <div className="container-px">
       <Link
@@ -302,11 +329,61 @@ export default function GalleryEditor() {
         </div>
       </div>
       <p className="text-xs text-titanium/40 break-all mb-2">{link}</p>
-      <p className="text-xs text-titanium/30 mb-10">
+      <p className="text-xs text-titanium/30 mb-4">
         {gallery.published
           ? 'Está acessível a quem tiver o link e a password.'
           : 'Em rascunho. Não abre a ninguém, nem com a password certa.'}
       </p>
+
+      {/*
+        Copiar link e password de uma vez, prontos a colar na conversa com o
+        cliente. Copiá-los à mão são dois gestos e duas oportunidades de
+        mandar um sem o outro.
+
+        A password não se lê da base de dados — está cifrada. Vem de onde foi
+        escrita: guardada na sessão ao criar a galeria ou ao definir uma nova.
+        Sem ela, pergunta-se, em vez de copiar uma mensagem incompleta.
+      */}
+      <div className="mb-10">
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={copiarParaCliente}
+            className="inline-flex items-center gap-2 border border-white/15 rounded-full px-5 py-2.5 text-[11px] uppercase tracking-[0.15em] text-titanium/75 hover:text-titanium hover:border-white/35 transition-colors min-h-[40px]"
+          >
+            <Copy size={13} /> Copiar para o cliente
+          </button>
+          {copiado && <span className="text-xs text-titanium/60">{copiado}</span>}
+        </div>
+
+        {pedirPassword && (
+          <div className="mt-3 flex items-end gap-3 flex-wrap border border-white/12 rounded-xl p-4">
+            <div className="flex-1 min-w-[200px]">
+              <label className="label-sm block mb-2" htmlFor="ge-pass-copiar">
+                Password desta galeria
+              </label>
+              <input
+                id="ge-pass-copiar"
+                autoFocus
+                value={passwordParaCopiar}
+                onChange={(e) => setPasswordParaCopiar(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && confirmarCopia()}
+                className={field}
+                placeholder="a que entregaste ao cliente"
+              />
+              <p className="text-[10px] text-titanium/40 mt-2">
+                Não a conseguimos ler: está guardada cifrada. Se não a tiveres,
+                define uma nova mais abaixo e volta aqui.
+              </p>
+            </div>
+            <button
+              onClick={confirmarCopia}
+              className="bg-titanium text-eerie px-5 py-2.5 rounded-full text-[11px] uppercase tracking-[0.15em] font-semibold active:scale-95 transition-transform min-h-[40px]"
+            >
+              Copiar
+            </button>
+          </div>
+        )}
+      </div>
 
       {notice && <p className="text-xs text-emerald-300/80 mb-5">{notice}</p>}
       {error && (
@@ -675,6 +752,9 @@ export default function GalleryEditor() {
             onClick={async () => {
               if (!newPassword) return
               await patch({ password: newPassword })
+              // Guardada na sessão: é a única altura em que a sabemos, e é
+              // logo a seguir que se quer copiá-la para mandar ao cliente.
+              guardarPassword(gallery.id, newPassword)
               setNewPassword('')
             }}
             disabled={!newPassword || saving}
