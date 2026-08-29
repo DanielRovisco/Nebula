@@ -1,4 +1,6 @@
-import { Suspense, lazy } from 'react'
+import { Suspense } from 'react'
+import { lazyComRecarga } from './lib/lazyComRecarga'
+import Rede from './components/Rede'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import Navbar from './components/Navbar'
@@ -13,22 +15,22 @@ import Home from './pages/Home'
 
 // A Home fica no bundle inicial (é a entrada da maioria das visitas); as
 // restantes rotas são chunks separados, carregados quando alguém navega.
-const About = lazy(() => import('./pages/About'))
-const Services = lazy(() => import('./pages/Services'))
-const Portfolio = lazy(() => import('./pages/Portfolio'))
-const Contact = lazy(() => import('./pages/Contact'))
-const GalleryAccess = lazy(() => import('./pages/GalleryAccess'))
-const GalleryView = lazy(() => import('./pages/GalleryView'))
-const Privacy = lazy(() => import('./pages/Privacy'))
-const NotFound = lazy(() => import('./pages/NotFound'))
-const Thanks = lazy(() => import('./pages/Thanks'))
+const About = lazyComRecarga(() => import('./pages/About'))
+const Services = lazyComRecarga(() => import('./pages/Services'))
+const Portfolio = lazyComRecarga(() => import('./pages/Portfolio'))
+const Contact = lazyComRecarga(() => import('./pages/Contact'))
+const GalleryAccess = lazyComRecarga(() => import('./pages/GalleryAccess'))
+const GalleryView = lazyComRecarga(() => import('./pages/GalleryView'))
+const Privacy = lazyComRecarga(() => import('./pages/Privacy'))
+const NotFound = lazyComRecarga(() => import('./pages/NotFound'))
+const Thanks = lazyComRecarga(() => import('./pages/Thanks'))
 
 // O painel e o cliente de Supabase só são descarregados por quem lá vai —
 // não pesam na visita normal ao site.
-const AdminShell = lazy(() => import('./pages/admin/AdminShell'))
-const GalleryList = lazy(() => import('./pages/admin/GalleryList'))
-const GalleryEditor = lazy(() => import('./pages/admin/GalleryEditor'))
-const SiteAdmin = lazy(() => import('./pages/admin/SiteAdmin'))
+const AdminShell = lazyComRecarga(() => import('./pages/admin/AdminShell'))
+const GalleryList = lazyComRecarga(() => import('./pages/admin/GalleryList'))
+const GalleryEditor = lazyComRecarga(() => import('./pages/admin/GalleryEditor'))
+const SiteAdmin = lazyComRecarga(() => import('./pages/admin/SiteAdmin'))
 
 const Loading = () => <div className="min-h-screen" />
 
@@ -39,7 +41,7 @@ export default function App() {
   // scroll suave. Não há nenhum link para aqui a partir do site.
   if (location.pathname.startsWith('/admin')) {
     return (
-      <Suspense fallback={<Loading />}>
+      <Rede><Suspense fallback={<Loading />}>
         <ScrollToTop />
         <AdminShell>
           <Routes>
@@ -48,7 +50,7 @@ export default function App() {
             <Route path="/admin/:id" element={<GalleryEditor />} />
           </Routes>
         </AdminShell>
-      </Suspense>
+      </Suspense></Rede>
     )
   }
 
@@ -58,13 +60,13 @@ export default function App() {
   // caminho de volta é o link no fim da galeria.
   if (/^\/(galeria\/[^/]+\/ver|en\/gallery\/[^/]+\/view)$/.test(location.pathname)) {
     return (
-      <Suspense fallback={<Loading />}>
+      <Rede><Suspense fallback={<Loading />}>
         <ScrollToTop />
         <Routes>
           <Route path="/galeria/:slug/ver" element={<GalleryView />} />
           <Route path="/en/gallery/:slug/view" element={<GalleryView />} />
         </Routes>
-      </Suspense>
+      </Suspense></Rede>
     )
   }
 
@@ -79,7 +81,7 @@ export default function App() {
         <PageTransition key={location.pathname}>
           <main>
             {/* min-h evita o Footer saltar para cima enquanto o chunk carrega. */}
-            <Suspense fallback={<Loading />}>
+            <Rede><Suspense fallback={<Loading />}>
               <Routes location={location}>
                 {/*
                   As mesmas páginas em dois endereços — um por língua. A língua
@@ -112,7 +114,7 @@ export default function App() {
                     do GitHub Pages, que reencaminha para dentro da aplicação. */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </Suspense>
+            </Suspense></Rede>
           </main>
         </PageTransition>
       </AnimatePresence>
