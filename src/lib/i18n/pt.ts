@@ -123,7 +123,7 @@ export const pt = {
     seoDescription:
       'Packs de fotografia e vídeo para casamentos, maternidade, retratos e eventos: vídeo 4K, drone, pré-wedding, galeria online privada e sneak peek em 24h.',
     label: 'Serviços',
-    title: 'Escolhe o que precisas.',
+    title: 'Feito para o teu momento.',
     seeWork: 'Ver trabalhos desta categoria',
     addonLabel: 'À medida',
     addonTitle: 'Monta o teu pack',

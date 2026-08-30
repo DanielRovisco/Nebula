@@ -129,7 +129,7 @@ export const en: Dict = {
     seoDescription:
       'Photography and film packages for weddings, maternity, portraits and events: 4K video, drone, pre-wedding, private online gallery and a 24-hour sneak peek.',
     label: 'Services',
-    title: 'Choose what you need.',
+    title: 'Made for your moment.',
     seeWork: 'See work in this category',
     addonLabel: 'Made to fit',
     addonTitle: 'Build your own package',
