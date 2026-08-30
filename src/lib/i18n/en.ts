@@ -39,7 +39,7 @@ export const en: Dict = {
     headline: ['Stories that stay', 'Forever'],
     heroCta: 'Book a session',
     heroNote: '2026 dates available',
-    manifesto: ['"We don’t photograph moments.', 'We make feelings last."'],
+    manifesto: ['Time passes.', 'The images stay'],
     servicesLabel: 'What we do',
     servicesTitle: 'Our services',
     servicesLink: 'See all services & pricing',

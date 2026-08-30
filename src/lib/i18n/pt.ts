@@ -33,7 +33,7 @@ export const pt = {
     headline: ['Histórias que ficam', 'Para sempre'],
     heroCta: 'Marcar Sessão',
     heroNote: 'Datas 2026 disponíveis',
-    manifesto: ['"Não fotografamos momentos.', 'Eternizamos sentimentos."'],
+    manifesto: ['O tempo passa.', 'As imagens ficam'],
     servicesLabel: 'O que fazemos',
     servicesTitle: 'Os nossos serviços',
     servicesLink: 'Ver todos os serviços & preços',
