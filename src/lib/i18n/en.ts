@@ -374,7 +374,7 @@ export const en: Dict = {
 
   footer: {
     tagline:
-      'An audiovisual studio for editorial photography and cinematic film. We capture stories, not just moments.',
+      'Photography and film for weddings, pregnancy and every moment of yours worth telling well.',
     navLabel: 'Navigation',
     contactLabel: 'Contact',
     rights: 'All rights reserved.',

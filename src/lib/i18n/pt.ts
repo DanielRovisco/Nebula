@@ -367,7 +367,7 @@ export const pt = {
 
   footer: {
     tagline:
-      'Produtora audiovisual especializada em fotografia editorial e vídeo cinematográfico. Capturamos histórias, não apenas momentos.',
+      'Fotografia e vídeo para casamentos, gravidez e todos os teus momentos que merecem ser bem contados.',
     navLabel: 'Navegação',
     contactLabel: 'Contacto',
     rights: 'Todos os direitos reservados.',
