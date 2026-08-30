@@ -36,7 +36,7 @@ export const en: Dict = {
     seoDescription:
       'Wedding photographer and videographer in Lisbon and the Alentejo. Editorial photography and 4K cinematic film for weddings, maternity, portraits and events.',
     place: 'Lisbon & Portalegre',
-    headline: ['Photography', 'and film,', 'in Portugal.'],
+    headline: ['Stories that stay', 'Forever'],
     heroCta: 'Book a session',
     heroNote: '2026 dates available',
     manifesto: ['"We don’t photograph moments.', 'We make feelings last."'],

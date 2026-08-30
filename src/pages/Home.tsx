@@ -66,7 +66,9 @@ const STEP_NUMBERS = ['01', '02', '03']
   ícone diz o assunto.
 */
 const STEP_ICONS = [MessageSquare, Camera, Images]
-const HEADLINE_DELAYS = [0.3, 0.46, 0.62]
+// Um atraso por linha do título. A lista é maior do que as linhas que hoje
+// existem, para o título poder mudar de tamanho sem partir a animação.
+const HEADLINE_DELAYS = [0.3, 0.46, 0.62, 0.78]
 
 /** Os números não se traduzem; as legendas sim. */
 const STATS = [
@@ -170,7 +172,14 @@ export default function Home() {
             {t.home.headline.map((text, i) => (
               <span key={text} className="block overflow-hidden" style={{ lineHeight: 0.93 }}>
                 <motion.span
-                  className="block"
+                  /*
+                    `text-balance` para a linha que não cabe: num telemóvel,
+                    "Histórias que ficam" parte em duas, e sem isto o browser
+                    corta onde calha, deixando uma linha comprida e outra com
+                    uma palavra. Equilibrado, as duas ficam do mesmo tamanho e
+                    parece uma quebra escolhida.
+                  */
+                  className="block text-balance"
                   initial={reduced ? false : { y: '108%' }}
                   animate={{ y: 0 }}
                   transition={{ duration: 1, delay: HEADLINE_DELAYS[i], ease: [0.16, 1, 0.3, 1] }}

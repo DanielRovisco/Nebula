@@ -30,7 +30,7 @@ export const pt = {
     seoDescription:
       'Fotógrafo e videógrafo para casamentos, maternidade, retratos e eventos em Lisboa e Portalegre. Fotografia editorial e vídeo cinematográfico 4K.',
     place: 'Lisboa & Portalegre',
-    headline: ['Fotografia', 'e vídeo,', 'em Portugal.'],
+    headline: ['Histórias que ficam', 'Para sempre'],
     heroCta: 'Marcar Sessão',
     heroNote: 'Datas 2026 disponíveis',
     manifesto: ['"Não fotografamos momentos.', 'Eternizamos sentimentos."'],
