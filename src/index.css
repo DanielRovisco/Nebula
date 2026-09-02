@@ -81,11 +81,18 @@
 
 /*
   Grão de filme sobre o site inteiro. É ruído gerado em SVG (feTurbulence), não
-  uma imagem — não pesa nada no carregamento e não há textura para ninguém ir
-  buscar. Fica por cima de tudo, mas transparente ao rato: nada deixa de ser
-  clicável por causa dele. O z-index é o mais alto do site de propósito — a
-  introdução (200) e o lightbox (150) também levam grão, senão o site parecia
-  mudar de material a meio.
+  uma imagem: não pesa nada no carregamento e não há textura para ninguém ir
+  buscar. Fica por cima de tudo, mas transparente ao rato, portanto nada deixa
+  de ser clicável por causa dele. O z-index é o mais alto do site de propósito,
+  para a introdução (200) levar grão como o resto, senão o site parecia mudar
+  de material a meio. A excepção é a fotografia aberta em ecrã cheio, mais
+  abaixo.
+
+  A opacidade é 0.2 e não um valor mais discreto porque foi medida. A 0.055 o
+  desvio padrão do fundo era de 0.86 níveis em 255, com sete níveis entre o
+  pixel mais claro e o mais escuro: abaixo do que o olho distingue num fundo
+  escuro, ou seja invisível e não subtil. A 0.2 o desvio anda pelos 4.7 e
+  vê-se sem sujar.
 */
 body::after {
   content: '';
@@ -98,13 +105,13 @@ body::after {
   inset: -140px;
   z-index: 300;
   pointer-events: none;
-  opacity: 0.055;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)'/%3E%3C/svg%3E");
+  opacity: 0.2;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)'/%3E%3C/svg%3E");
   background-size: 200px 200px;
   /*
-    32 segundos por volta. É devagar ao ponto de não se ver a andar: nota-se
-    que a imagem está viva sem que o olho consiga seguir o movimento, que é o
-    que se quer para não distrair de uma fotografia.
+    20 segundos por volta, uns 3px por segundo. É devagar ao ponto de não se
+    ver a andar: nota-se que a imagem está viva sem que o olho consiga seguir o
+    movimento, que é o que se quer para não distrair de uma fotografia.
 
     O movimento é feito com `translate3d` e não com `background-position`
     porque só o primeiro corre no compositor. Deslocar o fundo obrigava o
@@ -112,7 +119,7 @@ body::after {
     fotograma, e num telemóvel isso é bateria a arder por um efeito que quase
     não se vê.
   */
-  animation: grao-deriva 32s ease-in-out infinite;
+  animation: grao-deriva 20s ease-in-out infinite;
   will-change: transform;
 }
 
@@ -333,4 +340,17 @@ body::after {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/*
+  Fotografia aberta em ecrã cheio: o grão apaga-se quase por completo.
+
+  Ele dá material ao site, mas por cima de uma fotografia entregue a um cliente
+  é textura que nós acrescentámos ao trabalho dele. Fica um resto para a
+  passagem não dar um estalo, e volta ao normal ao fechar. O atributo é posto
+  pelo Lightbox.
+*/
+html[data-foto-aberta] body::after {
+  opacity: 0.03;
+  transition: opacity 0.35s ease;
 }

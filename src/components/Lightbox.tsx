@@ -36,9 +36,20 @@ export default function Lightbox({ item, index, total, onClose, onPrev, onNext }
     const antes = document.body.style.overflow
     document.body.style.overflow = 'hidden'
 
+    /*
+      Marca que há uma fotografia aberta em ecrã cheio, para o grão do site se
+      apagar quase por completo enquanto ela estiver à vista (ver index.css).
+
+      O grão dá material ao site, mas por cima de uma fotografia entregue a um
+      cliente é textura que nós acrescentámos ao trabalho dele. Quem abre uma
+      foto quer ver a foto, não o nosso papel de parede.
+    */
+    document.documentElement.dataset.fotoAberta = 'sim'
+
     return () => {
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = antes
+      delete document.documentElement.dataset.fotoAberta
     }
   }, [onClose, onPrev, onNext])
 
