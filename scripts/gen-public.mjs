@@ -112,8 +112,8 @@ const manifest = {
   start_url: base,
   scope: base,
   display: 'standalone',
-  background_color: '#191919',
-  theme_color: '#191919',
+  background_color: '#141414',
+  theme_color: '#141414',
   lang: 'pt-PT',
   icons: [
     { src: `${base}icons/icon-192.png`, sizes: '192x192', type: 'image/png' },

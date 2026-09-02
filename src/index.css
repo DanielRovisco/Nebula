@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-eerie: #191919;
+  --color-eerie: #141414;
   --color-titanium: #fcfff0;
   --color-gray: #8a8a8a;
   --color-gray-dark: #2a2a2a;
@@ -17,7 +17,7 @@
 }
 
 :root {
-  --eerie: #191919;
+  --eerie: #141414;
   --titanium: #fcfff0;
   --gray: #8a8a8a;
   --gray-dark: #2a2a2a;
@@ -90,12 +90,48 @@
 body::after {
   content: '';
   position: fixed;
-  inset: 0;
+  /*
+    Sangra 140px para fora do ecrã de todos os lados. O grão anda, e sem esta
+    folga via-se a orla do quadrado a entrar pela margem a cada volta. A
+    deriva nunca passa dos 70px, ou seja metade da folga.
+  */
+  inset: -140px;
   z-index: 300;
   pointer-events: none;
-  opacity: 0.05;
+  opacity: 0.055;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)'/%3E%3C/svg%3E");
   background-size: 200px 200px;
+  /*
+    32 segundos por volta. É devagar ao ponto de não se ver a andar: nota-se
+    que a imagem está viva sem que o olho consiga seguir o movimento, que é o
+    que se quer para não distrair de uma fotografia.
+
+    O movimento é feito com `translate3d` e não com `background-position`
+    porque só o primeiro corre no compositor. Deslocar o fundo obrigava o
+    browser a voltar a desenhar um rectângulo do tamanho do ecrã a cada
+    fotograma, e num telemóvel isso é bateria a arder por um efeito que quase
+    não se vê.
+  */
+  animation: grao-deriva 32s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes grao-deriva {
+  0%   { transform: translate3d(0, 0, 0); }
+  25%  { transform: translate3d(-46px, 32px, 0); }
+  50%  { transform: translate3d(38px, 58px, 0); }
+  75%  { transform: translate3d(52px, -30px, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+/*
+  Quem pediu menos movimento fica com o grão parado. A textura mantém-se, que
+  é o que dá o material ao site; só deixa de derivar.
+*/
+@media (prefers-reduced-motion: reduce) {
+  body::after {
+    animation: none;
+  }
 }
 
 /*
