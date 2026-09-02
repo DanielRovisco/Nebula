@@ -225,7 +225,7 @@ export default function Contact() {
   }
 
   return (
-    <div className="pt-28 sm:pt-36 pb-20 sm:pb-28">
+    <div className="pt-24 sm:pt-28 lg:pt-24 pb-16 sm:pb-20">
       <Seo
         title={t.contact.seoTitle}
         description={t.contact.seoDescription}
@@ -235,27 +235,20 @@ export default function Contact() {
         ])}
       />
 
-      {/* Header */}
-      {/*
-        Tudo dentro da mesma largura máxima. Sem ela, num ecrã de 1600px o
-        título ocupava metade e deixava a outra metade vazia, e as duas colunas
-        afastavam-se tanto que deixavam de se ler como uma página só.
-      */}
-      <section className="container-px max-w-6xl mx-auto mb-12 sm:mb-16">
+      <div className="container-px max-w-6xl mx-auto mb-6 lg:mb-2">
         <Breadcrumbs items={[{ label: t.nav.contact }]} />
-        <Reveal>
-          <span className="label-sm">{t.contact.label}</span>
-          <h1 className="mt-4 max-w-3xl leading-[1.05]" style={{ fontSize: 'clamp(2.2rem, 5vw, 4rem)' }}>
-            {t.contact.title}
-          </h1>
-        </Reveal>
-      </section>
+      </div>
 
       {/*
-        A coluna da esquerda acaba antes do formulário e deixava um buraco por
-        baixo dela. Fica colada ao topo enquanto se percorre o formulário: os
-        contactos directos continuam à vista de quem está a meio de escrever e
-        decide que prefere mandar uma mensagem.
+        O título vive dentro da coluna da esquerda, e não num bloco a toda a
+        largura por cima das duas. Num bloco por cima, a altura dele somava-se
+        à do formulário e a página só acabava 1120px abaixo do topo, ou seja
+        fora do ecrã em qualquer portátil. Ao lado, partilha a altura com o
+        formulário em vez de a acrescentar, e a página inteira passa a caber
+        num ecrã sem se rolar.
+
+        A coluna da esquerda fica colada ao topo enquanto se percorre o
+        formulário nos ecrãs onde ainda sobra alguma coisa por baixo.
       */}
       <section className="container-px max-w-6xl mx-auto grid lg:grid-cols-[1fr_1.25fr] gap-10 lg:gap-14 items-start">
         {/* Left: info */}
@@ -266,10 +259,22 @@ export default function Contact() {
             página passa todo para o painel do formulário, que é o que se quer
             que a pessoa use.
           */}
-          <div className="space-y-9 lg:sticky lg:top-28">
+          <div className="space-y-7 lg:sticky lg:top-28">
+            <div>
+              <span className="label-sm">{t.contact.label}</span>
+              {/*
+                Menor do que nas outras páginas de propósito: aqui divide a
+                linha com o formulário, e ao tamanho antigo empurrava a coluna
+                da esquerda para lá da altura do painel.
+              */}
+              <h1 className="mt-3 leading-[1.05]" style={{ fontSize: 'clamp(2.2rem, 3.4vw, 3rem)' }}>
+                {t.contact.title}
+              </h1>
+            </div>
+
             <p className="text-sm text-titanium/60 leading-relaxed max-w-sm">{t.contact.how}</p>
 
-            <div className="space-y-7">
+            <div className="space-y-6">
               <div>
                 <p className="label-sm mb-3">Email</p>
                 <a
@@ -321,11 +326,11 @@ export default function Contact() {
             onSubmit={handleSubmit}
             noValidate
             aria-labelledby="titulo-formulario"
-            className="space-y-7 sm:bg-white/[0.035] sm:border sm:border-white/10 sm:rounded-2xl sm:p-8 xl:p-10 sm:shadow-[0_28px_70px_-30px_rgba(0,0,0,0.85)]"
+            className="space-y-5 sm:bg-white/[0.035] sm:border sm:border-white/10 sm:rounded-2xl sm:p-7 xl:p-8 sm:shadow-[0_28px_70px_-30px_rgba(0,0,0,0.85)]"
           >
             <h2
               id="titulo-formulario"
-              className="text-[0.7rem] uppercase tracking-[0.3em] text-titanium/70 pb-6 mb-1 border-b border-white/10"
+              className="text-[0.7rem] uppercase tracking-[0.3em] text-titanium/70 pb-4 border-b border-white/10"
             >
               {t.contact.formTitle}
             </h2>
@@ -352,7 +357,7 @@ export default function Contact() {
               />
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-x-8 gap-y-7">
+            <div className="grid sm:grid-cols-2 gap-x-8 gap-y-5">
               <div className="relative">
                 <input
                   id="contact-name"
@@ -413,7 +418,7 @@ export default function Contact() {
               <label className="campo-label flutua" htmlFor="contact-service">{t.contact.service}</label>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-x-8 gap-y-7">
+            <div className="grid sm:grid-cols-2 gap-x-8 gap-y-5">
               <div className="relative">
                 <input
                   id="contact-date"
@@ -457,7 +462,7 @@ export default function Contact() {
                 id="contact-message"
                 name="message"
                 required
-                rows={4}
+                rows={3}
                 value={form.message}
                 onChange={(e) => setForm({ ...form, message: e.target.value })}
                 onBlur={() => visitar('message')}
@@ -510,7 +515,7 @@ export default function Contact() {
             <button
               type="submit"
               disabled={status === 'sending'}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-titanium text-eerie px-9 py-5 rounded-full text-[11px] uppercase tracking-[0.2em] font-semibold group active:scale-95 hover:gap-5 transition-all min-h-[50px] disabled:opacity-60 disabled:cursor-wait"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-titanium text-eerie px-9 py-5 lg:py-4 rounded-full text-[11px] uppercase tracking-[0.2em] font-semibold group active:scale-95 hover:gap-5 transition-all min-h-[50px] disabled:opacity-60 disabled:cursor-wait"
             >
               {status === 'sending' ? t.contact.sending : t.contact.submit}
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="transition-transform group-hover:translate-x-1" aria-hidden="true">
