@@ -56,6 +56,43 @@
         }
       }(window.location));
     </script>
+
+    <script>
+      /*
+        Rede de segurança para HTML velho em cache.
+
+        O GitHub Pages deixa o browser guardar o index.html durante uns
+        minutos, mas apaga os ficheiros da publicação anterior mal a nova
+        entra. Quem tiver o HTML antigo guardado pede um `index-XXXX.js` que já
+        não existe, leva um 404 e fica com uma página branca — sem nada em que
+        carregar, porque o próprio código que desenharia um erro é o que faltou
+        carregar. Aconteceu no /admin, e a um cliente a meio de uma entrega era
+        bem pior.
+
+        Vai buscar o HTML outra vez a saltar a cache (`cache: 'reload'`) e só
+        depois recarrega, senão a recarga voltava a servir o mesmo HTML velho e
+        não resolvia nada.
+
+        Uma vez só. Se o segundo arranque também falhar, o problema não é a
+        cache e recarregar em ciclo apenas esconde a avaria verdadeira. A
+        marca é limpa pelo main.tsx quando a aplicação chega a arrancar.
+      */
+      window.addEventListener('error', function (e) {
+        var alvo = e.target;
+        if (!alvo || alvo.tagName !== 'SCRIPT' || !alvo.src) return;
+        try {
+          if (sessionStorage.getItem('nebula-recarga-entrada')) return;
+          sessionStorage.setItem('nebula-recarga-entrada', '1');
+        } catch (_) {
+          // Sem sessionStorage não há como contar as tentativas, e recarregar
+          // sem conta é arriscar um ciclo infinito. Fica como está.
+          return;
+        }
+        fetch(window.location.href, { cache: 'reload' })
+          .catch(function () {})
+          .then(function () { window.location.reload(); });
+      }, true);
+    </script>
   </head>
   <body>
     <div id="root"></div>

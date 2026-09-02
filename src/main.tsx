@@ -20,6 +20,16 @@ import site from '../site.config.json'
 // O router não quer a barra final que o Vite exige no `base`.
 const BASENAME = site.base.replace(/\/$/, '')
 
+/*
+  Chegar aqui significa que o ficheiro de entrada carregou. Limpa a marca que o
+  index.html deixa quando recarrega por causa de HTML velho em cache, para a
+  próxima vez que isso acontecer haver outra vez direito a uma recarga. Sem
+  isto, a rede de segurança valia uma vez na vida do separador.
+*/
+try {
+  sessionStorage.removeItem('nebula-recarga-entrada')
+} catch { /* sem sessionStorage não há marca para limpar */ }
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter basename={BASENAME}>
