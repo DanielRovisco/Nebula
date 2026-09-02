@@ -256,16 +256,19 @@ ADMIN_EMAIL=eu@proj3ctnebula.pt ADMIN_PASSWORD=... npm run setup:check
 2. R2 → Manage API Tokens → criar um token com permissão de leitura e escrita
    nesse bucket. Guardar o Access Key ID e o Secret.
 3. Anotar o Account ID (aparece na barra lateral do R2).
-4. **CORS do bucket** — sem isto o browser recusa o upload. Em Settings → CORS
-   policy do bucket:
-   ```json
-   [{
-     "AllowedOrigins": ["https://danielrovisco.github.io", "http://localhost:5173"],
-     "AllowedMethods": ["PUT", "GET"],
-     "AllowedHeaders": ["content-type"],
-     "MaxAgeSeconds": 3600
-   }]
-   ```
+4. **CORS do bucket.** Em Settings → CORS policy, colar o conteúdo de
+   `supabase/r2-cors.json`. **Nos dois buckets**, o privado e o público.
+
+   Não copiar a política daqui para o lado nenhum: este passo já foi feito uma
+   vez com uma lista de origens que não incluía o domínio próprio, e o
+   resultado foi o upload funcionar e o download das galerias rebentar com
+   "blocked by CORS policy" meses depois. O ficheiro é a única versão certa, e
+   é lá que se acrescenta um domínio novo.
+
+   Sem `GET` em `AllowedMethods` as fotografias continuam a **aparecer** (uma
+   `<img>` não é um pedido de CORS) mas o download em ZIP falha. É uma avaria
+   que não se vê a olho: convém testar sempre o "descarregar tudo", não só
+   abrir a galeria.
 
 **3. Ligar os dois**
 

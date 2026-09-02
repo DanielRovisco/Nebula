@@ -9,7 +9,7 @@
 // (--no-verify-jwt porque o cliente é anónimo; a autorização é a password.)
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { cors, json, presign } from '../_shared/r2.ts'
+import { cors, json, presign, presignDownload } from '../_shared/r2.ts'
 import { signAccessToken } from '../_shared/token.ts'
 
 const SIGNED_URL_TTL = 60 * 60 * 2 // 2 horas
@@ -74,6 +74,10 @@ Deno.serve(async (req) => {
       sizeBytes: p.size_bytes,
       url: await presign(p.storage_path, 'GET', SIGNED_URL_TTL),
       thumbUrl: p.thumb_path ? await presign(p.thumb_path, 'GET', SIGNED_URL_TTL) : null,
+      // Segundo URL, do mesmo ficheiro, que o R2 devolve como anexo. Serve o
+      // download de uma foto sozinha sem passar por `fetch`, ou seja sem
+      // depender do CORS do bucket.
+      downloadUrl: await presignDownload(p.storage_path, p.file_name, SIGNED_URL_TTL),
     })),
   )
 

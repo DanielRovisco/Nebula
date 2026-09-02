@@ -21,6 +21,26 @@ async function fetchComRetry(url: string, signal?: AbortSignal, tentativas = 3):
       ultimoErro = new Error(`HTTP ${res.status}`)
     } catch (e) {
       if ((e as Error).name === 'AbortError') throw e
+      /*
+        Um bloqueio de CORS chega aqui como um TypeError sem mais nada: o
+        browser recusa-se a dizer ao script o que correu mal. Repetir três
+        vezes não ajuda — a configuração do bucket não muda entre tentativas —
+        e só faz o cliente esperar mais para receber o mesmo erro.
+
+        A mensagem vai para a consola porque é a única pista que há: para quem
+        está a ver a galeria isto é "não deu", e sem esta linha não há por onde
+        começar a procurar. Já nos custou uma tarde à conta de a resposta não
+        dizer nada.
+      */
+      if (e instanceof TypeError) {
+        console.error(
+          'Download bloqueado pelo CORS do bucket R2. ' +
+            'Cloudflare → R2 → bucket das galerias → Settings → CORS policy: ' +
+            'a origem deste site tem de estar em AllowedOrigins e GET em AllowedMethods. ' +
+            'O ficheiro supabase/r2-cors.json do repositório tem a política correcta.',
+        )
+        throw new Error('CORS', { cause: e })
+      }
       ultimoErro = e
     }
     await new Promise((r) => setTimeout(r, 500 * 2 ** i))
@@ -28,8 +48,25 @@ async function fetchComRetry(url: string, signal?: AbortSignal, tentativas = 3):
   throw ultimoErro instanceof Error ? ultimoErro : new Error('Falha de rede.')
 }
 
-/** Descarrega um ficheiro único a partir de um URL assinado. */
+/**
+ * Descarrega um ficheiro único.
+ *
+ * O caminho normal é um link directo para um URL assinado que o R2 devolve
+ * como anexo (`response-content-disposition`). Um link não é um pedido de
+ * CORS: o browser descarrega e não pergunta nada ao bucket. Isto interessa
+ * porque o caminho por `fetch` morre com "blocked by CORS policy" sempre que a
+ * configuração do bucket não estiver perfeita, e aí o cliente fica sem as
+ * fotografias sem perceber porquê.
+ *
+ * Só se recorre ao `fetch` quando não há alternativa: para a versão reduzida,
+ * que tem de ser processada no browser, ou quando a galeria foi aberta com uma
+ * versão antiga da Edge Function que ainda não devolve `downloadUrl`.
+ */
 export async function downloadOne(photo: SignedPhoto, web = false) {
+  if (!web && photo.downloadUrl) {
+    abrirDownload(photo.downloadUrl)
+    return
+  }
   if (!photo.url) throw new Error('Foto indisponível.')
   const res = await fetchComRetry(photo.url)
   if (!web) {
@@ -38,6 +75,20 @@ export async function downloadOne(photo: SignedPhoto, web = false) {
   }
   const reduzido = await paraWeb(new Uint8Array(await res.arrayBuffer()), photo.contentType)
   triggerSave(new Blob([reduzido.buffer as ArrayBuffer]), photo.fileName)
+}
+
+/*
+  Sem `download` no elemento: o atributo é ignorado entre domínios diferentes e,
+  pior, em alguns browsers a sua presença faz o link abrir num separador em vez
+  de descarregar. Quem manda no nome do ficheiro é o cabeçalho que vem do R2.
+*/
+function abrirDownload(url: string) {
+  const a = document.createElement('a')
+  a.href = url
+  a.rel = 'noopener'
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
 }
 
 /**

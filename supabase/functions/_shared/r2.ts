@@ -54,15 +54,51 @@ export async function presign(
   expiresIn: number,
   headers: Record<string, string> = {},
   kind: BucketKind = 'private',
+  /**
+   * Parâmetros extra a assinar junto com o resto. Usado para o
+   * `response-content-disposition`, que faz o R2 devolver o ficheiro como
+   * anexo. Têm de ir antes da assinatura: acrescentados depois, a assinatura
+   * deixa de bater certo e o R2 responde 403.
+   */
+  query: Record<string, string> = {},
 ): Promise<string> {
   const url = new URL(objectUrl(key, kind))
   url.searchParams.set('X-Amz-Expires', String(expiresIn))
+  for (const [k, v] of Object.entries(query)) url.searchParams.set(k, v)
   const signed = await client.sign(url.toString(), {
     method,
     headers,
     aws: { signQuery: true },
   })
   return signed.url
+}
+
+/**
+ * URL que descarrega o ficheiro em vez de o mostrar, com o nome original.
+ *
+ * Existe por uma razão concreta: descarregar com `fetch` obriga o bucket a
+ * responder com cabeçalhos de CORS, e quando essa configuração falha o
+ * download morre com "blocked by CORS policy" — mesmo estando tudo o resto
+ * bem. Um link normal para um URL assinado com `response-content-disposition`
+ * não é um pedido de CORS de todo: o browser descarrega e não pergunta nada.
+ *
+ * O nome vai em `filename*` no formato RFC 5987 para sobreviver a acentos, e
+ * também em `filename` simples para browsers antigos.
+ */
+export function presignDownload(
+  key: string,
+  fileName: string,
+  expiresIn: number,
+  kind: BucketKind = 'private',
+): Promise<string> {
+  // Aspas e barras invertidas partiriam o cabeçalho ao meio.
+  const seguro = fileName.replace(/["\\]/g, '_')
+  const ascii = seguro.replace(/[^\x20-\x7e]/g, '_')
+  const disposition =
+    `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(seguro)}`
+  return presign(key, 'GET', expiresIn, {}, kind, {
+    'response-content-disposition': disposition,
+  })
 }
 
 /** Apaga objetos. Erros por objeto não travam os restantes. */

@@ -48,6 +48,13 @@ export interface SignedPhoto {
   sizeBytes: number | null
   url: string | null
   thumbUrl: string | null
+  /**
+   * URL que descarrega o ficheiro directamente, sem passar por `fetch`.
+   *
+   * Opcional porque uma galeria aberta com a Edge Function antiga ainda não o
+   * traz. Nesse caso o download volta ao caminho antigo, que precisa de CORS.
+   */
+  downloadUrl?: string | null
 }
 
 /** Um item é vídeo se o content type o disser, ou pela extensão em dados antigos. */
