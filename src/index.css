@@ -210,6 +210,76 @@ body::after {
     text-transform: uppercase;
     color: rgba(252, 255, 240, 0.55);
   }
+
+  /*
+    Campos do formulário de contacto: sem caixa, só um risco por baixo.
+
+    A etiqueta começa pousada na linha, onde estaria um placeholder, e sobe
+    para cima assim que o campo ganha foco ou texto. É um <label> a sério,
+    ligado ao campo pelo `for` — e é essa a diferença que interessa: um
+    placeholder desaparece mal se começa a escrever e deixa quem está a meio do
+    formulário sem saber o que aquele campo pedia, além de nunca chegar a
+    alguns leitores de ecrã. Assim o desenho fica igualmente limpo e o nome do
+    campo nunca se perde.
+
+    O truque do `:not(:placeholder-shown)` obriga a que cada campo leve
+    `placeholder=" "` (um espaço). Sem placeholder nenhum o seletor nunca
+    dispara e a etiqueta ficava por cima do texto escrito.
+  */
+  .campo {
+    width: 100%;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid rgba(252, 255, 240, 0.15);
+    border-radius: 0;
+    padding: 1.75rem 0 0.65rem;
+    font-size: 1rem;
+    color: var(--titanium);
+    outline: none;
+    transition: border-color 0.2s ease;
+  }
+
+  .campo:focus {
+    border-bottom-color: rgba(252, 255, 240, 0.65);
+  }
+
+  .campo[aria-invalid='true'] {
+    border-bottom-color: rgba(248, 113, 113, 0.55);
+  }
+
+  .campo-label {
+    position: absolute;
+    left: 0;
+    top: 1.6rem;
+    font-size: 1rem;
+    color: rgba(252, 255, 240, 0.5);
+    pointer-events: none;
+    transition: top 0.2s ease, font-size 0.2s ease, letter-spacing 0.2s ease, color 0.2s ease;
+  }
+
+  /*
+    O `.flutua` é para os campos que nunca estão visualmente vazios — a data e
+    a lista de serviços mostram sempre alguma coisa, por isso o
+    `:placeholder-shown` nunca lá pega e a etiqueta tem de nascer já em cima.
+  */
+  .campo:focus + .campo-label,
+  .campo:not(:placeholder-shown) + .campo-label,
+  .campo-label.flutua {
+    top: 0;
+    font-size: 0.65rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(252, 255, 240, 0.55);
+  }
+}
+
+/* Quem pediu menos movimento não quer a etiqueta a deslizar de cada vez que
+   muda de campo. O salto continua a acontecer, apenas sem animação. */
+@media (prefers-reduced-motion: reduce) {
+  .campo,
+  .campo-label {
+    transition: none;
+  }
 }
 
 /*

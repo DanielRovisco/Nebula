@@ -224,9 +224,6 @@ export default function Contact() {
     } catch { /* nada a fazer */ }
   }
 
-  const inputClass =
-    'w-full bg-transparent border-b border-white/15 py-3 text-base outline-none focus:border-titanium/60 transition-colors placeholder:text-titanium/55'
-
   return (
     <div className="pt-28 sm:pt-36 pb-20 sm:pb-28">
       <Seo
@@ -263,61 +260,76 @@ export default function Contact() {
       <section className="container-px max-w-6xl mx-auto grid lg:grid-cols-[1fr_1.25fr] gap-10 lg:gap-14 items-start">
         {/* Left: info */}
         <Reveal>
-          <div className="space-y-8 lg:sticky lg:top-28">
-            {/* Quick contact box */}
-            <div className="border border-white/10 rounded-2xl p-6 sm:p-7 hover:border-white/20 transition-colors space-y-3">
-              <p className="label-sm mb-4">{t.contact.quickLabel}</p>
-              <a
-                href={CONTACT.instagramDm}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => track('cta_instagram', { onde: 'contacto' })}
-                className="flex items-center gap-3 bg-white/[0.06] hover:bg-white/[0.1] px-5 py-3.5 rounded-xl text-sm transition-colors min-h-[48px]"
-              >
-                <InstagramIcon size={18} className="shrink-0 text-titanium/70" />
-                <div>
-                  <div className="text-[11px] uppercase tracking-[0.15em] text-titanium/50 leading-none mb-0.5">Instagram</div>
-                  <div className="text-titanium/90">{CONTACT.instagramHandle}</div>
-                </div>
-              </a>
-              <a
-                href={`mailto:${CONTACT.email}`}
-                className="flex items-center gap-3 bg-white/[0.06] hover:bg-white/[0.1] px-5 py-3.5 rounded-xl text-sm transition-colors min-h-[48px]"
-              >
-                <Mail size={18} className="shrink-0 text-titanium/70" />
-                <div>
-                  <div className="text-[11px] uppercase tracking-[0.15em] text-titanium/50 leading-none mb-0.5">Email</div>
-                  <div className="text-titanium/90 break-all">{CONTACT.email}</div>
-                </div>
-              </a>
-              <p className="text-titanium/55 text-xs pt-1">{t.contact.replyTime}</p>
-            </div>
+          {/*
+            Sem caixas nem fundos: cada contacto é uma etiqueta pequena e o
+            valor por baixo, como no desenho de referência. O peso visual da
+            página passa todo para o painel do formulário, que é o que se quer
+            que a pessoa use.
+          */}
+          <div className="space-y-9 lg:sticky lg:top-28">
+            <p className="text-sm text-titanium/60 leading-relaxed max-w-sm">{t.contact.how}</p>
 
-            {/* Other contact details */}
-            <div className="space-y-5">
+            <div className="space-y-7">
               <div>
-                <p className="label-sm mb-2">{t.contact.locationLabel}</p>
-                <p className="flex items-center gap-3 text-sm sm:text-base py-1 text-titanium/80">
-                  <MapPin size={16} className="shrink-0 text-titanium/55" />
+                <p className="label-sm mb-3">Email</p>
+                <a
+                  href={`mailto:${CONTACT.email}`}
+                  className="inline-flex items-center gap-3 text-titanium/90 hover:text-titanium transition-colors break-all min-h-[44px]"
+                >
+                  <Mail size={16} className="shrink-0 text-titanium/50" />
+                  {CONTACT.email}
+                </a>
+              </div>
+
+              <div>
+                <p className="label-sm mb-3">Instagram</p>
+                <a
+                  href={CONTACT.instagramDm}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => track('cta_instagram', { onde: 'contacto' })}
+                  className="inline-flex items-center gap-3 text-titanium/90 hover:text-titanium transition-colors min-h-[44px]"
+                >
+                  <InstagramIcon size={16} className="shrink-0 text-titanium/50" />
+                  {CONTACT.instagramHandle}
+                </a>
+              </div>
+
+              <div>
+                <p className="label-sm mb-3">{t.contact.locationLabel}</p>
+                <p className="inline-flex items-center gap-3 text-titanium/90">
+                  <MapPin size={16} className="shrink-0 text-titanium/50" />
                   {t.contact.location}
                 </p>
               </div>
-              <div>
-                <p className="label-sm mb-2">{t.contact.howLabel}</p>
-                <p className="text-sm text-titanium/55 leading-relaxed">{t.contact.how}</p>
-              </div>
             </div>
 
+            <p className="text-xs text-titanium/50 border-t border-white/10 pt-6">{t.contact.replyTime}</p>
           </div>
         </Reveal>
 
         {/* Right: form */}
         <Reveal delay={0.15}>
+          {/*
+            O formulário vive num painel ligeiramente mais claro que a página,
+            com sombra por baixo. É o que faz a página ler-se como "a informação
+            está ali, a acção está aqui" em vez de duas colunas de texto lado a
+            lado. Só a partir de `sm`: num telemóvel um painel com margens por
+            dentro rouba a largura toda aos campos.
+          */}
           <form
             onSubmit={handleSubmit}
             noValidate
-            className="space-y-6 lg:border lg:border-white/10 lg:rounded-2xl lg:p-8 xl:p-10"
+            aria-labelledby="titulo-formulario"
+            className="space-y-7 sm:bg-white/[0.035] sm:border sm:border-white/10 sm:rounded-2xl sm:p-8 xl:p-10 sm:shadow-[0_28px_70px_-30px_rgba(0,0,0,0.85)]"
           >
+            <h2
+              id="titulo-formulario"
+              className="text-[0.7rem] uppercase tracking-[0.3em] text-titanium/70 pb-6 mb-1 border-b border-white/10"
+            >
+              {t.contact.formTitle}
+            </h2>
+
             {rascunho && (
               <p className="text-xs text-titanium/55 border border-white/10 rounded-xl p-3">
                 {t.contact.draftRestored}
@@ -340,9 +352,8 @@ export default function Contact() {
               />
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-6">
-              <div>
-                <label className="label-sm block mb-3" htmlFor="contact-name">{t.contact.name}</label>
+            <div className="grid sm:grid-cols-2 gap-x-8 gap-y-7">
+              <div className="relative">
                 <input
                   id="contact-name"
                   name="name"
@@ -353,15 +364,15 @@ export default function Contact() {
                   onBlur={() => visitar('name')}
                   aria-invalid={Boolean(erro('name'))}
                   aria-describedby={erro('name') ? 'erro-name' : undefined}
-                  className={`${inputClass} ${erro('name') ? 'border-red-400/50' : ''}`}
-                  placeholder={t.contact.namePlaceholder}
+                  className="campo"
+                  placeholder=" "
                 />
+                <label className="campo-label" htmlFor="contact-name">{t.contact.name}</label>
                 {erro('name') && (
                   <p id="erro-name" className="text-xs text-red-300/80 mt-2">{erro('name')}</p>
                 )}
               </div>
-              <div>
-                <label className="label-sm block mb-3" htmlFor="contact-email">{t.contact.email}</label>
+              <div className="relative">
                 <input
                   id="contact-email"
                   name="email"
@@ -373,36 +384,37 @@ export default function Contact() {
                   onBlur={() => visitar('email')}
                   aria-invalid={Boolean(erro('email'))}
                   aria-describedby={erro('email') ? 'erro-email' : undefined}
-                  className={`${inputClass} ${erro('email') ? 'border-red-400/50' : ''}`}
-                  placeholder="email@exemplo.pt"
+                  className="campo"
+                  placeholder=" "
                 />
+                <label className="campo-label" htmlFor="contact-email">{t.contact.email}</label>
                 {erro('email') && (
                   <p id="erro-email" className="text-xs text-red-300/80 mt-2">{erro('email')}</p>
                 )}
               </div>
             </div>
 
-            <div>
-              <label className="label-sm block mb-3" htmlFor="contact-service">{t.contact.service}</label>
+            {/*
+              A lista mostra sempre o primeiro serviço, por isso nunca está
+              visualmente vazia: a etiqueta nasce já em cima, com `flutua`.
+            */}
+            <div className="relative">
               <select
                 id="contact-service"
                 name="service"
                 value={form.service || servicos[0]}
                 onChange={(e) => setForm({ ...form, service: e.target.value })}
-                className="w-full bg-eerie border-b border-white/15 py-3 text-base outline-none focus:border-titanium/60 transition-colors text-titanium/80"
+                className="campo text-titanium/90"
               >
                 {servicos.map((s) => (
-                  <option key={s}>{s}</option>
+                  <option key={s} className="bg-eerie">{s}</option>
                 ))}
               </select>
+              <label className="campo-label flutua" htmlFor="contact-service">{t.contact.service}</label>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-6">
-              <div>
-                <label className="label-sm block mb-3" htmlFor="contact-date">
-                  {t.contact.date}{' '}
-                  <span className="normal-case tracking-normal text-titanium/55">{t.contact.optional}</span>
-                </label>
+            <div className="grid sm:grid-cols-2 gap-x-8 gap-y-7">
+              <div className="relative">
                 <input
                   id="contact-date"
                   name="date"
@@ -413,42 +425,59 @@ export default function Contact() {
                   onChange={(e) => setForm({ ...form, date: e.target.value })}
                   onBlur={() => visitar('date')}
                   aria-invalid={Boolean(erro('date'))}
-                  className={`${inputClass} [color-scheme:dark] ${erro('date') ? 'border-red-400/50' : ''}`}
+                  className="campo [color-scheme:dark] text-titanium/90"
                 />
+                {/* O campo de data desenha sempre o seu próprio dd/mm/aaaa, por
+                    isso a etiqueta também tem de nascer em cima. */}
+                <label className="campo-label flutua" htmlFor="contact-date">
+                  {t.contact.date}{' '}
+                  <span className="normal-case tracking-normal">{t.contact.optional}</span>
+                </label>
                 {erro('date') && <p className="text-xs text-red-300/80 mt-2">{erro('date')}</p>}
               </div>
-              <div>
-                <label className="label-sm block mb-3" htmlFor="contact-location">
-                  {t.contact.location_}{' '}
-                  <span className="normal-case tracking-normal text-titanium/55">{t.contact.optional}</span>
-                </label>
+              <div className="relative">
                 <input
                   id="contact-location"
                   name="location"
                   value={form.location}
                   onChange={(e) => setForm({ ...form, location: e.target.value })}
-                  className={inputClass}
-                  placeholder={t.contact.locationPlaceholder}
+                  className="campo"
+                  placeholder=" "
                 />
+                <label className="campo-label" htmlFor="contact-location">
+                  {t.contact.location_}{' '}
+                  <span className="normal-case tracking-normal">{t.contact.optional}</span>
+                </label>
               </div>
             </div>
 
-            <div>
-              <label className="label-sm block mb-3" htmlFor="contact-message">{t.contact.message}</label>
+            <div className="relative">
               <textarea
                 ref={areaRef}
                 id="contact-message"
                 name="message"
                 required
-                rows={5}
+                rows={4}
                 value={form.message}
                 onChange={(e) => setForm({ ...form, message: e.target.value })}
                 onBlur={() => visitar('message')}
                 aria-invalid={Boolean(erro('message'))}
-                aria-describedby={erro('message') ? 'erro-message' : undefined}
-                className="w-full bg-white/[0.03] border border-white/15 rounded-xl px-4 py-3 outline-none focus:border-titanium/60 transition-colors resize-none overflow-hidden text-base placeholder:text-titanium/55"
-                placeholder={t.contact.messagePlaceholder}
+                aria-describedby={`${erro('message') ? 'erro-message ' : ''}dica-message`}
+                className="campo resize-none overflow-hidden"
+                placeholder=" "
               />
+              <label className="campo-label" htmlFor="contact-message">{t.contact.message}</label>
+              {/*
+                A sugestão do que escrever era o placeholder do campo. Com a
+                etiqueta flutuante deixa de haver placeholder onde a pôr, e
+                perdê-la custava caro: é ela que faz chegarem pedidos com data,
+                local e ideia em vez de "olá, quanto custa?". Fica por baixo,
+                onde se lê antes de começar a escrever e continua visível
+                depois.
+              */}
+              <p id="dica-message" className="text-xs text-titanium/50 mt-2 leading-relaxed">
+                {t.contact.messagePlaceholder}
+              </p>
               {erro('message') && (
                 <p id="erro-message" className="text-xs text-red-300/80 mt-2">{erro('message')}</p>
               )}
