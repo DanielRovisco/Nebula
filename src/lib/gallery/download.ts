@@ -14,7 +14,32 @@ async function fetchComRetry(url: string, signal?: AbortSignal, tentativas = 3):
   for (let i = 0; i < tentativas; i++) {
     if (signal?.aborted) throw new DOMException('Cancelado', 'AbortError')
     try {
-      const res = await fetch(url, { signal })
+      /*
+        `no-store` não é por causa de dados velhos: é para não ler a cache.
+
+        Quem vê uma fotografia na galeria fá-lo através de uma `<img>`, e uma
+        `<img>` não é um pedido de CORS. O browser guarda essa resposta em
+        cache sem cabeçalhos de CORS, porque nunca foram pedidos. Ao
+        descarregar, o `fetch` pede o mesmo endereço, recebe de volta essa
+        cópia guardada, não encontra lá o `Access-Control-Allow-Origin` e
+        recusa — com a mesma mensagem que dá um bucket mal configurado, mesmo
+        estando o bucket impecável.
+
+        Foi isto que fez "algumas fotos" falharem e outras não: falhavam
+        exactamente as que já tinham sido abertas. Verificado com um OPTIONS
+        directo ao R2, que devolvia os cabeçalhos todos certos enquanto o
+        browser insistia em bloquear.
+
+        A alternativa era pôr `crossOrigin` nas imagens da galeria, para a
+        cópia guardada já vir com cabeçalhos. Não se fez: isso passaria a
+        obrigar o CORS a estar bom para as fotografias sequer aparecerem, e
+        mais vale o download falhar do que a galeria do cliente ficar vazia.
+
+        O custo é descarregar de novo o que já estava em cache. É pequeno: a
+        grelha mostra miniaturas, não os originais, e o ZIP já tem a sua
+        própria cache em memória.
+      */
+      const res = await fetch(url, { signal, cache: 'no-store' })
       if (res.ok) return res
       // 4xx não melhora à segunda: o URL assinado expirou ou nunca foi válido.
       if (res.status >= 400 && res.status < 500) throw new Error(`HTTP ${res.status}`)
