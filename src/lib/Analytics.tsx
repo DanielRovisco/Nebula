@@ -23,6 +23,16 @@ export default function Analytics() {
     if (!SRC || !import.meta.env.PROD) return
     if (document.querySelector(`script[src="${SRC}"]`)) return
 
+    /*
+      O painel de administração fica de fora pela mesma razão: somos nós que lá
+      entramos, todos os dias, e por vezes dezenas de vezes seguidas a
+      organizar uma galeria. Contar isso não diz nada sobre quem procura um
+      fotógrafo — só enche o gráfico e faz o site parecer mais visitado do que
+      é, que é a pior coisa que um número pode fazer.
+    */
+    if (window.location.pathname.replace(/\/$/, '').endsWith('/admin') ||
+        window.location.pathname.includes('/admin/')) return
+
     const s = document.createElement('script')
     s.src = SRC
     s.defer = true

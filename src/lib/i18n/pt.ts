@@ -249,7 +249,7 @@ export const pt = {
     label: 'Privacidade',
     title: 'O que fazemos com os teus dados.',
     updated: 'Última atualização:',
-    updatedAt: '16 de agosto de 2026',
+    updatedAt: '3 de setembro de 2026',
     sections: [
       {
         title: 'Quem trata os teus dados',
@@ -276,8 +276,8 @@ export const pt = {
           'GitHub Pages: alojamento do site.',
           'Supabase: base de dados das galerias e autenticação do nosso painel.',
           'Cloudflare R2: armazenamento das fotografias e vídeos.',
-          'Serviço de envio do formulário: encaminha para o nosso email a mensagem que escreves.',
-          'Ferramenta de estatísticas sem cookies: contagem agregada de visitas.',
+          'Formspree: encaminha para o nosso email a mensagem que escreves no formulário de contacto.',
+          'Umami: contagem agregada de visitas, sem cookies.',
         ],
         after:
           'Alguns destes fornecedores são norte-americanos e podem tratar dados fora da União Europeia, ao abrigo das cláusulas contratuais-tipo da Comissão Europeia.',

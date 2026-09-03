@@ -256,7 +256,7 @@ export const en: Dict = {
     label: 'Privacy',
     title: 'What we do with your data.',
     updated: 'Last updated:',
-    updatedAt: '16 August 2026',
+    updatedAt: '3 September 2026',
     sections: [
       {
         title: 'Who handles your data',
@@ -283,8 +283,8 @@ export const en: Dict = {
           'GitHub Pages: hosting for the site.',
           'Supabase: the gallery database and the login for our admin panel.',
           'Cloudflare R2: storage for photographs and films.',
-          'Form delivery service: passes the message you write to our inbox.',
-          'Cookie-free analytics tool: aggregate visit counts.',
+          'Formspree: passes the message you write in the contact form to our inbox.',
+          'Umami: aggregate visit counts, without cookies.',
         ],
         after:
           'Some of these providers are US-based and may process data outside the European Union, under the European Commission’s standard contractual clauses.',

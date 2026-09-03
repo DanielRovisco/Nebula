@@ -20,16 +20,23 @@ const site = JSON.parse(await readFile(raiz + 'site.config.json', 'utf8'))
 const origin = site.origin.replace(/\/$/, '')
 const base = site.base.endsWith('/') ? site.base : `${site.base}/`
 /*
-  Sub-páginas sem barra final (/sobre, não /sobre/), mas a inicial mantém a
-  dela: o canonical escrito pelo Seo.tsx é `https://dominio/`, e um sitemap a
-  dizer `https://dominio` estaria a declarar um endereço diferente do que a
-  própria página diz ser o seu. Só se nota quando o `base` é a raiz — com
-  `/Nebula/` a barra vinha do próprio base.
+  Todos os endereços com barra final, incluindo a inicial.
+
+  A razão é o que o servidor faz, não uma preferência de estilo. A
+  pré-renderização escreve cada rota como `dist/<rota>/index.html`, e o GitHub
+  Pages serve pastas com barra: quem pede `/sobre` leva um 301 para `/sobre/`.
+  Um sitemap a anunciar `/sobre` mandava o Google a um endereço que
+  redirecciona, e o resultado é ele reportar "página com redirecionamento" e
+  não indexar o endereço submetido. Junta-se a isso o canonical na página a
+  dizer `/sobre` enquanto o Google aterrou em `/sobre/`, e ficam os dois a
+  contradizer-se.
+
+  Isto tem de acompanhar o canonical escrito pelo Seo.tsx. Se um dia um deles
+  mudar de forma, o outro tem de mudar também.
 */
 const url = (caminho) => {
   const completo = `${origin}${base}${caminho.replace(/^\//, '')}`
-  const semBarra = completo.replace(/\/$/, '')
-  return semBarra === origin ? `${origin}/` : semBarra
+  return completo.endsWith('/') ? completo : `${completo}/`
 }
 
 /**

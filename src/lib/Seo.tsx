@@ -68,7 +68,20 @@ export default function Seo({ title, description, image, noindex = false, jsonLd
     setMeta('meta[name="twitter:description"]', 'name', 'twitter:description', description)
     setMeta('meta[name="twitter:image"]', 'name', 'twitter:image', image ?? DEFAULT_OG)
 
-    const url = `${SITE_URL}${pathname === '/' ? '/' : pathname}`
+    /*
+      Endereço canónico sempre com barra final.
+
+      A pré-renderização escreve cada rota como `dist/<rota>/index.html` e o
+      GitHub Pages serve pastas com barra: quem pede `/sobre` leva um 301 para
+      `/sobre/`. Um canonical a apontar para o endereço que redirecciona
+      contradiz o endereço onde o Google efectivamente aterra, e essa
+      contradição trava a indexação.
+
+      O sitemap é gerado com a mesma regra, em scripts/gen-public.mjs. Os dois
+      têm de andar juntos: mudar um sem o outro volta a criar a contradição.
+    */
+    const comBarra = (p: string) => (p.endsWith('/') ? p : `${p}/`)
+    const url = `${SITE_URL}${comBarra(pathname)}`
     setMeta('meta[property="og:url"]', 'property', 'og:url', url)
 
     let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')
@@ -100,10 +113,10 @@ export default function Seo({ title, description, image, noindex = false, jsonLd
     setMeta('meta[property="og:locale"]', 'property', 'og:locale', lang === 'pt' ? 'pt_PT' : 'en_GB')
 
     const alternativas: [string, string][] = [
-      ['pt-PT', `${SITE_URL}${switchLang(pathname, 'pt')}`],
-      ['en', `${SITE_URL}${switchLang(pathname, 'en')}`],
+      ['pt-PT', `${SITE_URL}${comBarra(switchLang(pathname, 'pt'))}`],
+      ['en', `${SITE_URL}${comBarra(switchLang(pathname, 'en'))}`],
       // Diz ao Google o que servir a quem não procura em nenhuma das duas.
-      ['x-default', `${SITE_URL}${switchLang(pathname, 'pt')}`],
+      ['x-default', `${SITE_URL}${comBarra(switchLang(pathname, 'pt'))}`],
     ]
     for (const [hreflang, href] of alternativas) {
       let link = document.head.querySelector<HTMLLinkElement>(

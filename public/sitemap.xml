@@ -5,96 +5,96 @@
   <url>
     <loc>https://proj3ctnebula.pt/</loc>
     <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/" />
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://proj3ctnebula.pt/portfolio</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/portfolio" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/portfolio" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/portfolio" />
+    <loc>https://proj3ctnebula.pt/portfolio/</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/portfolio/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/portfolio/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/portfolio/" />
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://proj3ctnebula.pt/servicos</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/servicos" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/services" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/servicos" />
+    <loc>https://proj3ctnebula.pt/servicos/</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/servicos/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/services/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/servicos/" />
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://proj3ctnebula.pt/sobre</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/sobre" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/about" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/sobre" />
+    <loc>https://proj3ctnebula.pt/sobre/</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/sobre/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/about/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/sobre/" />
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://proj3ctnebula.pt/contacto</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/contacto" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/contact" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/contacto" />
+    <loc>https://proj3ctnebula.pt/contacto/</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/contacto/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/contact/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/contacto/" />
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://proj3ctnebula.pt/privacidade</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/privacidade" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/privacy" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/privacidade" />
+    <loc>https://proj3ctnebula.pt/privacidade/</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/privacidade/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/privacy/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/privacidade/" />
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
-    <loc>https://proj3ctnebula.pt/en</loc>
+    <loc>https://proj3ctnebula.pt/en/</loc>
     <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/" />
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://proj3ctnebula.pt/en/portfolio</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/portfolio" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/portfolio" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/portfolio" />
+    <loc>https://proj3ctnebula.pt/en/portfolio/</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/portfolio/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/portfolio/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/portfolio/" />
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://proj3ctnebula.pt/en/services</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/servicos" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/services" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/servicos" />
+    <loc>https://proj3ctnebula.pt/en/services/</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/servicos/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/services/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/servicos/" />
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://proj3ctnebula.pt/en/about</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/sobre" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/about" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/sobre" />
+    <loc>https://proj3ctnebula.pt/en/about/</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/sobre/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/about/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/sobre/" />
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://proj3ctnebula.pt/en/contact</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/contacto" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/contact" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/contacto" />
+    <loc>https://proj3ctnebula.pt/en/contact/</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/contacto/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/contact/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/contacto/" />
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://proj3ctnebula.pt/en/privacy</loc>
-    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/privacidade" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/privacy" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/privacidade" />
+    <loc>https://proj3ctnebula.pt/en/privacy/</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/privacidade/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/privacy/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/privacidade/" />
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
