@@ -80,6 +80,29 @@
       window.addEventListener('error', function (e) {
         var alvo = e.target;
         if (!alvo || alvo.tagName !== 'SCRIPT' || !alvo.src) return;
+
+        /*
+          Só scripts nossos, e só antes de a aplicação arrancar. As duas
+          condições foram acrescentadas depois de esta rede de segurança pôr o
+          site em ciclo de recargas.
+
+          O que aconteceu: instalaram-se as estatísticas, um bloqueador de
+          publicidade barrou o script do Umami, isso disparou este mesmo evento,
+          e como a aplicação arrancava bem entre recargas ela limpava a marca
+          que impedia repetir. Bloqueio, recarga, bloqueio, recarga, sem fim.
+
+          Daí as duas guardas. Um script de outro domínio nunca é o ficheiro de
+          entrada, e se ele falhar o site continua a funcionar sem ele. E se a
+          aplicação já arrancou, o ficheiro de entrada carregou por definição:
+          o que falhar a partir daí é problema de outra pessoa, não desta rede.
+        */
+        if (window.__nebulaArrancou) return;
+        try {
+          if (new URL(alvo.src, window.location.href).origin !== window.location.origin) return;
+        } catch (_) {
+          return;
+        }
+
         try {
           if (sessionStorage.getItem('nebula-recarga-entrada')) return;
           sessionStorage.setItem('nebula-recarga-entrada', '1');

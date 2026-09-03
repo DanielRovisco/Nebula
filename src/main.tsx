@@ -30,6 +30,17 @@ try {
   sessionStorage.removeItem('nebula-recarga-entrada')
 } catch { /* sem sessionStorage não há marca para limpar */ }
 
+/*
+  Desarma a rede de segurança do index.html. A partir daqui o ficheiro de
+  entrada carregou, e qualquer erro de script que venha a seguir não se resolve
+  a recarregar a página.
+
+  Sem isto, um script bloqueado por um bloqueador de publicidade punha o site em
+  ciclo: o erro pedia recarga, a aplicação arrancava, limpava a marca acima, e o
+  erro voltava a pedir recarga. Aconteceu a sério, com o script das estatísticas.
+*/
+;(window as unknown as { __nebulaArrancou?: boolean }).__nebulaArrancou = true
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter basename={BASENAME}>
