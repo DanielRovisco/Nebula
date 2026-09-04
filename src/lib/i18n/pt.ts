@@ -255,6 +255,7 @@ export const pt = {
         title: 'Quem trata os teus dados',
         paragraphs: [
           'Os dados recolhidos neste site são tratados pela NEBULA, que presta serviços de fotografia e vídeo em Portugal.',
+          'Responsável pelo tratamento: Daniel Rovisco, NIF 240055233, Rua António Silva, Bairro São Carlos, n.º 4, 3.º Dto., 2725-170 Mem Martins, Portugal.',
           'Para qualquer questão sobre privacidade, o contacto é:',
         ],
       },

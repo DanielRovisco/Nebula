@@ -262,6 +262,7 @@ export const en: Dict = {
         title: 'Who handles your data',
         paragraphs: [
           'The data collected on this site is handled by NEBULA, a photography and film service based in Portugal.',
+          'Data controller: Daniel Rovisco, tax number 240055233, Rua António Silva, Bairro São Carlos, n.º 4, 3.º Dto., 2725-170 Mem Martins, Portugal.',
           'For anything to do with privacy, write to:',
         ],
       },

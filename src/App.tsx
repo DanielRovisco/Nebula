@@ -8,6 +8,7 @@ import Footer from './components/Footer'
 import ScrollProgress from './components/ScrollProgress'
 import FloatingActions from './components/FloatingActions'
 import Analytics from './lib/Analytics'
+import Poeira from './lib/Poeira'
 import SmoothScroll from './lib/SmoothScroll'
 import PageTransition from './lib/PageTransition'
 import ScrollToTop from './lib/ScrollToTop'
@@ -73,6 +74,7 @@ export default function App() {
   return (
     <SmoothScroll>
       {/* Fora do painel e das galerias: não se medem visitas a páginas privadas. */}
+      <Poeira />
       <Analytics />
       <ScrollProgress />
       <ScrollToTop />

@@ -36,13 +36,20 @@
     box-sizing: border-box;
   }
 
+  /*
+    A cor de fundo vive no html e não no body, e isso é o que permite a poeira
+    existir. Ela é um canvas em `z-index: -1`, ou seja atrás do conteúdo do
+    body: se o body tivesse cor própria, tapava-a por completo e não se via
+    nada. Assim a cor fica uma camada abaixo e a poeira flutua entre as duas.
+  */
   html {
     scroll-behavior: auto;
+    background: var(--eerie);
   }
 
   body {
     margin: 0;
-    background: var(--eerie);
+    background: transparent;
     color: var(--titanium);
     font-family: "Poppins", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -107,8 +114,12 @@ body::after {
   pointer-events: none;
   opacity: 0.2;
   /*
-    Grão fino, que é o que serve um ecrã pequeno visto de perto. O ecrã grande
-    leva outro, mais abaixo.
+    Grão fino, igual em todos os ecrãs.
+
+    Chegou a haver um grão mais grosso a partir dos 768px, para ele se ver num
+    monitor. Foi retirado: à distância lia-se como uma fotografia com ruído e
+    não como material do site. Quem faz o site parecer vivo passa a ser a
+    poeira do Poeira.tsx, que se move de verdade em vez de ser textura parada.
   */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)'/%3E%3C/svg%3E");
   background-size: 200px 200px;
@@ -125,32 +136,6 @@ body::after {
   */
   animation: grao-deriva 20s ease-in-out infinite;
   will-change: transform;
-}
-
-/*
-  Grão mais grosso só a partir dos 768px de largura.
-
-  Não é preciosismo: o mesmo grão não pode servir os dois. Um telemóvel
-  segura-se a trinta centímetros e tem o triplo dos pontos por polegada; um
-  monitor está a um metro. Com o grão fino, no monitor o olho esbate-o e ele
-  desaparece — do desvio de 4.7 que ele produz sobrevive 0.71, ou seja perde-se
-  85 por cento. Com o grão grosso, no telemóvel deixa de se ler como grão e
-  passa a ler-se como manchas, como se a imagem estivesse mal comprimida.
-
-  O padrão é desenhado com 100 unidades e mostrado a 320px. Como é SVG, é
-  redesenhado no tamanho final em vez de ser uma imagem pequena ampliada, por
-  isso sai grosso e nítido. A força do ruído é a mesma nos dois; muda só o
-  tamanho de cada grão.
-
-  A fronteira é a largura e não a densidade do ecrã de propósito: um portátil
-  com ecrã de alta densidade vê-se à distância de um monitor, não à de um
-  telemóvel, e é a distância que manda aqui.
-*/
-@media (min-width: 768px) {
-  body::after {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23g)'/%3E%3C/svg%3E");
-    background-size: 320px 320px;
-  }
 }
 
 @keyframes grao-deriva {
