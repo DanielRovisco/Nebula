@@ -275,6 +275,22 @@ export const en: Dict = {
         ],
       },
       {
+        title: 'Cookies and what your browser keeps',
+        paragraphs: [
+          'This site uses no cookies. Not ours, not third-party, none for advertising or cross-site tracking. That is why no consent banner ever appears: there is nothing to consent to.',
+          'It does use your browser\u2019s own storage to remember things you asked for, which stay on your device and are never sent to us:',
+        ],
+        list: [
+          'What you typed in the contact form, so it is not lost if you leave the page. Cleared the moment you send it.',
+          'Your access to a gallery once you get the password right, so you do not have to type it again on every page. It lasts two hours at most and disappears when you close the tab.',
+          'The gallery password, while you are there, only for the button that copies the sharing message. It also disappears when you close the tab.',
+          'A note that you have already seen the opening animation, so it does not play on every visit.',
+          'Two technical notes that let the site recover on its own when a file fails to load.',
+        ],
+        after:
+          'None of it identifies you and none of it reaches us. You can delete all of it at any time by clearing the site data in your browser settings; the only consequence is having to type the gallery password again.',
+      },
+      {
         title: 'Who else touches it',
         paragraphs: [
           'For the site to work we rely on providers who handle data on our behalf and only on our instructions:',

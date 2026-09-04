@@ -268,6 +268,22 @@ export const pt = {
         ],
       },
       {
+        title: 'Cookies e o que fica guardado no teu browser',
+        paragraphs: [
+          'Este site não usa cookies. Nem nossos, nem de terceiros, nem de publicidade ou de seguimento entre sites. É por isso que não te aparece nenhum aviso a pedir consentimento: não há nada a consentir.',
+          'Usa, isso sim, o armazenamento do próprio browser para se lembrar de coisas que tu pediste, e que ficam no teu dispositivo sem nunca serem enviadas para nós:',
+        ],
+        list: [
+          'O que escreveste no formulário de contacto, para não se perder se saíres da página. Apagado assim que envias.',
+          'O acesso a uma galeria depois de acertares na password, para não a teres de escrever outra vez a cada página. Dura no máximo duas horas e desaparece quando fechas o separador.',
+          'A password da galeria, enquanto lá estiveres, apenas para o botão que copia a mensagem de partilha. Também desaparece ao fechar o separador.',
+          'A marca de que já viste a animação de entrada, para ela não se repetir a cada visita.',
+          'Duas marcas técnicas que servem para o site se recuperar sozinho quando um ficheiro não carrega.',
+        ],
+        after:
+          'Nada disto te identifica nem nos chega às mãos. Podes apagar tudo a qualquer momento, limpando os dados do site nas definições do teu browser; a única consequência é teres de escrever a password da galeria de novo.',
+      },
+      {
         title: 'Quem mais lhes toca',
         paragraphs: [
           'Para o site funcionar recorremos a fornecedores que tratam dados por nossa conta e apenas segundo as nossas instruções:',
