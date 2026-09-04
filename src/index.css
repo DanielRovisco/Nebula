@@ -107,22 +107,11 @@ body::after {
   pointer-events: none;
   opacity: 0.2;
   /*
-    O padrão é desenhado com 100 unidades e mostrado a 320px, ou seja esticado
-    mais de três vezes. Não é desleixo: é o que torna cada grão maior.
-
-    O SVG é redesenhado no tamanho final, não é uma imagem pequena ampliada,
-    por isso o grão sai grosso e nítido em vez de esborratado. E como a força
-    do ruído não muda, ganha presença sem ficar mais sujo.
-
-    Foi medido, porque à vista não se decidia. Do desvio que o grão produz,
-    só uma parte sobrevive ao esbatimento que o olho faz a um metro de um
-    monitor, e era aí que ele desaparecia no computador enquanto se via bem no
-    telemóvel, que se segura a trinta centímetros e tem o triplo da densidade.
-    Com 200px de padrão a 200px sobrevivia 0.71; assim sobrevivem 1.9, quase o
-    triplo, com o mesmo ruído em bruto.
+    Grão fino, que é o que serve um ecrã pequeno visto de perto. O ecrã grande
+    leva outro, mais abaixo.
   */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23g)'/%3E%3C/svg%3E");
-  background-size: 320px 320px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
   /*
     20 segundos por volta, uns 3px por segundo. É devagar ao ponto de não se
     ver a andar: nota-se que a imagem está viva sem que o olho consiga seguir o
@@ -136,6 +125,32 @@ body::after {
   */
   animation: grao-deriva 20s ease-in-out infinite;
   will-change: transform;
+}
+
+/*
+  Grão mais grosso só a partir dos 768px de largura.
+
+  Não é preciosismo: o mesmo grão não pode servir os dois. Um telemóvel
+  segura-se a trinta centímetros e tem o triplo dos pontos por polegada; um
+  monitor está a um metro. Com o grão fino, no monitor o olho esbate-o e ele
+  desaparece — do desvio de 4.7 que ele produz sobrevive 0.71, ou seja perde-se
+  85 por cento. Com o grão grosso, no telemóvel deixa de se ler como grão e
+  passa a ler-se como manchas, como se a imagem estivesse mal comprimida.
+
+  O padrão é desenhado com 100 unidades e mostrado a 320px. Como é SVG, é
+  redesenhado no tamanho final em vez de ser uma imagem pequena ampliada, por
+  isso sai grosso e nítido. A força do ruído é a mesma nos dois; muda só o
+  tamanho de cada grão.
+
+  A fronteira é a largura e não a densidade do ecrã de propósito: um portátil
+  com ecrã de alta densidade vê-se à distância de um monitor, não à de um
+  telemóvel, e é a distância que manda aqui.
+*/
+@media (min-width: 768px) {
+  body::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23g)'/%3E%3C/svg%3E");
+    background-size: 320px 320px;
+  }
 }
 
 @keyframes grao-deriva {
