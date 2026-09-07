@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Check, ChevronDown } from 'lucide-react'
+import { ArrowRight, Check } from 'lucide-react'
 import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
 import Seo from '../lib/Seo'
@@ -79,7 +79,14 @@ export default function Services() {
   // Vindo de um cartão da página inicial (/servicos#maternidade), abre logo essa
   // categoria em vez da primeira.
   const [open, setOpen] = useState<string>(() => categoriaDoHash(hash) ?? 'casamentos')
-  const refs = useRef<Record<string, HTMLDivElement | null>>({})
+  /*
+    A barra das abas, para o salto vindo de um cartão da página inicial ficar
+    com as abas à vista e não com o painel colado ao topo. Antes havia uma
+    referência por categoria porque cada uma era uma secção; agora o painel é
+    um só e o que interessa mostrar é a escolha.
+  */
+  const barraRef = useRef<HTMLDivElement | null>(null)
+  const botoesRef = useRef<Record<string, HTMLButtonElement | null>>({})
 
   // Se o hash mudar sem sair da página (clicar noutro cartão a partir daqui),
   // acompanha-o já no render — sem efeito a disparar um segundo render.
@@ -98,13 +105,38 @@ export default function Services() {
     // antes de medir. O desconto de 96px tira a categoria de debaixo da barra
     // fixa do topo.
     const t = setTimeout(() => {
-      const el = refs.current[id]
+      const el = barraRef.current
       if (!el) return
       const topo = el.getBoundingClientRect().top + window.scrollY - 96
       window.scrollTo({ top: Math.max(0, topo), behavior: 'smooth' })
     }, 150)
     return () => clearTimeout(t)
   }, [hash])
+
+  /*
+    Setas para mudar de aba, Home e End para a primeira e a última. É o que a
+    norma manda para este padrão e é o que torna a barra utilizável sem rato:
+    sem isto, e com uma só paragem de tabulação, quem navega por teclado
+    chegava à barra e não conseguia sair da primeira aba.
+
+    O foco vai para a aba nova a seguir a mudá-la, senão a selecção andava e o
+    foco ficava para trás, e a leitura em voz alta deixava de corresponder ao
+    que está escolhido.
+  */
+  function aoTeclado(e: React.KeyboardEvent<HTMLDivElement>) {
+    // `string[]` e não a união literal: o `open` é uma string vinda do URL.
+    const ids: string[] = CATEGORIES.map((c) => c.id)
+    const i = ids.indexOf(open)
+    let destino: string | null = null
+    if (e.key === 'ArrowRight') destino = ids[(i + 1) % ids.length]
+    else if (e.key === 'ArrowLeft') destino = ids[(i - 1 + ids.length) % ids.length]
+    else if (e.key === 'Home') destino = ids[0]
+    else if (e.key === 'End') destino = ids[ids.length - 1]
+    if (!destino) return
+    e.preventDefault()
+    setOpen(destino)
+    botoesRef.current[destino]?.focus()
+  }
 
   return (
     <div className="pt-28 sm:pt-36 pb-20 sm:pb-28">
@@ -144,126 +176,145 @@ export default function Services() {
         </Reveal>
       </section>
 
-      {/* Accordion */}
+      {/*
+        Abas lado a lado, e não uma lista de painéis empilhados.
+
+        Empilhadas, os quatro serviços ocupavam quatro ecrãs e quem chegava
+        aqui via um e tinha de rolar para descobrir que havia mais. Lado a
+        lado, a oferta toda lê-se de uma vez e comparar dois é um clique em vez
+        de um passeio.
+
+        Segue o padrão de abas da norma: `tablist`, `tab` e `tabpanel` com as
+        ligações entre eles, uma só paragem de tabulação na barra, e as setas a
+        mudar de aba. Sem isso são quatro botões que por acaso parecem abas, e
+        quem navega por teclado tem de passar por todos para chegar ao último.
+      */}
       <section className="container-px">
-        <div className="border border-white/10 rounded-2xl overflow-hidden">
+        <div
+          ref={barraRef}
+          role="tablist"
+          aria-label={t.services.label}
+          onKeyDown={aoTeclado}
+          className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3"
+        >
           {CATEGORIES.map((cat, idx) => {
-            const isOpen = open === cat.id
+            const activa = open === cat.id
             return (
-              <div
+              <button
                 key={cat.id}
-                id={cat.id}
                 ref={(el) => {
-                  refs.current[cat.id] = el
+                  botoesRef.current[cat.id] = el
                 }}
-                className={`bg-eerie${idx > 0 ? ' border-t border-white/10' : ''}`}
+                role="tab"
+                id={`aba-${cat.id}`}
+                aria-selected={activa}
+                aria-controls="painel-servico"
+                /*
+                  Só a aba escolhida recebe tabulação. É o que faz a barra
+                  contar como uma paragem e não como quatro: entra-se nela,
+                  muda-se com as setas, e sai-se para o conteúdo.
+                */
+                tabIndex={activa ? 0 : -1}
+                onClick={() => setOpen(cat.id)}
+                className={`rounded-xl border px-4 py-4 sm:py-5 text-left transition-colors min-h-[56px] ${
+                  activa
+                    ? 'border-white/35 bg-white/[0.05] text-titanium'
+                    : 'border-white/10 text-titanium/60 hover:border-white/25 hover:text-titanium/85'
+                }`}
               >
-                {/* Trigger */}
-                <button
-                  onClick={() => setOpen(isOpen ? '' : cat.id)}
-                  className="w-full flex items-center justify-between py-6 sm:py-9 px-6 sm:px-10 text-left group active:bg-white/[0.02]"
-                >
-                  <div className="flex items-center gap-5 sm:gap-10 min-w-0">
-                    <span className="font-mono text-xs text-titanium/55 tracking-[0.25em] hidden sm:block">
-                      0{idx + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <h2
-                        className="group-hover:translate-x-1 transition-transform duration-300"
-                        style={{ fontSize: 'clamp(1.2rem, 2.8vw, 2.2rem)' }}
-                      >
-                        {t.home.services[cat.id].title}
-                      </h2>
-                      <p className="text-titanium/60 text-xs sm:text-sm mt-1">
-                        {t.home.services[cat.id].tagline}
-                      </p>
-                    </div>
-                  </div>
-                  <motion.span
-                    animate={{ rotate: isOpen ? 180 : 0 }}
-                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                    className="shrink-0 ml-4 text-titanium/50"
-                  >
-                    <ChevronDown size={20} />
-                  </motion.span>
-                </button>
-
-                {/* Panel */}
-                <AnimatePresence>
-                  {isOpen && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-                      className="overflow-hidden"
-                    >
-                      <div className="px-6 sm:px-10 pb-8 sm:pb-10">
-                        {/* Image */}
-                        <Picture
-                          name={cat.image}
-                          alt={cat.alt}
-                          sizes="(max-width: 1024px) 100vw, 900px"
-                          className={`w-full h-52 sm:h-64 rounded-xl object-cover ${cat.imgPos} mb-6 sm:mb-8`}
-                        />
-                        {/* Pack cards */}
-                        <div
-                          className={`grid gap-4 ${
-                            cat.packs.length === 2
-                              ? 'sm:grid-cols-2'
-                              : 'sm:grid-cols-2 lg:grid-cols-3'
-                          }`}
-                        >
-                          {cat.packs.map((pack) => (
-                            <div
-                              key={pack.name}
-                              className="border border-white/10 rounded-xl p-5 sm:p-6 flex flex-col hover:border-white/20 transition-colors"
-                            >
-                              <h3 className="text-base sm:text-lg mb-4">{t.services.packs[pack.name]}</h3>
-                              <ul className="space-y-2.5 flex-1">
-                                {pack.items.map((item) => (
-                                  <li key={item} className="flex items-start gap-2.5 text-sm text-titanium/55">
-                                    <Check size={13} className="mt-0.5 shrink-0 text-titanium/70" />
-                                    {t.services.items[item]}
-                                  </li>
-                                ))}
-                              </ul>
-                              <Link
-                                to={link('contact')}
-                                className="mt-6 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all w-fit min-h-[44px]"
-                              >
-                                {t.common.requestProposal} <ArrowRight size={12} />
-                              </Link>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/*
-                          Quem acaba de ler o que está incluído quer ver como
-                          fica — e o portfólio abre já filtrado por esta
-                          categoria, em vez de o obrigar a procurar o filtro.
-
-                          Só aparece quando o serviço tem mesmo uma categoria
-                          correspondente. Um hash que não casa com categoria
-                          nenhuma não dá erro: mostra o portfólio inteiro, sem
-                          filtro, como se a ligação não tivesse feito nada — e
-                          quem clicou fica sem perceber porquê.
-                        */}
-                        {cat.portfolio && (
-                          <Link
-                            to={`${link('portfolio')}#${cat.portfolio}`}
-                            className="mt-6 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all"
-                          >
-                            {t.services.seeWork} <ArrowRight size={12} />
-                          </Link>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+                <span className="font-mono text-[10px] tracking-[0.25em] text-titanium/45 block mb-1">
+                  0{idx + 1}
+                </span>
+                <span className="block leading-tight" style={{ fontSize: 'clamp(0.95rem, 1.5vw, 1.15rem)' }}>
+                  {t.home.services[cat.id].title}
+                </span>
+              </button>
             )
           })}
+        </div>
+
+        {/*
+          Um painel só, que troca de conteúdo. A transição é uma passagem de
+          opacidade curta e não uma abertura em altura: com as abas fixas por
+          cima, animar a altura fazia a página saltar debaixo do cursor de cada
+          vez que se mudava de serviço.
+        */}
+        <div
+          role="tabpanel"
+          id="painel-servico"
+          aria-labelledby={`aba-${open}`}
+          tabIndex={0}
+          className="mt-6 sm:mt-8 border border-white/10 rounded-2xl p-6 sm:p-10"
+        >
+          <AnimatePresence mode="wait">
+            {CATEGORIES.filter((c) => c.id === open).map((cat) => (
+              <motion.div
+                key={cat.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <p className="text-titanium/60 text-sm mb-6">{t.home.services[cat.id].tagline}</p>
+
+                <Picture
+                  name={cat.image}
+                  alt={cat.alt}
+                  sizes="(max-width: 1024px) 100vw, 900px"
+                  className={`w-full h-52 sm:h-64 rounded-xl object-cover ${cat.imgPos} mb-6 sm:mb-8`}
+                />
+
+                <div
+                  className={`grid gap-4 ${
+                    cat.packs.length === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-3'
+                  }`}
+                >
+                  {cat.packs.map((pack) => (
+                    <div
+                      key={pack.name}
+                      className="border border-white/10 rounded-xl p-5 sm:p-6 flex flex-col hover:border-white/20 transition-colors"
+                    >
+                      <h3 className="text-base sm:text-lg mb-4">{t.services.packs[pack.name]}</h3>
+                      <ul className="space-y-2.5 flex-1">
+                        {pack.items.map((item) => (
+                          <li key={item} className="flex items-start gap-2.5 text-sm text-titanium/55">
+                            <Check size={13} className="mt-0.5 shrink-0 text-titanium/70" />
+                            {t.services.items[item]}
+                          </li>
+                        ))}
+                      </ul>
+                      <Link
+                        to={link('contact')}
+                        className="mt-6 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all w-fit min-h-[44px]"
+                      >
+                        {t.common.requestProposal} <ArrowRight size={12} />
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+
+                {/*
+                  Quem acaba de ler o que está incluído quer ver como fica, e o
+                  portfólio abre já filtrado por esta categoria em vez de o
+                  obrigar a procurar o filtro.
+
+                  Só aparece quando o serviço tem mesmo uma categoria
+                  correspondente. Um hash que não casa com categoria nenhuma
+                  não dá erro: mostra o portfólio inteiro, sem filtro, como se
+                  a ligação não tivesse feito nada, e quem clicou fica sem
+                  perceber porquê.
+                */}
+                {cat.portfolio && (
+                  <Link
+                    to={`${link('portfolio')}#${cat.portfolio}`}
+                    className="mt-6 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all"
+                  >
+                    {t.services.seeWork} <ArrowRight size={12} />
+                  </Link>
+                )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       </section>
 
