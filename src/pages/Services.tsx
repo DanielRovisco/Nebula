@@ -257,16 +257,46 @@ export default function Services() {
               >
                 <p className="text-titanium/60 text-sm mb-6">{t.home.services[cat.id].tagline}</p>
 
-                <Picture
-                  name={cat.image}
-                  alt={cat.alt}
-                  sizes="(max-width: 1024px) 100vw, 900px"
-                  className={`w-full h-52 sm:h-64 rounded-xl object-cover ${cat.imgPos} mb-6 sm:mb-8`}
-                />
+                {/*
+                  A fotografia ao lado dos packs e em retrato, não numa faixa
+                  atravessada por cima deles.
 
+                  A faixa tinha 64px de altura numa largura de mil e tal: nesse
+                  formato não cabe fotografia nenhuma inteira, corta-se sempre
+                  a cabeça ou os pés e o que sobra é uma tira de fundo. Num
+                  site de fotografia, mostrar mal uma fotografia é o pior
+                  defeito que uma página pode ter.
+
+                  No telemóvel volta a ficar por cima, porque duas colunas
+                  numa largura de 390px davam duas colunas más em vez de uma
+                  boa, mas mantém o formato vertical.
+                */}
+                <div className="lg:grid lg:grid-cols-[0.85fr_1.5fr] lg:gap-8 lg:items-start">
+                  {/*
+                    3:4 e não outra proporção qualquer: é exactamente a das
+                    fotografias de origem (480x640, 960x1280, 1440x1920), por
+                    isso três das quatro categorias não sofrem corte nenhum. A
+                    dos eventos é 0.89 e perde um pouco dos lados, e é para
+                    isso que serve o `imgPos` de cada categoria.
+
+                    O `sizes` leva 30vw e não uma largura fixa: a coluna
+                    acompanha o ecrã, e num ecrã de alta densidade o browser
+                    precisa de saber o espaço real para pedir a versão de 960 em
+                    vez da de 480. Com uma largura fixa de 400px pedia a
+                    pequena e entregava uma fotografia desfocada, que num site
+                    de fotografia é o defeito que menos se pode dar ao luxo.
+                  */}
+                  <Picture
+                    name={cat.image}
+                    alt={cat.alt}
+                    sizes="(max-width: 1024px) 100vw, 30vw"
+                    className={`w-full aspect-[3/4] rounded-xl object-cover ${cat.imgPos} mb-6 lg:mb-0`}
+                  />
+
+                  <div>
                 <div
                   className={`grid gap-4 ${
-                    cat.packs.length === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-3'
+                    cat.packs.length === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2'
                   }`}
                 >
                   {cat.packs.map((pack) => (
@@ -312,6 +342,8 @@ export default function Services() {
                     {t.services.seeWork} <ArrowRight size={12} />
                   </Link>
                 )}
+                  </div>
+                </div>
               </motion.div>
             ))}
           </AnimatePresence>
