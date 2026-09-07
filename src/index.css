@@ -87,13 +87,18 @@
 }
 
 /*
-  Grão de filme sobre o site inteiro. É ruído gerado em SVG (feTurbulence), não
-  uma imagem: não pesa nada no carregamento e não há textura para ninguém ir
-  buscar. Fica por cima de tudo, mas transparente ao rato, portanto nada deixa
-  de ser clicável por causa dele. O z-index é o mais alto do site de propósito,
-  para a introdução (200) levar grão como o resto, senão o site parecia mudar
-  de material a meio. A excepção é a fotografia aberta em ecrã cheio, mais
-  abaixo.
+  Grão de filme no fundo do site. É ruído gerado em SVG (feTurbulence), não uma
+  imagem: não pesa nada no carregamento e não há textura para ninguém ir buscar.
+
+  Esteve por cima de tudo e foi trazido para trás do conteúdo. Por cima, caía
+  também sobre as fotografias, e o resultado era todas as fotos do site
+  parecerem tiradas com ruído — no portfólio, na faixa da home e, pior, nas
+  galerias entregues a clientes. O grão é material do site, não do trabalho de
+  ninguém.
+
+  A ordem das camadas, de baixo para cima, é: a cor de fundo no html, este
+  grão, a poeira do Poeira.tsx, e por fim o conteúdo. Uma fotografia tapa as
+  duas camadas e aparece exactamente como saiu da máquina.
 
   A opacidade é 0.2 e não um valor mais discreto porque foi medida. A 0.055 o
   desvio padrão do fundo era de 0.86 níveis em 255, com sete níveis entre o
@@ -110,7 +115,7 @@ body::after {
     deriva nunca passa dos 70px, ou seja metade da folga.
   */
   inset: -140px;
-  z-index: 300;
+  z-index: -2;
   pointer-events: none;
   opacity: 0.2;
   /*
@@ -357,15 +362,3 @@ body::after {
   }
 }
 
-/*
-  Fotografia aberta em ecrã cheio: o grão apaga-se quase por completo.
-
-  Ele dá material ao site, mas por cima de uma fotografia entregue a um cliente
-  é textura que nós acrescentámos ao trabalho dele. Fica um resto para a
-  passagem não dar um estalo, e volta ao normal ao fechar. O atributo é posto
-  pelo Lightbox.
-*/
-html[data-foto-aberta] body::after {
-  opacity: 0.03;
-  transition: opacity 0.35s ease;
-}
