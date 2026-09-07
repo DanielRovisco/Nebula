@@ -465,15 +465,29 @@ const realApi = {
   },
 
   /**
-   * Bytes ocupados pelas fotografias de todas as galerias.
+   * Bytes realmente ocupados no R2, somando os dois buckets.
    *
-   * Somado aqui e não na base de dados porque não há função agregada exposta —
-   * e algumas centenas de linhas com um número cada são um pedido barato.
+   * Perguntado ao R2 e não somado da base de dados. A soma da coluna
+   * `size_bytes` fica sempre abaixo da verdade por três motivos: não conta as
+   * miniaturas, que são um segundo ficheiro por fotografia; não conta o bucket
+   * público das imagens do site, que vive noutra tabela; e não conta o que
+   * sobra de um upload que falhou a meio e deixou o objeto sem linha na base
+   * de dados. Um número que engana por baixo sobre espaço disponível é pior do
+   * que nenhum, porque só se descobre que estava errado quando o upload falha.
+   *
+   * Se a função não responder, volta-se à soma antiga em vez de não mostrar
+   * nada: o espaço é informação secundária no painel e uma estimativa por
+   * baixo continua a valer mais do que um traço.
    */
   async storageUsed(): Promise<number> {
-    const { data, error } = await supabase().from('photos').select('size_bytes')
-    if (error) throw new Error(error.message)
-    return (data ?? []).reduce((soma, r) => soma + ((r.size_bytes as number) ?? 0), 0)
+    try {
+      const r = await callAdmin<{ bytes: number }>({ action: 'usage' })
+      return r.bytes
+    } catch {
+      const { data, error } = await supabase().from('photos').select('size_bytes')
+      if (error) throw new Error(error.message)
+      return (data ?? []).reduce((soma, r) => soma + ((r.size_bytes as number) ?? 0), 0)
+    }
   },
 
   /**

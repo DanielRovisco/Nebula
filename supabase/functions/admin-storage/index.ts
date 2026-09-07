@@ -13,12 +13,15 @@
 //       pré-visualizar uma galeria exatamente como o cliente a vê, sem ter de
 //       saber a password dele.
 //
+//   { action: 'usage' }
+//     → devolve o espaço realmente ocupado nos dois buckets, perguntado ao R2.
+//
 // Deploy:  supabase functions deploy admin-storage
 // (SEM --no-verify-jwt: o gateway do Supabase valida o token antes de chegar
 // aqui, e a verificação abaixo confirma que é mesmo um utilizador válido.)
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { cors, deleteObjects, json, presign, type BucketKind } from '../_shared/r2.ts'
+import { bucketSize, cors, deleteObjects, json, presign, type BucketKind } from '../_shared/r2.ts'
 
 const UPLOAD_TTL = 60 * 15 // 15 min para começar o upload
 const READ_TTL = 60 * 60 * 2 // 2h, igual ao que o cliente recebe
@@ -76,6 +79,28 @@ Deno.serve(async (req) => {
     if (!keys.length || keys.length > 1000) return json({ error: 'bad_request' }, 400)
     const urls = await Promise.all(keys.map((k) => presign(k, 'GET', READ_TTL, undefined, bucket)))
     return json({ urls })
+  }
+
+  if (body.action === 'usage') {
+    /*
+      Os dois buckets em paralelo. São duas listagens independentes e esperar
+      por uma para começar a outra só faria o painel demorar o dobro.
+
+      Se um deles falhar, devolve-se o outro na mesma com o erro à frente: o
+      espaço é informação secundária no painel, e recusar a resposta inteira
+      por causa de um bucket seria pior do que dar meia.
+    */
+    const [priv, pub] = await Promise.allSettled([bucketSize('private'), bucketSize('public')])
+    const ler = (r: PromiseSettledResult<Awaited<ReturnType<typeof bucketSize>>>) =>
+      r.status === 'fulfilled' ? r.value : { bytes: 0, objects: 0, truncado: false, erro: true }
+    const galerias = ler(priv)
+    const site = ler(pub)
+    return json({
+      galerias,
+      site,
+      bytes: galerias.bytes + site.bytes,
+      objects: galerias.objects + site.objects,
+    })
   }
 
   if (body.action === 'delete') {

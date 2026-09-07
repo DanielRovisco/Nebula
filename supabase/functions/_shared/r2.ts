@@ -129,3 +129,59 @@ export const json = (body: unknown, status = 200) =>
     status,
     headers: { ...cors, 'content-type': 'application/json' },
   })
+
+/**
+ * Tamanho real de um bucket, perguntado ao próprio R2.
+ *
+ * Existe porque o painel mostrava a soma da coluna `size_bytes` da base de
+ * dados, e essa soma fica sempre abaixo da verdade: não conta as miniaturas,
+ * que são um segundo ficheiro por fotografia; não conta o bucket público das
+ * imagens do site, que vive noutra tabela; e não conta o que sobra de um
+ * upload que falhou a meio e deixou o objeto sem linha na base de dados.
+ *
+ * O S3 não tem uma pergunta "quanto ocupa este bucket": tem de se listar tudo
+ * e somar. Cada pedido devolve no máximo mil objetos, daí o ciclo.
+ */
+export async function bucketSize(kind: BucketKind = 'private'): Promise<{
+  bytes: number
+  objects: number
+  /** Verdadeiro se a listagem foi cortada ao fim do tecto de páginas. */
+  truncado: boolean
+}> {
+  let bytes = 0
+  let objects = 0
+  let token: string | undefined
+  /*
+    Tecto de 50 páginas, ou seja cinquenta mil objetos. Com fotografias de
+    alguns megabytes, os 10 GB do plano gratuito chegam muito antes disso. O
+    tecto existe para uma configuração errada não pôr a função a listar para
+    sempre e a esgotar o tempo dela.
+  */
+  for (let pagina = 0; pagina < 50; pagina++) {
+    const url = new URL(`${R2_ENDPOINT}/${BUCKETS[kind]}`)
+    url.searchParams.set('list-type', '2')
+    url.searchParams.set('max-keys', '1000')
+    if (token) url.searchParams.set('continuation-token', token)
+
+    const res = await client.fetch(url.toString())
+    if (!res.ok) throw new Error(`R2 respondeu ${res.status} ao listar ${BUCKETS[kind]}`)
+    const xml = await res.text()
+
+    /*
+      Lido com expressões regulares e não com um analisador de XML: a resposta
+      é gerada por máquina, tem uma forma fixa, e trazer uma biblioteca de XML
+      para uma Edge Function só para somar números seria peso a mais.
+    */
+    for (const m of xml.matchAll(/<Size>(\d+)<\/Size>/g)) {
+      bytes += Number(m[1])
+      objects++
+    }
+
+    if (!/<IsTruncated>true<\/IsTruncated>/.test(xml)) {
+      return { bytes, objects, truncado: false }
+    }
+    token = xml.match(/<NextContinuationToken>([^<]+)<\/NextContinuationToken>/)?.[1]
+    if (!token) return { bytes, objects, truncado: false }
+  }
+  return { bytes, objects, truncado: true }
+}
