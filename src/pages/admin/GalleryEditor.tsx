@@ -278,8 +278,38 @@ export default function GalleryEditor() {
       await navigator.clipboard.writeText(mensagemDePartilha(gallery!.title, link, password))
       guardarPassword(gallery!.id, password)
       setPedirPassword(false)
-      setCopiado('Copiado.')
-      setTimeout(() => setCopiado(null), 2500)
+
+      /*
+        Copiar a mensagem para o cliente publica a galeria, se ainda não
+        estiver publicada.
+
+        Copiar o link é o gesto de quem já decidiu entregar — ninguém copia uma
+        mensagem pronta a enviar para não a enviar. Publicar num segundo botão
+        era um passo fácil de esquecer, e esquecê-lo custava caro: o cliente
+        recebia o link, batia com o nariz na porta, e a primeira impressão do
+        trabalho ficava a ser "não funciona".
+
+        Publica-se depois de a cópia ter corrido bem, e não antes. Se o browser
+        recusar o acesso à área de transferência não se chega aqui, e uma
+        galeria não fica aberta ao mundo por causa de uma mensagem que nunca
+        chegou a ser copiada.
+      */
+      if (!gallery!.published) {
+        try {
+          const atualizada = await api.updateGallery(gallery!.id, { published: true })
+          setGallery(atualizada)
+          setCopiado('Copiado e galeria publicada.')
+        } catch {
+          // A cópia funcionou; só a publicação falhou. Dizer exactamente isso,
+          // senão fica-se a pensar que está tudo pronto quando não está.
+          setCopiado(null)
+          setError('Copiado, mas não consegui publicar a galeria. Publica no botão acima antes de enviares.')
+          return
+        }
+      } else {
+        setCopiado('Copiado.')
+      }
+      setTimeout(() => setCopiado(null), 3500)
     } catch {
       setError('O browser não deixou copiar. Copia à mão o link e a password.')
     }
