@@ -82,6 +82,14 @@ create index if not exists galleries_slug_idx on galleries (slug);
 
 -- A capa de uma galeria aponta para uma fotografia. Sem índice, apagar uma
 -- fotografia obriga a percorrer todas as galerias à procura de quem a usa.
+--
+-- Este e os outros dois índices de chave estrangeira vão aparecer no linter do
+-- Supabase como "índice não usado", e vão continuar a aparecer. Os dois avisos
+-- excluem-se: sem o índice queixa-se de chave estrangeira sem índice, com ele
+-- queixa-se de índice sem uso. "Sem uso" aqui quer dizer que nenhuma consulta
+-- o percorreu, e é verdade — quem se serve dele é a verificação da chave
+-- estrangeira ao apagar, que não conta para essa estatística. Ficam, porque o
+-- que evitam é uma remoção lenta no dia em que houver muitas fotografias.
 create index if not exists galleries_capa_idx on galleries (cover_photo_id);
 
 -- Mantém updated_at fresco em qualquer alteração.
@@ -118,13 +126,35 @@ create table if not exists admins (
 );
 
 alter table admins enable row level security;
--- Sem políticas de propósito: ninguém lê esta tabela pelo PostgREST. Só a
--- função abaixo lá chega, e ela corre com as permissões de quem a criou.
 
+-- Cada conta vê a sua linha, e mais nenhuma.
+--
+-- É esta política que permite ao `is_admin()` abaixo ser uma função normal em
+-- vez de uma com privilégios elevados. A primeira versão era `security
+-- definer`, e isso valeu-lhe o aviso de função privilegiada ao alcance de
+-- quem tem sessão: corrigir um aviso criando outro não é corrigir nada.
+--
+-- Resolve também o aviso de tabela com RLS e sem políticas: agora tem uma, e
+-- diz exactamente o que se quer que diga.
+drop policy if exists "cada conta vê a sua linha" on admins;
+create policy "cada conta vê a sua linha" on admins
+  for select to authenticated using (user_id = (select auth.uid()));
+
+-- Sem `security definer`: a função corre com as permissões de quem a chama, e
+-- é a política acima que decide o que ela consegue ver. Quem não for admin não
+-- vê linha nenhuma e o `exists` dá falso, que é a resposta certa.
+--
+-- O `(select auth.uid())` em vez de `auth.uid()` directo é de propósito: assim
+-- o Postgres calcula-o uma vez por consulta em vez de uma vez por linha.
+--
+-- `create or replace` e não `drop` seguido de `create`: as políticas abaixo
+-- dependem desta função, e um `drop` numa base que já as tenha rebentava com
+-- erro de dependência. O `security invoker` vai escrito de propósito, para a
+-- substituição não deixar o modo antigo por engano.
 create or replace function is_admin() returns boolean
-language sql stable security definer
+language sql stable security invoker
 set search_path = public as $$
-  select exists (select 1 from admins where user_id = auth.uid());
+  select exists (select 1 from admins where user_id = (select auth.uid()));
 $$;
 
 revoke all on function is_admin() from public, anon;
@@ -178,6 +208,13 @@ create policy "admin escreve fotos" on photos
 --
 -- Com o teste aqui dentro, mesmo que alguém consiga criar conta, chamar isto
 -- dá-lhe um erro em vez do controlo das galerias.
+--
+-- O aviso do linter vai continuar a aparecer, e está correcto na descrição: é
+-- mesmo uma função com privilégios elevados que quem tem sessão pode chamar.
+-- Não se tira o `security definer` porque ela existe justamente para fazer o
+-- que o utilizador não pode fazer sozinho: gerar o hash da password com o
+-- pgcrypto sem que o hash passe pelo browser. O que se pode fazer, e está
+-- feito, é ela recusar-se a trabalhar para quem não é admin.
 create or replace function set_gallery_password(gallery_id uuid, new_password text)
 returns void language plpgsql security definer
   set search_path = public, extensions as $$
