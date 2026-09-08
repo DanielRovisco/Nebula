@@ -516,6 +516,22 @@ const realApi = {
     try {
       await fetch(functionsUrl('gallery-log'), {
         method: 'POST',
+        /*
+          `keepalive` porque este pedido sai no pior momento possível: logo a
+          seguir a entregar um ficheiro ao browser.
+
+          O download de uma fotografia é agora um link para o R2, e há browsers
+          — os de telemóvel em particular — que ao seguir esse link saem da
+          página. Um `fetch` normal é cancelado quando isso acontece, e o
+          registo morre a meio caminho sem deixar rasto. Com `keepalive` o
+          browser compromete-se a acabar o envio mesmo que a página desapareça.
+
+          Foi o que explicou uma cliente dizer que tinha descarregado e o
+          painel não mostrar nada, enquanto ao testar no computador aparecia
+          sempre: no computador o link não navega, logo o pedido não era
+          cancelado, e o problema ficava invisível de dentro.
+        */
+        keepalive: true,
         headers: {
           'content-type': 'application/json',
           apikey: anonKey(),

@@ -95,8 +95,15 @@ export default function Poeira() {
         A quantidade acompanha a área, senão um telemóvel ficava com a mesma
         poeira de um monitor e parecia uma tempestade. Limitada em cima porque
         acima de uma centena deixa de se ganhar nada a olho e começa a custar.
+
+        O mínimo é 38 e não um número qualquer. Pela área, um telemóvel dava
+        17, e com tão poucas partículas o sorteio quase nunca calhava numa
+        grande e acesa: media-se um brilho máximo de 86 em 255 contra 156 no
+        monitor, e o resultado era não se ver poeira nenhuma no telemóvel
+        enquanto no computador se via bem. O mínimo não mexe no computador,
+        que continua a tirar a quantidade da área.
       */
-      const quantas = Math.max(22, Math.min(110, Math.round((largura * altura) / 19000)))
+      const quantas = Math.max(38, Math.min(110, Math.round((largura * altura) / 19000)))
       particulas = Array.from({ length: quantas }, () => ({
         x: Math.random() * largura,
         y: Math.random() * altura,
