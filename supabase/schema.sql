@@ -131,12 +131,29 @@ $$;
 revoke all on function set_gallery_password(uuid, text) from public, anon;
 grant execute on function set_gallery_password(uuid, text) to authenticated;
 
+-- `security_invoker = true` e não o comportamento por omissão do Postgres.
+--
+-- Sem isto, a view corre com as permissões de quem a criou e não com as de quem
+-- a consulta, ou seja passa por cima do RLS da tabela galleries. E como o
+-- PostgREST dá acesso por omissão ao que está em `public`, qualquer visitante
+-- anónimo podia ler por aqui o que a política da tabela lhe nega: o nome, o
+-- título e o código de todas as galerias de clientes. A password não, que essa
+-- nem sequer está na view — mas os nomes dos clientes são dados deles, e o
+-- código é metade do link privado que lhes mandámos.
+--
+-- Com `security_invoker`, a view volta a respeitar as políticas da tabela: o
+-- admin autenticado lê tudo, como já lia, e o anónimo não lê nada. O revoke
+-- abaixo é redundante com isso e fica na mesma, porque uma defesa que depende
+-- de um único sinalizador é uma defesa a uma falha de distância.
 drop view if exists galleries_admin;
-create view galleries_admin as
+create view galleries_admin with (security_invoker = true) as
   select id, slug, title, client_name, message, cover_path, cover_photo_id,
          cover_title, cover_font, logo_variant, published, download_enabled,
          lock_attempts, expires_at, created_at, updated_at
   from galleries;
+
+revoke all on galleries_admin from anon;
+grant select on galleries_admin to authenticated;
 
 -- ─── Verificação de acesso do cliente ──────────────────────────────────────
 -- Só a Edge Function (service role) pode chamar isto. Devolve a galeria apenas
