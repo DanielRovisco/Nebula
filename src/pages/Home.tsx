@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion, useScroll, useTransform, useReducedMotion } from 'framer-motion'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { ArrowRight, Camera, Images, MessageSquare } from 'lucide-react'
 import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
 import { CAPAS_LOCAIS, HERO_ID } from '../lib/servicosCapas'
 import { publicUrl } from '../lib/site-content/public'
-import { useServiceCovers } from '../lib/site-content/useSiteContent'
+import { usePortfolio, useServiceCovers } from '../lib/site-content/useSiteContent'
 import CountUp from '../lib/CountUp'
 import Seo from '../lib/Seo'
 import SiteIntro from '../components/SiteIntro'
@@ -24,6 +24,13 @@ import { useFaixa, baralhar } from '../lib/useFaixa'
 // nos dois sítios e a Maternidade acabou com uma fotografia em cada página.
 const SERVICES = ['casamentos', 'maternidade', 'retratos', 'eventos'] as const
 
+/*
+  Reserva da faixa da página inicial.
+
+  O que ela mostra são as fotografias do portfólio carregadas no painel; esta
+  lista só entra enquanto elas não chegam, ou se não houver nenhuma. Fica no
+  código para a faixa abrir cheia no primeiro render, sem esperar pela rede.
+*/
 const GALLERY = [
   { name: 'palace-dome', alt: 'Retrato sob a cúpula de um palácio, em contraluz', pos: 'center center' },
   { name: 'editorial-dramatic', alt: 'Retrato editorial com iluminação dramática', pos: 'center 20%' },
@@ -71,7 +78,42 @@ export default function Home() {
     fotografias são as que quase ninguém chega a ver — e são tão boas como as
     primeiras. Assim cada visita mostra outras à cabeça.
   */
-  const [galeria] = useState(() => baralhar(GALLERY))
+  /*
+    A faixa passa a mostrar o portfólio verdadeiro em vez de cinco fotografias
+    escolhidas no código. Cada visita vê uma seleção diferente: fotografias
+    boas que ficavam sempre no fim da fila deixam de ser as que ninguém vê.
+  */
+  const reservaFaixa = useMemo(
+    () => ({
+      categories: [],
+      items: GALLERY.map((g) => ({
+        id: g.name,
+        localName: g.name,
+        src: '',
+        thumb: '',
+        alt: g.alt,
+        category: '',
+        tall: false,
+        pos: g.pos,
+      })),
+    }),
+    [],
+  )
+  const { items: doPortfolio } = usePortfolio(reservaFaixa)
+
+  /*
+    Baralhada e cortada nas 20 primeiras.
+
+    Vinte e não todas: a faixa desenha a lista duas vezes para dar a volta sem
+    costura, por isso são quarenta imagens, e um portfólio de duzentas fazia do
+    primeiro ecrã da página inicial um download de dezenas de megabytes. Vinte
+    já dá uma faixa que ninguém percorre até ao fim.
+
+    O `useMemo` depende da lista: baralha uma vez com a reserva e outra quando
+    o portfólio verdadeiro chegar, e não a cada render — senão as fotografias
+    trocavam de sítio a meio do movimento.
+  */
+  const galeria = useMemo(() => baralhar(doPortfolio).slice(0, 20), [doPortfolio])
   const faixa = useFaixa()
 
   const [showIntro, setShowIntro] = useState(() => {
@@ -406,18 +448,37 @@ export default function Home() {
           {[0, 1].map((passagem) =>
             galeria.map((item) => (
               <div
-                key={`${passagem}-${item.name}`}
+                key={`${passagem}-${item.id}`}
                 aria-hidden={passagem === 1 || undefined}
                 className="shrink-0 w-[70vw] sm:w-[34vw] md:w-[27vw] overflow-hidden rounded-xl"
                 style={{ height: 'clamp(48vh, 58vh, 65vh)' }}
               >
-                <Picture
-                  name={item.name}
-                  alt={passagem === 1 ? '' : item.alt}
-                  sizes="(max-width: 640px) 70vw, (max-width: 768px) 34vw, 27vw"
-                  style={{ objectPosition: item.pos }}
-                  className="w-full h-full object-cover pointer-events-none"
-                />
+                {/*
+                  As do repositório trazem `localName` e vão pelo <Picture>, que
+                  escolhe o tamanho certo. As do painel têm um ficheiro só.
+
+                  De um vídeo mostra-se a miniatura: aqui a faixa anda sozinha e
+                  quatro vídeos a tocar ao mesmo tempo num telemóvel seria o
+                  primeiro ecrã da página inicial a comer a bateria.
+                */}
+                {item.localName ? (
+                  <Picture
+                    name={item.localName}
+                    alt={passagem === 1 ? '' : item.alt}
+                    sizes="(max-width: 640px) 70vw, (max-width: 768px) 34vw, 27vw"
+                    style={{ objectPosition: item.pos }}
+                    className="w-full h-full object-cover pointer-events-none"
+                  />
+                ) : (
+                  <img
+                    src={item.thumb || item.src}
+                    alt={passagem === 1 ? '' : item.alt}
+                    loading="lazy"
+                    decoding="async"
+                    style={{ objectPosition: item.pos }}
+                    className="w-full h-full object-cover pointer-events-none"
+                  />
+                )}
               </div>
             )),
           )}
