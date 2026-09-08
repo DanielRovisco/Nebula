@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from 'react'
 import { ArrowRight, Camera, Images, MessageSquare } from 'lucide-react'
 import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
-import { CAPAS_LOCAIS } from '../lib/servicosCapas'
+import { CAPAS_LOCAIS, HERO_ID } from '../lib/servicosCapas'
 import { publicUrl } from '../lib/site-content/public'
 import { useServiceCovers } from '../lib/site-content/useSiteContent'
 import CountUp from '../lib/CountUp'
@@ -115,13 +115,40 @@ export default function Home() {
           style={reduced ? undefined : { scale: imgScale }}
           className="absolute inset-0 origin-center"
         >
-          <Picture
-            name="hero-beach-dress"
-            alt="Vestido longo branco numa praia, entre falésias, ao final do dia"
-            sizes="100vw"
-            priority
-            className="w-full h-full object-cover object-[50%_25%]"
-          />
+          {/*
+            A fotografia de entrada, trocável no painel como as dos serviços.
+
+            Quando vem do painel é uma <img> com `fetchPriority="high"` e sem
+            `loading="lazy"`. Isto é a imagem que decide a velocidade da página:
+            é o maior elemento do primeiro ecrã, e é por ela que o Google mede o
+            tempo de carregamento.
+
+            Há aqui um custo que vale a pena dizer: o `<link rel="preload">` do
+            index.html aponta para a fotografia do repositório, e não pode
+            apontar para outra, porque o HTML é escrito antes de se saber se há
+            capa carregada. Com uma capa no painel, esse preload passa a puxar
+            uma fotografia que não se vai usar e a verdadeira só começa a
+            descarregar depois do JavaScript arrancar. É meio segundo, e a
+            alternativa era não deixar trocar a fotografia mais visível do site.
+          */}
+          {capas[HERO_ID] ? (
+            <img
+              src={publicUrl(capas[HERO_ID].storageKey)}
+              alt={capas[HERO_ID].alt || CAPAS_LOCAIS[HERO_ID].alt}
+              fetchPriority="high"
+              decoding="async"
+              style={{ objectPosition: capas[HERO_ID].pos }}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <Picture
+              name={CAPAS_LOCAIS[HERO_ID].image}
+              alt={CAPAS_LOCAIS[HERO_ID].alt}
+              sizes="100vw"
+              priority
+              className={`w-full h-full object-cover ${CAPAS_LOCAIS[HERO_ID].imgPos}`}
+            />
+          )}
         </motion.div>
 
         <div className="absolute inset-0 bg-gradient-to-t from-eerie via-eerie/35 to-eerie/10" />

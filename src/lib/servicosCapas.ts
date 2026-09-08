@@ -18,7 +18,20 @@ export interface CapaLocal {
   imgPos: string
 }
 
+/**
+ * Identificador da fotografia de entrada da página inicial.
+ *
+ * Não é um serviço, mas vive na mesma lista e na mesma tabela: é o mesmo
+ * problema, uma fotografia do site que se troca no painel.
+ */
+export const HERO_ID = 'hero'
+
 export const CAPAS_LOCAIS: Record<string, CapaLocal> = {
+  [HERO_ID]: {
+    image: 'hero-beach-dress',
+    alt: 'Vestido longo branco numa praia, entre falésias, ao final do dia',
+    imgPos: 'object-[50%_25%]',
+  },
   casamentos: {
     image: 'forest-bride',
     alt: 'Sessão editorial em vestido longo branco, entre árvores',

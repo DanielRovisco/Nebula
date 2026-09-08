@@ -388,8 +388,14 @@ create policy "admin escreve fotos do site" on site_photos
 -- Sem linha, a página usa a fotografia que vem no repositório. Mudar a capa é
 -- acrescentar uma linha; repor a original é apagá-la.
 create table if not exists site_service_covers (
-  -- 'casamentos', 'maternidade', 'retratos', 'eventos'. Ver CATEGORIES em
-  -- src/pages/Services.tsx.
+  -- 'casamentos', 'maternidade', 'retratos', 'eventos', e ainda 'hero' para a
+  -- fotografia de entrada da página inicial. Ver src/lib/servicosCapas.ts.
+  --
+  -- O 'hero' não é um serviço e o nome da tabela fica a dever-lhe. Entrou aqui
+  -- em vez de numa tabela própria porque é exactamente o mesmo problema — uma
+  -- fotografia do site que se troca no painel — e uma segunda tabela com as
+  -- mesmas quatro colunas e as mesmas duas políticas era duplicação a fingir
+  -- de arrumação.
   service_id text primary key,
   -- Chave no bucket público, como em site_photos.
   storage_key text not null,

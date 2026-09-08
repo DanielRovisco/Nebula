@@ -7,6 +7,7 @@ import type { ServiceCover, SiteCategory, SitePhoto, Testimonial } from '../../l
 import { DEMO } from '../../lib/gallery/config'
 import { slugify } from '../../lib/gallery/helpers'
 import { asset } from '../../lib/asset'
+import { HERO_ID } from '../../lib/servicosCapas'
 
 const field =
   'w-full bg-transparent border-b border-white/15 py-2.5 outline-none focus:border-titanium/60 transition-colors placeholder:text-titanium/25'
@@ -30,6 +31,13 @@ const thumbUrl = (p: SitePhoto) =>
   os cruzar, e são quatro linhas.
 */
 const SERVICOS = [
+  {
+    id: HERO_ID,
+    nome: 'Entrada da página inicial',
+    // A única que não é um serviço, e a que mais se vê: é o primeiro ecrã de
+    // quem chega ao site.
+    nota: 'A fotografia grande que abre o site',
+  },
   { id: 'casamentos', nome: 'Casamentos' },
   { id: 'maternidade', nome: 'Maternidade' },
   { id: 'retratos', nome: 'Retratos' },
@@ -580,19 +588,25 @@ export default function SiteAdmin() {
 
       {/* ── Capas dos serviços ──────────────────────────────── */}
       <section className="mb-14">
-        <h2 className="text-xl mb-1">Capas dos serviços</h2>
+        <h2 className="text-xl mb-1">Fotografias do site</h2>
         <p className="text-titanium/45 text-xs mb-6 max-w-xl leading-relaxed">
-          A fotografia que aparece em cada serviço na página de serviços. Sem
-          nada carregado, fica a que vem no site. São mostradas em 3:4, ao alto.
+          A que abre o site e a de cada serviço. As dos serviços aparecem nos
+          cartões da página inicial e na página de serviços ao mesmo tempo. Sem
+          nada carregado, fica a que vem no site. Melhor ao alto: são mostradas
+          em 3:4.
         </p>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {SERVICOS.map((sv) => {
             const capa = capas[sv.id]
             const ocupado = aCarregarCapa === sv.id
             return (
               <div key={sv.id} className="border border-white/10 rounded-xl p-4">
-                <p className="label-sm mb-3">{sv.nome}</p>
+                <p className="label-sm">{sv.nome}</p>
+                {'nota' in sv && (
+                  <p className="text-[10px] text-titanium/35 mb-2 mt-0.5">{sv.nota}</p>
+                )}
+                <div className={'nota' in sv ? 'mb-2' : 'mb-3'} />
 
                 <div className="aspect-[3/4] rounded-lg overflow-hidden bg-white/[0.04] mb-3">
                   {capa ? (
