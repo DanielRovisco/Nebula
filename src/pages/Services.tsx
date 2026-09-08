@@ -68,6 +68,16 @@ const CATEGORIES = [
   },
 ] as const
 
+/*
+  Fundo do painel dos serviços, e da aba escolhida.
+
+  Sólido e não um branco translúcido porque a aba tem de tapar a borda do
+  painel com a mesma cor exacta, e uma cor translúcida deixava a linha a
+  transparecer por baixo. Um pouco acima do fundo da página (#141414), o
+  suficiente para o painel se destacar sem parecer outra caixa.
+*/
+const PAINEL = '#1c1c1c'
+
 /** Só abrimos a categoria pedida se ela existir — o hash vem do URL. */
 function categoriaDoHash(hash: string) {
   const id = decodeURIComponent(hash.replace('#', ''))
@@ -199,9 +209,22 @@ export default function Services() {
           role="tablist"
           aria-label={t.services.label}
           onKeyDown={aoTeclado}
-          className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3"
+          /*
+            `overflow-x-auto` é rede de segurança, não o plano.
+
+            Os espaçamentos abaixo foram apertados até as quatro abas caberem
+            num telemóvel sem rolar. Mas há ecrãs mais estreitos do que os que
+            se testam, e línguas com palavras mais longas: sem isto, a última
+            aba ficava cortada pela margem e sem maneira nenhuma de lá chegar,
+            porque o body corta o que passa da largura. Com isto, no pior caso
+            arrasta-se.
+
+            A barra de rolagem fica escondida: aqui ela lia-se como um risco
+            cinzento debaixo das abas e não como um controlo.
+          */
+          className="flex items-end overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {CATEGORIES.map((cat, idx) => {
+          {CATEGORIES.map((cat) => {
             const activa = open === cat.id
             return (
               <button
@@ -220,16 +243,47 @@ export default function Services() {
                 */
                 tabIndex={activa ? 0 : -1}
                 onClick={() => setOpen(cat.id)}
-                className={`rounded-xl border px-4 py-4 sm:py-5 text-left transition-colors min-h-[56px] ${
+                /*
+                  A aba escolhida cola-se ao painel: mesma cor de fundo, e a
+                  borda de baixo pintada dessa cor a tapar a borda do painel.
+                  É o `-mb-px` que a faz descer o pixel exacto que sobrepõe a
+                  linha. Sem essa sobreposição fica um risco a atravessar a
+                  aba, e o que devia ser uma pasta aberta lê-se como um botão
+                  pousado por cima de uma caixa.
+
+                  Por isso o painel tem fundo sólido e não translúcido: para a
+                  borda de baixo da aba poder tapar a linha por completo. Um
+                  branco a 4 por cento deixava-a a transparecer.
+                */
+                style={
                   activa
-                    ? 'border-white/35 bg-white/[0.05] text-titanium'
-                    : 'border-white/10 text-titanium/60 hover:border-white/25 hover:text-titanium/85'
+                    ? { background: PAINEL, borderBottomColor: PAINEL }
+                    : undefined
+                }
+                /*
+                  No telemóvel cada aba mede o que o texto pede; a partir de sm
+                  dividem a largura por igual.
+
+                  Com larguras iguais em 390px cada uma ficava com 86px e
+                  "Maternidade" saía cortada a meio com reticências. Uma aba que
+                  não diz o nome inteiro do serviço não serve para nada. Pelo
+                  conteúdo, as quatro somam cerca de 305px e cabem à vontade.
+                */
+                className={`relative -mb-px min-w-0 shrink-0 sm:shrink sm:flex-1 border rounded-t-xl px-2 sm:px-4 py-3 sm:py-4 transition-colors min-h-[48px] ${
+                  activa
+                    ? 'z-10 border-white/12 text-titanium'
+                    : 'border-transparent bg-white/[0.02] text-titanium/50 hover:bg-white/[0.04] hover:text-titanium/85'
                 }`}
               >
-                <span className="font-mono text-[10px] tracking-[0.25em] text-titanium/45 block mb-1">
-                  0{idx + 1}
-                </span>
-                <span className="block leading-tight" style={{ fontSize: 'clamp(0.95rem, 1.5vw, 1.15rem)' }}>
+                {/*
+                  Menos espaçamento entre letras no telemóvel. Com os 0.12em do
+                  computador as quatro abas somavam 387px numa barra de 343 e a
+                  última saía do ecrã.
+                */}
+                <span
+                  className="block truncate text-center sm:text-left uppercase tracking-[0.05em] sm:tracking-[0.12em]"
+                  style={{ fontSize: 'clamp(0.6rem, 1.1vw, 0.75rem)' }}
+                >
                   {t.home.services[cat.id].title}
                 </span>
               </button>
@@ -248,7 +302,8 @@ export default function Services() {
           id="painel-servico"
           aria-labelledby={`aba-${open}`}
           tabIndex={0}
-          className="mt-6 sm:mt-8 border border-white/10 rounded-2xl p-6 sm:p-10"
+          style={{ background: PAINEL }}
+          className="border border-white/12 rounded-b-2xl rounded-tr-2xl p-6 sm:p-10"
         >
           <AnimatePresence mode="wait">
             {CATEGORIES.filter((c) => c.id === open).map((cat) => {
