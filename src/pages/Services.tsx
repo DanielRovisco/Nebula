@@ -370,13 +370,21 @@ export default function Services() {
                   numa largura de 390px davam duas colunas más em vez de uma
                   boa, mas mantém o formato vertical.
                 */}
-                <div className="lg:grid lg:grid-cols-[minmax(0,270px)_1fr] lg:gap-7 lg:items-start">
+                <div className="lg:grid lg:grid-cols-[auto_1fr] lg:gap-7 lg:items-start">
                   {/*
-                    O `max-h` em vh limita a fotografia à altura do ecrã em vez
-                    de a encolher em todos. Num monitor alto ela sai nos 3:4
-                    inteiros; num portátil baixo perde altura, que é o que faz a
-                    página caber sem rolar em vez de a fotografia ficar pequena
-                    para toda a gente.
+                    A altura da fotografia é o que sobra do ecrã, não um
+                    número escolhido a olho: `100svh` menos os 470px que o resto
+                    da página ocupa sempre (topo, título, abas, margens do
+                    painel, packs e o link de baixo). Assim ela cresce num
+                    monitor alto e encolhe num portátil baixo, e a página acaba
+                    sempre à tangente do fundo do ecrã em vez de deixar folga
+                    desperdiçada.
+
+                    Com a altura definida e a proporção 3:4, é a largura que se
+                    deduz — e por isso a coluna é `auto`. Os limites em cima e
+                    em baixo existem para os extremos: num ecrã muito alto a
+                    fotografia deixaria de caber ao lado dos packs, e num muito
+                    baixo ficaria um selo.
 
                     3:4 e não outra proporção qualquer: é exactamente a das
                     fotografias de origem (480x640, 960x1280, 1440x1920), por
@@ -409,14 +417,14 @@ export default function Services() {
                       loading="lazy"
                       decoding="async"
                       style={{ objectPosition: capa.pos }}
-                      className="w-full aspect-[3/4] lg:max-h-[41vh] rounded-xl object-cover mb-6 lg:mb-0"
+                      className="w-full aspect-[3/4] lg:w-auto lg:h-[calc(100svh-470px)] lg:max-h-[62vh] lg:min-h-[255px] rounded-xl object-cover mb-6 lg:mb-0"
                     />
                   ) : (
                     <Picture
                       name={cat.image}
                       alt={cat.alt}
                       sizes="(max-width: 1024px) 100vw, 30vw"
-                      className={`w-full aspect-[3/4] lg:max-h-[41vh] rounded-xl object-cover ${cat.imgPos} mb-6 lg:mb-0`}
+                      className={`w-full aspect-[3/4] lg:w-auto lg:h-[calc(100svh-470px)] lg:max-h-[62vh] lg:min-h-[255px] rounded-xl object-cover ${cat.imgPos} mb-6 lg:mb-0`}
                     />
                   )}
 
