@@ -153,7 +153,7 @@ export default function Services() {
   }
 
   return (
-    <div className="pt-28 sm:pt-36 pb-20 sm:pb-28">
+    <div className="pt-24 sm:pt-28 lg:pt-24 pb-16 sm:pb-20">
       <Seo
         title={t.services.seoTitle}
         description={t.services.seoDescription}
@@ -180,11 +180,17 @@ export default function Services() {
       />
 
       {/* Header */}
-      <section className="container-px mb-12 sm:mb-24">
+      <section className="container-px mb-8 sm:mb-10">
         <Breadcrumbs items={[{ label: t.nav.services }]} />
         <Reveal>
           <span className="label-sm">{t.services.label}</span>
-          <h1 className="mt-4 max-w-3xl leading-[1.05]" style={{ fontSize: 'clamp(2.2rem, 6vw, 5rem)' }}>
+          {/*
+            Menor a partir de lg do que nas outras páginas: aqui o objetivo é a
+            página inteira caber num ecrã, e um título de 80px comia sozinho um
+            quinto da altura disponível. No telemóvel fica igual ao resto do
+            site, porque lá a página rola de qualquer maneira.
+          */}
+          <h1 className="mt-3 max-w-3xl leading-[1.05]" style={{ fontSize: 'clamp(2.2rem, 3.6vw, 3.2rem)' }}>
             {t.services.title}
           </h1>
         </Reveal>
@@ -269,19 +275,51 @@ export default function Services() {
                   não diz o nome inteiro do serviço não serve para nada. Pelo
                   conteúdo, as quatro somam cerca de 305px e cabem à vontade.
                 */
-                className={`relative -mb-px min-w-0 shrink-0 sm:shrink sm:flex-1 border rounded-t-xl px-2 sm:px-4 py-3 sm:py-4 transition-colors min-h-[48px] ${
+                className={`group relative -mb-px min-w-0 shrink-0 sm:shrink sm:flex-1 overflow-hidden border rounded-t-xl px-2 sm:px-4 py-3 sm:py-4 transition-colors min-h-[48px] ${
                   activa
                     ? 'z-10 border-white/12 text-titanium'
-                    : 'border-transparent bg-white/[0.02] text-titanium/50 hover:bg-white/[0.04] hover:text-titanium/85'
+                    : 'border-transparent bg-white/[0.02] text-titanium/45 hover:bg-white/[0.05] hover:text-titanium/85'
                 }`}
               >
                 {/*
-                  Menos espaçamento entre letras no telemóvel. Com os 0.12em do
-                  computador as quatro abas somavam 387px numa barra de 343 e a
-                  última saía do ecrã.
+                  Realce e risco da aba escolhida, desenhados com `layoutId`.
+
+                  É o mesmo par de elementos a mudar de sítio, não um a
+                  aparecer e outro a desaparecer: o framer-motion trata dois
+                  elementos com o mesmo `layoutId` como o mesmo objeto e anima-o
+                  de uma posição para a outra. O resultado é o realce a deslizar
+                  de aba em aba, que é o que dá vida a uma barra que sem isso
+                  são quatro rectângulos a acender e apagar.
+
+                  Ficam fora do fluxo e por baixo do rótulo: quem lê tem o texto
+                  por cima, e o realce é fundo.
                 */}
+                {activa && (
+                  <>
+                    <motion.span
+                      layoutId="aba-realce"
+                      aria-hidden="true"
+                      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                      className="absolute inset-0 rounded-t-xl"
+                      style={{
+                        background:
+                          'linear-gradient(to bottom, rgba(252,255,240,0.12), rgba(252,255,240,0) 70%)',
+                      }}
+                    />
+                    <motion.span
+                      layoutId="aba-risco"
+                      aria-hidden="true"
+                      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                      className="absolute top-0 left-3 right-3 h-[2px] rounded-full"
+                      style={{
+                        background:
+                          'linear-gradient(to right, rgba(252,255,240,0), rgba(252,255,240,0.85), rgba(252,255,240,0))',
+                      }}
+                    />
+                  </>
+                )}
                 <span
-                  className="block truncate text-center sm:text-left uppercase tracking-[0.05em] sm:tracking-[0.12em]"
+                  className="relative block truncate text-center sm:text-left uppercase tracking-[0.05em] sm:tracking-[0.12em] transition-transform duration-300 group-hover:-translate-y-px"
                   style={{ fontSize: 'clamp(0.6rem, 1.1vw, 0.75rem)' }}
                 >
                   {t.home.services[cat.id].title}
@@ -303,7 +341,7 @@ export default function Services() {
           aria-labelledby={`aba-${open}`}
           tabIndex={0}
           style={{ background: PAINEL }}
-          className="border border-white/12 rounded-b-2xl rounded-tr-2xl p-6 sm:p-10"
+          className="border border-white/12 rounded-b-2xl rounded-tr-2xl p-5 sm:p-7 xl:p-8"
         >
           <AnimatePresence mode="wait">
             {CATEGORIES.filter((c) => c.id === open).map((cat) => {
@@ -316,7 +354,7 @@ export default function Services() {
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               >
-                <p className="text-titanium/60 text-sm mb-6">{t.home.services[cat.id].tagline}</p>
+                <p className="text-titanium/60 text-sm mb-5">{t.home.services[cat.id].tagline}</p>
 
                 {/*
                   A fotografia ao lado dos packs e em retrato, não numa faixa
@@ -332,8 +370,14 @@ export default function Services() {
                   numa largura de 390px davam duas colunas más em vez de uma
                   boa, mas mantém o formato vertical.
                 */}
-                <div className="lg:grid lg:grid-cols-[0.85fr_1.5fr] lg:gap-8 lg:items-start">
+                <div className="lg:grid lg:grid-cols-[minmax(0,270px)_1fr] lg:gap-7 lg:items-start">
                   {/*
+                    O `max-h` em vh limita a fotografia à altura do ecrã em vez
+                    de a encolher em todos. Num monitor alto ela sai nos 3:4
+                    inteiros; num portátil baixo perde altura, que é o que faz a
+                    página caber sem rolar em vez de a fotografia ficar pequena
+                    para toda a gente.
+
                     3:4 e não outra proporção qualquer: é exactamente a das
                     fotografias de origem (480x640, 960x1280, 1440x1920), por
                     isso três das quatro categorias não sofrem corte nenhum. A
@@ -365,30 +409,36 @@ export default function Services() {
                       loading="lazy"
                       decoding="async"
                       style={{ objectPosition: capa.pos }}
-                      className="w-full aspect-[3/4] rounded-xl object-cover mb-6 lg:mb-0"
+                      className="w-full aspect-[3/4] lg:max-h-[41vh] rounded-xl object-cover mb-6 lg:mb-0"
                     />
                   ) : (
                     <Picture
                       name={cat.image}
                       alt={cat.alt}
                       sizes="(max-width: 1024px) 100vw, 30vw"
-                      className={`w-full aspect-[3/4] rounded-xl object-cover ${cat.imgPos} mb-6 lg:mb-0`}
+                      className={`w-full aspect-[3/4] lg:max-h-[41vh] rounded-xl object-cover ${cat.imgPos} mb-6 lg:mb-0`}
                     />
                   )}
 
                   <div>
+                {/*
+                  Os packs em tantas colunas quantos eles são, até três. Em duas
+                  colunas, três packs ocupavam duas linhas e a página crescia
+                  cerca de 200px por nada: a coluna da direita tem largura de
+                  sobra para os três lado a lado.
+                */}
                 <div
-                  className={`grid gap-4 ${
-                    cat.packs.length === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2'
+                  className={`grid gap-3 sm:gap-4 ${
+                    cat.packs.length === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-3'
                   }`}
                 >
                   {cat.packs.map((pack) => (
                     <div
                       key={pack.name}
-                      className="border border-white/10 rounded-xl p-5 sm:p-6 flex flex-col hover:border-white/20 transition-colors"
+                      className="border border-white/10 rounded-xl p-4 sm:p-5 flex flex-col hover:border-white/20 transition-colors"
                     >
-                      <h3 className="text-base sm:text-lg mb-4">{t.services.packs[pack.name]}</h3>
-                      <ul className="space-y-2.5 flex-1">
+                      <h3 className="text-base mb-3">{t.services.packs[pack.name]}</h3>
+                      <ul className="space-y-2 flex-1">
                         {pack.items.map((item) => (
                           <li key={item} className="flex items-start gap-2.5 text-sm text-titanium/55">
                             <Check size={13} className="mt-0.5 shrink-0 text-titanium/70" />
@@ -398,7 +448,7 @@ export default function Services() {
                       </ul>
                       <Link
                         to={link('contact')}
-                        className="mt-6 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all w-fit min-h-[44px]"
+                        className="mt-4 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all w-fit min-h-[44px]"
                       >
                         {t.common.requestProposal} <ArrowRight size={12} />
                       </Link>
@@ -435,7 +485,7 @@ export default function Services() {
       </section>
 
       {/* Upsell */}
-      <section className="container-px mt-16 sm:mt-28">
+      <section className="container-px mt-12 sm:mt-16">
         <div className="border border-white/10 rounded-2xl p-8 sm:p-12 text-center">
           <Reveal>
             <span className="label-sm">{t.services.addonLabel}</span>
