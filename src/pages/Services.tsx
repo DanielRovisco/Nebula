@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Check } from 'lucide-react'
 import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
+import { CAPAS_LOCAIS } from '../lib/servicosCapas'
 import { publicUrl } from '../lib/site-content/public'
 import { useServiceCovers } from '../lib/site-content/useSiteContent'
 import Seo from '../lib/Seo'
@@ -22,9 +23,6 @@ const CATEGORIES = [
     id: 'casamentos',
     // Sem correspondência no portfólio: ainda não há fotografias de casamento.
     portfolio: null,
-    image: 'forest-bride',
-    alt: 'Sessão editorial em vestido longo branco, entre árvores',
-    imgPos: 'object-top',
     packs: [
       { name: 'essencia', items: ['photoEditorial', 'privateGallery', 'sneakPeek'] },
       { name: 'origem', items: ['photoVideo4k', 'privateGallery', 'sneakPeek', 'preWedding'] },
@@ -34,9 +32,6 @@ const CATEGORIES = [
   {
     id: 'maternidade',
     portfolio: 'maternidade',
-    image: 'maternity-railway',
-    alt: 'Sessão de maternidade junto a uma linha de ferro',
-    imgPos: 'object-center',
     packs: [
       { name: 'essencia', items: ['photoSession', 'privateGallery'] },
       { name: 'cinemaFoto', items: ['photoVideoLifestyle', 'privateGallery', 'sneakPeek'] },
@@ -46,9 +41,6 @@ const CATEGORIES = [
   {
     id: 'retratos',
     portfolio: 'retratos',
-    image: 'editorial-dramatic',
-    alt: 'Retrato editorial com iluminação dramática',
-    imgPos: 'object-[50%_20%]',
     packs: [
       { name: 'foto', items: ['photoSession', 'privateGallery'] },
       { name: 'editorial', items: ['photoEditorial', 'privateGallery', 'sneakPeek'] },
@@ -58,9 +50,6 @@ const CATEGORIES = [
     id: 'eventos',
     // Os trabalhos que ilustram este serviço vivem em "Retratos".
     portfolio: 'retratos',
-    image: 'baby-balloons',
-    alt: 'Bebé rodeado de balões durante uma festa de família',
-    imgPos: 'object-[50%_15%]',
     packs: [
       { name: 'foto', items: ['eventPhoto', 'privateGallery'] },
       { name: 'fotoVideo', items: ['eventPhotoVideo', 'privateGallery', 'sneakPeek'] },
@@ -173,7 +162,7 @@ export default function Services() {
             serviceType: t.home.services[cat.id].title,
             provider: { '@type': 'LocalBusiness', name: 'NEBULA', '@id': `${SITE_URL}/` },
             areaServed: { '@type': 'Country', name: 'Portugal' },
-            image: absoluteUrl(`/brand/portfolio/${cat.image}-1440.webp`),
+            image: absoluteUrl(`/brand/portfolio/${CAPAS_LOCAIS[cat.id].image}-1440.webp`),
             url: `${SITE_URL}${link('services')}#${cat.id}`,
           })),
         ]}
@@ -346,6 +335,8 @@ export default function Services() {
           <AnimatePresence mode="wait">
             {CATEGORIES.filter((c) => c.id === open).map((cat) => {
               const capa = capas[cat.id]
+              // Fotografia do repositório, partilhada com os cartões da home.
+              const local = CAPAS_LOCAIS[cat.id]
               return (
               <motion.div
                 key={cat.id}
@@ -413,7 +404,7 @@ export default function Services() {
                     */
                     <img
                       src={publicUrl(capa.storageKey)}
-                      alt={capa.alt || cat.alt}
+                      alt={capa.alt || local.alt}
                       loading="lazy"
                       decoding="async"
                       style={{ objectPosition: capa.pos }}
@@ -421,10 +412,10 @@ export default function Services() {
                     />
                   ) : (
                     <Picture
-                      name={cat.image}
-                      alt={cat.alt}
+                      name={local.image}
+                      alt={local.alt}
                       sizes="(max-width: 1024px) 100vw, 30vw"
-                      className={`w-full aspect-[3/4] lg:w-auto lg:h-[calc(100svh-470px)] lg:max-h-[62vh] lg:min-h-[255px] rounded-xl object-cover ${cat.imgPos} mb-6 lg:mb-0`}
+                      className={`w-full aspect-[3/4] lg:w-auto lg:h-[calc(100svh-470px)] lg:max-h-[62vh] lg:min-h-[255px] rounded-xl object-cover ${local.imgPos} mb-6 lg:mb-0`}
                     />
                   )}
 

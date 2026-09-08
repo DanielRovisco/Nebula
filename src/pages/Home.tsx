@@ -4,6 +4,9 @@ import { useCallback, useRef, useState } from 'react'
 import { ArrowRight, Camera, Images, MessageSquare } from 'lucide-react'
 import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
+import { CAPAS_LOCAIS } from '../lib/servicosCapas'
+import { publicUrl } from '../lib/site-content/public'
+import { useServiceCovers } from '../lib/site-content/useSiteContent'
 import CountUp from '../lib/CountUp'
 import Seo from '../lib/Seo'
 import SiteIntro from '../components/SiteIntro'
@@ -16,36 +19,10 @@ import { businessJsonLd } from '../lib/businessJsonLd'
 import { useFaixa, baralhar } from '../lib/useFaixa'
 
 // O `id` casa com as categorias de /servicos: o cartão abre logo a categoria
-// certa no acordeão, em vez de cair sempre na primeira.
-const SERVICES = [
-  {
-    id: 'casamentos',
-    image: 'forest-bride',
-    alt: 'Sessão editorial em vestido longo branco, entre árvores',
-    imgPos: 'object-top',
-  },
-  {
-    id: 'maternidade',
-    image: 'maternity-sunset-couple',
-    alt: 'Casal à espera de bebé, ao pôr do sol',
-    // Centrada, e não afinada na vertical: a foto é mais larga que o cartão em
-    // proporção, por isso o recorte come pelos lados e um `object-[50%_65%]`
-    // não mexeria um pixel. O casal está ao centro, que é o que interessa.
-    imgPos: 'object-center',
-  },
-  {
-    id: 'retratos',
-    image: 'editorial-dramatic',
-    alt: 'Retrato editorial com iluminação dramática',
-    imgPos: 'object-[50%_20%]',
-  },
-  {
-    id: 'eventos',
-    image: 'baby-balloons',
-    alt: 'Retrato de bebé rodeado de balões',
-    imgPos: 'object-[50%_72%]',
-  },
-] as const
+// certa em vez de cair sempre na primeira. A fotografia e o recorte vêm de
+// servicosCapas.ts, partilhados com a página de serviços — estiveram escritos
+// nos dois sítios e a Maternidade acabou com uma fotografia em cada página.
+const SERVICES = ['casamentos', 'maternidade', 'retratos', 'eventos'] as const
 
 const GALLERY = [
   { name: 'palace-dome', alt: 'Retrato sob a cúpula de um palácio, em contraluz', pos: 'center center' },
@@ -85,6 +62,9 @@ export default function Home() {
   const link = useLink()
   const reduced = useReducedMotion()
   const heroRef = useRef<HTMLDivElement>(null)
+  // As mesmas capas da página de serviços, para as duas páginas não se
+  // contradizerem quando uma for trocada no painel.
+  const capas = useServiceCovers()
 
   /*
     Ordem baralhada uma vez por visita. Numa fila que se percorre, as últimas
@@ -260,19 +240,38 @@ export default function Home() {
           </Reveal>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-            {SERVICES.map((s, i) => (
-              <Reveal key={s.id} delay={i * 0.1}>
+            {SERVICES.map((id, i) => {
+              const local = CAPAS_LOCAIS[id]
+              return (
+              <Reveal key={id} delay={i * 0.1}>
                 <Link
-                  to={`${link('services')}#${s.id}`}
+                  to={`${link('services')}#${id}`}
                   className="block relative rounded-2xl overflow-hidden group"
                   style={{ height: 'clamp(48vh, 60vh, 68vh)' }}
                 >
-                  <Picture
-                    name={s.image}
-                    alt={s.alt}
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    className={`absolute inset-0 w-full h-full object-cover ${s.imgPos} transition-transform duration-[1400ms] group-hover:scale-105`}
-                  />
+                  {/*
+                    A mesma capa que a página de serviços mostra. Sem isso, uma
+                    capa trocada no painel mudava lá e ficava a antiga aqui, e o
+                    visitante via duas fotografias diferentes para o mesmo
+                    serviço a dois cliques de distância.
+                  */}
+                  {capas[id] ? (
+                    <img
+                      src={publicUrl(capas[id].storageKey)}
+                      alt={capas[id].alt || local.alt}
+                      loading="lazy"
+                      decoding="async"
+                      style={{ objectPosition: capas[id].pos }}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1400ms] group-hover:scale-105"
+                    />
+                  ) : (
+                    <Picture
+                      name={local.image}
+                      alt={local.alt}
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className={`absolute inset-0 w-full h-full object-cover ${local.imgPos} transition-transform duration-[1400ms] group-hover:scale-105`}
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-eerie/95 via-eerie/25 to-transparent" />
 
                   <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-7">
@@ -283,10 +282,10 @@ export default function Home() {
                       className="mb-2 group-hover:tracking-wide transition-[letter-spacing] duration-500"
                       style={{ fontSize: 'clamp(1.2rem, 2vw, 1.6rem)' }}
                     >
-                      {t.home.services[s.id].title}
+                      {t.home.services[id].title}
                     </h3>
                     <p className="text-[13px] text-titanium/55 leading-relaxed max-w-[220px]">
-                      {t.home.services[s.id].tagline}
+                      {t.home.services[id].tagline}
                     </p>
                     <div className="flex items-center gap-2 mt-5 label-sm text-titanium/60 group-hover:text-titanium/75 group-hover:gap-3 transition-all duration-300">
                       {t.common.exploreMore}
@@ -295,7 +294,8 @@ export default function Home() {
                   </div>
                 </Link>
               </Reveal>
-            ))}
+              )
+            })}
           </div>
 
           <Reveal delay={0.25} className="mt-10 sm:mt-12">
