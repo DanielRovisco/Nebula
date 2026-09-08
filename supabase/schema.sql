@@ -80,9 +80,17 @@ alter table photos
 create index if not exists photos_gallery_idx on photos (gallery_id, sort_order);
 create index if not exists galleries_slug_idx on galleries (slug);
 
+-- A capa de uma galeria aponta para uma fotografia. Sem índice, apagar uma
+-- fotografia obriga a percorrer todas as galerias à procura de quem a usa.
+create index if not exists galleries_capa_idx on galleries (cover_photo_id);
+
 -- Mantém updated_at fresco em qualquer alteração.
+-- `set search_path` fixo: sem isto a função resolve os nomes pelo caminho de
+-- quem a chama, e quem consegue criar um esquema seu à frente do public passa a
+-- decidir que `now()` é executado. É o aviso de search_path mutável do linter.
 create or replace function touch_updated_at() returns trigger
-language plpgsql as $$
+language plpgsql
+set search_path = public as $$
 begin
   new.updated_at = now();
   return new;
@@ -92,6 +100,40 @@ drop trigger if exists galleries_touch on galleries;
 create trigger galleries_touch before update on galleries
   for each row execute function touch_updated_at();
 
+-- ─── Quem é o admin ─────────────────────────────────────────────────────────
+-- As políticas diziam "qualquer conta autenticada pode tudo". Isso só é seguro
+-- enquanto ninguém conseguir criar conta: com o registo aberto, qualquer pessoa
+-- fazia uma conta e ficava com acesso às galerias dos clientes. Uma definição
+-- no painel não é sítio para guardar uma garantia dessas.
+--
+-- Passa a haver uma lista explícita. Quem não estiver nela está autenticado e
+-- não é ninguém.
+
+create table if not exists admins (
+  -- Sem chave estrangeira para auth.users de propósito: uma linha órfã aqui é
+  -- inofensiva, porque um id que já não existe nunca corresponde a ninguém, e
+  -- evita que este script dependa de permissões sobre o esquema de autenticação.
+  user_id uuid primary key,
+  added_at timestamptz not null default now()
+);
+
+alter table admins enable row level security;
+-- Sem políticas de propósito: ninguém lê esta tabela pelo PostgREST. Só a
+-- função abaixo lá chega, e ela corre com as permissões de quem a criou.
+
+create or replace function is_admin() returns boolean
+language sql stable security definer
+set search_path = public as $$
+  select exists (select 1 from admins where user_id = auth.uid());
+$$;
+
+revoke all on function is_admin() from public, anon;
+grant execute on function is_admin() to authenticated;
+
+-- Semeia com as contas que já existem, que hoje são as vossas. Sem isto, correr
+-- este script tirava o acesso ao painel a toda a gente, incluindo a vocês.
+insert into admins (user_id) select id from auth.users on conflict do nothing;
+
 -- ─── Row Level Security ─────────────────────────────────────────────────────
 -- Ninguém anónimo lê estas tabelas. O cliente nunca fala com elas diretamente:
 -- passa sempre pela Edge Function, que corre com a service role e só devolve
@@ -100,33 +142,52 @@ create trigger galleries_touch before update on galleries
 alter table galleries enable row level security;
 alter table photos enable row level security;
 
+-- Uma política por tabela, e não duas.
+--
+-- Havia uma de leitura e outra de escrita, e a de escrita era `for all`, que
+-- inclui a leitura. O Postgres avalia todas as políticas permissivas que se
+-- apliquem, linha a linha, por isso cada leitura passava por duas verificações
+-- que davam exactamente o mesmo resultado. É o aviso de políticas permissivas
+-- múltiplas do linter do Supabase, e o desperdício cresce com o número de
+-- linhas.
+--
+-- O `for all` sozinho faz o mesmo: quem está autenticado é o admin, e o admin
+-- lê e escreve tudo.
 drop policy if exists "admin lê galerias" on galleries;
-create policy "admin lê galerias" on galleries
-  for select to authenticated using (true);
-
 drop policy if exists "admin escreve galerias" on galleries;
 create policy "admin escreve galerias" on galleries
-  for all to authenticated using (true) with check (true);
+  for all to authenticated using ((select is_admin())) with check ((select is_admin()));
 
 drop policy if exists "admin lê fotos" on photos;
-create policy "admin lê fotos" on photos
-  for select to authenticated using (true);
-
 drop policy if exists "admin escreve fotos" on photos;
 create policy "admin escreve fotos" on photos
-  for all to authenticated using (true) with check (true);
+  for all to authenticated using ((select is_admin())) with check ((select is_admin()));
 
 -- ─── Password ───────────────────────────────────────────────────────────────
 -- Só o servidor faz hash e verificação. A app nunca recebe o hash: as políticas
 -- acima dão select em galleries a utilizadores autenticados, por isso o admin
 -- veria a coluna. A view abaixo é o que a app usa, sem o hash.
 
+-- A verificação de admin lá dentro não é redundante com o `grant` abaixo.
+--
+-- Esta função corre com as permissões de quem a criou, ou seja passa por cima
+-- do RLS da tabela: quem a conseguir chamar muda a password de qualquer
+-- galeria. O `grant` dá-a a `authenticated`, e `authenticated` é qualquer conta
+-- com sessão iniciada. É o aviso do linter sobre funções com privilégios
+-- elevadas ao alcance de utilizadores com sessão, e tem razão.
+--
+-- Com o teste aqui dentro, mesmo que alguém consiga criar conta, chamar isto
+-- dá-lhe um erro em vez do controlo das galerias.
 create or replace function set_gallery_password(gallery_id uuid, new_password text)
-returns void language sql security definer
+returns void language plpgsql security definer
   set search_path = public, extensions as $$
+begin
+  if not is_admin() then
+    raise exception 'sem permissão para definir a password desta galeria';
+  end if;
   update galleries set password_hash = crypt(new_password, gen_salt('bf', 10))
   where id = gallery_id;
-$$;
+end $$;
 
 revoke all on function set_gallery_password(uuid, text) from public, anon;
 grant execute on function set_gallery_password(uuid, text) to authenticated;
@@ -169,6 +230,10 @@ create table if not exists access_attempts (
 
 create index if not exists access_attempts_idx on access_attempts (slug, at desc);
 
+-- RLS ligado e sem políticas nenhumas, de propósito: assim ninguém lê nem
+-- escreve esta tabela pelo PostgREST, nem anónimo nem autenticado. Quem lhe
+-- toca é a Edge Function, que corre com a service role e passa por cima do RLS.
+-- O linter assinala isto como informação, não como problema, e é o que se quer.
 alter table access_attempts enable row level security;
 
 -- CREATE OR REPLACE não muda o tipo de retorno: para acrescentar colunas é
@@ -272,7 +337,7 @@ alter table gallery_events enable row level security;
 
 drop policy if exists "admin lê eventos" on gallery_events;
 create policy "admin lê eventos" on gallery_events
-  for select to authenticated using (true);
+  for select to authenticated using ((select is_admin()));
 
 -- Ninguém escreve aqui a partir do browser: os eventos entram pela Edge
 -- Function, que exige o comprovativo de acesso emitido depois da password.
@@ -295,11 +360,14 @@ create table if not exists gallery_favorites (
 
 create index if not exists gallery_favorites_idx on gallery_favorites (gallery_id);
 
+-- Pela mesma razão: apagar uma fotografia procura as favoritas que lhe apontam.
+create index if not exists gallery_favorites_foto_idx on gallery_favorites (photo_id);
+
 alter table gallery_favorites enable row level security;
 
 drop policy if exists "admin lê favoritas" on gallery_favorites;
 create policy "admin lê favoritas" on gallery_favorites
-  for select to authenticated using (true);
+  for select to authenticated using ((select is_admin()));
 
 -- Tal como nos eventos, a escrita é exclusiva da Edge Function com o
 -- comprovativo de acesso. Do browser, sem sessão, não se marca nada.
@@ -351,6 +419,10 @@ alter table site_photos add column if not exists content_type text;
 
 create index if not exists site_photos_idx on site_photos (sort_order);
 
+-- Índice na chave estrangeira. Sem ele, apagar uma categoria obriga o Postgres
+-- a percorrer a tabela toda das fotografias para ver quais lhe apontam.
+create index if not exists site_photos_categoria_idx on site_photos (category_id);
+
 -- Testemunhos de clientes. Escritos à mão no painel a partir do que os clientes
 -- nos enviam. Não há recolha automática, e é de propósito: um testemunho que
 -- ninguém verificou vale menos do que nenhum.
@@ -374,26 +446,36 @@ alter table site_photos enable row level security;
 alter table site_testimonials enable row level security;
 
 -- Leitura pública: é isto que o site mostra a quem o visita.
+-- Leitura pública só para o `anon`, e não também para o `authenticated`.
+--
+-- Quem está autenticado é o admin, e já lê por via da política de escrita, que
+-- é `for all`. Ter as duas a aplicar-se a ele fazia cada leitura do painel
+-- passar por duas verificações com o mesmo resultado — o aviso de políticas
+-- permissivas múltiplas.
+--
+-- E há uma diferença que importa: as políticas públicas de fotos e testemunhos
+-- filtram por `published`, a de escrita não. É a de escrita que dá ao painel a
+-- visão do que ainda não está publicado, e é isso que ele precisa de mostrar.
 drop policy if exists "todos leem categorias" on site_categories;
 create policy "todos leem categorias" on site_categories
-  for select to anon, authenticated using (true);
+  for select to anon using (true);
 
 drop policy if exists "todos leem fotos do site" on site_photos;
 create policy "todos leem fotos do site" on site_photos
-  for select to anon, authenticated using (published);
+  for select to anon using (published);
 
 drop policy if exists "todos leem testemunhos" on site_testimonials;
 create policy "todos leem testemunhos" on site_testimonials
-  for select to anon, authenticated using (published);
+  for select to anon using (published);
 
 -- Escrita só para quem fez login no painel.
 drop policy if exists "admin escreve categorias" on site_categories;
 create policy "admin escreve categorias" on site_categories
-  for all to authenticated using (true) with check (true);
+  for all to authenticated using ((select is_admin())) with check ((select is_admin()));
 
 drop policy if exists "admin escreve fotos do site" on site_photos;
 create policy "admin escreve fotos do site" on site_photos
-  for all to authenticated using (true) with check (true);
+  for all to authenticated using ((select is_admin())) with check ((select is_admin()));
 
 -- Capa de cada serviço na página de serviços.
 --
@@ -427,15 +509,15 @@ alter table site_service_covers enable row level security;
 
 drop policy if exists "todos leem capas dos servicos" on site_service_covers;
 create policy "todos leem capas dos servicos" on site_service_covers
-  for select to anon, authenticated using (true);
+  for select to anon using (true);
 
 drop policy if exists "admin escreve capas dos servicos" on site_service_covers;
 create policy "admin escreve capas dos servicos" on site_service_covers
-  for all to authenticated using (true) with check (true);
+  for all to authenticated using ((select is_admin())) with check ((select is_admin()));
 
 drop policy if exists "admin escreve testemunhos" on site_testimonials;
 create policy "admin escreve testemunhos" on site_testimonials
-  for all to authenticated using (true) with check (true);
+  for all to authenticated using ((select is_admin())) with check ((select is_admin()));
 
 -- Categorias de arranque, iguais às que o site já mostra.
 insert into site_categories (slug, label, sort_order) values
