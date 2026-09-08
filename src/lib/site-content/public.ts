@@ -1,4 +1,4 @@
-import type { SiteCategory, SitePhoto, Testimonial } from './types'
+import type { ServiceCover, SiteCategory, SitePhoto, Testimonial } from './types'
 
 /**
  * Leitura do conteúdo público do site.
@@ -98,4 +98,27 @@ export async function fetchTestimonials(): Promise<Testimonial[]> {
     sortOrder: (r.sort_order as number) ?? 0,
     published: true,
   }))
+}
+
+/**
+ * Capas dos serviços escolhidas no painel, por serviço.
+ *
+ * Devolve um objeto vazio quando não há nada configurado ou a leitura falha,
+ * e nunca `null`: quem chama junta-o ao que vem do código, e um serviço sem
+ * capa carregada fica simplesmente com a fotografia do repositório.
+ */
+export async function fetchServiceCovers(): Promise<Record<string, ServiceCover>> {
+  if (DEMO || !PUBLIC_BASE) return {}
+  const linhas = await rest<Record<string, unknown>[]>('site_service_covers?select=*')
+  if (!linhas) return {}
+  const mapa: Record<string, ServiceCover> = {}
+  for (const r of linhas) {
+    mapa[String(r.service_id)] = {
+      serviceId: String(r.service_id),
+      storageKey: String(r.storage_key),
+      alt: String(r.alt ?? ''),
+      pos: String(r.pos ?? '50% 50%'),
+    }
+  }
+  return mapa
 }

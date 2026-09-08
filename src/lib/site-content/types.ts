@@ -57,3 +57,19 @@ export interface SitePhoto {
  */
 export const ehVideo = (p: { contentType: string | null; storageKey?: string }) =>
   p.contentType?.startsWith('video/') ?? /\.(mp4|mov|webm|m4v)$/i.test(p.storageKey ?? '')
+
+/**
+ * Capa de um serviço, escolhida no painel.
+ *
+ * Sem capa carregada, a página de serviços usa a fotografia que vem no
+ * repositório. É por isso que isto é opcional em todo o lado: o site tem de
+ * funcionar antes de alguém ter mexido no painel, e continuar a funcionar se o
+ * Supabase estiver em baixo.
+ */
+export interface ServiceCover {
+  serviceId: string
+  storageKey: string
+  alt: string
+  /** Recorte, como `object-position` do CSS. */
+  pos: string
+}

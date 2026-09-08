@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { fetchPortfolio, fetchTestimonials, publicUrl } from './public'
+import { fetchPortfolio, fetchServiceCovers, fetchTestimonials, publicUrl } from './public'
 import { ehVideo } from './types'
-import type { Testimonial } from './types'
+import type { ServiceCover, Testimonial } from './types'
 
 export interface PortfolioItem {
   id: string
@@ -83,4 +83,28 @@ export function useTestimonials(): Testimonial[] {
   }, [])
 
   return lista
+}
+
+/**
+ * Capas dos serviços, com a do repositório como base.
+ *
+ * Devolve de imediato um objeto vazio e preenche quando a rede responder. A
+ * página de serviços trata a ausência como "usa a fotografia do código", por
+ * isso não pisca nem espera: no pior caso mostra a capa antiga durante um
+ * instante, o que é melhor do que um buraco.
+ */
+export function useServiceCovers(): Record<string, ServiceCover> {
+  const [capas, setCapas] = useState<Record<string, ServiceCover>>({})
+
+  useEffect(() => {
+    let vivo = true
+    fetchServiceCovers().then((r) => {
+      if (vivo) setCapas(r)
+    })
+    return () => {
+      vivo = false
+    }
+  }, [])
+
+  return capas
 }

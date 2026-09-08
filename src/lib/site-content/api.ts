@@ -1,7 +1,7 @@
 import { DEMO, supabase } from '../gallery/config'
 import { THUMB_EDGE, THUMB_QUALITY, callAdmin, putToR2, resize } from '../gallery/api'
 import { DEMO_TESTIMONIAL } from './types'
-import type { SiteCategory, SitePhoto, Testimonial } from './types'
+import type { ServiceCover, SiteCategory, SitePhoto, Testimonial } from './types'
 
 export { publicUrl } from './public'
 
@@ -131,6 +131,14 @@ const demoSiteAdmin = {
       if (t) t.sortOrder = i
     })
   },
+
+  // Na demonstração as capas não se guardam: o painel mostra sempre as do
+  // repositório, que é o que a demonstração deve mostrar.
+  async listServiceCovers(): Promise<ServiceCover[]> {
+    return []
+  },
+  async setServiceCover() {},
+  async clearServiceCover() {},
 }
 
 const realSiteAdmin = {
@@ -208,6 +216,45 @@ const realSiteAdmin = {
 
   async deletePhoto(id: string) {
     const { error } = await supabase().from('site_photos').delete().eq('id', id)
+    if (error) throw new Error(error.message)
+  },
+
+  async listServiceCovers(): Promise<ServiceCover[]> {
+    const { data, error } = await supabase().from('site_service_covers').select('*')
+    if (error) throw new Error(error.message)
+    return (data ?? []).map((r) => ({
+      serviceId: r.service_id as string,
+      storageKey: r.storage_key as string,
+      alt: (r.alt as string) ?? '',
+      pos: (r.pos as string) ?? '50% 50%',
+    }))
+  },
+
+  /*
+    `upsert` e não insert: há uma linha por serviço e mudar a capa é substituir
+    a que lá está. Com insert, a segunda troca rebentava contra a chave
+    primária e o painel dizia um erro de base de dados a quem só queria trocar
+    uma fotografia.
+  */
+  async setServiceCover(cover: ServiceCover) {
+    const { error } = await supabase()
+      .from('site_service_covers')
+      .upsert({
+        service_id: cover.serviceId,
+        storage_key: cover.storageKey,
+        alt: cover.alt,
+        pos: cover.pos,
+        updated_at: new Date().toISOString(),
+      })
+    if (error) throw new Error(error.message)
+  },
+
+  /** Apagar a linha repõe a fotografia que vem no repositório. */
+  async clearServiceCover(serviceId: string) {
+    const { error } = await supabase()
+      .from('site_service_covers')
+      .delete()
+      .eq('service_id', serviceId)
     if (error) throw new Error(error.message)
   },
 

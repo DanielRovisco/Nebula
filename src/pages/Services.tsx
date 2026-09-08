@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Check } from 'lucide-react'
 import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
+import { publicUrl } from '../lib/site-content/public'
+import { useServiceCovers } from '../lib/site-content/useSiteContent'
 import Seo from '../lib/Seo'
 import { SITE_URL, absoluteUrl } from '../lib/site'
 import { useLink, useT } from '../lib/i18n'
@@ -76,6 +78,8 @@ export default function Services() {
   const t = useT()
   const link = useLink()
   const { hash } = useLocation()
+  // Capas escolhidas no painel. Serviço sem capa lá fica com a do repositório.
+  const capas = useServiceCovers()
   // Vindo de um cartão da página inicial (/servicos#maternidade), abre logo essa
   // categoria em vez da primeira.
   const [open, setOpen] = useState<string>(() => categoriaDoHash(hash) ?? 'casamentos')
@@ -247,7 +251,9 @@ export default function Services() {
           className="mt-6 sm:mt-8 border border-white/10 rounded-2xl p-6 sm:p-10"
         >
           <AnimatePresence mode="wait">
-            {CATEGORIES.filter((c) => c.id === open).map((cat) => (
+            {CATEGORIES.filter((c) => c.id === open).map((cat) => {
+              const capa = capas[cat.id]
+              return (
               <motion.div
                 key={cat.id}
                 initial={{ opacity: 0, y: 8 }}
@@ -286,12 +292,34 @@ export default function Services() {
                     pequena e entregava uma fotografia desfocada, que num site
                     de fotografia é o defeito que menos se pode dar ao luxo.
                   */}
-                  <Picture
-                    name={cat.image}
-                    alt={cat.alt}
-                    sizes="(max-width: 1024px) 100vw, 30vw"
-                    className={`w-full aspect-[3/4] rounded-xl object-cover ${cat.imgPos} mb-6 lg:mb-0`}
-                  />
+                  {capa ? (
+                    /*
+                      Capa carregada no painel. É uma <img> simples e não o
+                      <Picture>: o <Picture> escolhe entre tamanhos que só
+                      existem para as fotografias do repositório, e uma capa
+                      carregada tem um ficheiro só.
+
+                      O recorte vem do painel em `pos` e entra por estilo, não
+                      por classe: é um valor livre escolhido por quem carregou
+                      a foto, e as classes do Tailwind são escritas antes de
+                      existir alguém para as escolher.
+                    */
+                    <img
+                      src={publicUrl(capa.storageKey)}
+                      alt={capa.alt || cat.alt}
+                      loading="lazy"
+                      decoding="async"
+                      style={{ objectPosition: capa.pos }}
+                      className="w-full aspect-[3/4] rounded-xl object-cover mb-6 lg:mb-0"
+                    />
+                  ) : (
+                    <Picture
+                      name={cat.image}
+                      alt={cat.alt}
+                      sizes="(max-width: 1024px) 100vw, 30vw"
+                      className={`w-full aspect-[3/4] rounded-xl object-cover ${cat.imgPos} mb-6 lg:mb-0`}
+                    />
+                  )}
 
                   <div>
                 <div
@@ -345,7 +373,8 @@ export default function Services() {
                   </div>
                 </div>
               </motion.div>
-            ))}
+              )
+            })}
           </AnimatePresence>
         </div>
       </section>

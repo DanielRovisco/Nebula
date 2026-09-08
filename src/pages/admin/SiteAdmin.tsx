@@ -3,7 +3,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Eye, EyeOff, Maximiz
 import { useArrastar } from './useArrastar'
 import { ehVideo } from '../../lib/site-content/types'
 import { siteAdmin, publicUrl, uploadSitePhoto, uploadSiteVideo, SITE_EDGE } from '../../lib/site-content/api'
-import type { SiteCategory, SitePhoto, Testimonial } from '../../lib/site-content/types'
+import type { ServiceCover, SiteCategory, SitePhoto, Testimonial } from '../../lib/site-content/types'
 import { DEMO } from '../../lib/gallery/config'
 import { slugify } from '../../lib/gallery/helpers'
 import { asset } from '../../lib/asset'
@@ -17,6 +17,25 @@ const thumbUrl = (p: SitePhoto) =>
     ? asset(`/brand/portfolio/${(p.thumbKey ?? '').split('/').pop()}`)
     : publicUrl(p.thumbKey ?? p.storageKey)
 
+/*
+  Os quatro serviços, na ordem em que aparecem na página.
+
+  Repetidos aqui e não importados de Services.tsx de propósito: aquela lista
+  traz a estrutura dos packs e as fotografias do repositório, e importá-la para
+  o painel arrastava a página pública inteira para dentro do pacote do
+  administrador. O que o painel precisa é só do identificador e de um nome
+  legível.
+
+  Se um dia se acrescentar um serviço, entra nos dois sítios. É o preço de não
+  os cruzar, e são quatro linhas.
+*/
+const SERVICOS = [
+  { id: 'casamentos', nome: 'Casamentos' },
+  { id: 'maternidade', nome: 'Maternidade' },
+  { id: 'retratos', nome: 'Retratos' },
+  { id: 'eventos', nome: 'Eventos' },
+] as const
+
 export default function SiteAdmin() {
   const [categories, setCategories] = useState<SiteCategory[]>([])
   const [photos, setPhotos] = useState<SitePhoto[]>([])
@@ -28,14 +47,29 @@ export default function SiteAdmin() {
   const [tick, setTick] = useState(0)
   const fileInput = useRef<HTMLInputElement>(null)
 
+  /*
+    Capas dos serviços, por serviço. Guardadas em objeto e não em lista porque
+    é sempre por serviço que se pergunta, e uma lista obrigava a procurar de
+    cada vez que se desenha uma linha.
+  */
+  const [capas, setCapas] = useState<Record<string, ServiceCover>>({})
+  const [aCarregarCapa, setACarregarCapa] = useState<string | null>(null)
+  const capaInputs = useRef<Record<string, HTMLInputElement | null>>({})
+
   useEffect(() => {
     let vivo = true
-    Promise.all([siteAdmin.listCategories(), siteAdmin.listPhotos(), siteAdmin.listTestimonials()])
-      .then(([c, p, t]) => {
+    Promise.all([
+      siteAdmin.listCategories(),
+      siteAdmin.listPhotos(),
+      siteAdmin.listTestimonials(),
+      siteAdmin.listServiceCovers(),
+    ])
+      .then(([c, p, t, cv]) => {
         if (!vivo) return
         setCategories(c)
         setPhotos(p)
         setTestemunhos(t)
+        setCapas(Object.fromEntries(cv.map((x) => [x.serviceId, x])))
       })
       .catch((e) => vivo && setError((e as Error).message))
     return () => {
@@ -98,6 +132,76 @@ export default function SiteAdmin() {
     } finally {
       setUpload(null)
       if (fileInput.current) fileInput.current.value = ''
+    }
+  }
+
+  /**
+   * Troca a capa de um serviço.
+   *
+   * Reaproveita o mesmo upload das fotografias do portfólio: sobe para o
+   * bucket público e é reduzida no browser antes de ir. Não faz sentido ter
+   * dois caminhos de upload no mesmo painel, e este já trata do
+   * redimensionamento e da miniatura.
+   *
+   * O recorte começa ao centro. Quem quiser afiná-lo tem os botões por baixo:
+   * a capa é cortada em 3:4 e uma cara a dois terços da altura desaparecia.
+   */
+  async function trocarCapa(serviceId: string, file: File) {
+    setError(null)
+    setACarregarCapa(serviceId)
+    try {
+      const up = await uploadSitePhoto(file)
+      const cover: ServiceCover = {
+        serviceId,
+        storageKey: up.storageKey,
+        alt: file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '),
+        pos: capas[serviceId]?.pos ?? '50% 50%',
+      }
+      await siteAdmin.setServiceCover(cover)
+      setCapas((c) => ({ ...c, [serviceId]: cover }))
+      flash('Capa trocada.')
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setACarregarCapa(null)
+      const el = capaInputs.current[serviceId]
+      if (el) el.value = ''
+    }
+  }
+
+  /** Guarda um campo da capa sem voltar a carregar o ficheiro. */
+  async function ajustarCapa(serviceId: string, patch: Partial<ServiceCover>) {
+    const atual = capas[serviceId]
+    if (!atual) return
+    const nova = { ...atual, ...patch }
+    setCapas((c) => ({ ...c, [serviceId]: nova }))
+    try {
+      await siteAdmin.setServiceCover(nova)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  /**
+   * Repõe a fotografia que vem no repositório.
+   *
+   * Só apaga a linha; o ficheiro fica no bucket. Apagá-lo daria jeito ao
+   * espaço mas arriscava deixar uma capa a apontar para o vazio se a mesma
+   * fotografia estivesse a ser usada noutro sítio, e uma página com um buraco
+   * é pior do que uns megabytes a mais.
+   */
+  async function reporCapa(serviceId: string) {
+    setError(null)
+    try {
+      await siteAdmin.clearServiceCover(serviceId)
+      setCapas((c) => {
+        const n = { ...c }
+        delete n[serviceId]
+        return n
+      })
+      flash('Reposta a fotografia original.')
+    } catch (e) {
+      setError((e as Error).message)
     }
   }
 
@@ -472,6 +576,105 @@ export default function SiteAdmin() {
             })()}
           </>
         )}
+      </section>
+
+      {/* ── Capas dos serviços ──────────────────────────────── */}
+      <section className="mb-14">
+        <h2 className="text-xl mb-1">Capas dos serviços</h2>
+        <p className="text-titanium/45 text-xs mb-6 max-w-xl leading-relaxed">
+          A fotografia que aparece em cada serviço na página de serviços. Sem
+          nada carregado, fica a que vem no site. São mostradas em 3:4, ao alto.
+        </p>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {SERVICOS.map((sv) => {
+            const capa = capas[sv.id]
+            const ocupado = aCarregarCapa === sv.id
+            return (
+              <div key={sv.id} className="border border-white/10 rounded-xl p-4">
+                <p className="label-sm mb-3">{sv.nome}</p>
+
+                <div className="aspect-[3/4] rounded-lg overflow-hidden bg-white/[0.04] mb-3">
+                  {capa ? (
+                    <img
+                      src={publicUrl(capa.storageKey)}
+                      alt=""
+                      style={{ objectPosition: capa.pos }}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-center px-3">
+                      <span className="text-titanium/35 text-[11px] leading-relaxed">
+                        A usar a fotografia do site
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/*
+                  O recorte só aparece quando há capa carregada. A do site tem
+                  o enquadramento afinado no código, e dar aqui um controlo que
+                  não faz nada seria pior do que não o dar.
+                */}
+                {capa && (
+                  <div className="flex items-center gap-1 mb-3">
+                    <span className="text-[10px] text-titanium/40 mr-1">Recorte</span>
+                    {(
+                      [
+                        ['Topo', '50% 0%'],
+                        ['Centro', '50% 50%'],
+                        ['Base', '50% 100%'],
+                      ] as const
+                    ).map(([rotulo, valor]) => (
+                      <button
+                        key={valor}
+                        onClick={() => ajustarCapa(sv.id, { pos: valor })}
+                        className={`text-[10px] px-2 py-1.5 rounded-md border transition-colors min-h-[32px] ${
+                          capa.pos === valor
+                            ? 'border-white/35 text-titanium'
+                            : 'border-white/10 text-titanium/50 hover:text-titanium/80'
+                        }`}
+                      >
+                        {rotulo}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <input
+                  ref={(el) => {
+                    capaInputs.current[sv.id] = el
+                  }}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0]
+                    if (f) void trocarCapa(sv.id, f)
+                  }}
+                />
+
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => capaInputs.current[sv.id]?.click()}
+                    disabled={ocupado}
+                    className="text-[11px] uppercase tracking-[0.15em] border border-white/15 rounded-full px-4 py-2 text-titanium/75 hover:text-titanium hover:border-white/35 transition-colors min-h-[36px] disabled:opacity-50 disabled:cursor-wait"
+                  >
+                    {ocupado ? 'A enviar…' : capa ? 'Trocar' : 'Escolher foto'}
+                  </button>
+                  {capa && (
+                    <button
+                      onClick={() => reporCapa(sv.id)}
+                      className="text-[11px] uppercase tracking-[0.15em] text-titanium/45 hover:text-titanium/75 transition-colors min-h-[36px] px-2"
+                    >
+                      Repor
+                    </button>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </section>
 
       {/* ── Testemunhos ─────────────────────────────────────── */}

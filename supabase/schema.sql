@@ -378,6 +378,38 @@ drop policy if exists "admin escreve fotos do site" on site_photos;
 create policy "admin escreve fotos do site" on site_photos
   for all to authenticated using (true) with check (true);
 
+-- Capa de cada serviço na página de serviços.
+--
+-- Uma linha por serviço, com o serviço a servir de chave: são quatro, são
+-- fixos, e são nomeados no código. Uma tabela com id próprio e uma coluna a
+-- dizer a que serviço pertence permitiria duas capas para o mesmo serviço, e
+-- depois havia que escolher uma. Assim é impossível por construção.
+--
+-- Sem linha, a página usa a fotografia que vem no repositório. Mudar a capa é
+-- acrescentar uma linha; repor a original é apagá-la.
+create table if not exists site_service_covers (
+  -- 'casamentos', 'maternidade', 'retratos', 'eventos'. Ver CATEGORIES em
+  -- src/pages/Services.tsx.
+  service_id text primary key,
+  -- Chave no bucket público, como em site_photos.
+  storage_key text not null,
+  alt text not null default '',
+  -- Recorte, um `object-position` do CSS. A capa é cortada para caber em 3:4 e
+  -- o que interessa raramente está ao centro.
+  pos text not null default '50% 50%',
+  updated_at timestamptz not null default now()
+);
+
+alter table site_service_covers enable row level security;
+
+drop policy if exists "todos leem capas dos servicos" on site_service_covers;
+create policy "todos leem capas dos servicos" on site_service_covers
+  for select to anon, authenticated using (true);
+
+drop policy if exists "admin escreve capas dos servicos" on site_service_covers;
+create policy "admin escreve capas dos servicos" on site_service_covers
+  for all to authenticated using (true) with check (true);
+
 drop policy if exists "admin escreve testemunhos" on site_testimonials;
 create policy "admin escreve testemunhos" on site_testimonials
   for all to authenticated using (true) with check (true);
