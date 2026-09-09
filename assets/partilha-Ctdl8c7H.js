@@ -1,0 +1,1 @@
+var e=e=>`nebula-pass-${e}`;function t(t,n){try{sessionStorage.setItem(e(t),n)}catch{}}function n(t){try{return sessionStorage.getItem(e(t))}catch{return null}}function r(e,t,n){return`${e}\n\nLink: ${t}\nPassword: ${n}`}export{n,r,t};
