@@ -55,17 +55,29 @@ jobs:
           [ -z "$R2" ] && echo "::warning::VITE_R2_PUBLIC_URL vazio: fotografias carregadas pelo painel não aparecem."
           # O Worker do ZIP: sem ele o módulo dos casamentos funciona todo, só
           # falta o botão de descarregar tudo. Avisa e segue.
-          if [ -z "$ZIP" ]; then
+          #
+          # Espaços à volta são o erro mais comum a colar um endereço, e um
+          # endereço não pode ter espaços nenhuns: limpam-se e segue. Já
+          # aconteceu uma vez este passo travar a publicação do site inteiro
+          # por causa de um espaço à frente do https, o que é uma maneira cara
+          # de corrigir uma coisa barata.
+          ZIP_LIMPO="$(printf '%s' "$ZIP" | tr -d '[:space:]')"
+          if [ -z "$ZIP_LIMPO" ]; then
             echo "::warning::VITE_ZIP_WORKER_URL vazio: o painel fica sem o botão de descarregar o casamento."
           else
-            case "$ZIP" in
-              https://*) ;;
-              *) echo "::error::VITE_ZIP_WORKER_URL não começa por https://"; exit 1 ;;
+            [ "$ZIP_LIMPO" != "$ZIP" ] && echo "::warning::VITE_ZIP_WORKER_URL tinha espaços à volta; foram retirados para este build. Vale a pena corrigir o secret."
+            case "$ZIP_LIMPO" in
+              https://*) echo "VITE_ZIP_WORKER_URL presente." ;;
+              # Aqui sim é erro: um endereço que não é um endereço não melhora
+              # com boa vontade, e publicar com ele dava um botão que falhava.
+              *) echo "::error::VITE_ZIP_WORKER_URL não começa por https:// — o valor deve ser o endereço que o 'npx wrangler deploy' imprimiu."; exit 1 ;;
             esac
-            case "$ZIP" in
-              */) echo "::warning::VITE_ZIP_WORKER_URL acaba em barra; o endereço do download fica com barra a dobrar." ;;
+            case "$ZIP_LIMPO" in
+              */) ZIP_LIMPO="${ZIP_LIMPO%/}"; echo "::warning::VITE_ZIP_WORKER_URL acabava em barra; foi retirada." ;;
             esac
           fi
+          # Passa ao build já limpo (ver o passo do vite build, que o lê daqui).
+          echo "VITE_ZIP_WORKER_URL=$ZIP_LIMPO" >> "$GITHUB_ENV"
           # O do formulário não é obrigatório — sem ele o site abre o programa
           # de email do visitante, que funciona. Mas é indistinguível de "está
           # configurado e falhou", por isso fica dito qual dos dois é.
@@ -105,9 +117,9 @@ jobs:
           VITE_ANALYTICS_DOMAIN: ${{ secrets.VITE_ANALYTICS_DOMAIN }}
           VITE_ANALYTICS_ID: ${{ secrets.VITE_ANALYTICS_ID }}
           VITE_CONTACT_ENDPOINT: ${{ secrets.VITE_CONTACT_ENDPOINT }}
-          # Vazio enquanto o Worker do ZIP não estiver publicado: o painel
-          # esconde o botão de descarregar tudo e o resto funciona na mesma.
-          VITE_ZIP_WORKER_URL: ${{ secrets.VITE_ZIP_WORKER_URL }}
+          # O VITE_ZIP_WORKER_URL não vem daqui: vem do passo de verificação, já
+          # sem espaços à volta, através do GITHUB_ENV. Voltar a declará-lo
+          # aqui sobrepunha-se à versão limpa e trazia o problema de volta.
 
       - run: npm run prerender || echo "::warning::Pré-renderização falhou; publica-se a versão SPA."
 
