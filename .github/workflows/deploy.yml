@@ -3,6 +3,10 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  # Para republicar sem haver nada de novo no código. Serve para quando muda um
+  # secret: o build lê-os no momento em que corre, e sem isto era preciso
+  # inventar um commit para pôr um secret novo em vigor.
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -34,6 +38,7 @@ jobs:
           ANON: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           R2: ${{ secrets.VITE_R2_PUBLIC_URL }}
           FORM: ${{ secrets.VITE_CONTACT_ENDPOINT }}
+          ZIP: ${{ secrets.VITE_ZIP_WORKER_URL }}
         run: |
           falta=""
           [ -z "$URL" ] && falta="$falta VITE_SUPABASE_URL"
@@ -48,6 +53,19 @@ jobs:
           # O R2 público só serve fotografias carregadas pelo painel. O site
           # marketing usa as imagens do repositório, por isso isto avisa e segue.
           [ -z "$R2" ] && echo "::warning::VITE_R2_PUBLIC_URL vazio: fotografias carregadas pelo painel não aparecem."
+          # O Worker do ZIP: sem ele o módulo dos casamentos funciona todo, só
+          # falta o botão de descarregar tudo. Avisa e segue.
+          if [ -z "$ZIP" ]; then
+            echo "::warning::VITE_ZIP_WORKER_URL vazio: o painel fica sem o botão de descarregar o casamento."
+          else
+            case "$ZIP" in
+              https://*) ;;
+              *) echo "::error::VITE_ZIP_WORKER_URL não começa por https://"; exit 1 ;;
+            esac
+            case "$ZIP" in
+              */) echo "::warning::VITE_ZIP_WORKER_URL acaba em barra; o endereço do download fica com barra a dobrar." ;;
+            esac
+          fi
           # O do formulário não é obrigatório — sem ele o site abre o programa
           # de email do visitante, que funciona. Mas é indistinguível de "está
           # configurado e falhou", por isso fica dito qual dos dois é.
