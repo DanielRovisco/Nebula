@@ -574,3 +574,146 @@ on conflict (slug) do nothing;
 -- funções, com as credenciais guardadas nos secrets.
 --
 -- As colunas storage_path e thumb_path guardam a chave do objeto no R2.
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- PARTILHA DE FOTOS DE CASAMENTO
+-- ═══════════════════════════════════════════════════════════════════════════
+--
+-- Módulo diferente do das galerias. As galerias entregam o trabalho do
+-- fotógrafo ao cliente; isto recolhe o que os convidados fotografaram e
+-- devolve-o ao casal. O sentido é o oposto, as regras de acesso são outras, e
+-- por isso são tabelas próprias em vez de reaproveitar `galleries`.
+
+create table if not exists events (
+  id uuid primary key default gen_random_uuid(),
+  -- Vai no link e no QR code: /e/joana-e-miguel-2026
+  slug text not null unique,
+  couple_name text not null,
+  event_date date not null,
+
+  /*
+    Quando as fotografias passam a ser visíveis. Nulo é "logo".
+
+    Até essa hora ficam guardadas e invisíveis para toda a gente, incluindo o
+    casal, se for isso que eles quiserem. É a diferença entre ver o casamento a
+    acontecer e ter a surpresa na manhã seguinte, e é escolha deles.
+  */
+  reveal_at timestamptz,
+
+  -- Até quando se pode carregar. Por omissão 90 dias depois do casamento: quem
+  -- filmou a festa só se lembra de despejar o telemóvel semanas depois.
+  upload_window_ends_at timestamptz not null,
+
+  /*
+    Até quando se guarda. Nulo é "para sempre".
+
+    Existe para a decisão de retenção poder ser tomada mais tarde sem mexer no
+    esquema. Nada apaga nada por causa deste campo: quando houver política de
+    retenção, ela avisa primeiro e apaga depois, e nunca em silêncio.
+  */
+  retain_until timestamptz,
+
+  -- Os convidados veem o que os outros carregaram, ou só o que carregaram eles.
+  guests_see_gallery boolean not null default true,
+
+  /*
+    Com moderação, o que chega fica pendente e só aparece depois de o casal
+    aprovar. Desligada por omissão: obrigar a aprovar centenas de fotografias
+    para elas aparecerem é o género de trabalho que ninguém faz, e a galeria
+    ficava vazia.
+  */
+  moderation boolean not null default false,
+
+  -- Tectos contra abuso. Quem tiver o link pode escrever no nosso bucket sem
+  -- conta nenhuma, e é quem paga o armazenamento que tem de pôr o limite.
+  max_file_bytes bigint not null default 524288000,        -- 500 MB
+  max_total_bytes bigint not null default 214748364800,    -- 200 GB
+  bytes_used bigint not null default 0,
+
+  owner_id uuid not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists events_slug_idx on events (slug);
+create index if not exists events_owner_idx on events (owner_id);
+
+create table if not exists event_media (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references events(id) on delete cascade,
+  kind text not null check (kind in ('foto', 'video')),
+  -- Chaves no bucket privado. O original nunca é recomprimido.
+  storage_key text not null,
+  thumb_key text,
+  -- O nome que o ficheiro tinha no telemóvel. A chave acima leva um carimbo
+  -- temporal para não haver colisões; este é o que vai no ZIP entregue ao casal.
+  original_name text,
+  content_type text,
+  size_bytes bigint not null default 0,
+  width int,
+  height int,
+  -- Do EXIF, quando existe. É por aqui que se agrupa por momento do dia.
+  taken_at timestamptz,
+  -- Texto livre e opcional. Nunca email nem password: pedir conta a um
+  -- convidado a meio de uma festa é pedir que não carregue nada.
+  uploaded_by_name text,
+  status text not null default 'aprovado'
+    check (status in ('pendente', 'aprovado', 'escondido')),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists event_media_evento_idx on event_media (event_id, created_at desc);
+create index if not exists event_media_estado_idx on event_media (event_id, status);
+
+/*
+  O total ocupado é mantido por gatilho e não contado a cada pedido.
+
+  Contar `sum(size_bytes)` de um casamento com milhares de ficheiros a cada
+  upload é percorrer a tabela toda no momento de maior carga, que é
+  precisamente durante a festa.
+*/
+create or replace function event_bytes_sync() returns trigger
+language plpgsql
+set search_path = public as $$
+begin
+  if tg_op = 'INSERT' then
+    update events set bytes_used = bytes_used + new.size_bytes where id = new.event_id;
+  elsif tg_op = 'DELETE' then
+    update events set bytes_used = greatest(0, bytes_used - old.size_bytes) where id = old.event_id;
+  end if;
+  return null;
+end $$;
+
+drop trigger if exists event_media_bytes on event_media;
+create trigger event_media_bytes after insert or delete on event_media
+  for each row execute function event_bytes_sync();
+
+drop trigger if exists events_touch on events;
+create trigger events_touch before update on events
+  for each row execute function touch_updated_at();
+
+alter table events enable row level security;
+alter table event_media enable row level security;
+
+/*
+  Nada é lido nem escrito directamente por quem visita, nem sequer as linhas.
+
+  O convidado não tem conta, por isso não há a quem dar permissões; e as
+  fotografias vivem num bucket privado, que só se abre com URLs assinados. Tudo
+  passa pelas Edge Functions, que correm com a service role e decidem o que
+  mostrar conforme a hora de revelação, a moderação e a janela de upload.
+
+  Ao casal, que é quem tem conta, dá-se acesso aos seus eventos e mais nada.
+*/
+drop policy if exists "casal gere os seus eventos" on events;
+create policy "casal gere os seus eventos" on events
+  for all to authenticated
+  using (owner_id = (select auth.uid()))
+  with check (owner_id = (select auth.uid()));
+
+drop policy if exists "casal gere as suas fotografias" on event_media;
+create policy "casal gere as suas fotografias" on event_media
+  for all to authenticated
+  using (exists (select 1 from events e where e.id = event_id and e.owner_id = (select auth.uid())))
+  with check (exists (select 1 from events e where e.id = event_id and e.owner_id = (select auth.uid())));

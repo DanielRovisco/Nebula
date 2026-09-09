@@ -1,0 +1,16 @@
+name = "nebula-zip"
+main = "index.ts"
+compatibility_date = "2026-01-01"
+
+# O bucket privado das galerias e dos eventos. O nome tem de bater certo com o
+# R2_BUCKET usado pelas Edge Functions.
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "galleries"
+
+# Os dois secrets põem-se por linha de comandos, nunca neste ficheiro:
+#   npx wrangler secret put SUPABASE_URL
+#   npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+#
+# A service role tem acesso total à base de dados. Se alguma vez aparecer num
+# ficheiro que vá para o git, tem de ser rodada no Supabase nesse mesmo dia.
