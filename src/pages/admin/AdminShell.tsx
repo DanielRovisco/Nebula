@@ -168,6 +168,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
       <nav className="container-px mb-10 flex gap-1 border-b border-white/[0.08]">
         {[
           { to: '/admin', label: 'Galerias', end: true },
+          { to: '/admin/eventos', label: 'Casamentos', end: false },
           { to: '/admin/site', label: 'Site', end: false },
         ].map((t) => (
           <NavLink

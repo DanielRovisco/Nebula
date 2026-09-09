@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
     if (!key.startsWith(`eventos/${evento.id}/`)) return json({ error: 'chave_invalida' }, 400)
 
     const contentType = String(body.contentType ?? '')
-    const { error } = await sb.from('event_media').insert({
+    const { data: linha, error } = await sb.from('event_media').insert({
       event_id: evento.id,
       kind: contentType.startsWith('video/') ? 'video' : 'foto',
       storage_key: key,
@@ -123,9 +123,12 @@ Deno.serve(async (req) => {
       uploaded_by_name: body.name ? String(body.name).slice(0, 60) : null,
       // Com moderação ligada, entra à espera de aprovação.
       status: evento.moderation ? 'pendente' : 'aprovado',
-    })
+    }).select('id').single()
     if (error) return json({ error: 'server_error' }, 500)
-    return json({ ok: true })
+    // O id volta para o browser do convidado, que o guarda. É o que lhe permite
+    // ver o que carregou quando a galeria está fechada aos convidados: sem
+    // conta, esta lista é a única forma de ele se identificar perante a galeria.
+    return json({ ok: true, id: linha?.id })
   }
 
   return json({ error: 'unknown_action' }, 400)

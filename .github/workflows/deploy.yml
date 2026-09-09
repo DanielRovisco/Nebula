@@ -87,6 +87,9 @@ jobs:
           VITE_ANALYTICS_DOMAIN: ${{ secrets.VITE_ANALYTICS_DOMAIN }}
           VITE_ANALYTICS_ID: ${{ secrets.VITE_ANALYTICS_ID }}
           VITE_CONTACT_ENDPOINT: ${{ secrets.VITE_CONTACT_ENDPOINT }}
+          # Vazio enquanto o Worker do ZIP não estiver publicado: o painel
+          # esconde o botão de descarregar tudo e o resto funciona na mesma.
+          VITE_ZIP_WORKER_URL: ${{ secrets.VITE_ZIP_WORKER_URL }}
 
       - run: npm run prerender || echo "::warning::Pré-renderização falhou; publica-se a versão SPA."
 

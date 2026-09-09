@@ -26,12 +26,18 @@ const Privacy = lazyComRecarga(() => import('./pages/Privacy'))
 const NotFound = lazyComRecarga(() => import('./pages/NotFound'))
 const Thanks = lazyComRecarga(() => import('./pages/Thanks'))
 
+// A página do convidado do casamento. Vive fora do site: quem lá chega vem de
+// um QR code numa mesa, não de uma visita ao portefólio.
+const EventoPage = lazyComRecarga(() => import('./pages/evento/EventoPage'))
+
 // O painel e o cliente de Supabase só são descarregados por quem lá vai —
 // não pesam na visita normal ao site.
 const AdminShell = lazyComRecarga(() => import('./pages/admin/AdminShell'))
 const GalleryList = lazyComRecarga(() => import('./pages/admin/GalleryList'))
 const GalleryEditor = lazyComRecarga(() => import('./pages/admin/GalleryEditor'))
 const SiteAdmin = lazyComRecarga(() => import('./pages/admin/SiteAdmin'))
+const EventList = lazyComRecarga(() => import('./pages/admin/EventList'))
+const EventEditor = lazyComRecarga(() => import('./pages/admin/EventEditor'))
 
 const Loading = () => <div className="min-h-screen" />
 
@@ -48,6 +54,8 @@ export default function App() {
           <Routes>
             <Route path="/admin" element={<GalleryList />} />
             <Route path="/admin/site" element={<SiteAdmin />} />
+            <Route path="/admin/eventos" element={<EventList />} />
+            <Route path="/admin/eventos/:id" element={<EventEditor />} />
             <Route path="/admin/:id" element={<GalleryEditor />} />
           </Routes>
         </AdminShell>
@@ -59,6 +67,22 @@ export default function App() {
   // próprio logo centrado, e ter a navbar por cima punha dois logos NEBULA no
   // mesmo ecrã. O cliente está na entrega dele, não a navegar o site — o
   // caminho de volta é o link no fim da galeria.
+  /*
+    A página do evento corre sozinha, pela mesma razão que a galeria: quem lá
+    está veio de um código QR numa mesa de casamento, para deixar fotografias, e
+    a navegação do site só lhe daria maneiras de sair de onde queria estar.
+  */
+  if (/^\/e\/[^/]+$/.test(location.pathname)) {
+    return (
+      <Rede><Suspense fallback={<Loading />}>
+        <ScrollToTop />
+        <Routes>
+          <Route path="/e/:slug" element={<EventoPage />} />
+        </Routes>
+      </Suspense></Rede>
+    )
+  }
+
   if (/^\/(galeria\/[^/]+\/ver|en\/gallery\/[^/]+\/view)$/.test(location.pathname)) {
     return (
       <Rede><Suspense fallback={<Loading />}>

@@ -429,3 +429,77 @@ modo de demonstração não escapa para o site publicado. Tem
 de ser ligado à mão — **nunca é um fallback automático**. Um deploy sem
 configuração mostra um aviso e recusa o acesso, em vez de servir um cadeado
 decorativo com ar de verdadeiro.
+
+## Casamentos: as fotografias dos convidados
+
+Um casamento tem duzentos telemóveis e um fotógrafo. As melhores fotografias da
+noite estão quase sempre nos telemóveis, e acabam perdidas em conversas de
+WhatsApp. Este módulo é o sítio onde elas param.
+
+Cada casamento tem um endereço próprio — `proj3ctnebula.pt/e/joana-e-miguel` —
+que se imprime como código QR e se põe nas mesas. Quem o lê cai numa página com
+um botão. Não há registo, não há palavra-passe, não há aplicação para instalar.
+
+### Porque é que não há contas
+
+Porque pedir uma conta a alguém que só quer entregar três fotografias é a forma
+mais fiável de não receber as três fotografias. O que autoriza um upload não é
+uma identidade, é o link do evento mais a janela de tempo, e as duas coisas são
+verificadas no servidor.
+
+### O que acontece quando alguém escolhe fotografias
+
+Os ficheiros entram primeiro no IndexedDB do browser e só depois sobem, um de
+cada vez. A ordem importa: num casamento a rede é má, e um upload que dependa
+de a ligação aguentar do princípio ao fim falha. Assim, uma vez escolhidos, os
+ficheiros estão guardados — a pessoa pode bloquear o telemóvel, sair da página,
+ficar sem rede, ir para casa, e o envio continua da próxima vez que abrir o
+link.
+
+Sobe o ficheiro original, sem compressão. É a promessa que distingue isto de
+mandar por WhatsApp.
+
+Do lado do painel (separador **Casamentos**) cria-se o evento, imprime-se o
+código, vê-se o que entrou, esconde-se o que não deve aparecer, e descarrega-se
+tudo num ZIP.
+
+### Janela de envios e retenção
+
+Por omissão a janela fecha 90 dias depois do casamento. Fechar a janela **não
+apaga nada**: deixam de entrar fotografias novas, e o que lá está continua lá.
+Não há expiração silenciosa, e é de propósito — a data em que as fotografias do
+casamento de alguém desaparecem não pode ser uma linha nos termos.
+
+### O Worker do ZIP
+
+O ZIP é construído por um Worker de Cloudflare (`worker/zip`), que lê os
+ficheiros do R2 e os vai empurrando à medida que os lê. Sem compressão e sem
+juntar nada em memória: um casamento pode ter duzentos gigabytes, e nem cabem
+na memória de um Worker nem valia a pena comprimir JPEGs.
+
+Publicar:
+
+```bash
+cd worker/zip
+npx wrangler secret put SUPABASE_URL
+npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+npx wrangler deploy
+```
+
+Depois, o endereço que o `deploy` imprimir entra em `VITE_ZIP_WORKER_URL`
+(`.env.local` e *secret* do repositório). Sem ele o módulo funciona todo; o que
+falta é o botão de descarregar tudo.
+
+> A *service role* do Supabase tem acesso total à base de dados. Vive nos
+> secrets do Worker e nunca num ficheiro do repositório. Se alguma vez lá
+> aparecer, tem de ser rodada no Supabase nesse mesmo dia.
+
+### Edge Functions
+
+```bash
+npx supabase functions deploy event-upload --no-verify-jwt
+npx supabase functions deploy event-gallery --no-verify-jwt
+```
+
+O `--no-verify-jwt` é deliberado nas duas: quem chama é um convidado sem conta.
+Toda a autorização está dentro das funções.
