@@ -631,10 +631,27 @@ create table if not exists events (
   max_total_bytes bigint not null default 214748364800,    -- 200 GB
   bytes_used bigint not null default 0,
 
+  /*
+    Segredo que autoriza o download em bloco.
+
+    O slug não serve para isto: está impresso em todas as mesas do casamento,
+    de propósito, para os convidados o lerem. Sem um segundo segredo, quem
+    lesse o código QR podia descarregar o casamento inteiro, e o que era um
+    convite a deixar fotografias passava a ser um convite a levá-las todas.
+
+    Vive numa coluna e não num JWT porque o download é um link que o browser
+    segue: não há sítio onde pôr um cabeçalho.
+  */
+  download_token text not null default encode(gen_random_bytes(24), 'hex'),
+
   owner_id uuid not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Para quem já tinha corrido a versão anterior deste ficheiro.
+alter table events add column if not exists download_token text not null
+  default encode(gen_random_bytes(24), 'hex');
 
 create index if not exists events_slug_idx on events (slug);
 create index if not exists events_owner_idx on events (owner_id);

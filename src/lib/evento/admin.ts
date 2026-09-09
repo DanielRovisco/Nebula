@@ -23,6 +23,7 @@ export interface Evento {
   max_file_bytes: number
   max_total_bytes: number
   bytes_used: number
+  download_token: string
   created_at: string
 }
 

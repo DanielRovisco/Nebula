@@ -189,16 +189,31 @@ function zipStream(entradas: Entrada[], bucket: R2Bucket): ReadableStream<Uint8A
   })
 }
 
+/**
+ * Compara dois segredos sem deixar o tempo dizer quantos caracteres batem.
+ *
+ * Percorre sempre o comprimento todo e acumula as diferenças, em vez de parar
+ * na primeira. O comprimento em si não é segredo (é sempre o mesmo), por isso
+ * pode sair pela porta rápida.
+ */
+function igualEmTempoConstante(a: string, b: string): boolean {
+  if (a.length !== b.length || a.length === 0) return false
+  let diferenca = 0
+  for (let i = 0; i < a.length; i++) diferenca |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  return diferenca === 0
+}
+
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url)
     const slug = url.searchParams.get('e')
+    const token = url.searchParams.get('t') ?? ''
     if (!slug) return new Response('falta o evento', { status: 400 })
 
     // A lista vem do Supabase, com a service role: é lá que estão as regras de
     // quem pode ver o quê, e o Worker não as reimplementa.
     const res = await fetch(
-      `${env.SUPABASE_URL}/rest/v1/events?slug=eq.${encodeURIComponent(slug)}&select=id,couple_name`,
+      `${env.SUPABASE_URL}/rest/v1/events?slug=eq.${encodeURIComponent(slug)}&select=id,couple_name,download_token`,
       {
         headers: {
           apikey: env.SUPABASE_SERVICE_ROLE_KEY,
@@ -206,12 +221,30 @@ export default {
         },
       },
     )
-    const eventos = (await res.json()) as { id: string; couple_name: string }[]
+    const eventos = (await res.json()) as
+      { id: string; couple_name: string; download_token: string }[]
     const evento = eventos?.[0]
     if (!evento) return new Response('não encontrado', { status: 404 })
 
+    /*
+      O slug sozinho não chega. Ele está impresso nas mesas para os convidados
+      o lerem, e é isso que o torna imprestável como autorização: quem foi
+      convidado para deixar fotografias não foi convidado para levar as de toda
+      a gente. O segredo do download vive na base de dados e só aparece no
+      painel.
+
+      A comparação é feita em tempo constante. Uma comparação normal desiste no
+      primeiro carácter diferente, e o tempo que demora a desistir diz quantos
+      caracteres estavam certos, o que permite descobrir o segredo à letra.
+    */
+    if (!igualEmTempoConstante(token, evento.download_token)) {
+      // A mesma resposta que se dá a um evento que não existe: sem token, não
+      // se confirma sequer que este casamento é real.
+      return new Response('não encontrado', { status: 404 })
+    }
+
     const mres = await fetch(
-      `${env.SUPABASE_URL}/rest/v1/event_media?event_id=eq.${evento.id}&status=eq.aprovado&select=storage_key&order=created_at.asc`,
+      `${env.SUPABASE_URL}/rest/v1/event_media?event_id=eq.${evento.id}&status=eq.aprovado&select=storage_key,original_name&order=created_at.asc`,
       {
         headers: {
           apikey: env.SUPABASE_SERVICE_ROLE_KEY,

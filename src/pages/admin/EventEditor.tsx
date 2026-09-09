@@ -296,14 +296,15 @@ function Entrega({ evento, total }: { evento: Evento; total: number }) {
   return (
     <div>
       <a
-        href={`${ZIP}?e=${encodeURIComponent(evento.slug)}`}
+        href={`${ZIP}?e=${encodeURIComponent(evento.slug)}&t=${encodeURIComponent(evento.download_token)}`}
         className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-titanium text-eerie text-[11px] uppercase tracking-[0.12em] hover:bg-titanium/90 transition-colors min-h-[44px]"
       >
         <Download size={14} /> Descarregar tudo
       </a>
       <p className="text-xs text-titanium/35 mt-2 leading-relaxed">
         {total} ficheiros, {gb(evento.bytes_used)}. Começa a descarregar logo e
-        vai crescendo: num casamento grande demora, mas não pára.
+        vai crescendo: num casamento grande demora, mas não pára. Este link leva
+        a chave do casamento: só se dá aos noivos.
       </p>
     </div>
   )
