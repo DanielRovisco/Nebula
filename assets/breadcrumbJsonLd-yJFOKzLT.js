@@ -1,0 +1,1 @@
+import{b as e}from"./index-CDHGDFHJ.js";function t(t){return{"@context":`https://schema.org`,"@type":`BreadcrumbList`,itemListElement:t.map((t,n)=>({"@type":`ListItem`,position:n+1,name:t.nome,item:`${e}${t.caminho}`}))}}export{t};
