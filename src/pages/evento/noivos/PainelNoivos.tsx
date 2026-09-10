@@ -22,6 +22,26 @@ const ZIP = import.meta.env.VITE_ZIP_WORKER_URL as string | undefined
 /** Leitura do relógio, fora dos componentes: não é estado do React. */
 const aindaAberto = (iso: string) => new Date(iso).getTime() > Date.now()
 
+/**
+ * O que se diz quando ainda não chegou nenhuma fotografia.
+ *
+ * Depende do dia, porque a mesma frase que é bonita na véspera é estranha na
+ * manhã seguinte. Antes do casamento é espera; no próprio dia é entusiasmo; e
+ * depois de ele ter passado não se pode continuar a falar de um dia que já foi.
+ */
+function esperaVazia(dataEvento: string): string {
+  // Comparação por dia e não por hora: às onze da noite do casamento continua a
+  // ser o dia deles, e um `getTime()` diria que já passou.
+  const dia = new Date(dataEvento)
+  const hoje = new Date()
+  const soDia = (d: Date) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())
+  const diferenca = soDia(hoje) - soDia(dia)
+
+  if (diferenca < 0) return 'À espera do grande dia!'
+  if (diferenca === 0) return 'É agora! Preparados?'
+  return 'Ainda não chegou nenhuma.'
+}
+
 type Aba = 'todas' | 'pendente' | 'escondido' | 'lixo'
 
 /**
@@ -283,8 +303,7 @@ export default function PainelNoivos() {
 
           {media.length === 0 ? (
             <p className="text-titanium/40 leading-relaxed mt-6 max-w-md">
-              Assim que alguém ler o código e mandar a primeira fotografia, ela
-              aparece aqui. Não é preciso fazer nada até lá.
+              {esperaVazia(evento.eventDate)}
             </p>
           ) : (
             <>
@@ -703,21 +722,21 @@ function Definicoes({
             <strong className="text-titanium/70 font-normal">
               {fecha.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' })}
             </strong>
-            . Depois dessa data deixam de entrar novas, e nada é apagado: o que
-            está aqui continua aqui.
+            .
           </>
         ) : (
-          <>
-            Os envios fecharam. Nada foi apagado, e nada vai ser: estas
-            fotografias ficam. Se quiserem reabrir, é só dizer.
-          </>
+          <>Os envios fecharam. As fotografias ficam.</>
         )}
       </p>
 
+      {/*
+        O aviso da chave diz o que está em jogo e nada mais. A versão anterior
+        explicava-se em três linhas e uma comparação, e um aviso comprido é um
+        aviso que não se lê.
+      */}
       <p className="text-xs text-titanium/25 leading-relaxed mt-6 max-w-xl">
-        Este link é a vossa chave. Quem o tiver vê e gere estas fotografias, por
-        isso guardem-no como guardariam a chave de casa. Se alguma vez o
-        perderem de vista, peçam-nos outro.
+        Este link é a vossa chave. Quem tiver acesso pode ver e apagar todas as
+        fotografias. Mantenham-no entre vocês.
       </p>
     </section>
   )
