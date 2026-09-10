@@ -494,12 +494,47 @@ falta é o botão de descarregar tudo.
 > secrets do Worker e nunca num ficheiro do repositório. Se alguma vez lá
 > aparecer, tem de ser rodada no Supabase nesse mesmo dia.
 
+### O painel dos noivos
+
+Além do link dos convidados, cada casamento tem um segundo link, para o casal:
+
+```
+proj3ctnebula.pt/casamento/<slug>?k=<chave>
+```
+
+Os dois estão no painel, um por cima do outro, e **não se trocam**: o dos
+convidados vai no código QR e nas mesas; o dos noivos leva a chave do casamento
+e dá acesso a ver, esconder, apagar e descarregar tudo.
+
+A chave sai da barra de endereço assim que a página abre, e fica guardada no
+browser deles. Podem pôr a página nos favoritos sem o segredo ficar à vista de
+quem espreitar por cima do ombro.
+
+Também aqui não há conta nem palavra-passe, e pela mesma razão que os convidados
+não têm: obrigar duas pessoas a inventar uma palavra-passe para verem as
+fotografias do próprio casamento é trabalho que ninguém quer e suporte que
+alguém vai ter de dar às onze da noite.
+
+### O código QR
+
+É desenhado no browser, com o símbolo da NEBULA ao centro. Um símbolo por cima
+de um código tapa módulos, e só continua legível por causa da correcção de
+erros: no nível mais alto um código sobrevive a perder cerca de 30% da área, e o
+símbolo ocupa perto de 5%.
+
+Testado com um descodificador a sério (`jsqr`), com endereços curtos e
+compridos, e reduzido a 220, 140 e 90 pixels — lê-se em todos. **Deixa de ler
+quando o símbolo passa dos 34% do lado**, por isso `simboloEscala` fica nos
+0.22 e não se mexe sem repetir o teste.
+
 ### Edge Functions
 
 ```bash
 npx supabase functions deploy event-upload --no-verify-jwt
 npx supabase functions deploy event-gallery --no-verify-jwt
+npx supabase functions deploy event-owner --no-verify-jwt
 ```
 
-O `--no-verify-jwt` é deliberado nas duas: quem chama é um convidado sem conta.
-Toda a autorização está dentro das funções.
+O `--no-verify-jwt` é deliberado nas três: quem chama são convidados e noivos,
+nenhum deles com conta. Toda a autorização está dentro das funções — o slug e a
+janela de tempo nas duas primeiras, a chave do casamento na terceira.

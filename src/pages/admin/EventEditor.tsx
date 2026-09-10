@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Check, Copy, Download, EyeOff, Trash2 } from 'lucide-react'
-import QRCode from 'qrcode'
+import QrNebula from '../../components/QrNebula'
+import { guardarQr } from '../../lib/qr/guardar'
 import {
   type Evento, type MediaAdmin,
   apagarEvento, apagarMedia, assinar, guardarEvento, lerEvento, listarMedia, mudarEstado,
@@ -30,7 +31,7 @@ export default function EventEditor() {
   const [media, setMedia] = useState<MediaAdmin[]>([])
   const [aba, setAba] = useState<Aba>('aprovado')
   const [escolhidos, setEscolhidos] = useState<Set<string>>(new Set())
-  const [copiado, setCopiado] = useState(false)
+  const [copiado, setCopiado] = useState<'convidados' | 'noivos' | null>(null)
 
   useEffect(() => {
     Promise.all([lerEvento(id), listarMedia(id)])
@@ -47,6 +48,13 @@ export default function EventEditor() {
   if (!evento) return <div className="container-px min-h-[40vh]" />
 
   const url = absoluteUrl(`e/${evento.slug}`)
+  const urlNoivos = `${absoluteUrl(`casamento/${evento.slug}`)}?k=${encodeURIComponent(evento.download_token)}`
+
+  const copiar = (qual: 'convidados' | 'noivos', valor: string) => {
+    navigator.clipboard.writeText(valor)
+    setCopiado(qual)
+    setTimeout(() => setCopiado(null), 1600)
+  }
 
   const alternar = (mid: string) => {
     const s = new Set(escolhidos)
@@ -92,23 +100,28 @@ export default function EventEditor() {
         <Codigo url={url} nome={evento.couple_name} />
 
         <div className="space-y-5 min-w-0">
-          <div>
-            <span className="label-sm">Link para os convidados</span>
-            <div className="flex gap-2 mt-2">
-              <input readOnly value={url} className="flex-1 min-w-0 bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-titanium/60" />
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(url)
-                  setCopiado(true)
-                  setTimeout(() => setCopiado(false), 1600)
-                }}
-                className="px-4 rounded-lg bg-white/[0.06] hover:bg-white/10 transition-colors text-titanium/70"
-                aria-label="Copiar link"
-              >
-                {copiado ? <Check size={15} /> : <Copy size={15} />}
-              </button>
-            </div>
-          </div>
+          {/*
+            Dois links, e a diferença entre eles é a coisa mais importante desta
+            página: um é para toda a gente e o outro é a chave do casamento. Por
+            isso estão separados, com o aviso colado ao segundo, e não numa
+            lista de campos onde se copia o errado sem dar por isso.
+          */}
+          <LinhaDeLink
+            etiqueta="Link para os convidados"
+            valor={url}
+            nota="É este que vai no código QR e nas mesas."
+            copiado={copiado === 'convidados'}
+            aoCopiar={() => copiar('convidados', url)}
+          />
+
+          <LinhaDeLink
+            etiqueta="Link dos noivos"
+            valor={urlNoivos}
+            nota="Abre o painel deles: ver, escolher, esconder e descarregar tudo. Leva a chave do casamento, por isso é só para eles."
+            copiado={copiado === 'noivos'}
+            aoCopiar={() => copiar('noivos', urlNoivos)}
+            destaque
+          />
 
           <Interruptor
             ligado={evento.guests_see_gallery}
@@ -239,37 +252,24 @@ function Accao({ aoClicar, icone, children }: { aoClicar: () => void; icone: Rea
 /**
  * O código QR, desenhado no browser e pronto a imprimir.
  *
- * É gerado aqui e não guardado em lado nenhum, porque não há nada para guardar:
- * o código é só o endereço, e o endereço já está na base de dados. Guardar uma
- * imagem dele era arranjar uma segunda cópia da mesma verdade, para ficar
- * desactualizada no dia em que o slug mudasse.
+ * É gerado aqui e não guardado em lado nenhum, porque não há nada para
+ * guardar: o código é só o endereço, e o endereço já está na base de dados.
+ * Guardar uma imagem dele era arranjar uma segunda cópia da mesma verdade,
+ * para ficar desactualizada no dia em que o slug mudasse.
  */
 function Codigo({ url, nome }: { url: string; nome: string }) {
-  const canvas = useRef<HTMLCanvasElement>(null)
-
-  useEffect(() => {
-    if (!canvas.current) return
-    QRCode.toCanvas(canvas.current, url, {
-      width: 520,
-      margin: 1,
-      // Escuro sobre claro: um código invertido não é lido por metade das
-      // câmaras de telemóvel, e o cartão vai ser impresso em papel branco.
-      color: { dark: '#141414', light: '#ffffff' },
-      errorCorrectionLevel: 'M',
-    }).catch(() => {})
-  }, [url])
-
-  const descarregar = () => {
-    const a = document.createElement('a')
-    a.href = canvas.current!.toDataURL('image/png')
-    a.download = `qr-${nome.toLowerCase().replace(/\s+/g, '-')}.png`
-    a.click()
-  }
+  const canvas = useRef<HTMLCanvasElement | null>(null)
+  const guardar = useCallback((c: HTMLCanvasElement) => { canvas.current = c }, [])
 
   return (
     <div className="w-fit">
-      <canvas ref={canvas} className="w-40 h-40 sm:w-48 sm:h-48 rounded-xl bg-white p-2" />
-      <button onClick={descarregar} className="mt-3 flex items-center gap-1.5 text-xs text-titanium/45 hover:text-titanium/80 transition-colors">
+      <div className="rounded-xl bg-white p-2">
+        <QrNebula url={url} tamanho={800} aoDesenhar={guardar} className="w-40 h-40 sm:w-48 sm:h-48 block" />
+      </div>
+      <button
+        onClick={() => canvas.current && guardarQr(canvas.current, `codigo-${nome}`)}
+        className="mt-3 flex items-center gap-1.5 text-xs text-titanium/45 hover:text-titanium/80 transition-colors"
+      >
         <Download size={12} /> Guardar o código
       </button>
     </div>
@@ -305,6 +305,43 @@ function Entrega({ evento, total }: { evento: Evento; total: number }) {
         {total} ficheiros, {gb(evento.bytes_used)}. Começa a descarregar logo e
         vai crescendo: num casamento grande demora, mas não pára. Este link leva
         a chave do casamento: só se dá aos noivos.
+      </p>
+    </div>
+  )
+}
+
+function LinhaDeLink({
+  etiqueta, valor, nota, copiado, aoCopiar, destaque,
+}: {
+  etiqueta: string
+  valor: string
+  nota: string
+  copiado: boolean
+  aoCopiar: () => void
+  destaque?: boolean
+}) {
+  return (
+    <div>
+      <span className="label-sm">{etiqueta}</span>
+      <div className="flex gap-2 mt-2">
+        <input
+          readOnly
+          value={valor}
+          onFocus={(e) => e.currentTarget.select()}
+          className={`flex-1 min-w-0 bg-white/[0.04] border rounded-lg px-3 py-2.5 text-sm text-titanium/60 ${
+            destaque ? 'border-amber-300/25' : 'border-white/10'
+          }`}
+        />
+        <button
+          onClick={aoCopiar}
+          className="px-4 rounded-lg bg-white/[0.06] hover:bg-white/10 transition-colors text-titanium/70"
+          aria-label={`Copiar ${etiqueta.toLowerCase()}`}
+        >
+          {copiado ? <Check size={15} /> : <Copy size={15} />}
+        </button>
+      </div>
+      <p className={`text-xs mt-2 leading-relaxed ${destaque ? 'text-amber-100/50' : 'text-titanium/35'}`}>
+        {nota}
       </p>
     </div>
   )

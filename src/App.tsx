@@ -30,6 +30,10 @@ const Thanks = lazyComRecarga(() => import('./pages/Thanks'))
 // um QR code numa mesa, não de uma visita ao portefólio.
 const EventoPage = lazyComRecarga(() => import('./pages/evento/EventoPage'))
 
+// O painel dos noivos. Também fora do site, e pela mesma razão: é a página do
+// casamento deles, não uma secção do nosso portefólio.
+const PainelNoivos = lazyComRecarga(() => import('./pages/evento/noivos/PainelNoivos'))
+
 // O painel e o cliente de Supabase só são descarregados por quem lá vai —
 // não pesam na visita normal ao site.
 const AdminShell = lazyComRecarga(() => import('./pages/admin/AdminShell'))
@@ -72,12 +76,13 @@ export default function App() {
     está veio de um código QR numa mesa de casamento, para deixar fotografias, e
     a navegação do site só lhe daria maneiras de sair de onde queria estar.
   */
-  if (/^\/e\/[^/]+$/.test(location.pathname)) {
+  if (/^\/(e|casamento)\/[^/]+$/.test(location.pathname)) {
     return (
       <Rede><Suspense fallback={<Loading />}>
         <ScrollToTop />
         <Routes>
           <Route path="/e/:slug" element={<EventoPage />} />
+          <Route path="/casamento/:slug" element={<PainelNoivos />} />
         </Routes>
       </Suspense></Rede>
     )

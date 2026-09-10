@@ -215,7 +215,7 @@ export function Interruptor({
       className="w-full flex items-start gap-3 text-left group"
     >
       <span className={`mt-0.5 w-9 h-5 rounded-full shrink-0 transition-colors ${ligado ? 'bg-titanium/80' : 'bg-white/10'}`}>
-        <span className={`block w-4 h-4 mt-0.5 rounded-full bg-eerie transition-transform ${ligado ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
+        <span className={`block w-4 h-4 mt-0.5 rounded-full transition-transform ${ligado ? 'bg-eerie translate-x-[18px]' : 'bg-titanium/45 translate-x-0.5'}`} />
       </span>
       <span className="min-w-0">
         <span className="block text-sm text-titanium/80">{titulo}</span>
