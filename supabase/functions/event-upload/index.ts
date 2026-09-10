@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
   const sb = admin()
   const { data: evento } = await sb
     .from('events')
-    .select('id, couple_name, event_date, upload_window_ends_at, moderation, max_file_bytes, max_total_bytes, bytes_used')
+    .select('id, couple_name, event_date, upload_window_ends_at, moderation, max_file_bytes, max_total_bytes, bytes_used, welcome_message')
     .eq('slug', slug)
     .maybeSingle()
 
@@ -67,6 +67,8 @@ Deno.serve(async (req) => {
       aberto,
       fecha: evento.upload_window_ends_at,
       maxFileBytes: evento.max_file_bytes,
+      // A frase escrita pelos noivos, ou a de omissão da própria coluna.
+      welcome: evento.welcome_message,
     })
   }
 

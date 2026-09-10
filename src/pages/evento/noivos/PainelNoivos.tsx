@@ -145,7 +145,19 @@ export default function PainelNoivos() {
 
   const definir = async (campos: Parameters<typeof guardarDefinicoes>[2]) => {
     if (!chave || !painel) return
-    setPainel({ ...painel, evento: { ...painel.evento, ...campos } })
+    /*
+      Os interruptores mudam à frente dos olhos, antes de o servidor responder:
+      esperar por ele fazia o botão parecer partido numa rede fraca.
+
+      A frase fica de fora dessa antecipação, porque é o único campo que o
+      servidor pode devolver diferente do que recebeu (vazia vira a de sempre).
+      Adivinhá-la aqui era arriscar mostrar uma coisa e ter outra gravada.
+    */
+    const local: Partial<Painel['evento']> = {}
+    if (typeof campos.guestsSeeGallery === 'boolean') local.guestsSeeGallery = campos.guestsSeeGallery
+    if (typeof campos.moderation === 'boolean') local.moderation = campos.moderation
+    if (campos.revealAt !== undefined) local.revealAt = campos.revealAt
+    setPainel({ ...painel, evento: { ...painel.evento, ...local } })
     try {
       await guardarDefinicoes(slug, chave, campos)
     } catch { setErro('falhou') }
@@ -167,7 +179,7 @@ export default function PainelNoivos() {
       <main className="container-px max-w-5xl mx-auto">
         <Reveal>
           <section className="grid grid-cols-3 gap-px bg-white/[0.07] rounded-2xl overflow-hidden -mt-6 sm:-mt-10 relative">
-            <Numero valor={fotos} rotulo={fotos === 1 ? 'fotografia' : 'fotografias'} icone={<ImagemIcone size={14} />} />
+            <Numero valor={fotos} rotulo={fotos === 1 ? 'foto' : 'fotos'} icone={<ImagemIcone size={14} />} />
             <Numero valor={videos} rotulo={videos === 1 ? 'vídeo' : 'vídeos'} icone={<Play size={14} />} />
             <Numero valor={pessoas} rotulo={pessoas === 1 ? 'pessoa' : 'pessoas'} icone={<Users size={14} />} />
           </section>
@@ -366,7 +378,13 @@ function Numero({
         to={valor}
         className="block font-serif [&_span]:font-serif text-3xl sm:text-4xl leading-none"
       />
-      <p className="label-sm mt-2.5">{rotulo}</p>
+      {/*
+        Menos espacejamento no telemóvel. Com três colunas a 390px, cada célula
+        tem uns 120px, e o `label-sm` a 0.28em fazia "fotografias" transbordar
+        para cima da vizinha. Encurtou-se a palavra e aliviou-se o espacejamento
+        só onde é preciso.
+      */}
+      <p className="label-sm mt-2.5 tracking-[0.16em] sm:tracking-[0.28em]">{rotulo}</p>
     </div>
   )
 }
@@ -535,7 +553,11 @@ function Definicoes({
   evento, aoMudar,
 }: {
   evento: Painel['evento']
-  aoMudar: (campos: { guestsSeeGallery?: boolean; moderation?: boolean }) => void
+  aoMudar: (campos: {
+    guestsSeeGallery?: boolean
+    moderation?: boolean
+    welcomeMessage?: string | null
+  }) => void
 }) {
   const fecha = new Date(evento.uploadWindowEndsAt)
   const aberta = aindaAberto(evento.uploadWindowEndsAt)
@@ -544,7 +566,9 @@ function Definicoes({
     <section className="mt-16 sm:mt-24 pt-10 border-t border-white/[0.07]">
       <span className="label-sm">Definições</span>
 
-      <div className="mt-6 space-y-6 max-w-xl">
+      <Frase inicial={evento.welcomeMessage} aoGuardar={(v) => aoMudar({ welcomeMessage: v })} />
+
+      <div className="mt-9 space-y-6 max-w-xl">
         <Interruptor
           ligado={evento.guestsSeeGallery}
           aoMudar={(v) => aoMudar({ guestsSeeGallery: v })}
@@ -590,6 +614,87 @@ function Definicoes({
         perderem de vista, peçam-nos outro.
       </p>
     </section>
+  )
+}
+
+/**
+ * A frase que os convidados leem ao abrir o link.
+ *
+ * Guarda-se ao sair do campo e não a cada tecla: um pedido por letra escrita
+ * era ruído para o servidor e, numa rede fraca, uma frase a chegar fora de
+ * ordem e a gravar-se a meio.
+ *
+ * Apagar tudo repõe a frase de sempre, e é o servidor que decide qual é. Assim
+ * não há duas versões dela do lado do browser à espera de ficarem diferentes.
+ */
+function Frase({
+  inicial, aoGuardar,
+}: { inicial: string; aoGuardar: (v: string | null) => void }) {
+  const [texto, setTexto] = useState(inicial)
+  const [guardado, setGuardado] = useState(false)
+  const gravado = useRef(inicial)
+
+  // Se o painel recarregar com outra frase (outro separador, por exemplo), o
+  // campo acompanha, desde que não haja nada por gravar aqui.
+  useEffect(() => {
+    if (gravado.current === texto) {
+      gravado.current = inicial
+      setTexto(inicial)
+    }
+    // Só quando a frase do servidor muda: seguir `texto` punha o campo a
+    // lutar contra quem está a escrever nele.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inicial])
+
+  const sair = () => {
+    const limpo = texto.trim()
+    if (limpo === gravado.current.trim()) return
+    gravado.current = limpo
+    aoGuardar(limpo || null)
+    setGuardado(true)
+    setTimeout(() => setGuardado(false), 2200)
+  }
+
+  return (
+    <div className="max-w-xl">
+      <div className="flex items-baseline justify-between gap-3">
+        <label htmlFor="frase" className="label-sm">O que os convidados leem</label>
+        {guardado && (
+          <span className="text-[11px] text-titanium/45 flex items-center gap-1">
+            <Check size={11} /> Guardado
+          </span>
+        )}
+      </div>
+
+      <textarea
+        id="frase"
+        value={texto}
+        onChange={(e) => setTexto(e.target.value)}
+        onBlur={sair}
+        rows={3}
+        maxLength={240}
+        className="w-full mt-3 bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-titanium/85 leading-relaxed resize-none focus:border-white/30 outline-none transition-colors"
+      />
+
+      <div className="flex items-center justify-between gap-3 mt-2">
+        <p className="text-xs text-titanium/35 leading-relaxed">
+          Aparece por cima do botão, na página deles.
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            gravado.current = ''
+            setTexto('')
+            aoGuardar(null)
+            setGuardado(true)
+            setTimeout(() => setGuardado(false), 2200)
+          }}
+          className="shrink-0 text-xs text-titanium/35 hover:text-titanium/75 transition-colors"
+        >
+          Repor a original
+        </button>
+      </div>
+    </div>
   )
 }
 

@@ -632,6 +632,16 @@ create table if not exists events (
   bytes_used bigint not null default 0,
 
   /*
+    A frase que o convidado lê ao abrir a página.
+
+    Tem um texto de omissão que serve à maioria dos casamentos, e os noivos
+    podem trocá-lo pelo deles no painel. É a única parte da página que fala com
+    a voz do casal, e por isso é a única que faz sentido eles poderem escrever.
+  */
+  welcome_message text not null
+    default 'Queremos ver o nosso dia pelos olhos daqueles que mais gostamos! Partilha o teu olhar 🤍',
+
+  /*
     Segredo que autoriza o download em bloco.
 
     O slug não serve para isto: está impresso em todas as mesas do casamento,
@@ -652,6 +662,8 @@ create table if not exists events (
 -- Para quem já tinha corrido a versão anterior deste ficheiro.
 alter table events add column if not exists download_token text not null
   default encode(gen_random_bytes(24), 'hex');
+alter table events add column if not exists welcome_message text not null
+  default 'Queremos ver o nosso dia pelos olhos daqueles que mais gostamos! Partilha o teu olhar 🤍';
 
 create index if not exists events_slug_idx on events (slug);
 create index if not exists events_owner_idx on events (owner_id);

@@ -7,7 +7,8 @@ import InstagramIcon from '../../lib/InstagramIcon'
 import { asset } from '../../lib/asset'
 import { CONTACT, absoluteUrl } from '../../lib/site'
 import {
-  type GaleriaEvento, type InfoEvento, ErroEvento, galeriaEvento, infoEvento,
+  type GaleriaEvento, type InfoEvento,
+  ErroEvento, FRASE_DE_OMISSAO, galeriaEvento, infoEvento,
 } from '../../lib/evento/api'
 import { minhaChave } from '../../lib/evento/fila'
 import { useFila } from '../../lib/evento/useFila'
@@ -171,11 +172,13 @@ export default function EventoPage() {
       <main className="container-px max-w-2xl mx-auto">
         {info.aberto ? (
           <motion.section {...entra(0.7)} className="mt-10 sm:mt-12">
-            {/* `text-balance` reparte as linhas em vez de deixar a última com
-                uma palavra só, que é o que acontecia aqui com "têm." sozinho. */}
-            <p className="text-titanium/55 leading-relaxed text-center text-balance max-w-md mx-auto">
-              Tiraste alguma coisa boa? Deixa-a aqui. Não é preciso conta
-              nenhuma, e as fotografias sobem com a qualidade que têm.
+            {/*
+              A frase é dos noivos, e é a única parte desta página que fala com
+              a voz deles. `text-balance` reparte as linhas em vez de deixar a
+              última com uma palavra só.
+            */}
+            <p className="text-titanium/60 leading-relaxed text-center text-balance max-w-md mx-auto">
+              {info.welcome ?? FRASE_DE_OMISSAO}
             </p>
 
             <input

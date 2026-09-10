@@ -14,7 +14,19 @@ export interface InfoEvento {
   aberto: boolean
   fecha: string
   maxFileBytes: number
+  /** A frase escrita pelos noivos. Ausente numa cópia local antiga. */
+  welcome?: string
 }
+
+/**
+ * A frase de omissão, do lado do browser.
+ *
+ * Só é usada quando a cópia local do evento foi guardada antes de esta frase
+ * existir: nesse caso o servidor ainda não foi ouvido e a página tem de
+ * escrever alguma coisa. Em tudo o resto, quem manda a frase é o servidor.
+ */
+export const FRASE_DE_OMISSAO =
+  'Queremos ver o nosso dia pelos olhos daqueles que mais gostamos! Partilha o teu olhar 🤍'
 
 export interface MediaEvento {
   id: string

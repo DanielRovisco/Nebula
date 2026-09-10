@@ -25,6 +25,17 @@ import { cors, deleteObjects, json, presign } from '../_shared/r2.ts'
 
 const VER_TTL = 60 * 60 * 4 // 4h: o casal fica a olhar para isto muito tempo
 
+/**
+ * A frase de omissão da página dos convidados.
+ *
+ * É a mesma que está como `default` da coluna, e está escrita nos dois sítios
+ * de propósito: a coluna trata dos eventos que se criam, esta constante trata
+ * de quem apaga a frase e quer a original de volta. Se um dia mudar, muda nos
+ * dois.
+ */
+const FRASE_DE_OMISSAO =
+  'Queremos ver o nosso dia pelos olhos daqueles que mais gostamos! Partilha o teu olhar 🤍'
+
 const admin = () =>
   createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
     auth: { persistSession: false },
@@ -126,6 +137,7 @@ Deno.serve(async (req) => {
         uploadWindowEndsAt: evento.upload_window_ends_at,
         guestsSeeGallery: evento.guests_see_gallery,
         moderation: evento.moderation,
+        welcomeMessage: evento.welcome_message,
         bytesUsed: evento.bytes_used,
         maxTotalBytes: evento.max_total_bytes,
       },
@@ -181,6 +193,15 @@ Deno.serve(async (req) => {
     const mudanca: Record<string, unknown> = { updated_at: new Date().toISOString() }
     if (typeof body.guestsSeeGallery === 'boolean') mudanca.guests_see_gallery = body.guestsSeeGallery
     if (typeof body.moderation === 'boolean') mudanca.moderation = body.moderation
+    /*
+      A frase. Vazia ou nula quer dizer "queremos a de sempre", e não "queremos
+      uma página sem frase nenhuma": o convidado que abrisse o link ficava com
+      um espaço branco por cima do botão e sem perceber porquê.
+    */
+    if (body.welcomeMessage === null || typeof body.welcomeMessage === 'string') {
+      const escrita = String(body.welcomeMessage ?? '').trim().slice(0, 240)
+      mudanca.welcome_message = escrita || FRASE_DE_OMISSAO
+    }
     // A hora de revelação e a janela de envios são datas, e uma data inválida
     // vinda do browser fecharia o evento ou revelaria tudo por engano.
     if (body.revealAt === null || typeof body.revealAt === 'string') {

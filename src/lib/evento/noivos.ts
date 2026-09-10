@@ -35,6 +35,7 @@ export interface Painel {
     uploadWindowEndsAt: string
     guestsSeeGallery: boolean
     moderation: boolean
+    welcomeMessage: string
     bytesUsed: number
     maxTotalBytes: number
   }
@@ -83,5 +84,11 @@ export const apagarMedia = (slug: string, chave: string, ids: string[]) =>
 export const guardarDefinicoes = (
   slug: string,
   chave: string,
-  campos: { guestsSeeGallery?: boolean; moderation?: boolean; revealAt?: string | null },
+  campos: {
+    guestsSeeGallery?: boolean
+    moderation?: boolean
+    revealAt?: string | null
+    /** Nula ou vazia repõe a frase de sempre. */
+    welcomeMessage?: string | null
+  },
 ) => chamar<{ ok: true }>({ action: 'definicoes', slug, chave, ...campos })
