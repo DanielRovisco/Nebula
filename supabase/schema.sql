@@ -677,8 +677,27 @@ create table if not exists event_media (
   uploaded_by_name text,
   status text not null default 'aprovado'
     check (status in ('pendente', 'aprovado', 'escondido')),
+
+  /*
+    Segredo do browser que carregou o ficheiro.
+
+    Serve uma coisa só: deixar o convidado apagar o que ele proprio enviou, e
+    mais nada. É gerado no browser dele à primeira visita e nunca sai de lá,
+    portanto não identifica ninguém e não sobrevive a limpar os dados do site
+    — o que é exactamente o que se quer numa página sem contas.
+
+    Sem isto, apagar teria de acreditar no id que o browser mandasse, e o id
+    de uma fotografia é a mesma coisa que a permissão para a apagar.
+  */
+  uploader_key text,
+
   created_at timestamptz not null default now()
 );
+
+-- Para quem já tinha corrido a versão anterior deste ficheiro.
+alter table event_media add column if not exists uploader_key text;
+create index if not exists event_media_uploader_idx
+  on event_media (event_id, uploader_key);
 
 create index if not exists event_media_evento_idx on event_media (event_id, created_at desc);
 create index if not exists event_media_estado_idx on event_media (event_id, status);

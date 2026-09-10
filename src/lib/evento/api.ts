@@ -27,6 +27,8 @@ export interface MediaEvento {
   createdAt: string
   url: string
   thumbUrl: string | null
+  /** Verdadeiro nas que este browser carregou. Decidido no servidor. */
+  minha?: boolean
 }
 
 export interface GaleriaEvento {
@@ -105,8 +107,8 @@ export async function infoEvento(slug: string): Promise<{ info: InfoEvento; deCa
   }
 }
 
-export const galeriaEvento = (slug: string, ids: string[]) =>
-  chamar<GaleriaEvento>('event-gallery', { slug, ids })
+export const galeriaEvento = (slug: string, uploaderKey: string) =>
+  chamar<GaleriaEvento>('event-gallery', { slug, uploaderKey })
 
 export const pedirUpload = (
   slug: string,
@@ -119,6 +121,22 @@ export const pedirUpload = (
 
 export const registarUpload = (slug: string, corpo: Record<string, unknown>) =>
   chamar<{ ok: true; id?: string }>('event-upload', { action: 'registar', slug, ...corpo })
+
+/**
+ * Apaga uma fotografia que este browser enviou.
+ *
+ * Um 404 não é tratado como erro: quer dizer que ela já lá não está, e o que a
+ * pessoa queria era que não estivesse. Insistir a dizer que falhou seria
+ * discutir sobre um resultado que já é o certo.
+ */
+export async function removerDoServidor(slug: string, id: string, uploaderKey: string) {
+  try {
+    await chamar('event-upload', { action: 'remover', slug, id, uploaderKey })
+  } catch (e) {
+    if (e instanceof ErroEvento && e.estado === 404) return
+    throw e
+  }
+}
 
 /**
  * PUT do ficheiro para o R2, com progresso.

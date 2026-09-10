@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  ErroEvento, enviarFicheiro, pedirUpload, registarUpload,
+  ErroEvento, enviarFicheiro, pedirUpload, registarUpload, removerDoServidor,
 } from './api'
 import {
-  type ItemFila, apagar, guardar, juntar, limparEnviados, listar,
+  type ItemFila, apagar, guardar, juntar, limparEnviados, listar, minhaChave,
 } from './fila'
 
 /** Quantas vezes se insiste antes de desistir e mostrar o botão de repetir. */
@@ -102,15 +102,12 @@ export function useFila(slug: string) {
       // A miniatura é um extra. Se falhar, o ficheiro já está entregue e não se
       // deita fora um upload de 400 MB por causa de uma imagem de 40 KB.
       let thumbKey: string | undefined
-      if (item.tipo.startsWith('image/')) {
+      if (item.tipo.startsWith('image/') && item.miniatura) {
         try {
-          const pequena = await miniatura(item.blob)
-          if (pequena) {
-            const alvo = await pedirUpload(slug, `mini-${item.nome}.jpg`, 'image/jpeg', pequena.size)
-            await enviarFicheiro(alvo.url, pequena, 'image/jpeg', () => {})
-            thumbKey = alvo.key
-          }
-        } catch { /* fica sem miniatura */ }
+          const alvo = await pedirUpload(slug, `mini-${item.nome}.jpg`, 'image/jpeg', item.miniatura.size)
+          await enviarFicheiro(alvo.url, item.miniatura, 'image/jpeg', () => {})
+          thumbKey = alvo.key
+        } catch { /* fica sem miniatura no servidor; a local continua cá */ }
       }
 
       const r = await registarUpload(slug, {
@@ -120,6 +117,7 @@ export function useFila(slug: string) {
         contentType: item.tipo,
         sizeBytes: item.tamanho,
         name: item.autor,
+        uploaderKey: minhaChave(slug),
       })
 
       await actualizar(item.id, {
@@ -205,10 +203,23 @@ export function useFila(slug: string) {
   const adicionar = useCallback(
     async (ficheiros: File[], autor?: string) => {
       const novos = await juntar(slug, ficheiros, autor)
+
+      /*
+        A grelha aparece primeiro e as miniaturas entram a seguir, uma a uma.
+        É a ordem que faz a página parecer instantânea: escolher trinta
+        fotografias mostra trinta espaços de imediato, em vez de deixar o dedo
+        no ar enquanto o telemóvel decodifica trinta JPEGs de 12 megapixéis.
+      */
       publicar([...itensRef.current, ...novos])
       correr()
+
+      for (const it of novos) {
+        if (!it.tipo.startsWith('image/') || !it.blob) continue
+        const pequena = await miniatura(it.blob)
+        if (pequena) await actualizar(it.id, { miniatura: pequena })
+      }
     },
-    [slug, publicar, correr],
+    [slug, publicar, correr, actualizar],
   )
 
   const repetir = useCallback(async () => {
@@ -220,12 +231,22 @@ export function useFila(slug: string) {
     correr()
   }, [publicar, correr])
 
+  /**
+   * Tira uma fotografia da lista, e do servidor se já lá tiver chegado.
+   *
+   * Primeiro o servidor, depois o registo local. Pela ordem contrária, uma
+   * falha de rede deixava a fotografia no casamento e o convidado convencido de
+   * que a tinha apagado, que é a pior das duas maneiras de falhar.
+   */
   const remover = useCallback(
     async (id: string) => {
+      const item = itensRef.current.find((i) => i.id === id)
+      if (!item) return
+      if (item.mediaId) await removerDoServidor(slug, item.mediaId, minhaChave(slug))
       await apagar(id)
       publicar(itensRef.current.filter((i) => i.id !== id))
     },
-    [publicar],
+    [slug, publicar],
   )
 
   const estado: EstadoFila = {

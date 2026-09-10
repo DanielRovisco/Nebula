@@ -22,6 +22,34 @@ const BD = 'nebula-eventos'
 const LOJA = 'ficheiros'
 const VERSAO = 1
 
+/**
+ * A chave deste browser, por evento.
+ *
+ * É o mais perto de uma identidade que esta página tem, e de propósito: não
+ * viaja para lado nenhum a não ser com os uploads, não diz quem a pessoa é, e
+ * desaparece se ela limpar os dados do site. Serve uma coisa só, que é deixá-la
+ * apagar o que ela própria enviou.
+ */
+export function minhaChave(slug: string): string {
+  const nome = `nebula-chave-${slug}`
+  try {
+    const guardada = localStorage.getItem(nome)
+    if (guardada) return guardada
+    const nova = [...crypto.getRandomValues(new Uint8Array(16))]
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
+    localStorage.setItem(nome, nova)
+    return nova
+  } catch {
+    // Modo privado sem armazenamento: gera-se uma para esta sessão. Perde-se
+    // ao fechar, e o pior que acontece é deixar de dar para apagar o que se
+    // enviou. O upload em si continua a funcionar.
+    return [...crypto.getRandomValues(new Uint8Array(16))]
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
+  }
+}
+
 export type EstadoItem = 'espera' | 'a-enviar' | 'feito' | 'erro'
 
 export interface ItemFila {
@@ -29,6 +57,15 @@ export interface ItemFila {
   slug: string
   /** O ficheiro original. Apagado depois de subir, para não encher o telemóvel. */
   blob: Blob | null
+  /**
+   * Miniatura, guardada mesmo depois de o original ir embora.
+   *
+   * São umas dezenas de quilobytes por fotografia, e é o que faz a grelha ter
+   * imagens em vez de nomes de ficheiros — inclusive sem rede, e inclusive
+   * antes de o upload começar. Trinta fotografias dão menos de dois megabytes
+   * guardados, o que é barato para o que se ganha.
+   */
+  miniatura?: Blob | null
   nome: string
   tipo: string
   tamanho: number
@@ -124,9 +161,9 @@ export async function juntar(slug: string, ficheiros: File[], autor?: string): P
  * Apaga o que já subiu e ficou para trás.
  *
  * Corre-se à entrada, e não a seguir a cada envio, porque o que interessa é que
- * o espaço não fique preso indefinidamente — não que seja libertado no segundo
- * exacto. Os registos ficam (é o que permite ao convidado ver o que carregou);
- * o que se larga são os bytes.
+ * o espaço não fique preso indefinidamente, não que seja libertado no segundo
+ * exacto. Os registos e as miniaturas ficam (é o que permite ao convidado ver o
+ * que carregou); o que se larga é o original, que é onde estão os bytes todos.
  */
 export async function limparEnviados(slug: string): Promise<void> {
   for (const it of await listar(slug)) {

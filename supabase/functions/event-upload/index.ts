@@ -21,7 +21,7 @@
 // vale é o que se confirma aqui.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { cors, json, presign } from '../_shared/r2.ts'
+import { cors, deleteObjects, json, presign } from '../_shared/r2.ts'
 
 const UPLOAD_TTL = 60 * 30 // 30 min: em rede de quinta, um vídeo demora
 
@@ -121,6 +121,9 @@ Deno.serve(async (req) => {
       height: body.height ? Number(body.height) : null,
       taken_at: body.takenAt ? String(body.takenAt) : null,
       uploaded_by_name: body.name ? String(body.name).slice(0, 60) : null,
+      // É por esta chave que o convidado consegue apagar o que enviou, e só o
+      // que enviou. Vem do browser dele e não identifica ninguém.
+      uploader_key: body.uploaderKey ? String(body.uploaderKey).slice(0, 80) : null,
       // Com moderação ligada, entra à espera de aprovação.
       status: evento.moderation ? 'pendente' : 'aprovado',
     }).select('id').single()
@@ -129,6 +132,43 @@ Deno.serve(async (req) => {
     // ver o que carregou quando a galeria está fechada aos convidados: sem
     // conta, esta lista é a única forma de ele se identificar perante a galeria.
     return json({ ok: true, id: linha?.id })
+  }
+
+  /*
+    Apagar uma fotografia que o próprio convidado enviou.
+    
+    Fica dentro da janela de envios de propósito: enquanto se pode carregar,
+    pode-se corrigir. Depois de a janela fechar, a colecção é dos noivos, e
+    quem quiser tirar de lá alguma coisa fala com eles — que é o que a página
+    promete na secção de privacidade.
+  */
+  if (body.action === 'remover') {
+    const id = String(body.id ?? '')
+    const uploaderKey = String(body.uploaderKey ?? '')
+    if (!id || !uploaderKey) return json({ error: 'bad_request' }, 400)
+
+    /*
+      As três condições contam. O id sozinho não autoriza nada: quem o tivesse
+      apagava fotografias de outra pessoa. É o par id + chave, dentro deste
+      evento, que faz a prova.
+    */
+    const { data: linha } = await sb
+      .from('event_media')
+      .select('id, storage_key, thumb_key')
+      .eq('id', id)
+      .eq('event_id', evento.id)
+      .eq('uploader_key', uploaderKey)
+      .maybeSingle()
+
+    // A mesma resposta para "não existe" e para "não é tua": nem se confirma
+    // que a fotografia existe a quem não tem a chave dela.
+    if (!linha) return json({ error: 'nao_encontrado' }, 404)
+
+    const chaves = [linha.storage_key as string, ...(linha.thumb_key ? [linha.thumb_key as string] : [])]
+    await deleteObjects(chaves)
+    const { error } = await sb.from('event_media').delete().eq('id', linha.id)
+    if (error) return json({ error: 'server_error' }, 500)
+    return json({ ok: true })
   }
 
   return json({ error: 'unknown_action' }, 400)

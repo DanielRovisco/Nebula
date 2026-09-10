@@ -60,17 +60,22 @@ Deno.serve(async (req) => {
   }
 
   /*
-    Os ids do que este browser carregou. Só se aceitam os que têm cara de id:
-    a lista vai para dentro de um filtro `or`, e um valor com uma vírgula ou um
-    parêntesis lá dentro deixava de ser um valor e passava a ser sintaxe.
+    Quem é "eu" nesta página.
+
+    Antes vinha uma lista de ids do browser, e o servidor acreditava nela. A
+    chave do browser é melhor por duas razões: é uma coisa só em vez de
+    quinhentas, e o servidor passa a decidir o que é de quem em vez de o
+    perguntar a quem está do outro lado.
   */
-  const meus = (Array.isArray(body.ids) ? body.ids.map(String) : [])
-    .filter((v) => /^[0-9a-f-]{36}$/i.test(v))
-    .slice(0, 500)
+  const bruta = String(body.uploaderKey ?? '')
+  // Só se aceita a chave se ela for o que devia ser. Vai para dentro de um
+  // filtro `or`, e um valor com uma vírgula ou um parêntesis lá dentro deixava
+  // de ser um valor e passava a ser sintaxe da consulta.
+  const minhaChave = /^[0-9a-f]{16,80}$/i.test(bruta) ? bruta : ''
 
   let q = sb
     .from('event_media')
-    .select('id, kind, storage_key, thumb_key, content_type, width, height, taken_at, uploaded_by_name, created_at')
+    .select('id, kind, storage_key, thumb_key, content_type, width, height, taken_at, uploaded_by_name, uploader_key, created_at')
     .eq('event_id', evento.id)
     // Escondido é escondido para toda a gente, incluindo para quem a carregou:
     // foi o casal que a tirou da vista, e isso é uma decisão deles.
@@ -79,24 +84,22 @@ Deno.serve(async (req) => {
     .limit(500)
 
   /*
-    Com a galeria fechada aos convidados, cada um vê só o que carregou. A lista
-    de ids vem do browser dele, o que é de propósito: não há conta, portanto não
-    há forma de saber quem é sem lhe pedir uma, e pedi-la era exactamente o que
-    se quer evitar. O pior que alguém faz com uma lista de ids inventada é ver
-    fotografias do casamento onde já estava.
+    Com a galeria fechada aos convidados, cada um vê só o que carregou. Quem ele
+    é sai da chave que o browser dele guarda, e não de uma conta: não há conta,
+    e pedir uma era exactamente o que se quer evitar nesta página.
   */
   if (!evento.guests_see_gallery) {
-    if (meus.length === 0) return json({ coupleName: evento.couple_name, media: [] })
-    q = q.in('id', meus)
-  } else if (meus.length > 0) {
+    if (!minhaChave) return json({ coupleName: evento.couple_name, media: [] })
+    q = q.eq('uploader_key', minhaChave)
+  } else if (minhaChave) {
     /*
       A moderação decide o que os outros veem, nunca o que a própria pessoa vê
       do que acabou de enviar. Sem isto, uma convidada carregava três
-      fotografias e ficava a olhar para uma galeria onde elas não estavam — e
+      fotografias e ficava a olhar para uma galeria onde elas não estavam, e
       concluía, com razão, que o upload tinha falhado. O que se ganhava era uma
       pessoa a repetir o envio até desistir.
     */
-    q = q.or(`status.eq.aprovado,id.in.(${meus.join(',')})`)
+    q = q.or(`status.eq.aprovado,uploader_key.eq.${minhaChave}`)
   } else {
     q = q.eq('status', 'aprovado')
   }
@@ -114,6 +117,9 @@ Deno.serve(async (req) => {
       takenAt: m.taken_at,
       name: m.uploaded_by_name,
       createdAt: m.created_at,
+      // Verdadeiro só nas que este browser carregou. É o que decide se aparece
+      // o botão de apagar, e a decisão é do servidor e não do browser.
+      minha: Boolean(minhaChave) && m.uploader_key === minhaChave,
       url: await presign(m.storage_key as string, 'GET', VER_TTL),
       thumbUrl: m.thumb_key ? await presign(m.thumb_key as string, 'GET', VER_TTL) : null,
     })),
