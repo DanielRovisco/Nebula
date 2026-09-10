@@ -92,13 +92,23 @@ function zipStream(entradas: Entrada[], bucket: R2Bucket): ReadableStream<Uint8A
       let deslocamento = 0
       let contados = 0
       const codificador = new TextEncoder()
+      const emFalta: string[] = []
 
-      for (const entrada of entradas) {
-        const objecto = await bucket.get(entrada.chave)
-        if (!objecto) continue
-
-        const nome = codificador.encode(entrada.nome)
-        const { hora, data } = dataDos(objecto.uploaded ?? new Date())
+      /**
+       * Escreve uma entrada completa do ZIP a partir de pedaços.
+       *
+       * Serve os ficheiros do R2 e também o aviso de faltas, que é um ficheiro
+       * de texto construído aqui. É a mesma escrita nos dois casos porque o
+       * formato é o mesmo, e ter duas cópias dele era ter uma para corrigir e
+       * outra para esquecer.
+       */
+      const escrever = async (
+        nomeTexto: string,
+        quando: Date,
+        pedacos: () => AsyncGenerator<Uint8Array>,
+      ) => {
+        const nome = codificador.encode(nomeTexto)
+        const { hora, data } = dataDos(quando)
         const inicio = deslocamento
 
         // Cabeçalho local. Tamanho e CRC vão a zero e seguem no descritor: é
@@ -131,13 +141,10 @@ function zipStream(entradas: Entrada[], bucket: R2Bucket): ReadableStream<Uint8A
 
         const crc = new Crc32()
         let tamanho = 0
-        const leitor = objecto.body!.getReader()
-        for (;;) {
-          const { done, value } = await leitor.read()
-          if (done) break
-          crc.atualiza(value)
-          tamanho += value.length
-          controlador.enqueue(value)
+        for await (const pedaco of pedacos()) {
+          crc.atualiza(pedaco)
+          tamanho += pedaco.length
+          controlador.enqueue(pedaco)
         }
         deslocamento += tamanho
 
@@ -168,6 +175,47 @@ function zipStream(entradas: Entrada[], bucket: R2Bucket): ReadableStream<Uint8A
           ),
         )
         contados++
+      }
+
+      for (const entrada of entradas) {
+        const objecto = await bucket.get(entrada.chave)
+        /*
+          Um ficheiro que não se encontra não pode desaparecer em silêncio. Ao
+          fim de uma lista inteira de faltas, o que sai é um ZIP válido e vazio,
+          e quem o recebe guarda-o convencido de que tem o casamento.
+
+          Aqui já não dá para mudar o estado da resposta: os cabeçalhos foram
+          para a rede antes do primeiro byte, que é o que permite o download
+          começar logo. O que se pode fazer é escrever a falta dentro do próprio
+          ficheiro, e é o que se faz a seguir ao último.
+        */
+        if (!objecto) {
+          emFalta.push(entrada.nome)
+          continue
+        }
+
+        await escrever(entrada.nome, objecto.uploaded ?? new Date(), async function* () {
+          const leitor = objecto.body!.getReader()
+          for (;;) {
+            const { done, value } = await leitor.read()
+            if (done) break
+            yield value
+          }
+        })
+      }
+
+      if (emFalta.length > 0) {
+        const aviso =
+          `ATENÇÃO\r\n\r\n` +
+          `${emFalta.length} ficheiro(s) deste casamento não foram encontrados no ` +
+          `armazenamento e NÃO estão neste ZIP.\r\n\r\n` +
+          `Isto não é normal. Não apagues mais nada e fala connosco antes de ` +
+          `fazeres seja o que for.\r\n\r\n` +
+          `Em falta:\r\n` +
+          emFalta.map((n) => `  - ${n}`).join('\r\n') + `\r\n`
+        await escrever('LEIA-ME-FALTAM-FICHEIROS.txt', new Date(), async function* () {
+          yield codificador.encode(aviso)
+        })
       }
 
       const dir = juntar(...central)
@@ -292,6 +340,34 @@ export default {
       usados.add(nome)
       return { nome, chave: l.storage_key }
     })
+
+    /*
+      Antes de começar a enviar, confirma-se que os ficheiros existem mesmo.
+
+      Assim que o primeiro byte sai, o estado da resposta está decidido: um ZIP
+      que corra mal a meio continua a ser um download de 200. É por isso que
+      esta pergunta é feita agora e não durante — é a última altura em que ainda
+      se pode dizer "não" em voz alta.
+
+      Bastam algumas amostras. O que se está a apanhar aqui não é um ficheiro
+      perdido, é a ligação apontada ao sítio errado, e essa engana-se em todos
+      ao mesmo tempo. Aconteceu: o bucket é da jurisdição europeia e a ligação
+      do Worker não o dizia, por isso apontava a outro bucket com o mesmo nome.
+      Não deu erro nenhum e entregou um ZIP vazio.
+    */
+    const amostra = entradas.slice(0, 5)
+    const encontrados = await Promise.all(
+      amostra.map((e) => env.BUCKET.head(e.chave).then((o) => Boolean(o)).catch(() => false)),
+    )
+    if (!encontrados.some(Boolean)) {
+      return new Response(
+        'Os ficheiros deste casamento não foram encontrados no armazenamento. ' +
+        'Nada foi apagado: é a ligação do Worker ao bucket que está errada. ' +
+        'Confirma o `bucket_name` e a `jurisdiction` no wrangler.toml, e que ' +
+        'batem certo com o R2_BUCKET e o R2_JURISDICTION das Edge Functions.',
+        { status: 502, headers: { 'content-type': 'text/plain; charset=utf-8' } },
+      )
+    }
 
     const ficheiro = `${slug}.zip`
     return new Response(zipStream(entradas, env.BUCKET), {

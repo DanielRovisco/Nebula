@@ -74,6 +74,13 @@ export interface ItemFila {
   /** Progresso do envio, de 0 a 1. Não é guardado entre sessões. */
   progresso: number
   /**
+   * A partir de quando vale a pena tentar outra vez, em milissegundos.
+   *
+   * Existe para o descanso entre tentativas de um ficheiro não ser o descanso
+   * de todos: enquanto este espera, os outros seguem.
+   */
+  tentarApos?: number
+  /**
    * A chave no R2, escrita assim que o PUT passa.
    *
    * É o que impede o mesmo ficheiro de subir duas vezes. Sem isto, uma falha no

@@ -64,6 +64,13 @@ async function chamar<T>(fn: string, body: Record<string, unknown>): Promise<T> 
       // dia, e uma resposta guardada faria o convidado ver o estado de há uma
       // hora.
       cache: 'no-store',
+      /*
+        Tecto de trinta segundos. Estes pedidos levam umas centenas de bytes:
+        se em trinta segundos não houve resposta, não vai haver. Sem isto, um
+        `fetch` pendurado numa ligação meio aberta segurava a fila inteira, que
+        é exactamente o que aconteceu no primeiro teste a sério.
+      */
+      signal: AbortSignal.timeout(30000),
     })
   } catch {
     // Estado 0 quer dizer "não houve resposta". É diferente de um erro do
@@ -158,6 +165,9 @@ export async function removerDoServidor(slug: string, id: string, uploaderKey: s
  * vídeo de 400 MB numa rede fraca demora minutos, e sem a barra a mexer a
  * pessoa assume que encravou e fecha a página.
  */
+/** Sem sinal de vida durante este tempo, desiste-se e tenta-se outra vez. */
+const PARAGEM_MS = 45000
+
 export function enviarFicheiro(
   url: string,
   blob: Blob,
@@ -169,15 +179,51 @@ export function enviarFicheiro(
     const x = new XMLHttpRequest()
     x.open('PUT', url)
     x.setRequestHeader('content-type', contentType)
+
+    /*
+      O vigia.
+
+      Não se pode usar `x.timeout`, porque um vídeo de 400 MB numa rede de
+      quinta demora legitimamente muito tempo, e qualquer tecto fixo cortava
+      envios bons. O que se vigia é o progresso: enquanto houver bytes a sair,
+      espera-se o que for preciso; quarenta e cinco segundos sem um único byte
+      é uma ligação morta.
+
+      Isto foi apanhado num telemóvel a sério, não aqui: em modo de avião, o
+      browser mantém a ligação meio aberta e o pedido nunca falha nem termina.
+      Ficava a roda a girar para sempre, e como a fila envia um de cada vez, um
+      ficheiro preso segurava todos os que viessem a seguir.
+    */
+    let ultimoSinal = Date.now()
+    const vigia = setInterval(() => {
+      if (Date.now() - ultimoSinal > PARAGEM_MS) {
+        x.abort()
+        falha(new ErroEvento('sem_rede', 0))
+      }
+    }, 5000)
+
+    const acabar = () => clearInterval(vigia)
+
     x.upload.onprogress = (e) => {
+      ultimoSinal = Date.now()
       if (e.lengthComputable) aoProgresso(e.loaded / e.total)
     }
-    x.onload = () =>
-      x.status >= 200 && x.status < 300
-        ? ok()
-        : falha(new ErroEvento('falha_upload', x.status))
-    x.onerror = () => falha(new ErroEvento('sem_rede', 0))
-    x.ontimeout = () => falha(new ErroEvento('sem_rede', 0))
+    x.onload = () => {
+      acabar()
+      if (x.status >= 200 && x.status < 300) ok()
+      else falha(new ErroEvento('falha_upload', x.status))
+    }
+    x.onerror = () => { acabar(); falha(new ErroEvento('sem_rede', 0)) }
+    x.ontimeout = () => { acabar(); falha(new ErroEvento('sem_rede', 0)) }
+    x.onabort = () => { acabar(); falha(new ErroEvento('sem_rede', 0)) }
+
+    // Perder a rede a meio de um envio interrompe-o já, em vez de o deixar
+    // pendurado à espera do vigia.
+    const semRede = () => x.abort()
+    window.addEventListener('offline', semRede, { once: true })
+    const limpar = () => window.removeEventListener('offline', semRede)
+    x.onloadend = () => { acabar(); limpar() }
+
     sinal?.addEventListener('abort', () => x.abort(), { once: true })
     x.send(blob)
   })

@@ -161,10 +161,27 @@ export function useFila(slug: string) {
         if (!navigator.onLine) break
         // `blob || key`: um item cujo ficheiro já subiu mas cujo registo falhou
         // já não tem blob, e mesmo assim tem trabalho por acabar.
-        const proximo = itensRef.current.find(
+        const porFazer = itensRef.current.filter(
           (i) => (i.blob || i.key) && (i.estado === 'espera' || i.estado === 'a-enviar'),
         )
-        if (!proximo) break
+        if (porFazer.length === 0) break
+
+        /*
+          O que já cumpriu o seu descanso. Um ficheiro que falhou espera antes
+          de nova tentativa, mas esse tempo é dele e não da fila: os outros
+          continuam a subir enquanto ele espera.
+
+          Antes o descanso era um `await` no meio do ciclo, e uma fotografia
+          teimosa com cinco tentativas segurava tudo o que viesse a seguir
+          durante quase um minuto.
+        */
+        const agora = Date.now()
+        const proximo = porFazer.find((i) => !i.tentarApos || i.tentarApos <= agora)
+        if (!proximo) {
+          const espera = Math.min(...porFazer.map((i) => i.tentarApos ?? agora)) - agora
+          await dormir(Math.max(500, Math.min(espera, 5000)))
+          continue
+        }
 
         try {
           await enviarUm(proximo)
@@ -182,8 +199,12 @@ export function useFila(slug: string) {
           if (definitivo || tentativas >= TENTATIVAS_MAX) {
             await actualizar(proximo.id, { estado: 'erro', tentativas, erro: erro.codigo })
           } else {
-            await actualizar(proximo.id, { estado: 'espera', tentativas })
-            await dormir(espera(tentativas))
+            await actualizar(proximo.id, {
+              estado: 'espera',
+              tentativas,
+              tentarApos: Date.now() + espera(tentativas),
+              progresso: 0,
+            })
           }
         }
       }
@@ -246,7 +267,7 @@ export function useFila(slug: string) {
   const repetir = useCallback(async () => {
     const lista = itensRef.current.map((i) =>
       i.estado === 'erro' && (i.blob || i.key)
-        ? { ...i, estado: 'espera' as const, tentativas: 0 }
+        ? { ...i, estado: 'espera' as const, tentativas: 0, tentarApos: undefined }
         : i,
     )
     publicar(lista)

@@ -8,6 +8,15 @@ compatibility_date = "2026-01-01"
 binding = "BUCKET"
 bucket_name = "galleries"
 
+# A jurisdição TEM de estar aqui, e tem de ser a mesma do R2_JURISDICTION dos
+# secrets do Supabase.
+#
+# Um bucket criado na União Europeia e um bucket criado sem jurisdição são dois
+# buckets diferentes, mesmo com o mesmo nome. Sem esta linha, o Worker liga-se
+# ao outro: não dá erro nenhum, não encontra ficheiro nenhum, e entrega um ZIP
+# vazio como se estivesse tudo bem. Foi exactamente isso que aconteceu.
+jurisdiction = "eu"
+
 # Os dois secrets põem-se por linha de comandos, nunca neste ficheiro:
 #   npx wrangler secret put SUPABASE_URL
 #   npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY

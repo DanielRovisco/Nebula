@@ -68,25 +68,56 @@ export default function PainelNoivos() {
     setParams(limpo, { replace: true })
   }, [params, setParams, slug])
 
+  /*
+    O painel vai buscar o estado à entrada, sempre que volta à frente, e de
+    minuto a minuto enquanto estiver à vista.
+
+    Sem isto era uma fotografia tirada ao momento em que abriu. As coisas que os
+    noivos fazem mudavam no ecrã, porque são alteradas aqui; tudo o que
+    acontecesse do outro lado ficava invisível. Foi assim que uma fotografia
+    apagada por um convidado não aparecia no lixo deles: estava marcada na base
+    de dados e ninguém voltava lá a perguntar.
+
+    E num casamento o outro lado é a regra, não a excepção: enquanto o painel
+    está aberto, há gente a carregar fotografias.
+  */
   useEffect(() => {
     if (!chave) return
     let vivo = true
-    lerPainel(slug, chave)
-      .then((p) => {
-        if (!vivo) return
-        setPainel(p)
-        setErro(null)
-      })
-      .catch((e) => {
-        if (!vivo) return
-        if (e instanceof SemAcesso) {
-          esquecerChave(slug)
-          setErro('sem_acesso')
-        } else {
-          setErro('falhou')
-        }
-      })
-    return () => { vivo = false }
+
+    const buscar = () => {
+      lerPainel(slug, chave)
+        .then((p) => {
+          if (!vivo) return
+          setPainel(p)
+          setErro(null)
+        })
+        .catch((e) => {
+          if (!vivo) return
+          if (e instanceof SemAcesso) {
+            esquecerChave(slug)
+            setErro('sem_acesso')
+          } else {
+            setErro('falhou')
+          }
+        })
+    }
+
+    buscar()
+
+    // Escondida, a página não pergunta nada: um separador esquecido aberto uma
+    // semana não tem de acordar o servidor de minuto a minuto.
+    const aoVoltar = () => { if (!document.hidden) buscar() }
+    document.addEventListener('visibilitychange', aoVoltar)
+    window.addEventListener('focus', aoVoltar)
+    const relogio = setInterval(aoVoltar, 60000)
+
+    return () => {
+      vivo = false
+      document.removeEventListener('visibilitychange', aoVoltar)
+      window.removeEventListener('focus', aoVoltar)
+      clearInterval(relogio)
+    }
   }, [chave, slug])
 
   // Uma lista nova a cada render fazia o useMemo abaixo recalcular sempre, e
