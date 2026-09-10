@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { AlertCircle, Check, CloudOff, ImagePlus, Loader2, RotateCw, X } from 'lucide-react'
+import { AlertCircle, ArrowUpRight, Check, CloudOff, ImagePlus, Loader2, RotateCw, X } from 'lucide-react'
 import Seo from '../../lib/Seo'
+import InstagramIcon from '../../lib/InstagramIcon'
+import { asset } from '../../lib/asset'
+import { CONTACT, absoluteUrl } from '../../lib/site'
 import { type GaleriaEvento, type InfoEvento, ErroEvento, galeriaEvento, infoEvento } from '../../lib/evento/api'
 import { useFila } from '../../lib/evento/useFila'
 import type { ItemFila } from '../../lib/evento/fila'
@@ -200,10 +203,78 @@ export default function EventoPage() {
             <li>Se te arrependeres de alguma, diz aos noivos e ela é apagada.</li>
           </ul>
         </section>
+
+        <Assinatura />
       </main>
     </div>
   )
 }
+
+/**
+ * Quem fez isto, e onde se vê mais.
+ *
+ * Fica no fim e não no princípio, de propósito. Quem abre esta página está a
+ * meio de um casamento, com o telemóvel numa mão, e veio entregar fotografias.
+ * Pôr-lhe o nosso portefólio à frente antes disso era trocar o que ele veio
+ * fazer por aquilo que nós queremos. No fim, depois de ter carregado, é outra
+ * conversa: nessa altura já viu a coisa a funcionar, e é o melhor momento que
+ * vamos ter para lhe dizer quem somos.
+ */
+function Assinatura() {
+  return (
+    <section className="mt-16 pt-10 border-t border-white/[0.07] text-center">
+      <img
+        src={asset('brand/logo-symbol-white.png')}
+        alt=""
+        aria-hidden
+        width={1252}
+        height={1494}
+        className="h-9 w-auto mx-auto opacity-45"
+      />
+
+      {/*
+        "Somos nós que fotografamos" e não "as fotografias são nossas". A
+        segunda versão estava aqui e vinha logo a seguir a "vão para os noivos e
+        mais ninguém, não são publicadas nem vendidas": lidas em sequência,
+        parecia que estávamos a reclamar as fotografias que a pessoa tinha
+        acabado de entregar. Dizer o contrário do que se acabou de prometer, na
+        mesma página, é a melhor forma de não ser acreditado em nenhuma das
+        duas.
+      */}
+      <p className="text-titanium/50 text-sm leading-relaxed mt-5 max-w-xs mx-auto">
+        Somos nós que fotografamos este casamento. Se um dia for o teu dia, ou o
+        de alguém teu, gostávamos de o contar.
+      </p>
+
+      {/*
+        Os dois abrem noutro separador. Não é boa educação, é necessário: quem
+        estiver a meio de enviar um vídeo e sair desta página pára os envios, e
+        o casamento fica sem essas fotografias por causa de um link nosso.
+      */}
+      <div className="flex flex-wrap justify-center gap-2 mt-6">
+        <a
+          href={absoluteUrl('portfolio')}
+          target="_blank"
+          rel="noreferrer"
+          className={BOTAO_LEVE}
+        >
+          Ver o nosso trabalho <ArrowUpRight size={13} />
+        </a>
+        <a
+          href={CONTACT.instagram}
+          target="_blank"
+          rel="noreferrer"
+          className={BOTAO_LEVE}
+        >
+          <InstagramIcon size={13} /> {CONTACT.instagramHandle}
+        </a>
+      </div>
+    </section>
+  )
+}
+
+const BOTAO_LEVE =
+  'inline-flex items-center gap-2 px-5 py-3 rounded-full border border-white/12 text-[11px] uppercase tracking-[0.12em] text-titanium/60 hover:border-white/35 hover:text-titanium/90 transition-all min-h-[44px]'
 
 function Fila({ fila }: { fila: ReturnType<typeof useFila> }) {
   return (
