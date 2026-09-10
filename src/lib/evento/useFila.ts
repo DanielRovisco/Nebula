@@ -113,16 +113,41 @@ export function useFila(slug: string) {
           é a única coisa que ela pode fazer.
         */
         const ficheiro = item.blob
-        if (!ficheiro || !(await legivel(ficheiro))) {
-          throw new ErroEvento('ficheiro_perdido', 410)
-        }
+        /*
+          Sem ficheiro, ou com zero bytes, não há nada a tentar. As duas coisas
+          são certezas, e não dúvidas: um ficheiro vazio nunca é uma fotografia.
+
+          A distinção importa. Sem ela, um blob esvaziado subia na mesma, o
+          servidor aceitava-o e ficava registado no casamento como uma
+          fotografia a sério, com zero bytes lá dentro. A pessoa via "entregue"
+          e ninguém dava por nada até alguém tentar abrir o ficheiro.
+        */
+        if (!ficheiro || ficheiro.size === 0) throw new ErroEvento('ficheiro_perdido', 410)
+
+        /*
+          A pergunta é feita, mas não decide se se tenta: decide o recado que se
+          dá se correr mal.
+
+          Tentar sempre é a regra. A dúvida sobre um ficheiro é do programa, e o
+          preço de a resolver contra a pessoa é ela ficar a olhar para "escolhe
+          outra vez" numa fotografia que estava boa. Se estiver mesmo perdida, o
+          envio falha logo a seguir, e aí a certeza é dele e não nossa.
+        */
+        const parecePerdido = !(await legivel(ficheiro))
 
         const pedido = await pedirUpload(slug, item.nome, item.tipo, item.tamanho)
-        await enviarFicheiro(pedido.url, ficheiro, item.tipo, (f) => {
-          // O progresso não vai ao disco: escrever no IndexedDB a cada pedaço
-          // enviado dava centenas de escritas por ficheiro, sem nada a ganhar.
-          actualizar(item.id, { progresso: f }, false)
-        })
+        try {
+          await enviarFicheiro(pedido.url, ficheiro, item.tipo, (f) => {
+            // O progresso não vai ao disco: escrever no IndexedDB a cada pedaço
+            // enviado dava centenas de escritas por ficheiro, sem nada a ganhar.
+            actualizar(item.id, { progresso: f }, false)
+          })
+        } catch (e) {
+          // Falhou, e já se suspeitava do ficheiro: é ele, não é a rede. Dizer
+          // "sem rede" mandava a pessoa esperar por uma coisa que não vem.
+          if (parecePerdido) throw new ErroEvento('ficheiro_perdido', 410)
+          throw e
+        }
         key = pedido.key
         // Ao disco antes de qualquer outra coisa: a partir daqui, este ficheiro
         // está entregue, aconteça o que acontecer aos passos seguintes.

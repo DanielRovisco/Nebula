@@ -125,17 +125,47 @@ const LIMITE_COPIA = 80 * 1024 * 1024
 export async function copiaDuravel(blob: Blob, tipo: string): Promise<Blob | null> {
   if (blob.size > LIMITE_COPIA) return null
   try {
-    return new Blob([await blob.arrayBuffer()], { type: tipo })
+    return new Blob([await bytesDe(blob)], { type: tipo })
   } catch {
     return null
   }
 }
 
-/** Confirma que ainda se consegue ler o ficheiro antes de o tentar enviar. */
+/**
+ * Lê um blob para memória.
+ *
+ * `Blob.arrayBuffer()` só existe a partir do Safari 14, e um telemóvel de
+ * casamento pode ser de qualquer ano. O `FileReader` existe em tudo, e é para
+ * isso que serve o segundo caminho.
+ */
+function bytesDe(blob: Blob): Promise<ArrayBuffer> {
+  if (typeof blob.arrayBuffer === 'function') return blob.arrayBuffer()
+  return new Promise((ok, falha) => {
+    const leitor = new FileReader()
+    leitor.onload = () => ok(leitor.result as ArrayBuffer)
+    leitor.onerror = () => falha(leitor.error ?? new Error('nao_deu_para_ler'))
+    leitor.readAsArrayBuffer(blob)
+  })
+}
+
+/**
+ * Se ainda se consegue ler o ficheiro.
+ *
+ * Devolve `false` só quando há certeza de que não dá. Na dúvida diz que sim, e
+ * é de propósito: esta pergunta serve para dar um recado melhor a quem está do
+ * outro lado, nunca para impedir uma tentativa.
+ *
+ * A primeira versão fazia o contrário. Usava `arrayBuffer()` sem alternativa,
+ * e num browser onde esse método não existe a chamada rebentava, a resposta era
+ * "não dá", e todas as fotografias apareciam com "escolhe outra vez" sem uma
+ * única tentativa de as enviar. Uma verificação que recusa o que não percebe é
+ * pior do que verificação nenhuma.
+ */
 export async function legivel(blob: Blob | null | undefined): Promise<boolean> {
-  if (!blob || blob.size === 0) return false
+  if (!blob) return false
+  if (blob.size === 0) return false
   try {
-    await blob.slice(0, 1).arrayBuffer()
+    await bytesDe(blob.slice(0, 1))
     return true
   } catch {
     return false
