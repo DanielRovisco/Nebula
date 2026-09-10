@@ -59,13 +59,22 @@ Deno.serve(async (req) => {
     })
   }
 
-  const meus = Array.isArray(body.ids) ? body.ids.map(String).slice(0, 500) : null
+  /*
+    Os ids do que este browser carregou. Só se aceitam os que têm cara de id:
+    a lista vai para dentro de um filtro `or`, e um valor com uma vírgula ou um
+    parêntesis lá dentro deixava de ser um valor e passava a ser sintaxe.
+  */
+  const meus = (Array.isArray(body.ids) ? body.ids.map(String) : [])
+    .filter((v) => /^[0-9a-f-]{36}$/i.test(v))
+    .slice(0, 500)
 
   let q = sb
     .from('event_media')
     .select('id, kind, storage_key, thumb_key, content_type, width, height, taken_at, uploaded_by_name, created_at')
     .eq('event_id', evento.id)
-    .eq('status', 'aprovado')
+    // Escondido é escondido para toda a gente, incluindo para quem a carregou:
+    // foi o casal que a tirou da vista, e isso é uma decisão deles.
+    .neq('status', 'escondido')
     .order('created_at', { ascending: false })
     .limit(500)
 
@@ -77,8 +86,19 @@ Deno.serve(async (req) => {
     fotografias do casamento onde já estava.
   */
   if (!evento.guests_see_gallery) {
-    if (!meus || meus.length === 0) return json({ coupleName: evento.couple_name, media: [] })
+    if (meus.length === 0) return json({ coupleName: evento.couple_name, media: [] })
     q = q.in('id', meus)
+  } else if (meus.length > 0) {
+    /*
+      A moderação decide o que os outros veem, nunca o que a própria pessoa vê
+      do que acabou de enviar. Sem isto, uma convidada carregava três
+      fotografias e ficava a olhar para uma galeria onde elas não estavam — e
+      concluía, com razão, que o upload tinha falhado. O que se ganhava era uma
+      pessoa a repetir o envio até desistir.
+    */
+    q = q.or(`status.eq.aprovado,id.in.(${meus.join(',')})`)
+  } else {
+    q = q.eq('status', 'aprovado')
   }
 
   const { data: linhas, error } = await q

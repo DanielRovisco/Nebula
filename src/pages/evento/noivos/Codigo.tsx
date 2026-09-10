@@ -48,8 +48,8 @@ export default function Codigo({ url, nome }: { url: string; nome: string }) {
         <div className="min-w-0 flex-1">
           <h2 className="font-serif text-2xl sm:text-3xl leading-tight">O vosso código</h2>
           <p className="text-titanium/50 text-sm leading-relaxed mt-2.5 max-w-sm">
-            Quem o ler cai numa página onde pode deixar fotografias, sem criar
-            conta nenhuma. Imprimam-no e ponham-no nas mesas.
+            O código do vosso dia. Partilhem com os convidados para partilharem
+            o seu olhar convosco.
           </p>
 
           <div className="flex flex-wrap gap-2 mt-5">

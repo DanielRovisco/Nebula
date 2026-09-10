@@ -2,16 +2,17 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import {
-  Check, Download, EyeOff, HardDrive, Image as ImagemIcone, Loader2, Play, Trash2, Users,
+  Check, Download, EyeOff, Image as ImagemIcone, Loader2, Play, Trash2, Users,
 } from 'lucide-react'
 import Seo from '../../../lib/Seo'
 import Reveal from '../../../lib/Reveal'
+import CountUp from '../../../lib/CountUp'
 import { asset } from '../../../lib/asset'
 import { CONTACT, absoluteUrl } from '../../../lib/site'
 import {
   type EstadoMedia, type MediaNoivos, type Painel,
   SemAcesso, apagarMedia, esquecerChave, guardarChave, guardarDefinicoes,
-  lerChave, lerPainel, mudarEstado, tamanho,
+  lerChave, lerPainel, mudarEstado,
 } from '../../../lib/evento/noivos'
 import Codigo from './Codigo'
 import Foto from './Foto'
@@ -165,11 +166,10 @@ export default function PainelNoivos() {
 
       <main className="container-px max-w-5xl mx-auto">
         <Reveal>
-          <section className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/[0.07] rounded-2xl overflow-hidden -mt-6 sm:-mt-10 relative">
-            <Numero valor={fotos} rotulo="fotografias" icone={<ImagemIcone size={14} />} />
+          <section className="grid grid-cols-3 gap-px bg-white/[0.07] rounded-2xl overflow-hidden -mt-6 sm:-mt-10 relative">
+            <Numero valor={fotos} rotulo={fotos === 1 ? 'fotografia' : 'fotografias'} icone={<ImagemIcone size={14} />} />
             <Numero valor={videos} rotulo={videos === 1 ? 'vídeo' : 'vídeos'} icone={<Play size={14} />} />
             <Numero valor={pessoas} rotulo={pessoas === 1 ? 'pessoa' : 'pessoas'} icone={<Users size={14} />} />
-            <Numero texto={tamanho(evento.bytesUsed)} rotulo="guardados" icone={<HardDrive size={14} />} />
           </section>
         </Reveal>
 
@@ -346,14 +346,26 @@ function Capa({ nome, data, reduzido }: { nome: string; data: string; reduzido: 
 }
 
 function Numero({
-  valor, texto, rotulo, icone,
-}: { valor?: number; texto?: string; rotulo: string; icone?: React.ReactNode }) {
+  valor, rotulo, icone,
+}: { valor: number; rotulo: string; icone?: React.ReactNode }) {
   return (
-    <div className="bg-eerie px-4 py-6 sm:py-7 text-center">
+    <div className="bg-eerie px-3 sm:px-4 py-6 sm:py-7 text-center">
       {icone && <span className="inline-flex text-titanium/25 mb-2">{icone}</span>}
-      <p className="font-serif text-3xl sm:text-4xl leading-none">
-        {texto ?? valor}
-      </p>
+      {/*
+        O número sobe de zero até ao valor quando entra no ecrã. Com movimento
+        reduzido ligado no sistema, aparece logo o valor final: um número a
+        saltar é movimento como qualquer outro.
+      */}
+      {/*
+        O `font-serif` tem de ir também aos filhos: há uma regra base que dá
+        Montserrat a todos os `span`, e o CountUp põe o número dentro de um. A
+        regra atinge esse span directamente e ganha ao tipo de letra herdado do
+        pai, por isso herdar não chega aqui.
+      */}
+      <CountUp
+        to={valor}
+        className="block font-serif [&_span]:font-serif text-3xl sm:text-4xl leading-none"
+      />
       <p className="label-sm mt-2.5">{rotulo}</p>
     </div>
   )
@@ -530,20 +542,27 @@ function Definicoes({
 
   return (
     <section className="mt-16 sm:mt-24 pt-10 border-t border-white/[0.07]">
-      <span className="label-sm">Como querem isto</span>
+      <span className="label-sm">Definições</span>
 
       <div className="mt-6 space-y-6 max-w-xl">
         <Interruptor
           ligado={evento.guestsSeeGallery}
           aoMudar={(v) => aoMudar({ guestsSeeGallery: v })}
-          titulo="Os convidados veem a galeria"
-          nota="Desligado, cada um vê só o que carregou. Vocês veem sempre tudo."
+          titulo="Galeria pública"
+          nota="Os convidados podem ver as fotos todas. Desativado, só conseguem ver as que enviaram."
         />
         <Interruptor
           ligado={evento.moderation}
           aoMudar={(v) => aoMudar({ moderation: v })}
           titulo="Aprovar antes de aparecer"
-          nota="O que entrar a partir de agora fica à espera. O que já entrou não muda."
+          nota="Os noivos têm que aprovar as fotos que entram na galeria. Só é válido se a galeria for pública."
+          /*
+            Com a galeria fechada não há galeria para moderar: cada convidado vê
+            o que enviou e nada mais. O interruptor fica esbatido em vez de
+            desaparecer, para eles perceberem que a definição existe e porque é
+            que ela não está a fazer nada.
+          */
+          esbatido={!evento.guestsSeeGallery}
         />
       </div>
 
@@ -575,15 +594,23 @@ function Definicoes({
 }
 
 function Interruptor({
-  ligado, aoMudar, titulo, nota,
-}: { ligado: boolean; aoMudar: (v: boolean) => void; titulo: string; nota: string }) {
+  ligado, aoMudar, titulo, nota, esbatido,
+}: {
+  ligado: boolean
+  aoMudar: (v: boolean) => void
+  titulo: string
+  nota: string
+  /** Continua a funcionar; só está sem efeito enquanto outra definição estiver
+   *  como está. Esbatido e não desligado: o valor é o que eles escolheram. */
+  esbatido?: boolean
+}) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={ligado}
       onClick={() => aoMudar(!ligado)}
-      className="w-full flex items-start gap-4 text-left"
+      className={`w-full flex items-start gap-4 text-left transition-opacity ${esbatido ? 'opacity-45' : ''}`}
     >
       {/*
         Com o interruptor desligado o botão é claro sobre o carril escuro, e

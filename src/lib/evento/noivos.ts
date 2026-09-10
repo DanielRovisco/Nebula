@@ -85,13 +85,3 @@ export const guardarDefinicoes = (
   chave: string,
   campos: { guestsSeeGallery?: boolean; moderation?: boolean; revealAt?: string | null },
 ) => chamar<{ ok: true }>({ action: 'definicoes', slug, chave, ...campos })
-
-/** Formatação de tamanhos, do quilobyte ao terabyte, sem exagerar em casas. */
-export function tamanho(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  const unidades = ['KB', 'MB', 'GB', 'TB']
-  let v = bytes / 1024
-  let i = 0
-  while (v >= 1024 && i < unidades.length - 1) { v /= 1024; i++ }
-  return `${v < 10 ? v.toFixed(1) : Math.round(v)} ${unidades[i]}`
-}
