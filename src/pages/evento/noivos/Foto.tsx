@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronLeft, ChevronRight, Download, EyeOff, Trash2, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download, EyeOff, Trash2, Undo2, X } from 'lucide-react'
 import type { MediaNoivos } from '../../../lib/evento/noivos'
 
 /**
@@ -20,10 +20,12 @@ interface Props {
   aoSeguinte: () => void
   aoEsconder: () => void
   aoApagar: () => void
+  /** No lixo as duas acções trocam de sentido: recuperar, ou apagar de vez. */
+  noLixo?: boolean
 }
 
 export default function Foto({
-  item, indice, total, aoFechar, aoAnterior, aoSeguinte, aoEsconder, aoApagar,
+  item, indice, total, aoFechar, aoAnterior, aoSeguinte, aoEsconder, aoApagar, noLixo,
 }: Props) {
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => {
@@ -106,10 +108,17 @@ export default function Foto({
           })}
         </span>
         <button onClick={aoEsconder} className={ACCAO}>
-          <EyeOff size={13} /> {item.status === 'escondido' ? 'Voltar a mostrar' : 'Esconder'}
+          {noLixo
+            ? <><Undo2 size={13} /> Recuperar</>
+            : <><EyeOff size={13} /> {item.status === 'escondido' ? 'Voltar a mostrar' : 'Esconder'}</>}
         </button>
-        <button onClick={aoApagar} className={ACCAO}>
-          <Trash2 size={13} /> Apagar
+        <button
+          onClick={aoApagar}
+          className={noLixo
+            ? 'inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-red-500/15 hover:bg-red-500/25 text-red-200/85 transition-colors text-[11px] uppercase tracking-[0.12em] min-h-[44px]'
+            : ACCAO}
+        >
+          <Trash2 size={13} /> {noLixo ? 'Apagar mesmo' : 'Apagar'}
         </button>
       </footer>
     </div>,

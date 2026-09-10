@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import {
-  Check, Download, EyeOff, Image as ImagemIcone, Loader2, Play, Trash2, Users,
+  Check, Download, EyeOff, Image as ImagemIcone, Loader2, Play, Trash2, Undo2, Users,
 } from 'lucide-react'
 import Seo from '../../../lib/Seo'
 import Reveal from '../../../lib/Reveal'
@@ -12,7 +12,7 @@ import { CONTACT, absoluteUrl } from '../../../lib/site'
 import {
   type EstadoMedia, type MediaNoivos, type Painel,
   SemAcesso, apagarMedia, esquecerChave, guardarChave, guardarDefinicoes,
-  lerChave, lerPainel, mudarEstado,
+  lerChave, lerPainel, mudarEstado, purgarMedia, restaurarMedia,
 } from '../../../lib/evento/noivos'
 import Codigo from './Codigo'
 import Foto from './Foto'
@@ -22,7 +22,7 @@ const ZIP = import.meta.env.VITE_ZIP_WORKER_URL as string | undefined
 /** Leitura do relógio, fora dos componentes: não é estado do React. */
 const aindaAberto = (iso: string) => new Date(iso).getTime() > Date.now()
 
-type Aba = 'todas' | 'pendente' | 'escondido'
+type Aba = 'todas' | 'pendente' | 'escondido' | 'lixo'
 
 /**
  * O painel dos noivos.
@@ -93,15 +93,32 @@ export default function PainelNoivos() {
   // o `??` sozinho produz exactamente isso quando o painel ainda não chegou.
   const media = useMemo(() => painel?.media ?? [], [painel])
 
-  const visiveis = useMemo(
-    // "Na galeria" é mesmo o que está na galeria. Incluir aqui o que está à
-    // espera de aprovação era contradizer a etiqueta e, pior, dar a entender
-    // que os convidados já viam uma fotografia que ainda ninguém aprovou.
-    () => media.filter((m) => m.status === (aba === 'todas' ? 'aprovado' : aba)),
-    [media, aba],
+  const daAba = useCallback(
+    (qual: Aba) =>
+      qual === 'lixo'
+        ? media.filter((m) => m.apagada)
+        // "Na galeria" é mesmo o que está na galeria. Incluir aqui o que está à
+        // espera de aprovação era contradizer a etiqueta e, pior, dar a
+        // entender que os convidados já viam uma fotografia por aprovar.
+        : media.filter((m) => !m.apagada && m.status === (qual === 'todas' ? 'aprovado' : qual)),
+    [media],
   )
 
-  const contar = (s: EstadoMedia) => media.filter((m) => m.status === s).length
+  /*
+    Os separadores laterais só existem enquanto tiverem alguma coisa, e o que
+    lá está pode ser esvaziado por uma acção do próprio: recuperar a última
+    fotografia do lixo faz o separador "Lixo" desaparecer.
+
+    Sem isto, quem o fizesse ficava preso num separador que já não está na
+    navegação, a olhar para uma grelha vazia sem forma óbvia de sair. Deriva-se
+    em vez de se corrigir num efeito: assim nunca chega a haver um render com o
+    separador errado.
+  */
+  const abaEfectiva: Aba = aba !== 'todas' && daAba(aba).length === 0 ? 'todas' : aba
+  const visiveis = useMemo(() => daAba(abaEfectiva), [daAba, abaEfectiva])
+
+  const contar = (s: EstadoMedia) => media.filter((m) => !m.apagada && m.status === s).length
+  const noLixo = media.filter((m) => m.apagada).length
 
   /** Aplica uma mudança localmente e no servidor, sem esperar por uma recarga. */
   const aplicar = async (ids: string[], accao: (k: string) => Promise<unknown>, local: (m: MediaNoivos[]) => MediaNoivos[]) => {
@@ -129,16 +146,36 @@ export default function PainelNoivos() {
       (m) => m.map((x) => (ids.includes(x.id) ? { ...x, status } : x)),
     )
 
-  const apagar = (ids: string[]) => {
-    const quantos = ids.length
+  /*
+    Apagar manda para o lixo, e por isso não pergunta nada: é reversível, está
+    à distância de um separador, e uma pergunta antes de cada gesto reversível
+    ensina as pessoas a carregar em "sim" sem ler — que é exactamente o hábito
+    que não se quer quando aparecer a pergunta que conta.
+  */
+  const apagar = (ids: string[]) =>
+    aplicar(
+      ids,
+      (k) => apagarMedia(slug, k, ids),
+      (m) => m.map((x) => (ids.includes(x.id) ? { ...x, apagada: true } : x)),
+    )
+
+  const restaurar = (ids: string[]) =>
+    aplicar(
+      ids,
+      (k) => restaurarMedia(slug, k, ids),
+      (m) => m.map((x) => (ids.includes(x.id) ? { ...x, apagada: false } : x)),
+    )
+
+  /* Esta é a que conta, e é a única que pergunta. */
+  const purgar = (ids: string[]) => {
     if (!confirm(
-      quantos === 1
-        ? 'Apagar esta fotografia para sempre?'
-        : `Apagar ${quantos} ficheiros para sempre?`,
+      ids.length === 1
+        ? 'Apagar esta fotografia definitivamente? Não há como a trazer de volta.'
+        : `Apagar ${ids.length} ficheiros definitivamente? Não há como os trazer de volta.`,
     )) return
     return aplicar(
       ids,
-      (k) => apagarMedia(slug, k, ids),
+      (k) => purgarMedia(slug, k, ids),
       (m) => m.filter((x) => !ids.includes(x.id)),
     )
   }
@@ -221,12 +258,21 @@ export default function PainelNoivos() {
           ) : (
             <>
               <Abas
-                aba={aba}
+                aba={abaEfectiva}
                 aoMudar={(a) => { setAba(a); setEscolhidos(new Set()) }}
                 naGaleria={contar('aprovado')}
                 pendentes={contar('pendente')}
                 escondidas={contar('escondido')}
+                noLixo={noLixo}
               />
+
+              {abaEfectiva === 'lixo' && (
+                <p className="mt-5 text-sm text-titanium/45 leading-relaxed max-w-lg">
+                  O que foi apagado, por vocês ou por quem o enviou. Nada aqui
+                  desaparece sozinho: fica à vossa espera até decidirem. Escolham
+                  e recuperem, ou apaguem de vez.
+                </p>
+              )}
 
               <Grelha
                 itens={visiveis}
@@ -253,11 +299,13 @@ export default function PainelNoivos() {
         <BarraEscolha
           quantos={escolhidos.size}
           ocupado={ocupado}
-          aba={aba}
+          aba={abaEfectiva}
           aoLimpar={() => setEscolhidos(new Set())}
           aoAprovar={() => mudar([...escolhidos], 'aprovado')}
           aoEsconder={() => mudar([...escolhidos], 'escondido')}
           aoApagar={() => apagar([...escolhidos])}
+          aoRestaurar={() => restaurar([...escolhidos])}
+          aoPurgar={() => purgar([...escolhidos])}
         />
       )}
 
@@ -269,15 +317,18 @@ export default function PainelNoivos() {
           aoFechar={() => setAberto(null)}
           aoAnterior={() => setAberto((i) => ((i ?? 0) - 1 + visiveis.length) % visiveis.length)}
           aoSeguinte={() => setAberto((i) => ((i ?? 0) + 1) % visiveis.length)}
+          noLixo={abaEfectiva === 'lixo'}
           aoEsconder={() => {
             const alvo = visiveis[aberto]
-            mudar([alvo.id], alvo.status === 'escondido' ? 'aprovado' : 'escondido')
+            if (abaEfectiva === 'lixo') restaurar([alvo.id])
+            else mudar([alvo.id], alvo.status === 'escondido' ? 'aprovado' : 'escondido')
             setAberto(null)
           }}
           aoApagar={() => {
             const alvo = visiveis[aberto]
             setAberto(null)
-            apagar([alvo.id])
+            if (abaEfectiva === 'lixo') purgar([alvo.id])
+            else apagar([alvo.id])
           }}
         />
       )}
@@ -390,13 +441,14 @@ function Numero({
 }
 
 function Abas({
-  aba, aoMudar, naGaleria, pendentes, escondidas,
+  aba, aoMudar, naGaleria, pendentes, escondidas, noLixo,
 }: {
   aba: Aba
   aoMudar: (a: Aba) => void
   naGaleria: number
   pendentes: number
   escondidas: number
+  noLixo: number
 }) {
   // As abas vazias não aparecem. Um casamento sem moderação nunca tem nada à
   // espera, e mostrar um separador permanentemente a zero era dar uma tarefa
@@ -405,6 +457,7 @@ function Abas({
     ['todas', 'Na galeria', naGaleria],
     ...(pendentes > 0 ? [['pendente', 'À espera', pendentes] as [Aba, string, number]] : []),
     ...(escondidas > 0 ? [['escondido', 'Escondidas', escondidas] as [Aba, string, number]] : []),
+    ...(noLixo > 0 ? [['lixo', 'Lixo', noLixo] as [Aba, string, number]] : []),
   ]
   if (lista.length === 1) return null
 
@@ -508,7 +561,7 @@ function Grelha({
 }
 
 function BarraEscolha({
-  quantos, ocupado, aba, aoLimpar, aoAprovar, aoEsconder, aoApagar,
+  quantos, ocupado, aba, aoLimpar, aoAprovar, aoEsconder, aoApagar, aoRestaurar, aoPurgar,
 }: {
   quantos: number
   ocupado: boolean
@@ -517,7 +570,10 @@ function BarraEscolha({
   aoAprovar: () => void
   aoEsconder: () => void
   aoApagar: () => void
+  aoRestaurar: () => void
+  aoPurgar: () => void
 }) {
+  const noLixo = aba === 'lixo'
   return (
     <div className="fixed bottom-4 inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-50">
       <div className="flex flex-wrap items-center gap-2 px-4 py-3 rounded-2xl bg-eerie/95 backdrop-blur border border-white/15 shadow-2xl">
@@ -525,19 +581,38 @@ function BarraEscolha({
           {quantos} {quantos === 1 ? 'escolhida' : 'escolhidas'}
         </span>
         {ocupado && <Loader2 size={14} className="animate-spin text-titanium/40" />}
-        {aba !== 'todas' && (
-          <button onClick={aoAprovar} className={ACCAO}>
-            <Check size={13} /> Pôr na galeria
-          </button>
+
+        {noLixo ? (
+          <>
+            <button onClick={aoRestaurar} className={ACCAO}>
+              <Undo2 size={13} /> Recuperar
+            </button>
+            {/* A única acção sem volta desta página. Vermelha, e sozinha. */}
+            <button
+              onClick={aoPurgar}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-full bg-red-500/15 hover:bg-red-500/25 text-red-200/85 transition-colors text-xs min-h-[40px]"
+            >
+              <Trash2 size={13} /> Apagar mesmo
+            </button>
+          </>
+        ) : (
+          <>
+            {aba !== 'todas' && (
+              <button onClick={aoAprovar} className={ACCAO}>
+                <Check size={13} /> Pôr na galeria
+              </button>
+            )}
+            {aba !== 'escondido' && (
+              <button onClick={aoEsconder} className={ACCAO}>
+                <EyeOff size={13} /> Esconder
+              </button>
+            )}
+            <button onClick={aoApagar} className={ACCAO}>
+              <Trash2 size={13} /> Apagar
+            </button>
+          </>
         )}
-        {aba !== 'escondido' && (
-          <button onClick={aoEsconder} className={ACCAO}>
-            <EyeOff size={13} /> Esconder
-          </button>
-        )}
-        <button onClick={aoApagar} className={ACCAO}>
-          <Trash2 size={13} /> Apagar
-        </button>
+
         <button onClick={aoLimpar} className="px-3 py-2 text-xs text-titanium/40 hover:text-titanium/80 transition-colors">
           Cancelar
         </button>

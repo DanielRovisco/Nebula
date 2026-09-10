@@ -703,13 +703,104 @@ create table if not exists event_media (
   */
   uploader_key text,
 
+  /*
+    Identificador que o browser gera antes de enviar.
+
+    Existe para o mesmo ficheiro não poder entrar duas vezes. O caminho que o
+    obrigava era este: o ficheiro sobe, o registo falha por a rede ter piscado,
+    e a fila repete tudo do princípio. Do lado do servidor o primeiro registo
+    pode ter corrido bem e só a resposta se ter perdido, e o casamento ficava
+    com a mesma fotografia duas vezes.
+
+    Com isto, repetir o registo do mesmo envio é uma operação sem efeito.
+  */
+  client_id text,
+
+  /*
+    Quando foi mandada para o lixo. Nulo é "está lá".
+
+    Apagar não apaga: marca. É a rede de segurança desta coisa toda, e existe
+    porque o que está aqui não se pode recuperar de mais lado nenhum. Um dedo
+    torto num telemóvel, ou um convidado que se enganou na fotografia, não podem
+    ser a última palavra sobre uma fotografia de casamento.
+
+    O ficheiro continua no R2. Quem o quiser mesmo fora dali fá-lo pelo painel,
+    de propósito, num sítio onde se vê o que se está a apagar.
+  */
+  deleted_at timestamptz,
+
   created_at timestamptz not null default now()
 );
 
 -- Para quem já tinha corrido a versão anterior deste ficheiro.
 alter table event_media add column if not exists uploader_key text;
+alter table event_media add column if not exists client_id text;
+alter table event_media add column if not exists deleted_at timestamptz;
+
 create index if not exists event_media_uploader_idx
   on event_media (event_id, uploader_key);
+
+/*
+  Um envio, uma linha. O índice é parcial porque `client_id` é nulo nas linhas
+  criadas antes disto existir, e num índice único vários nulos não colidem.
+*/
+create unique index if not exists event_media_client_idx
+  on event_media (event_id, client_id) where client_id is not null;
+
+-- Quase todas as leituras querem só o que não está no lixo.
+create index if not exists event_media_vivas_idx
+  on event_media (event_id, created_at desc) where deleted_at is null;
+
+/*
+  O slug não muda. Nunca.
+
+  Assim que um evento existe, o seu endereço pode já estar impresso num código
+  QR em cima de sessenta mesas. Mudá-lo não é editar um campo: é transformar
+  esses sessenta papéis em papéis que não levam a lado nenhum, no dia em que
+  ninguém os pode reimprimir.
+
+  A regra vive aqui e não no painel porque um painel é uma opinião e isto é uma
+  garantia: nem uma alteração futura ao código, nem alguém a mexer com a chave
+  de serviço, nem um engano no SQL Editor conseguem mudá-lo. O mesmo para o
+  evento a que uma fotografia pertence.
+*/
+create or replace function eventos_imutaveis() returns trigger
+language plpgsql
+set search_path = public as $$
+begin
+  if new.slug is distinct from old.slug then
+    raise exception
+      'O endereço de um evento não pode mudar: o código QR já pode estar impresso. Cria um evento novo.'
+      using errcode = 'check_violation';
+  end if;
+  if new.id is distinct from old.id then
+    raise exception 'O id de um evento não pode mudar.' using errcode = 'check_violation';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists events_imutaveis on events;
+create trigger events_imutaveis before update on events
+  for each row execute function eventos_imutaveis();
+
+create or replace function media_imutavel() returns trigger
+language plpgsql
+set search_path = public as $$
+begin
+  -- Uma fotografia não muda de casamento nem de ficheiro. Se mudasse, uma
+  -- actualização mal escrita apontava a linha de um casamento para o objecto de
+  -- outro, e o erro só aparecia na entrega.
+  if new.event_id is distinct from old.event_id
+     or new.storage_key is distinct from old.storage_key then
+    raise exception 'O evento e o ficheiro de uma fotografia não podem mudar.'
+      using errcode = 'check_violation';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists event_media_imutavel on event_media;
+create trigger event_media_imutavel before update on event_media
+  for each row execute function media_imutavel();
 
 create index if not exists event_media_evento_idx on event_media (event_id, created_at desc);
 create index if not exists event_media_estado_idx on event_media (event_id, status);

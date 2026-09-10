@@ -243,8 +243,20 @@ export default {
       return new Response('não encontrado', { status: 404 })
     }
 
+    /*
+      Tudo o que o casamento tem, e não só o que está na galeria.
+
+      Antes isto pedia `status=eq.aprovado`, e o resultado era o pior tipo de
+      avaria: silenciosa e tardia. Uma fotografia escondida por estar tremida, e
+      outra à espera de aprovação, não entravam no ficheiro chamado "descarregar
+      tudo". Os noivos guardavam o ZIP convencidos de que tinham o casamento, e
+      só dariam por isso muito depois de já não haver nada a fazer.
+
+      Escondido quer dizer "fora da galeria", não "deita fora". O que fica de
+      fora é só o que está no lixo, porque isso alguém decidiu.
+    */
     const mres = await fetch(
-      `${env.SUPABASE_URL}/rest/v1/event_media?event_id=eq.${evento.id}&status=eq.aprovado&select=storage_key,original_name&order=created_at.asc`,
+      `${env.SUPABASE_URL}/rest/v1/event_media?event_id=eq.${evento.id}&deleted_at=is.null&select=storage_key,original_name&order=created_at.asc`,
       {
         headers: {
           apikey: env.SUPABASE_SERVICE_ROLE_KEY,

@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
   if (body.action === 'painel') {
     const { data: linhas, error } = await sb
       .from('event_media')
-      .select('id, kind, storage_key, thumb_key, original_name, content_type, size_bytes, width, height, taken_at, uploaded_by_name, status, created_at')
+      .select('id, kind, storage_key, thumb_key, original_name, content_type, size_bytes, width, height, taken_at, uploaded_by_name, status, deleted_at, created_at')
       .eq('event_id', evento.id)
       .order('created_at', { ascending: false })
       .limit(2000)
@@ -107,6 +107,10 @@ Deno.serve(async (req) => {
         takenAt: m.taken_at,
         autor: m.uploaded_by_name,
         status: m.status,
+        // O lixo vem junto, marcado. Vem porque é aqui que ele se vê e se
+        // desfaz, e num painel que já tem tudo o resto seria estranho ir buscar
+        // isto a outro sítio.
+        apagada: Boolean(m.deleted_at),
         createdAt: m.created_at,
         /*
           A miniatura é o que a grelha usa; o grande só é assinado porque a
@@ -123,10 +127,9 @@ Deno.serve(async (req) => {
     // Quem contribuiu, por nome. Quem não escreveu nome conta como uma pessoa
     // só, o que é falso, mas é menos falso do que contar cada anónimo como uma
     // pessoa diferente e dizer ao casal que teve 80 convidados a participar.
-    const nomes = new Set(
-      (linhas ?? []).map((m) => (m.uploaded_by_name ?? '').trim()).filter(Boolean),
-    )
-    const anonimos = (linhas ?? []).some((m) => !(m.uploaded_by_name ?? '').trim())
+    const vivas = (linhas ?? []).filter((m) => !m.deleted_at)
+    const nomes = new Set(vivas.map((m) => (m.uploaded_by_name ?? '').trim()).filter(Boolean))
+    const anonimos = vivas.some((m) => !(m.uploaded_by_name ?? '').trim())
 
     return json({
       evento: {
@@ -163,13 +166,61 @@ Deno.serve(async (req) => {
     return json({ ok: true })
   }
 
+  /*
+    Apagar manda para o lixo. Não apaga.
+
+    O que está aqui não existe em mais lado nenhum: as fotografias vieram dos
+    telemóveis dos convidados, que já as apagaram, e o casamento não se repete.
+    Um clique errado numa grelha de trezentos quadrados não pode ser a última
+    palavra sobre isso.
+
+    Sair do lixo para sempre é outra acção, noutro sítio, com outro nome.
+  */
   if (body.action === 'apagar') {
+    if (!ids.length) return json({ ok: true })
+    const { data: linhas, error } = await sb
+      .from('event_media')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('event_id', evento.id)
+      .in('id', ids)
+      .is('deleted_at', null)
+      .select('id')
+    if (error) return json({ error: 'server_error' }, 500)
+    return json({ ok: true, apagados: (linhas ?? []).length })
+  }
+
+  /** Trazer de volta o que foi para o lixo. */
+  if (body.action === 'restaurar') {
+    if (!ids.length) return json({ ok: true })
+    const { data: linhas, error } = await sb
+      .from('event_media')
+      .update({ deleted_at: null })
+      .eq('event_id', evento.id)
+      .in('id', ids)
+      .select('id')
+    if (error) return json({ error: 'server_error' }, 500)
+    return json({ ok: true, restaurados: (linhas ?? []).length })
+  }
+
+  /*
+    Apagar mesmo, e só do lixo.
+
+    O `.not('deleted_at', 'is', null)` não é uma formalidade: é o que garante
+    que esta acção nunca toca numa fotografia que esteja à vista, mesmo que lhe
+    cheguem os ids errados. Para uma fotografia sair daqui tem de ter passado
+    antes pelo lixo, o que quer dizer que alguém já tomou essa decisão duas
+    vezes, em dois momentos diferentes.
+  */
+  if (body.action === 'purgar') {
     if (!ids.length) return json({ ok: true })
     const { data: linhas } = await sb
       .from('event_media')
       .select('id, storage_key, thumb_key')
       .eq('event_id', evento.id)
       .in('id', ids)
+      .not('deleted_at', 'is', null)
+
+    if (!linhas?.length) return json({ ok: true, purgados: 0 })
 
     /*
       Primeiro o ficheiro, depois a linha. Se o R2 falhar, fica uma linha a
@@ -177,16 +228,16 @@ Deno.serve(async (req) => {
       dois. Pela ordem contrária ficava um ficheiro pago para sempre sem
       ninguém saber que ele lá está.
     */
-    const chaves = (linhas ?? []).flatMap((l) =>
+    const chaves = linhas.flatMap((l) =>
       [l.storage_key as string, ...(l.thumb_key ? [l.thumb_key as string] : [])],
     )
     if (chaves.length) await deleteObjects(chaves)
 
     const { error } = await sb
       .from('event_media').delete().eq('event_id', evento.id)
-      .in('id', (linhas ?? []).map((l) => l.id))
+      .in('id', linhas.map((l) => l.id))
     if (error) return json({ error: 'server_error' }, 500)
-    return json({ ok: true, apagados: (linhas ?? []).length })
+    return json({ ok: true, purgados: linhas.length })
   }
 
   if (body.action === 'definicoes') {

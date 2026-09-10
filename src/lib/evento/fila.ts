@@ -73,8 +73,17 @@ export interface ItemFila {
   tentativas: number
   /** Progresso do envio, de 0 a 1. Não é guardado entre sessões. */
   progresso: number
-  /** Preenchido quando o ficheiro chega ao destino. */
+  /**
+   * A chave no R2, escrita assim que o PUT passa.
+   *
+   * É o que impede o mesmo ficheiro de subir duas vezes. Sem isto, uma falha no
+   * passo seguinte (o registo) mandava a fila repetir tudo do princípio, e o
+   * primeiro ficheiro ficava no bucket para sempre, pago e sem ninguém saber
+   * que lá estava.
+   */
   key?: string
+  /** Chave da miniatura, pela mesma razão. */
+  thumbKey?: string
   /** Id da linha na base de dados, para o convidado poder ver o que carregou. */
   mediaId?: string
   erro?: string

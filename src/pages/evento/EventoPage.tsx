@@ -250,7 +250,16 @@ export default function EventoPage() {
           online={fila.online}
           comErro={fila.comErro}
           aoRepetir={fila.repetir}
-          aoRemover={fila.remover}
+          /*
+            A galeria é recarregada a seguir a apagar. Sem isto, a fotografia
+            saía da lista de cima e ficava na grelha de baixo até alguém
+            recarregar a página, o que se lê como "o apagar não funcionou" e
+            leva a pessoa a tentar outra vez.
+          */
+          aoRemover={async (id) => {
+            await fila.remover(id)
+            recarregarGaleria()
+          }}
         />
 
         {galeria?.escondido ? (

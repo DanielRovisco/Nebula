@@ -86,27 +86,42 @@ export function useFila(slug: string) {
     [publicar],
   )
 
-  /** Sobe um ficheiro: pede o endereço, envia, e regista. */
+  /**
+   * Sobe um ficheiro: pede o endereço, envia, e regista.
+   *
+   * Os três passos são retomáveis um a um. Se a rede cair entre o segundo e o
+   * terceiro, a tentativa seguinte não volta a mandar os 400 MB: já tem a chave
+   * guardada e continua de onde estava. Era esse o caminho que enchia o bucket
+   * de ficheiros órfãos, pagos e invisíveis.
+   */
   const enviarUm = useCallback(
     async (item: ItemFila) => {
-      if (!item.blob) return
       await actualizar(item.id, { estado: 'a-enviar', progresso: 0, erro: undefined })
 
-      const { key, url } = await pedirUpload(slug, item.nome, item.tipo, item.tamanho)
-      await enviarFicheiro(url, item.blob, item.tipo, (f) => {
-        // O progresso não vai ao disco: escrever no IndexedDB a cada pedaço
-        // enviado dava centenas de escritas por ficheiro, sem nada a ganhar.
-        actualizar(item.id, { progresso: f }, false)
-      })
+      let key = item.key
+      if (!key) {
+        if (!item.blob) return
+        const pedido = await pedirUpload(slug, item.nome, item.tipo, item.tamanho)
+        await enviarFicheiro(pedido.url, item.blob, item.tipo, (f) => {
+          // O progresso não vai ao disco: escrever no IndexedDB a cada pedaço
+          // enviado dava centenas de escritas por ficheiro, sem nada a ganhar.
+          actualizar(item.id, { progresso: f }, false)
+        })
+        key = pedido.key
+        // Ao disco antes de qualquer outra coisa: a partir daqui, este ficheiro
+        // está entregue, aconteça o que acontecer aos passos seguintes.
+        await actualizar(item.id, { key, progresso: 1 })
+      }
 
       // A miniatura é um extra. Se falhar, o ficheiro já está entregue e não se
       // deita fora um upload de 400 MB por causa de uma imagem de 40 KB.
-      let thumbKey: string | undefined
-      if (item.tipo.startsWith('image/') && item.miniatura) {
+      let thumbKey = item.thumbKey
+      if (!thumbKey && item.tipo.startsWith('image/') && item.miniatura) {
         try {
           const alvo = await pedirUpload(slug, `mini-${item.nome}.jpg`, 'image/jpeg', item.miniatura.size)
           await enviarFicheiro(alvo.url, item.miniatura, 'image/jpeg', () => {})
           thumbKey = alvo.key
+          await actualizar(item.id, { thumbKey })
         } catch { /* fica sem miniatura no servidor; a local continua cá */ }
       }
 
@@ -118,6 +133,10 @@ export function useFila(slug: string) {
         sizeBytes: item.tamanho,
         name: item.autor,
         uploaderKey: minhaChave(slug),
+        // O identificador do envio. Se este registo já tiver sido feito e só a
+        // resposta se tiver perdido, o servidor reconhece-o e devolve o mesmo
+        // id em vez de criar uma segunda linha.
+        clientId: item.id,
       })
 
       await actualizar(item.id, {
@@ -140,8 +159,10 @@ export function useFila(slug: string) {
     try {
       for (;;) {
         if (!navigator.onLine) break
+        // `blob || key`: um item cujo ficheiro já subiu mas cujo registo falhou
+        // já não tem blob, e mesmo assim tem trabalho por acabar.
         const proximo = itensRef.current.find(
-          (i) => i.blob && (i.estado === 'espera' || i.estado === 'a-enviar'),
+          (i) => (i.blob || i.key) && (i.estado === 'espera' || i.estado === 'a-enviar'),
         )
         if (!proximo) break
 
@@ -183,7 +204,7 @@ export function useFila(slug: string) {
         i.estado === 'a-enviar' ? { ...i, estado: 'espera' as const, progresso: 0 } : i,
       )
       publicar(limpa)
-      if (limpa.some((i) => i.blob && i.estado === 'espera')) correr()
+      if (limpa.some((i) => (i.blob || i.key) && i.estado === 'espera')) correr()
     })()
     return () => { montado.current = false }
   }, [slug, publicar, correr])
@@ -224,7 +245,9 @@ export function useFila(slug: string) {
 
   const repetir = useCallback(async () => {
     const lista = itensRef.current.map((i) =>
-      i.estado === 'erro' && i.blob ? { ...i, estado: 'espera' as const, tentativas: 0 } : i,
+      i.estado === 'erro' && (i.blob || i.key)
+        ? { ...i, estado: 'espera' as const, tentativas: 0 }
+        : i,
     )
     publicar(lista)
     for (const i of lista) if (i.estado === 'espera') await guardar(i)

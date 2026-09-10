@@ -37,6 +37,7 @@ export interface MediaAdmin {
   size_bytes: number
   uploaded_by_name: string | null
   status: 'pendente' | 'aprovado' | 'escondido'
+  deleted_at: string | null
   created_at: string
   /** Preenchidos depois, por `assinar`. */
   url?: string
@@ -98,9 +99,38 @@ export async function guardarEvento(id: string, campos: Partial<Evento>): Promis
   if (error) throw error
 }
 
-export async function apagarEvento(id: string): Promise<void> {
+/**
+ * Apaga um evento inteiro. É a única coisa aqui que não tem volta.
+ *
+ * Os ficheiros são apagados do R2 primeiro, e só depois as linhas. Pela ordem
+ * contrária ficavam gigabytes no bucket sem nenhum registo a dizer que
+ * existiam: pagos para sempre e impossíveis de encontrar, porque as chaves
+ * viviam nas linhas que se acabaram de apagar.
+ *
+ * Quem chama isto tem de ter confirmado com o nome do casal escrito à mão. Não
+ * é teatro: um `confirm()` a seguir a um clique errado é respondido com "sim"
+ * sem se ler, e do outro lado está o casamento inteiro de alguém.
+ */
+export async function apagarEvento(id: string): Promise<{ ficheiros: number }> {
+  const { data: linhas, error: erroLer } = await supabase()
+    .from('event_media')
+    .select('storage_key, thumb_key')
+    .eq('event_id', id)
+  if (erroLer) throw erroLer
+
+  const chaves = (linhas ?? []).flatMap((l) =>
+    [l.storage_key as string, ...(l.thumb_key ? [l.thumb_key as string] : [])],
+  )
+
+  // Em blocos: o `delete` do R2 tem tecto por pedido, e um casamento grande
+  // passa dele com folga.
+  for (let i = 0; i < chaves.length; i += 500) {
+    await callAdmin({ action: 'delete', keys: chaves.slice(i, i + 500) })
+  }
+
   const { error } = await supabase().from('events').delete().eq('id', id)
   if (error) throw error
+  return { ficheiros: chaves.length }
 }
 
 export async function listarMedia(eventId: string): Promise<MediaAdmin[]> {
@@ -108,6 +138,8 @@ export async function listarMedia(eventId: string): Promise<MediaAdmin[]> {
     .from('event_media')
     .select('*')
     .eq('event_id', eventId)
+    // O lixo geriu-se no painel dos noivos, que é de quem são as fotografias.
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
   if (error) throw error
   return (data ?? []) as MediaAdmin[]
@@ -134,15 +166,16 @@ export async function mudarEstado(ids: string[], status: MediaAdmin['status']): 
 }
 
 /**
- * Apaga mesmo: o ficheiro do R2 e a linha da base de dados, por esta ordem.
+ * Manda para o lixo. Não apaga.
  *
- * Se o R2 falhar, a linha fica — o que dá um ficheiro visível e uma tentativa
- * que se repete. Ao contrário, ficaria um ficheiro pago para sempre sem
- * ninguém a saber que ele existe.
+ * O ficheiro fica no R2 e a linha fica na base de dados, fora da vista. Quem
+ * decide apagar mesmo são os noivos, no painel deles, onde a acção tem outro
+ * nome e outra cor. Estas fotografias não são nossas.
  */
 export async function apagarMedia(linhas: MediaAdmin[]): Promise<void> {
-  const chaves = linhas.flatMap((l) => [l.storage_key, ...(l.thumb_key ? [l.thumb_key] : [])])
-  await callAdmin({ action: 'delete', keys: chaves })
-  const { error } = await supabase().from('event_media').delete().in('id', linhas.map((l) => l.id))
+  const { error } = await supabase()
+    .from('event_media')
+    .update({ deleted_at: new Date().toISOString() })
+    .in('id', linhas.map((l) => l.id))
   if (error) throw error
 }

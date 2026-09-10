@@ -527,6 +527,48 @@ compridos, e reduzido a 220, 140 e 90 pixels — lê-se em todos. **Deixa de ler
 quando o símbolo passa dos 34% do lado**, por isso `simboloEscala` fica nos
 0.22 e não se mexe sem repetir o teste.
 
+### O que não pode partir
+
+Estas fotografias não existem em mais lado nenhum. Vieram dos telemóveis dos
+convidados, que já as apagaram, e o casamento não se repete. O módulo está
+construído à volta disso.
+
+**O endereço de um evento nunca muda.** Assim que o evento existe, o `slug`
+está trancado por um gatilho na base de dados, não por uma opinião do painel.
+Nem uma alteração futura ao código, nem alguém com a chave de serviço, nem um
+engano no SQL Editor o conseguem mudar. A razão é simples: esse endereço pode
+já estar impresso em sessenta mesas, e mudá-lo transformava sessenta papéis em
+papéis que não levam a lado nenhum. O nome do casal continua a poder mudar à
+vontade, porque não vai no código.
+
+**Apagar não apaga.** Tanto os convidados como os noivos mandam para o lixo, e
+o ficheiro fica no R2. Os noivos veem o lixo num separador próprio e podem
+recuperar. Sair de lá para sempre é outra acção, com outro nome, noutra cor, e
+o servidor recusa-a a qualquer fotografia que não tenha passado antes pelo
+lixo — o que quer dizer que alguém tomou a decisão duas vezes, em dois momentos
+diferentes.
+
+**Um envio, uma fotografia.** Cada ficheiro leva um identificador gerado no
+browser, com uma chave única na base de dados. Se o ficheiro subir e o registo
+falhar, a tentativa seguinte não volta a mandar os 400 MB nem cria uma segunda
+linha: continua de onde estava. Era este o caminho que enchia o bucket de
+ficheiros órfãos, pagos e invisíveis, e que punha a mesma fotografia duas vezes
+no casamento.
+
+**"Descarregar tudo" é mesmo tudo.** O ZIP leva o que está na galeria, o que
+está à espera de aprovação e o que está escondido. Só não leva o que está no
+lixo. Antes levava só o aprovado, e isso era a pior espécie de avaria:
+silenciosa e tardia — os noivos guardavam o ficheiro convencidos de que tinham
+o casamento inteiro.
+
+**Apagar um evento pede o nome do casal escrito à mão**, e apaga os ficheiros
+do R2 antes das linhas. Pela ordem contrária ficavam gigabytes no bucket sem
+nenhum registo a dizer que existiam.
+
+Verificado contra um Postgres a sério, não só lido: o slug recusa mudar, o nome
+não, o `client_id` repetido é recusado, o lixo não desconta espaço e o apagar
+definitivo desconta.
+
 ### Edge Functions
 
 ```bash

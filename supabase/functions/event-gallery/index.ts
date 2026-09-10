@@ -80,6 +80,8 @@ Deno.serve(async (req) => {
     // Escondido é escondido para toda a gente, incluindo para quem a carregou:
     // foi o casal que a tirou da vista, e isso é uma decisão deles.
     .neq('status', 'escondido')
+    // O que está no lixo não se mostra a ninguém. Continua guardado.
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(500)
 

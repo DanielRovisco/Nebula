@@ -21,7 +21,7 @@
 // vale é o que se confirma aqui.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { cors, deleteObjects, json, presign } from '../_shared/r2.ts'
+import { cors, json, presign } from '../_shared/r2.ts'
 
 const UPLOAD_TTL = 60 * 30 // 30 min: em rede de quinta, um vídeo demora
 
@@ -111,6 +111,8 @@ Deno.serve(async (req) => {
     if (!key.startsWith(`eventos/${evento.id}/`)) return json({ error: 'chave_invalida' }, 400)
 
     const contentType = String(body.contentType ?? '')
+    const clientId = body.clientId ? String(body.clientId).slice(0, 80) : null
+
     const { data: linha, error } = await sb.from('event_media').insert({
       event_id: evento.id,
       kind: contentType.startsWith('video/') ? 'video' : 'foto',
@@ -126,13 +128,30 @@ Deno.serve(async (req) => {
       // É por esta chave que o convidado consegue apagar o que enviou, e só o
       // que enviou. Vem do browser dele e não identifica ninguém.
       uploader_key: body.uploaderKey ? String(body.uploaderKey).slice(0, 80) : null,
+      client_id: clientId,
       // Com moderação ligada, entra à espera de aprovação.
       status: evento.moderation ? 'pendente' : 'aprovado',
     }).select('id').single()
+
+    /*
+      23505 é a chave única do envio: esta fotografia já foi registada. Acontece
+      quando o registo correu bem e só a resposta se perdeu pelo caminho, e o
+      browser voltou a tentar. Não é um erro — é a prova de que a primeira
+      tentativa funcionou. Devolve-se o id que já existe e segue.
+    */
+    if (error && error.code === '23505' && clientId) {
+      const { data: jaLa } = await sb
+        .from('event_media')
+        .select('id')
+        .eq('event_id', evento.id)
+        .eq('client_id', clientId)
+        .maybeSingle()
+      if (jaLa) return json({ ok: true, id: jaLa.id, repetido: true })
+    }
     if (error) return json({ error: 'server_error' }, 500)
+
     // O id volta para o browser do convidado, que o guarda. É o que lhe permite
-    // ver o que carregou quando a galeria está fechada aos convidados: sem
-    // conta, esta lista é a única forma de ele se identificar perante a galeria.
+    // apagar o que enviou.
     return json({ ok: true, id: linha?.id })
   }
 
@@ -156,19 +175,30 @@ Deno.serve(async (req) => {
     */
     const { data: linha } = await sb
       .from('event_media')
-      .select('id, storage_key, thumb_key')
+      .select('id')
       .eq('id', id)
       .eq('event_id', evento.id)
       .eq('uploader_key', uploaderKey)
+      .is('deleted_at', null)
       .maybeSingle()
 
     // A mesma resposta para "não existe" e para "não é tua": nem se confirma
     // que a fotografia existe a quem não tem a chave dela.
     if (!linha) return json({ error: 'nao_encontrado' }, 404)
 
-    const chaves = [linha.storage_key as string, ...(linha.thumb_key ? [linha.thumb_key as string] : [])]
-    await deleteObjects(chaves)
-    const { error } = await sb.from('event_media').delete().eq('id', linha.id)
+    /*
+      Marca-se, não se apaga. O ficheiro fica no R2 e a linha fica na base de
+      dados, fora da vista de toda a gente, incluindo do próprio.
+
+      É de propósito, e é a diferença entre um engano e uma perda: um convidado
+      que apague a fotografia errada num telemóvel, a meio de uma festa, não
+      pode ser a última palavra sobre uma fotografia de casamento. Os noivos
+      veem-na no lixo e podem trazê-la de volta.
+    */
+    const { error } = await sb
+      .from('event_media')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', linha.id)
     if (error) return json({ error: 'server_error' }, 500)
     return json({ ok: true })
   }

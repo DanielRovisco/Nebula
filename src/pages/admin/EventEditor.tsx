@@ -224,16 +224,14 @@ export default function EventEditor() {
         </>
       )}
 
-      <button
-        onClick={async () => {
-          if (!confirm('Apagar o evento e todos os registos? Os ficheiros no armazenamento não são apagados por aqui.')) return
+      <ApagarEvento
+        nome={evento.couple_name}
+        total={media.length}
+        aoApagar={async () => {
           await apagarEvento(evento.id)
           navigate('/admin/eventos')
         }}
-        className="mt-16 text-xs text-titanium/30 hover:text-titanium/60 transition-colors"
-      >
-        Apagar este evento
-      </button>
+      />
     </div>
   )
 }
@@ -343,6 +341,73 @@ function LinhaDeLink({
       <p className={`text-xs mt-2 leading-relaxed ${destaque ? 'text-amber-100/50' : 'text-titanium/35'}`}>
         {nota}
       </p>
+    </div>
+  )
+}
+
+
+/**
+ * Apagar um casamento inteiro.
+ *
+ * Pede o nome do casal escrito à mão. Não é para tornar a coisa chata: é a
+ * única forma de garantir que quem carregou aqui sabia em que casamento estava.
+ * Um `confirm()` a seguir a um clique errado é respondido com "sim" sem se ler,
+ * e do outro lado estão as fotografias de um dia que não se repete.
+ */
+function ApagarEvento({
+  nome, total, aoApagar,
+}: { nome: string; total: number; aoApagar: () => Promise<void> }) {
+  const [aberto, setAberto] = useState(false)
+  const [escrito, setEscrito] = useState('')
+  const [ocupado, setOcupado] = useState(false)
+
+  const bate = escrito.trim().toLowerCase() === nome.trim().toLowerCase()
+
+  if (!aberto) {
+    return (
+      <button
+        onClick={() => setAberto(true)}
+        className="mt-16 block text-xs text-titanium/30 hover:text-titanium/60 transition-colors"
+      >
+        Apagar este evento
+      </button>
+    )
+  }
+
+  return (
+    <div className="mt-16 p-5 rounded-xl border border-red-400/25 bg-red-500/[0.05] max-w-md">
+      <p className="text-sm text-titanium/80 leading-relaxed">
+        Isto apaga {total} {total === 1 ? 'ficheiro' : 'ficheiros'} do
+        armazenamento e todos os registos deste casamento. Não há cópia, não há
+        lixo, não há volta.
+      </p>
+      <p className="text-xs text-titanium/45 mt-3 leading-relaxed">
+        Escreve <strong className="text-titanium/75 font-normal">{nome}</strong> para confirmar.
+      </p>
+      <input
+        value={escrito}
+        onChange={(e) => setEscrito(e.target.value)}
+        autoFocus
+        className="w-full mt-3 bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-titanium/85 focus:border-white/30 outline-none transition-colors"
+      />
+      <div className="flex gap-2 mt-4">
+        <button
+          disabled={!bate || ocupado}
+          onClick={async () => {
+            setOcupado(true)
+            try { await aoApagar() } finally { setOcupado(false) }
+          }}
+          className="px-4 py-2.5 rounded-full bg-red-500/20 text-red-100 text-[11px] uppercase tracking-[0.12em] disabled:opacity-25 disabled:cursor-not-allowed min-h-[44px]"
+        >
+          {ocupado ? 'A apagar...' : 'Apagar para sempre'}
+        </button>
+        <button
+          onClick={() => { setAberto(false); setEscrito('') }}
+          className="px-4 py-2.5 text-[11px] uppercase tracking-[0.12em] text-titanium/40 hover:text-titanium/70 transition-colors min-h-[44px]"
+        >
+          Cancelar
+        </button>
+      </div>
     </div>
   )
 }

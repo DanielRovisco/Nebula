@@ -21,6 +21,8 @@ export interface MediaNoivos {
   takenAt: string | null
   autor: string | null
   status: EstadoMedia
+  /** Está no lixo. Continua guardada, mas fora da vista de toda a gente. */
+  apagada: boolean
   createdAt: string
   thumbUrl: string | null
   url: string
@@ -78,8 +80,17 @@ export const lerPainel = (slug: string, chave: string) =>
 export const mudarEstado = (slug: string, chave: string, ids: string[], status: EstadoMedia) =>
   chamar<{ ok: true }>({ action: 'estado', slug, chave, ids, status })
 
+/** Manda para o lixo. Reversível. */
 export const apagarMedia = (slug: string, chave: string, ids: string[]) =>
   chamar<{ ok: true; apagados: number }>({ action: 'apagar', slug, chave, ids })
+
+/** Traz de volta do lixo. */
+export const restaurarMedia = (slug: string, chave: string, ids: string[]) =>
+  chamar<{ ok: true; restaurados: number }>({ action: 'restaurar', slug, chave, ids })
+
+/** Apaga mesmo, e só o que já está no lixo. Sem volta. */
+export const purgarMedia = (slug: string, chave: string, ids: string[]) =>
+  chamar<{ ok: true; purgados: number }>({ action: 'purgar', slug, chave, ids })
 
 export const guardarDefinicoes = (
   slug: string,
