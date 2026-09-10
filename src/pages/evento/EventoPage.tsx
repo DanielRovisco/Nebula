@@ -264,22 +264,27 @@ export default function EventoPage() {
           <Galeria media={galeria?.media ?? []} />
         )}
 
+        <Assinatura />
+
         {/*
           A promessa de privacidade fica na página, e não escondida numa
           política. Quem carrega uma fotografia tem direito a saber para onde
           ela vai antes de a carregar, não depois.
-        */}
-        <section className="mt-16 pt-8 border-t border-white/[0.07]">
-          <span className="label-sm">O que acontece às tuas fotografias</span>
-          <ul className="mt-4 space-y-2 text-sm text-titanium/50 leading-relaxed">
-            <li>Vão para os noivos e mais ninguém. Não são publicadas nem vendidas.</li>
-            <li>Não te é pedida conta, email ou número. O nome é opcional.</li>
-            <li>Ficam guardadas na Europa, num espaço privado, sem endereço público.</li>
-            <li>Enquanto os envios estiverem abertos, podes apagar as tuas aqui.</li>
-          </ul>
-        </section>
 
-        <Assinatura />
+          Fica no fim e em letra pequena porque é isso que ela é: uma nota de
+          rodapé que tem de estar lá e ser encontrável, não um aviso a competir
+          com o botão. Quatro linhas soltas ocupavam meia página a dizer o que
+          cabe em quatro linhas de texto corrido.
+        */}
+        <section className="mt-14 pt-7 border-t border-white/[0.07]">
+          <span className="label-sm">O que acontece às tuas fotografias</span>
+          <p className="mt-3 text-xs text-titanium/40 leading-relaxed max-w-md">
+            Vão para os noivos e mais ninguém: não são publicadas nem vendidas.
+            Não te é pedida conta, email ou número, e o nome é opcional. Ficam
+            guardadas na Europa, num espaço privado e sem endereço público. E
+            enquanto os envios estiverem abertos, podes apagar as tuas aqui.
+          </p>
+        </section>
       </main>
     </div>
   )
@@ -314,15 +319,14 @@ function Assinatura() {
       />
 
       {/*
-        "Somos nós que fotografamos" e não "as fotografias são nossas". A segunda
-        versão esteve aqui e vinha logo a seguir a "vão para os noivos e mais
-        ninguém, não são publicadas nem vendidas": lidas em sequência, parecia
-        que estávamos a reclamar as fotografias que a pessoa tinha acabado de
-        entregar.
+        Duas linhas, e a quebra é escrita e não deixada ao acaso: a primeira diz
+        o que estamos aqui a fazer, a segunda é o convite. Juntas num parágrafo
+        corrido, a segunda passava despercebida a seguir à primeira.
       */}
-      <p className="text-titanium/50 text-sm leading-relaxed mt-5 max-w-xs mx-auto">
-        Somos nós que fotografamos este casamento. Se um dia for o teu dia, ou o
-        de alguém teu, gostávamos de o contar.
+      <p className="font-serif text-xl sm:text-2xl leading-snug mt-6 max-w-sm mx-auto">
+        Este dia está a ser contado por nós.
+        <br />
+        Um dia gostaríamos de contar o teu.
       </p>
 
       {/*
