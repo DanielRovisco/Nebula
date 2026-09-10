@@ -55,17 +55,31 @@ export type EstadoItem = 'espera' | 'a-enviar' | 'feito' | 'erro'
 export interface ItemFila {
   id: string
   slug: string
-  /** O ficheiro original. Apagado depois de subir, para não encher o telemóvel. */
-  blob: Blob | null
+  /**
+   * Os bytes do ficheiro. Postos a nulo depois de subir, para não encher o
+   * telemóvel.
+   *
+   * `ArrayBuffer` e não `Blob`, e isto é a peça que faz a coisa funcionar.
+   *
+   * Um `File` escolhido num `<input>` é uma referência para um ficheiro
+   * temporário do sistema, e no Safari do iPhone essa referência morre quando a
+   * página fecha: ao voltar, o que lá está já não se lê. Guardar um `Blob` no
+   * IndexedDB parecia resolver, mas o Safari trata blobs guardados de forma
+   * própria e nem sempre os devolve inteiros.
+   *
+   * Um `ArrayBuffer` são bytes e mais nada. Todos os browsers o copiam para o
+   * IndexedDB e o devolvem tal e qual. É a única forma de a fotografia estar
+   * mesmo lá quando a pessoa voltar.
+   */
+  dados: ArrayBuffer | null
   /**
    * Miniatura, guardada mesmo depois de o original ir embora.
    *
    * São umas dezenas de quilobytes por fotografia, e é o que faz a grelha ter
-   * imagens em vez de nomes de ficheiros — inclusive sem rede, e inclusive
-   * antes de o upload começar. Trinta fotografias dão menos de dois megabytes
-   * guardados, o que é barato para o que se ganha.
+   * imagens em vez de nomes de ficheiros, inclusive sem rede e antes de o
+   * upload começar. Também em bytes, pela mesma razão.
    */
-  miniatura?: Blob | null
+  miniatura?: ArrayBuffer | null
   nome: string
   tipo: string
   tamanho: number
@@ -97,6 +111,14 @@ export interface ItemFila {
   criadoEm: number
   /** Nome que a pessoa escreveu, se escreveu. */
   autor?: string
+  /**
+   * Verdadeiro quando os bytes não couberam no armazenamento do browser.
+   *
+   * Acontece com vídeos muito grandes. O envio funciona na mesma enquanto a
+   * página estiver aberta, mas fechá-la perde o ficheiro, e isso tem de ser
+   * dito a quem está do outro lado em vez de descoberto mais tarde.
+   */
+  soMemoria?: boolean
 }
 
 /**
@@ -107,7 +129,7 @@ export interface ItemFila {
  * antigo que o fizesse a meio de uma festa, e o que se ganhava em segurança
  * perdia-se num separador que rebenta.
  */
-const LIMITE_COPIA = 80 * 1024 * 1024
+const LIMITE_COPIA = 200 * 1024 * 1024
 
 /**
  * Uma cópia dos bytes, independente do ficheiro que está no disco.
@@ -122,10 +144,11 @@ const LIMITE_COPIA = 80 * 1024 * 1024
  * Copiar os bytes desfaz isso. O que fica guardado passa a ser a fotografia, e
  * não a morada dela.
  */
-export async function copiaDuravel(blob: Blob, tipo: string): Promise<Blob | null> {
-  if (blob.size > LIMITE_COPIA) return null
+export async function copiaDuravel(blob: Blob): Promise<ArrayBuffer | null> {
+  if (blob.size === 0 || blob.size > LIMITE_COPIA) return null
   try {
-    return new Blob([await bytesDe(blob)], { type: tipo })
+    const bytes = await bytesDe(blob)
+    return bytes.byteLength > 0 ? bytes : null
   } catch {
     return null
   }
@@ -138,7 +161,7 @@ export async function copiaDuravel(blob: Blob, tipo: string): Promise<Blob | nul
  * casamento pode ser de qualquer ano. O `FileReader` existe em tudo, e é para
  * isso que serve o segundo caminho.
  */
-function bytesDe(blob: Blob): Promise<ArrayBuffer> {
+export function bytesDe(blob: Blob): Promise<ArrayBuffer> {
   if (typeof blob.arrayBuffer === 'function') return blob.arrayBuffer()
   return new Promise((ok, falha) => {
     const leitor = new FileReader()
@@ -170,6 +193,32 @@ export async function legivel(blob: Blob | null | undefined): Promise<boolean> {
   } catch {
     return false
   }
+}
+
+/**
+ * Os ficheiros acabados de escolher, ainda em memória.
+ *
+ * Ler trinta fotografias para bytes demora, e o envio não tem de esperar por
+ * isso: começa com o `File` original, que está vivo enquanto a página estiver
+ * aberta, enquanto a cópia para o disco corre por trás. Quem chegar depois de
+ * um recarregamento já encontra os bytes guardados.
+ */
+const emMemoria = new Map<string, File>()
+
+export const guardarEmMemoria = (id: string, f: File) => emMemoria.set(id, f)
+export const esquecerDaMemoria = (id: string) => emMemoria.delete(id)
+
+/**
+ * O ficheiro pronto a enviar: o original se ainda cá estiver, senão os bytes
+ * guardados.
+ */
+export function paraEnviar(item: ItemFila): Blob | null {
+  const vivo = emMemoria.get(item.id)
+  if (vivo && vivo.size > 0) return vivo
+  if (item.dados && item.dados.byteLength > 0) {
+    return new Blob([item.dados], { type: item.tipo })
+  }
+  return null
 }
 
 let bd: Promise<IDBDatabase> | null = null
@@ -217,6 +266,7 @@ export async function guardar(item: ItemFila): Promise<void> {
 }
 
 export async function apagar(id: string): Promise<void> {
+  esquecerDaMemoria(id)
   await tx('readwrite', (l) => l.delete(id) as unknown as IDBRequest<undefined>)
 }
 
@@ -232,7 +282,9 @@ export async function juntar(slug: string, ficheiros: File[], autor?: string): P
   const itens: ItemFila[] = ficheiros.map((f, i) => ({
     id: `${agora}-${i}-${Math.random().toString(36).slice(2, 8)}`,
     slug,
-    blob: f,
+    // Os bytes entram a seguir, em segundo plano. O ficheiro em si fica em
+    // memória já, para o envio poder começar sem esperar pela cópia.
+    dados: null,
     nome: f.name,
     tipo: f.type || 'application/octet-stream',
     tamanho: f.size,
@@ -242,7 +294,10 @@ export async function juntar(slug: string, ficheiros: File[], autor?: string): P
     criadoEm: agora + i,
     autor,
   }))
-  for (const it of itens) await guardar(it)
+  for (let i = 0; i < itens.length; i++) {
+    guardarEmMemoria(itens[i].id, ficheiros[i])
+    await guardar(itens[i])
+  }
   return itens
 }
 
@@ -256,6 +311,9 @@ export async function juntar(slug: string, ficheiros: File[], autor?: string): P
  */
 export async function limparEnviados(slug: string): Promise<void> {
   for (const it of await listar(slug)) {
-    if (it.estado === 'feito' && it.blob) await guardar({ ...it, blob: null })
+    if (it.estado === 'feito' && it.dados) {
+      esquecerDaMemoria(it.id)
+      await guardar({ ...it, dados: null })
+    }
   }
 }

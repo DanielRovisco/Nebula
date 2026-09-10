@@ -4,7 +4,8 @@ import {
 } from './api'
 import {
   type ItemFila,
-  apagar, copiaDuravel, guardar, juntar, legivel, limparEnviados, listar, minhaChave,
+  apagar, bytesDe, copiaDuravel, guardar, juntar, legivel, limparEnviados,
+  listar, minhaChave, paraEnviar,
 } from './fila'
 
 /** Quantas vezes se insiste antes de desistir e mostrar o botão de repetir. */
@@ -24,7 +25,7 @@ const dormir = (ms: number) => new Promise((r) => setTimeout(r, ms))
  * telemóvel de um convidado, para ganhar uma imagem de pré-visualização. Não
  * compensa: os vídeos mostram-se com o seu próprio primeiro fotograma.
  */
-async function miniatura(f: Blob): Promise<Blob | null> {
+async function miniatura(f: Blob): Promise<ArrayBuffer | null> {
   try {
     const bitmap = await createImageBitmap(f)
     const escala = Math.min(1, MINIATURA / Math.max(bitmap.width, bitmap.height))
@@ -33,7 +34,13 @@ async function miniatura(f: Blob): Promise<Blob | null> {
     c.height = Math.round(bitmap.height * escala)
     c.getContext('2d')!.drawImage(bitmap, 0, 0, c.width, c.height)
     bitmap.close()
-    return await new Promise((r) => c.toBlob(r, 'image/jpeg', 0.75))
+    const pequena = await new Promise<Blob | null>((r) => c.toBlob(r, 'image/jpeg', 0.75))
+    // Também em bytes: uma miniatura guardada como Blob corre o mesmo risco que
+    // o original, e uma grelha sem imagens depois de recarregar é o mesmo tipo
+    // de avaria, só que mais pequena.
+    // `bytesDe` e não `arrayBuffer()`: o mesmo motivo de sempre, um browser
+    // mais antigo não tem esse método e a miniatura ficava por fazer.
+    return pequena ? await bytesDe(pequena) : null
   } catch {
     // Formato que o browser não abre (HEIC em alguns Android, RAW). O ficheiro
     // sobe na mesma, com a qualidade que tinha; fica é sem miniatura.
@@ -112,7 +119,7 @@ export function useFila(slug: string) {
           não melhora à quinta tentativa. A pessoa vê "escolhe outra vez", que
           é a única coisa que ela pode fazer.
         */
-        const ficheiro = item.blob
+        const ficheiro = paraEnviar(item)
         /*
           Sem ficheiro, ou com zero bytes, não há nada a tentar. As duas coisas
           são certezas, e não dúvidas: um ficheiro vazio nunca é uma fotografia.
@@ -157,10 +164,11 @@ export function useFila(slug: string) {
       // A miniatura é um extra. Se falhar, o ficheiro já está entregue e não se
       // deita fora um upload de 400 MB por causa de uma imagem de 40 KB.
       let thumbKey = item.thumbKey
-      if (!thumbKey && item.tipo.startsWith('image/') && item.miniatura) {
+      if (!thumbKey && item.tipo.startsWith('image/') && item.miniatura?.byteLength) {
         try {
-          const alvo = await pedirUpload(slug, `mini-${item.nome}.jpg`, 'image/jpeg', item.miniatura.size)
-          await enviarFicheiro(alvo.url, item.miniatura, 'image/jpeg', () => {})
+          const pequena = new Blob([item.miniatura], { type: 'image/jpeg' })
+          const alvo = await pedirUpload(slug, `mini-${item.nome}.jpg`, 'image/jpeg', pequena.size)
+          await enviarFicheiro(alvo.url, pequena, 'image/jpeg', () => {})
           thumbKey = alvo.key
           await actualizar(item.id, { thumbKey })
         } catch { /* fica sem miniatura no servidor; a local continua cá */ }
@@ -185,7 +193,7 @@ export function useFila(slug: string) {
         progresso: 1,
         key,
         mediaId: r.id,
-        blob: null,
+        dados: null,
         erro: undefined,
       })
     },
@@ -315,13 +323,16 @@ export function useFila(slug: string) {
         trinta ficheiros em memória ao mesmo tempo.
       */
       for (const it of novos) {
-        if (!it.blob) continue
+        const ficheiro = paraEnviar(it)
+        if (!ficheiro) continue
 
-        const copia = await copiaDuravel(it.blob, it.tipo)
-        if (copia) await actualizar(it.id, { blob: copia })
+        const bytes = await copiaDuravel(ficheiro)
+        // Sem cópia, o ficheiro vive só enquanto a página estiver aberta. Marca-
+        // se para a página o poder dizer, em vez de o descobrir mais tarde.
+        await actualizar(it.id, bytes ? { dados: bytes } : { soMemoria: true })
 
         if (!it.tipo.startsWith('image/')) continue
-        const pequena = await miniatura(copia ?? it.blob)
+        const pequena = await miniatura(ficheiro)
         if (pequena) await actualizar(it.id, { miniatura: pequena })
       }
     },

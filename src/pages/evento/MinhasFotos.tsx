@@ -35,8 +35,11 @@ const RECADOS: Record<string, string> = {
  * trinta fotografias deixavam trinta blobs presos em memória até a página
  * fechar, o que num telemóvel a meio de uma festa conta.
  */
-function useUrlDoBlob(blob: Blob | null | undefined): string | null {
-  const url = useMemo(() => (blob ? URL.createObjectURL(blob) : null), [blob])
+function useUrlDoBlob(bytes: ArrayBuffer | null | undefined): string | null {
+  const url = useMemo(
+    () => (bytes?.byteLength ? URL.createObjectURL(new Blob([bytes], { type: 'image/jpeg' })) : null),
+    [bytes],
+  )
   useEffect(() => () => { if (url) URL.revokeObjectURL(url) }, [url])
   return url
 }
@@ -105,7 +108,9 @@ export default function MinhasFotos({ itens, online, comErro, aoRepetir, aoRemov
       {!online && (
         <p className="mt-3 flex items-center gap-2 text-xs text-titanium/50">
           <CloudOff size={13} />
-          Sem rede. Está tudo guardado e sobe assim que a rede voltar.
+          {itens.some((i) => i.soMemoria && i.estado !== 'feito')
+            ? 'Sem rede. As fotografias estão guardadas, mas há vídeos grandes que só sobem se não fechares esta página.'
+            : 'Sem rede. Está tudo guardado e sobe assim que a rede voltar.'}
         </p>
       )}
 
