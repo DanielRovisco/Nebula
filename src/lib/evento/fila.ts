@@ -99,6 +99,49 @@ export interface ItemFila {
   autor?: string
 }
 
+/**
+ * Acima deste tamanho não se copia o ficheiro: envia-se o original.
+ *
+ * Copiar obriga a ter os bytes todos em memória de uma vez. Para fotografias
+ * (5 a 15 MB) não custa nada; para um vídeo de 400 MB era pedir a um telemóvel
+ * antigo que o fizesse a meio de uma festa, e o que se ganhava em segurança
+ * perdia-se num separador que rebenta.
+ */
+const LIMITE_COPIA = 80 * 1024 * 1024
+
+/**
+ * Uma cópia dos bytes, independente do ficheiro que está no disco.
+ *
+ * Um `File` escolhido num `<input>` não é uma fotografia: é uma referência para
+ * uma cópia temporária que o sistema fez. Guardá-lo no IndexedDB guarda a
+ * referência, e no Safari do iPhone essa referência morre quando a página
+ * fecha. Reabrir e encontrar um ficheiro ilegível era exactamente o que estava
+ * a acontecer: as fotografias escolhidas antes de fechar nunca subiam, e as
+ * escolhidas depois subiam sempre, porque essas ainda estavam vivas em memória.
+ *
+ * Copiar os bytes desfaz isso. O que fica guardado passa a ser a fotografia, e
+ * não a morada dela.
+ */
+export async function copiaDuravel(blob: Blob, tipo: string): Promise<Blob | null> {
+  if (blob.size > LIMITE_COPIA) return null
+  try {
+    return new Blob([await blob.arrayBuffer()], { type: tipo })
+  } catch {
+    return null
+  }
+}
+
+/** Confirma que ainda se consegue ler o ficheiro antes de o tentar enviar. */
+export async function legivel(blob: Blob | null | undefined): Promise<boolean> {
+  if (!blob || blob.size === 0) return false
+  try {
+    await blob.slice(0, 1).arrayBuffer()
+    return true
+  } catch {
+    return false
+  }
+}
+
 let bd: Promise<IDBDatabase> | null = null
 
 function abrir(): Promise<IDBDatabase> {

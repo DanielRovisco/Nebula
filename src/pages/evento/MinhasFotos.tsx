@@ -23,6 +23,7 @@ const RECADOS: Record<string, string> = {
   janela_fechada: 'Os envios fecharam',
   sem_rede: 'Sem rede',
   falha_upload: 'Falhou',
+  ficheiro_perdido: 'Escolhe outra vez',
 }
 
 /**

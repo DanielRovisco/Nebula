@@ -3,7 +3,8 @@ import {
   ErroEvento, enviarFicheiro, pedirUpload, registarUpload, removerDoServidor,
 } from './api'
 import {
-  type ItemFila, apagar, guardar, juntar, limparEnviados, listar, minhaChave,
+  type ItemFila,
+  apagar, copiaDuravel, guardar, juntar, legivel, limparEnviados, listar, minhaChave,
 } from './fila'
 
 /** Quantas vezes se insiste antes de desistir e mostrar o botão de repetir. */
@@ -100,9 +101,24 @@ export function useFila(slug: string) {
 
       let key = item.key
       if (!key) {
-        if (!item.blob) return
+        /*
+          O ficheiro tem de estar mesmo lá. Antes isto era um `return` calado, e
+          o efeito era o pior possível: o item ficava marcado como "a enviar", o
+          motor voltava a encontrá-lo, voltava a chamar, voltava a devolver — um
+          ciclo infinito que não enviava nada e não deixava passar mais
+          ninguém. Uma roda a girar para sempre e uma fila parada atrás dela.
+
+          Agora é um erro, e um erro definitivo: um ficheiro que já não se lê
+          não melhora à quinta tentativa. A pessoa vê "escolhe outra vez", que
+          é a única coisa que ela pode fazer.
+        */
+        const ficheiro = item.blob
+        if (!ficheiro || !(await legivel(ficheiro))) {
+          throw new ErroEvento('ficheiro_perdido', 410)
+        }
+
         const pedido = await pedirUpload(slug, item.nome, item.tipo, item.tamanho)
-        await enviarFicheiro(pedido.url, item.blob, item.tipo, (f) => {
+        await enviarFicheiro(pedido.url, ficheiro, item.tipo, (f) => {
           // O progresso não vai ao disco: escrever no IndexedDB a cada pedaço
           // enviado dava centenas de escritas por ficheiro, sem nada a ganhar.
           actualizar(item.id, { progresso: f }, false)
@@ -159,10 +175,18 @@ export function useFila(slug: string) {
     try {
       for (;;) {
         if (!navigator.onLine) break
-        // `blob || key`: um item cujo ficheiro já subiu mas cujo registo falhou
-        // já não tem blob, e mesmo assim tem trabalho por acabar.
+        /*
+          Tudo o que não está entregue nem falhado é para tentar, sem excepção.
+
+          Havia aqui um `i.blob || i.key`, para saltar o que não tivesse nada
+          para enviar. O efeito era o contrário do pretendido: um ficheiro que
+          deixasse de ser legível não era saltado com um aviso, era saltado em
+          silêncio. Ficava para sempre em "a enviar", sem erro, sem botão, e sem
+          nada que a pessoa pudesse fazer. Um item que não dá para enviar tem de
+          falhar em voz alta, e é o `enviarUm` que o diz.
+        */
         const porFazer = itensRef.current.filter(
-          (i) => (i.blob || i.key) && (i.estado === 'espera' || i.estado === 'a-enviar'),
+          (i) => i.estado === 'espera' || i.estado === 'a-enviar',
         )
         if (porFazer.length === 0) break
 
@@ -194,7 +218,9 @@ export function useFila(slug: string) {
           // gastava bateria e dava esperança falsa a quem está a olhar.
           const definitivo =
             erro.estado === 413 || erro.estado === 415 ||
-            erro.estado === 403 || erro.estado === 507
+            erro.estado === 403 || erro.estado === 507 ||
+            // O ficheiro deixou de estar legível neste browser.
+            erro.estado === 410
 
           if (definitivo || tentativas >= TENTATIVAS_MAX) {
             await actualizar(proximo.id, { estado: 'erro', tentativas, erro: erro.codigo })
@@ -225,7 +251,7 @@ export function useFila(slug: string) {
         i.estado === 'a-enviar' ? { ...i, estado: 'espera' as const, progresso: 0 } : i,
       )
       publicar(limpa)
-      if (limpa.some((i) => (i.blob || i.key) && i.estado === 'espera')) correr()
+      if (limpa.some((i) => i.estado === 'espera')) correr()
     })()
     return () => { montado.current = false }
   }, [slug, publicar, correr])
@@ -255,9 +281,22 @@ export function useFila(slug: string) {
       publicar([...itensRef.current, ...novos])
       correr()
 
+      /*
+        A seguir, e em segundo plano, duas coisas por ficheiro: uma cópia dos
+        bytes que sobreviva a fechar a página, e a miniatura.
+
+        A cópia vem primeiro porque é a que evita perder a fotografia. Um a um
+        e não todos de uma vez: trinta fotografias copiadas em paralelo são
+        trinta ficheiros em memória ao mesmo tempo.
+      */
       for (const it of novos) {
-        if (!it.tipo.startsWith('image/') || !it.blob) continue
-        const pequena = await miniatura(it.blob)
+        if (!it.blob) continue
+
+        const copia = await copiaDuravel(it.blob, it.tipo)
+        if (copia) await actualizar(it.id, { blob: copia })
+
+        if (!it.tipo.startsWith('image/')) continue
+        const pequena = await miniatura(copia ?? it.blob)
         if (pequena) await actualizar(it.id, { miniatura: pequena })
       }
     },
@@ -266,7 +305,7 @@ export function useFila(slug: string) {
 
   const repetir = useCallback(async () => {
     const lista = itensRef.current.map((i) =>
-      i.estado === 'erro' && (i.blob || i.key)
+      i.estado === 'erro'
         ? { ...i, estado: 'espera' as const, tentativas: 0, tentarApos: undefined }
         : i,
     )
