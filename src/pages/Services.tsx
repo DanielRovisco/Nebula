@@ -18,6 +18,25 @@ import { breadcrumbJsonLd } from '../lib/breadcrumbJsonLd'
  * acrescentar um item a um pack é uma linha em cada língua, e nunca fica um
  * pack meio traduzido.
  */
+/**
+ * Quantas colunas para os cartões que existem.
+ *
+ * Recebe um `number` e não o comprimento literal de propósito: com os tipos
+ * estreitados pelo `as const`, o compilador sabia que nenhuma categoria tinha
+ * dois packs e marcava essa comparação como morta. Ela não está morta, está à
+ * espera de os eventos terem packs a sério.
+ *
+ * Um cartão sozinho não se estica ao ecrã todo: uma linha de texto com mil
+ * pixels de largura não se lê, e um cartão vazio à direita parece uma coisa que
+ * não carregou.
+ */
+const colunas = (quantos: number) =>
+  quantos === 1
+    ? 'sm:max-w-md'
+    : quantos === 2
+      ? 'sm:grid-cols-2'
+      : 'sm:grid-cols-2 lg:grid-cols-3'
+
 const CATEGORIES = [
   {
     id: 'casamentos',
@@ -93,10 +112,13 @@ const CATEGORIES = [
       que ninguém tem em duplicado no telemóvel.
     */
     packs: [
-      { name: 'essencia', items: ['photoSession', 'sessao1h', 'fotos10', 'privateGallery'] },
+      {
+        name: 'essencia',
+        items: ['photoSession', 'sessao1h', 'localEscolha', 'fotos10', 'privateGallery'],
+      },
       {
         name: 'origem',
-        items: ['photoEditorial', 'sessao2h', 'fotos20', 'privateGallery', 'sneakPeek'],
+        items: ['photoEditorial', 'sessao2h', 'localEscolha', 'fotos20', 'privateGallery', 'sneakPeek'],
       },
       {
         name: 'nebula',
@@ -109,9 +131,23 @@ const CATEGORIES = [
     id: 'eventos',
     // Os trabalhos que ilustram este serviço vivem em "Retratos".
     portfolio: 'retratos',
+    /*
+      Um cartão só, e de propósito.
+
+      Não se escrevem packs para um serviço que ainda não se fez. Um pack é uma
+      promessa com número: horas, fotografias, prazos. Sem eventos feitos, esses
+      números seriam inventados, e quem os descobre errado é o cliente no
+      próprio dia.
+
+      Quando houver eventos suficientes para saber quanto tempo levam e quantas
+      fotografias saem, isto vira uma escada como as outras. Até lá, o convite
+      honesto é falar.
+    */
     packs: [
-      { name: 'foto', items: ['eventPhoto', 'privateGallery'] },
-      { name: 'fotoVideo', items: ['eventPhotoVideo', 'privateGallery', 'sneakPeek'] },
+      {
+        name: 'medida',
+        items: ['eventoCobertura', 'eventoCombinado', 'privateGallery', 'sneakPeek'],
+      },
     ],
   },
 ] as const
@@ -485,11 +521,7 @@ export default function Services() {
                   cerca de 200px por nada: a coluna da direita tem largura de
                   sobra para os três lado a lado.
                 */}
-                <div
-                  className={`grid gap-3 sm:gap-4 ${
-                    cat.packs.length === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-3'
-                  }`}
-                >
+                <div className={`grid gap-3 sm:gap-4 ${colunas(cat.packs.length)}`}>
                   {cat.packs.map((pack) => (
                     <div
                       key={pack.name}
