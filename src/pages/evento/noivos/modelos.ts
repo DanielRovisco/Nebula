@@ -31,8 +31,8 @@ export const MODELOS: Modelo[] = [
   {
     id: 'editorial',
     nome: 'Editorial',
-    titulo: 'Viste alguma coisa bonita?',
-    mensagem: 'Deixa-a aqui. Sem aplicações, sem contas, sem demoras.',
+    titulo: 'Viste alguma coisa bonita? Deixa-a aqui.',
+    mensagem: 'Aponta a câmara ao código. Sem aplicações, sem contas, sem demoras.',
   },
   {
     id: 'noite',

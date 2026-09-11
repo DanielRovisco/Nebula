@@ -53,20 +53,41 @@ function Folha({ modelo, titulo, mensagem, casal, data, url }: DadosFolha) {
   }
 
   if (modelo.id === 'editorial') {
+    /*
+      Uma revista, não um aviso.
+
+      A versão anterior era tímida: um título pequeno em cima, o código a
+      encolher num canto, e metade da folha vazia sem razão. Aqui o título
+      ocupa o terço de cima e sangra até à margem, e o código está grande e
+      alinhado com ele. O que se pendura numa parede tem de se ler da porta.
+    */
     return (
-      <div className={`${comum} bg-white text-[#141414] items-start text-left px-[20mm] py-[22mm]`}>
-        <p className="text-[8pt] uppercase tracking-[0.3em] text-[#141414]/45">{casal} · {data}</p>
-        <div className="w-full h-px bg-[#141414]/15 mt-[6mm]" />
-        <h1 className="font-serif text-[34pt] leading-[1.05] mt-[14mm] max-w-[120mm]">{titulo}</h1>
-        <p className="text-[12pt] leading-relaxed mt-[8mm] max-w-[100mm] text-[#141414]/65">
-          {mensagem}
-        </p>
-        <div className="mt-auto w-full flex items-end justify-between gap-[10mm]">
-          <p className="text-[8pt] uppercase tracking-[0.3em] text-[#141414]/35 pb-[2mm]">
-            proj3ctnebula.pt
+      <div className={`${comum} bg-white text-[#141414] items-stretch text-left px-[18mm] py-[16mm]`}>
+        <div className="flex items-baseline justify-between gap-[8mm]">
+          <p className="text-[8pt] uppercase tracking-[0.32em] text-[#141414]/45">
+            Fotografias dos convidados
           </p>
-          <div className="w-[72mm] h-[72mm] shrink-0">{qr}</div>
+          <p className="text-[8pt] uppercase tracking-[0.32em] text-[#141414]/45">{data}</p>
         </div>
+        <div className="w-full h-[0.6mm] bg-[#141414] mt-[4mm]" />
+
+        <h1 className="font-serif text-[46pt] leading-[0.98] mt-[10mm] tracking-[-0.01em]">
+          {titulo}
+        </h1>
+
+        <div className="flex items-end gap-[10mm] mt-auto pt-[12mm]">
+          <div className="flex-1 min-w-0">
+            <p className="font-serif text-[22pt] leading-tight">{casal}</p>
+            <div className="w-[18mm] h-px bg-[#141414]/30 my-[6mm]" />
+            <p className="text-[11.5pt] leading-relaxed text-[#141414]/70">{mensagem}</p>
+          </div>
+          <div className="w-[74mm] h-[74mm] shrink-0">{qr}</div>
+        </div>
+
+        <div className="w-full h-px bg-[#141414]/15 mt-[10mm]" />
+        <p className="text-[7.5pt] uppercase tracking-[0.32em] text-[#141414]/35 mt-[3mm]">
+          proj3ctnebula.pt
+        </p>
       </div>
     )
   }
@@ -183,11 +204,6 @@ export default function Templates({ url, casal, data, aoFechar }: Props) {
           <div className="sem-impressao max-w-[210mm] mx-auto mb-7 space-y-4">
             <Campo etiqueta="Título" valor={titulo} aoMudar={setTitulo} maximo={70} />
             <Campo etiqueta="Mensagem" valor={mensagem} aoMudar={setMensagem} maximo={140} />
-            <p className="text-xs text-titanium/30 leading-relaxed">
-              O vosso nome e a data vêm do casamento e não se escrevem aqui.
-              Imprimir guarda em PDF, se escolherem essa opção na janela do
-              browser.
-            </p>
           </div>
 
           {/*
@@ -210,10 +226,7 @@ export default function Templates({ url, casal, data, aoFechar }: Props) {
         </div>
       ) : (
         <div className="px-4 sm:px-6 py-8">
-          <p className="text-titanium/50 text-sm leading-relaxed max-w-md mb-7">
-            Cinco cartazes prontos a imprimir em A4. Escolhe um, muda o texto se
-            quiseres, e imprime.
-          </p>
+          <h2 className="font-serif text-2xl sm:text-3xl mb-7">Os nossos templates</h2>
           <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {MODELOS.map((m) => (
               <li key={m.id}>

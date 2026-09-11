@@ -78,7 +78,7 @@ export default function Codigo({
                   className="absolute z-20 left-0 top-full mt-2 p-1.5 rounded-xl bg-eerie border border-white/15 shadow-2xl flex flex-col min-w-[11rem]"
                   onMouseLeave={() => setAEscolherCor(false)}
                 >
-                  <p className="label-sm px-2.5 pt-1.5 pb-2">Sobre que fundo</p>
+                  <p className="label-sm px-2.5 pt-1.5 pb-2">Cor do código</p>
                   <Cor
                     cor="preto"
                     aoEscolher={() => { guardarQr(url, 'preto', nome); setAEscolherCor(false) }}
@@ -165,9 +165,15 @@ function Cor({
 /**
  * O código a ocupar o ecrã todo, para alguém o ler do outro lado da mesa.
  *
- * Sobre fundo claro e não escuro: é o fundo que o código precisa para ser lido,
- * e um telemóvel apontado a um ecrã escuro com um código invertido falha em
- * muitos leitores. Aqui o desenho segue a máquina, não o contrário.
+ * O ecrã é escuro como o resto do site. Era claro, e abrir uma folha branca
+ * inteira a partir de uma página preta é um flash na cara de quem está a olhar,
+ * muitas vezes à noite.
+ *
+ * O código continua sobre branco, numa placa. Invertê-lo também resolvia o
+ * flash, mas há leitores de câmara que recusam códigos claros sobre escuro, e
+ * um código bonito que meia dúzia de convidados não consegue ler não serve para
+ * nada. A placa dá ao leitor o contraste que ele precisa e ao ecrã o escuro que
+ * os olhos precisam.
  */
 function EcraCheio({ url, nome, aoFechar }: { url: string; nome: string; aoFechar: () => void }) {
   useEffect(() => {
@@ -197,31 +203,31 @@ function EcraCheio({ url, nome, aoFechar }: { url: string; nome: string; aoFecha
   }, [aoFechar])
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] bg-[#f7f7f4] flex flex-col items-center justify-center p-6">
+    <div className="fixed inset-0 z-[100] bg-eerie flex flex-col items-center justify-center p-6">
       <button
         onClick={aoFechar}
         aria-label="Fechar"
-        className="absolute top-5 right-5 w-11 h-11 rounded-full flex items-center justify-center text-eerie/45 hover:text-eerie hover:bg-eerie/[0.06] transition-colors"
+        className="absolute top-5 right-5 w-11 h-11 rounded-full flex items-center justify-center text-titanium/45 hover:text-titanium hover:bg-white/[0.07] transition-colors"
       >
         <X size={22} />
       </button>
 
-      <p className="text-eerie/45 text-[0.65rem] uppercase tracking-[0.28em] mb-7 text-center">
-        Aponta a câmara
-      </p>
+      <p className="label-sm mb-7 text-center">Aponta a câmara</p>
 
-      <QrNebula
-        url={url}
-        tamanho={1400}
-        fundo="#ffffff"
-        className="w-[min(78vw,60vh,520px)] h-[min(78vw,60vh,520px)] block"
-      />
+      <div className="rounded-2xl bg-white p-4 sm:p-5">
+        <QrNebula
+          url={url}
+          tamanho={1400}
+          fundo="#ffffff"
+          className="w-[min(72vw,54vh,460px)] h-[min(72vw,54vh,460px)] block"
+        />
+      </div>
 
-      <p className="mt-8 font-serif text-2xl sm:text-3xl text-eerie text-center">{nome}</p>
+      <p className="mt-8 font-serif text-2xl sm:text-3xl text-center">{nome}</p>
 
       <button
         onClick={() => guardarQr(url, 'preto', nome)}
-        className="mt-7 inline-flex items-center gap-2 px-5 py-3 rounded-full border border-eerie/15 text-[11px] uppercase tracking-[0.12em] text-eerie/60 hover:border-eerie/40 hover:text-eerie transition-all min-h-[44px]"
+        className="mt-7 inline-flex items-center gap-2 px-5 py-3 rounded-full border border-white/15 text-[11px] uppercase tracking-[0.12em] text-titanium/60 hover:border-white/40 hover:text-titanium transition-all min-h-[44px]"
       >
         <Download size={13} /> Guardar para imprimir
       </button>
