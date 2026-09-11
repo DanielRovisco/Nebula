@@ -157,7 +157,7 @@ export const en: Dict = {
       sessao1h: 'One hour, one outfit',
       sessao2h: 'Two hours, two outfits',
       sessao3h: 'Up to three hours and three outfits, instead of one',
-      fotos20Mais: '20 to 40 edited photographs, instead of 10 to 20',
+      fotos20Mais: '20 to 50 edited photographs, instead of 10 to 20',
       localEscolha: 'Outdoors or in studio, your choice',
       preparacao: 'Planning beforehand: outfits and references',
       fotos10: '10 to 20 edited photographs',

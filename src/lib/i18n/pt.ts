@@ -175,7 +175,7 @@ export const pt = {
         roupas estaria a dizer duas coisas sobre a mesma sessão.
       */
       sessao3h: 'Até 3 horas e três roupas, em vez de uma',
-      fotos20Mais: '20 a 40 fotografias editadas, em vez de 10 a 20',
+      fotos20Mais: '20 a 50 fotografias editadas, em vez de 10 a 20',
       localEscolha: 'Exterior ou estúdio, à escolha',
       preparacao: 'Preparação antes do dia: roupas e referências',
       fotos10: '10 a 20 fotografias editadas',
