@@ -111,19 +111,29 @@ const CATEGORIES = [
       pessoa quer publicar, e um retrato que também se mexe é a única coisa aqui
       que ninguém tem em duplicado no telemóvel.
     */
+    /*
+      Dois degraus e não três.
+
+      Um retrato é um serviço simples: uma pessoa, uma sessão, uma entrega. Três
+      níveis obrigavam a inventar uma diferença a meio que não existe, e um
+      degrau inventado nota-se — faz o cliente desconfiar dos outros dois.
+
+      O de cima chama-se Nebula e não Origem de propósito: em todas as
+      categorias, Nebula quer dizer o mais completo que há. Retratos apenas não
+      tem o degrau do meio.
+    */
     packs: [
       {
         name: 'essencia',
         items: ['photoSession', 'sessao1h', 'localEscolha', 'fotos10', 'privateGallery'],
       },
       {
-        name: 'origem',
-        items: ['photoEditorial', 'sessao2h', 'localEscolha', 'fotos20', 'privateGallery', 'sneakPeek'],
-      },
-      {
         name: 'nebula',
-        herda: 'origem',
-        items: ['sessao3h', 'preparacao', 'fotosTodas', 'verticalReels', 'entregaRapida'],
+        herda: 'essencia',
+        items: [
+          'photoEditorial', 'sessao3h', 'fotos20Mais', 'preparacao',
+          'sneakPeek', 'verticalReels', 'entregaRapida',
+        ],
       },
     ],
   },

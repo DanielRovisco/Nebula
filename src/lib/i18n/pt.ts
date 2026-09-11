@@ -125,8 +125,15 @@ export const pt = {
     label: 'Serviços',
     title: 'Feito para o teu momento.',
     seeWork: 'Ver trabalhos desta categoria',
-    /* Usado no pack de topo: "Tudo o que o Origem tem, e ainda:" */
-    inheritsFrom: (pack: string) => `Tudo o que o ${pack} tem, e ainda`,
+    /*
+      Usado no pack de topo: "Tudo o que o pack Origem tem, e ainda".
+
+      A palavra "pack" está lá por gramática e não por gosto: sem ela é preciso
+      um artigo antes do nome, e o artigo certo muda com o nome. "O Origem" e "a
+      Essência" não cabem os dois na mesma frase feita. Com "o pack" à frente, o
+      artigo concorda sempre com "pack" e qualquer nome serve.
+    */
+    inheritsFrom: (pack: string) => `Tudo o que o pack ${pack} tem, e ainda`,
     addonLabel: 'À medida',
     addonTitle: 'Monta o teu pack',
     addonText:
@@ -162,7 +169,13 @@ export const pt = {
       */
       sessao1h: '1 hora, uma roupa',
       sessao2h: '2 horas, duas roupas',
-      sessao3h: 'Até 3 horas e três roupas, em vez de duas',
+      /*
+        O "em vez de" existe porque o cartão de cima herda o de baixo. Sem ele,
+        um pack que promete tudo o que a Essência tem e a seguir fala de três
+        roupas estaria a dizer duas coisas sobre a mesma sessão.
+      */
+      sessao3h: 'Até 3 horas e três roupas, em vez de uma',
+      fotos20Mais: '20 a 40 fotografias editadas, em vez de 10 a 20',
       localEscolha: 'Exterior ou estúdio, à escolha',
       preparacao: 'Preparação antes do dia: roupas e referências',
       fotos10: '10 a 20 fotografias editadas',
