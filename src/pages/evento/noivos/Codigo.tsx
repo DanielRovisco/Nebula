@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Check, Copy, Download, Maximize2, X } from 'lucide-react'
+import { Check, Copy, Download, LayoutTemplate, Maximize2, X } from 'lucide-react'
 import QrNebula from '../../../components/QrNebula'
-import { guardarQr } from '../../../lib/qr/guardar'
+import { type CorDoQr, guardarQr } from '../../../lib/qr/exportar'
+import Templates from './Templates'
 
 /**
  * O código QR do casamento, no painel dos noivos.
@@ -13,12 +14,13 @@ import { guardarQr } from '../../../lib/qr/guardar'
  * o código ao fotógrafo no dia do casamento é um casal a quem se entregou meia
  * ferramenta.
  */
-export default function Codigo({ url, nome }: { url: string; nome: string }) {
+export default function Codigo({
+  url, nome, data,
+}: { url: string; nome: string; data: string }) {
   const [ampliado, setAmpliado] = useState(false)
+  const [cartazes, setCartazes] = useState(false)
+  const [aEscolherCor, setAEscolherCor] = useState(false)
   const [copiado, setCopiado] = useState(false)
-  const canvas = useRef<HTMLCanvasElement | null>(null)
-
-  const guardar = useCallback((c: HTMLCanvasElement) => { canvas.current = c }, [])
 
   const copiar = async () => {
     try {
@@ -36,7 +38,7 @@ export default function Codigo({ url, nome }: { url: string; nome: string }) {
           className="group relative shrink-0 rounded-2xl bg-white p-3 sm:p-4 transition-transform duration-500 hover:scale-[1.02] focus-visible:scale-[1.02]"
           aria-label="Ver o código em grande"
         >
-          <QrNebula url={url} tamanho={640} aoDesenhar={guardar} className="w-36 h-36 sm:w-44 sm:h-44 block" />
+          <QrNebula url={url} tamanho={640} className="w-36 h-36 sm:w-44 sm:h-44 block" />
           <span className="absolute inset-0 rounded-2xl flex items-center justify-center bg-eerie/0 group-hover:bg-eerie/45 group-focus-visible:bg-eerie/45 transition-colors duration-300">
             <Maximize2
               size={20}
@@ -56,12 +58,50 @@ export default function Codigo({ url, nome }: { url: string; nome: string }) {
             <Botao aoClicar={() => setAmpliado(true)} icone={<Maximize2 size={13} />}>
               Ver em grande
             </Botao>
-            <Botao
-              aoClicar={() => canvas.current && guardarQr(canvas.current, `codigo-${nome}`)}
-              icone={<Download size={13} />}
-            >
-              Guardar imagem
+
+            {/*
+              Guardar abre duas opções em vez de um ficheiro. O código sai sem
+              fundo, e sem fundo a cor deixa de ser um detalhe: preto some-se
+              num convite escuro, branco some-se em papel branco. Quem sabe onde
+              o vai pôr é quem carrega no botão.
+            */}
+            <div className="relative">
+              <Botao
+                aoClicar={() => setAEscolherCor((v) => !v)}
+                icone={<Download size={13} />}
+                expandido={aEscolherCor}
+              >
+                Guardar imagem
+              </Botao>
+              {aEscolherCor && (
+                <div
+                  className="absolute z-20 left-0 top-full mt-2 p-1.5 rounded-xl bg-eerie border border-white/15 shadow-2xl flex flex-col min-w-[11rem]"
+                  onMouseLeave={() => setAEscolherCor(false)}
+                >
+                  <p className="label-sm px-2.5 pt-1.5 pb-2">Sobre que fundo</p>
+                  <Cor
+                    cor="preto"
+                    aoEscolher={() => { guardarQr(url, 'preto', nome); setAEscolherCor(false) }}
+                  >
+                    Código preto
+                  </Cor>
+                  <Cor
+                    cor="branco"
+                    aoEscolher={() => { guardarQr(url, 'branco', nome); setAEscolherCor(false) }}
+                  >
+                    Código branco
+                  </Cor>
+                  <p className="text-[11px] text-titanium/30 px-2.5 pt-2 pb-1 leading-relaxed">
+                    PNG sem fundo, só o código.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <Botao aoClicar={() => setCartazes(true)} icone={<LayoutTemplate size={13} />}>
+              Cartazes
             </Botao>
+
             <Botao aoClicar={copiar} icone={copiado ? <Check size={13} /> : <Copy size={13} />}>
               {copiado ? 'Copiado' : 'Copiar link'}
             </Botao>
@@ -72,19 +112,52 @@ export default function Codigo({ url, nome }: { url: string; nome: string }) {
       </div>
 
       {ampliado && <EcraCheio url={url} nome={nome} aoFechar={() => setAmpliado(false)} />}
+      {cartazes && (
+        <Templates url={url} casal={nome} data={data} aoFechar={() => setCartazes(false)} />
+      )}
     </>
   )
 }
 
 function Botao({
-  aoClicar, icone, children,
-}: { aoClicar: () => void; icone: React.ReactNode; children: React.ReactNode }) {
+  aoClicar, icone, children, expandido,
+}: {
+  aoClicar: () => void
+  icone: React.ReactNode
+  children: React.ReactNode
+  expandido?: boolean
+}) {
   return (
     <button
       onClick={aoClicar}
-      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-white/12 text-[11px] uppercase tracking-[0.12em] text-titanium/60 hover:border-white/35 hover:text-titanium/90 transition-all min-h-[44px]"
+      aria-expanded={expandido}
+      className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-full border text-[11px] uppercase tracking-[0.12em] transition-all min-h-[44px] ${
+        expandido
+          ? 'border-white/35 text-titanium/90'
+          : 'border-white/12 text-titanium/60 hover:border-white/35 hover:text-titanium/90'
+      }`}
     >
       {icone} {children}
+    </button>
+  )
+}
+
+/** Uma das duas cores, com uma amostra ao lado para não haver dúvida. */
+function Cor({
+  cor, aoEscolher, children,
+}: { cor: CorDoQr; aoEscolher: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={aoEscolher}
+      className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg hover:bg-white/[0.07] transition-colors text-sm text-titanium/80 text-left"
+    >
+      <span
+        aria-hidden
+        className={`w-4 h-4 rounded shrink-0 border ${
+          cor === 'preto' ? 'bg-[#141414] border-white/25' : 'bg-white border-white/25'
+        }`}
+      />
+      {children}
     </button>
   )
 }
@@ -97,9 +170,6 @@ function Botao({
  * muitos leitores. Aqui o desenho segue a máquina, não o contrário.
  */
 function EcraCheio({ url, nome, aoFechar }: { url: string; nome: string; aoFechar: () => void }) {
-  const canvas = useRef<HTMLCanvasElement | null>(null)
-  const guardar = useCallback((c: HTMLCanvasElement) => { canvas.current = c }, [])
-
   useEffect(() => {
     const aoTeclado = (e: KeyboardEvent) => { if (e.key === 'Escape') aoFechar() }
     document.addEventListener('keydown', aoTeclado)
@@ -143,14 +213,14 @@ function EcraCheio({ url, nome, aoFechar }: { url: string; nome: string; aoFecha
       <QrNebula
         url={url}
         tamanho={1400}
-        aoDesenhar={guardar}
+        fundo="#ffffff"
         className="w-[min(78vw,60vh,520px)] h-[min(78vw,60vh,520px)] block"
       />
 
       <p className="mt-8 font-serif text-2xl sm:text-3xl text-eerie text-center">{nome}</p>
 
       <button
-        onClick={() => canvas.current && guardarQr(canvas.current, `codigo-${nome}`)}
+        onClick={() => guardarQr(url, 'preto', nome)}
         className="mt-7 inline-flex items-center gap-2 px-5 py-3 rounded-full border border-eerie/15 text-[11px] uppercase tracking-[0.12em] text-eerie/60 hover:border-eerie/40 hover:text-eerie transition-all min-h-[44px]"
       >
         <Download size={13} /> Guardar para imprimir

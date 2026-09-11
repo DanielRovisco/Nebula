@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Check, Copy, Download, EyeOff, Trash2 } from 'lucide-react'
 import QrNebula from '../../components/QrNebula'
-import { guardarQr } from '../../lib/qr/guardar'
+import { guardarQr } from '../../lib/qr/exportar'
 import {
   type Evento, type MediaAdmin,
   apagarEvento, apagarMedia, assinar, guardarEvento, lerEvento, listarMedia, mudarEstado,
@@ -256,16 +256,13 @@ function Accao({ aoClicar, icone, children }: { aoClicar: () => void; icone: Rea
  * para ficar desactualizada no dia em que o slug mudasse.
  */
 function Codigo({ url, nome }: { url: string; nome: string }) {
-  const canvas = useRef<HTMLCanvasElement | null>(null)
-  const guardar = useCallback((c: HTMLCanvasElement) => { canvas.current = c }, [])
-
   return (
     <div className="w-fit">
       <div className="rounded-xl bg-white p-2">
-        <QrNebula url={url} tamanho={800} aoDesenhar={guardar} className="w-40 h-40 sm:w-48 sm:h-48 block" />
+        <QrNebula url={url} tamanho={800} fundo="#ffffff" className="w-40 h-40 sm:w-48 sm:h-48 block" />
       </div>
       <button
-        onClick={() => canvas.current && guardarQr(canvas.current, `codigo-${nome}`)}
+        onClick={() => guardarQr(url, 'preto', nome)}
         className="mt-3 flex items-center gap-1.5 text-xs text-titanium/45 hover:text-titanium/80 transition-colors"
       >
         <Download size={12} /> Guardar o código

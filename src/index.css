@@ -362,3 +362,93 @@ body::after {
   }
 }
 
+/* ── Cartazes A4 ─────────────────────────────────────────────────────────── */
+
+/*
+  A folha é medida em milímetros e não em pixels.
+
+  É isso que faz sair do papel do tamanho que aparece no ecrã, sem depender da
+  resolução de quem imprime. No ecrã encolhe-se com `scale`, e encolher no fim
+  em vez de desenhar mais pequeno garante que o que a impressora recebe é
+  exactamente o que se viu.
+*/
+.folha-a4 {
+  width: 210mm;
+  height: 297mm;
+  overflow: hidden;
+  /* Os cartazes têm fundos próprios, e um fundo que o browser decide não
+     imprimir deixa de ser um cartaz. */
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+/* O palco: a folha inteira, encolhida para caber na largura disponível. */
+.folha-palco {
+  display: flex;
+  justify-content: center;
+}
+.folha-impressao {
+  transform-origin: top center;
+  transform: scale(min(1, calc((100vw - 3rem) / 210mm)));
+  height: calc(297mm * min(1, (100vw - 3rem) / 210mm));
+}
+
+/* As miniaturas da grelha de escolha. */
+.folha-miniatura {
+  width: 100%;
+  aspect-ratio: 210 / 297;
+  overflow: hidden;
+  position: relative;
+}
+.folha-miniatura > * {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  /* A largura do contentor a dividir pela largura da folha. Com `cqw` o valor
+     acompanha a coluna da grelha, que muda com o tamanho do ecrã. */
+  transform: scale(calc(100cqw / 210mm));
+}
+.folha-miniatura {
+  container-type: inline-size;
+}
+
+@media print {
+  /*
+    Imprime-se a folha e mais nada.
+
+    A primeira versão escondia tudo com `visibility: hidden`, e isso esconde sem
+    libertar o espaço: o A4 saía certo mas com duas páginas em branco atrás,
+    feitas do resto da página que continuava a ocupar altura. Só apanhado a
+    gerar o PDF e a contar as páginas — no ecrã não se via nada.
+
+    Com `display: none` o que fica de fora deixa de existir, e o documento passa
+    a ter exactamente a altura de uma folha.
+  */
+  body > *:not(.janela-cartazes) {
+    display: none !important;
+  }
+  .janela-cartazes {
+    position: static !important;
+    overflow: visible !important;
+    background: transparent !important;
+  }
+  .corpo-cartaz {
+    padding: 0 !important;
+  }
+  .sem-impressao {
+    display: none !important;
+  }
+  .folha-palco {
+    display: block !important;
+  }
+  .folha-impressao {
+    transform: none !important;
+    height: auto !important;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 0;
+}

@@ -275,7 +275,13 @@ export default function PainelNoivos() {
 
         <Reveal delay={0.1}>
           <section className="mt-16 sm:mt-24 p-6 sm:p-8 rounded-2xl border border-white/[0.08] bg-white/[0.02]">
-            <Codigo url={absoluteUrl(`e/${evento.slug}`)} nome={evento.coupleName} />
+            <Codigo
+              url={absoluteUrl(`e/${evento.slug}`)}
+              nome={evento.coupleName}
+              data={new Date(evento.eventDate).toLocaleDateString('pt-PT', {
+                day: 'numeric', month: 'long', year: 'numeric',
+              })}
+            />
           </section>
         </Reveal>
 

@@ -29,6 +29,15 @@ export interface OpcoesQr {
   simboloEscala?: number
   /** Módulos de margem à volta. A norma pede 4. */
   margem?: number
+  /**
+   * Pixels por ponto. Por omissão segue o ecrã, que é o que faz o código sair
+   * nítido num telemóvel retina.
+   *
+   * Fixa-se em 1 para exportar: um ficheiro guardado não pode sair com 2000 ou
+   * 6000 pixels conforme o ecrã de quem carregou no botão. Quem imprime precisa
+   * de saber o que tem.
+   */
+  densidade?: number
 }
 
 /**
@@ -40,7 +49,7 @@ export interface OpcoesQr {
  */
 export function desenharQr(canvas: HTMLCanvasElement, texto: string, o: OpcoesQr): number {
   const {
-    tamanho, frente, fundo, simbolo = null, simboloEscala = 0.22, margem = 4,
+    tamanho, frente, fundo, simbolo = null, simboloEscala = 0.22, margem = 4, densidade,
   } = o
 
   /*
@@ -53,7 +62,8 @@ export function desenharQr(canvas: HTMLCanvasElement, texto: string, o: OpcoesQr
   const dados = qr.modules.data
 
   const ctx = canvas.getContext('2d')!
-  const dpr = typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio || 1, 3)
+  const dpr = densidade
+    ?? (typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio || 1, 3))
   canvas.width = Math.round(tamanho * dpr)
   canvas.height = Math.round(tamanho * dpr)
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -117,9 +127,9 @@ export function desenharQr(canvas: HTMLCanvasElement, texto: string, o: OpcoesQr
       zona danificada limpa. Com ela, a correcção de erros trata daquilo como
       um pedaço em falta, que é o que sabe reparar.
     */
-    ctx.fillStyle = fundo ?? '#ffffff'
-    caixaRedonda(ctx, x - respiro, x - respiro, lado + respiro * 2, lado + respiro * 2, lado * 0.22)
-    ctx.fill()
+    abrirBuraco(ctx, fundo, () =>
+      caixaRedonda(ctx, x - respiro, x - respiro, lado + respiro * 2, lado + respiro * 2, lado * 0.22),
+    )
 
     /*
       O símbolo entra na caixa com a proporção que tem, e não esticado até ela.
@@ -150,6 +160,33 @@ function medida(fonte: CanvasImageSource, qual: 'width' | 'height'): number {
       : ('naturalHeight' in fonte ? 'naturalHeight' : 'height')
   ]
   return typeof v === 'number' ? v : 0
+}
+
+/**
+ * Abre um buraco na forma já desenhada, ou pinta-o com a cor do fundo.
+ *
+ * Num código com fundo, "buraco" é só tinta da cor do papel. Sem fundo, tem de
+ * ser buraco mesmo: pintar de branco num PNG transparente dava um quadrado
+ * branco a aparecer em cima de qualquer fundo onde o código fosse pousado, que
+ * é exactamente o que a transparência existe para evitar.
+ */
+function abrirBuraco(
+  ctx: CanvasRenderingContext2D,
+  fundo: string | null,
+  desenhar: () => void,
+) {
+  if (fundo) {
+    ctx.fillStyle = fundo
+    desenhar()
+    ctx.fill()
+    return
+  }
+  const antes = ctx.globalCompositeOperation
+  ctx.globalCompositeOperation = 'destination-out'
+  ctx.fillStyle = '#000'
+  desenhar()
+  ctx.fill()
+  ctx.globalCompositeOperation = antes
 }
 
 function caixaRedonda(
@@ -183,12 +220,10 @@ function desenharOlho(
   caixaRedonda(ctx, x, y, lado, lado, passo * 2)
   ctx.fill()
 
-  // O buraco é pintado com a cor do fundo em vez de recortado: um recorte
-  // deixaria ver o que estivesse por trás do canvas, e o código impresso passa
-  // a ter um anel transparente no meio de uma folha branca.
-  ctx.fillStyle = fundo ?? '#ffffff'
-  caixaRedonda(ctx, x + passo, y + passo, passo * 5, passo * 5, passo * 1.4)
-  ctx.fill()
+  // Com fundo, o buraco é tinta da cor do papel. Sem fundo, é buraco mesmo.
+  abrirBuraco(ctx, fundo, () =>
+    caixaRedonda(ctx, x + passo, y + passo, passo * 5, passo * 5, passo * 1.4),
+  )
 
   ctx.fillStyle = frente
   caixaRedonda(ctx, x + passo * 2, y + passo * 2, passo * 3, passo * 3, passo * 0.9)
