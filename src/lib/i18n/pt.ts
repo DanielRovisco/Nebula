@@ -162,6 +162,8 @@ export const pt = {
       */
       sessao1h: '1 hora, uma roupa',
       sessao2h: '2 horas, duas roupas',
+      sessao3h: '3 horas e três roupas, em vez de duas',
+      preparacao: 'Preparação antes do dia: roupas e referências',
       fotos10: '10 a 20 fotografias editadas',
       fotos20: '20 a 40 fotografias editadas',
       photoVideoLifestyle: 'Fotografia + Vídeo lifestyle',
@@ -172,7 +174,6 @@ export const pt = {
       essencia: 'Essência',
       origem: 'Origem',
       nebula: 'Nebula',
-      editorial: 'Editorial',
       foto: 'Foto',
       fotoVideo: 'Foto + Vídeo',
     },

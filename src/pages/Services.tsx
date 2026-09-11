@@ -84,9 +84,25 @@ const CATEGORIES = [
   {
     id: 'retratos',
     portfolio: 'retratos',
+    /*
+      Três degraus, com os mesmos nomes das outras categorias.
+
+      O que separa um retrato do seguinte é tempo, roupas e o que se leva para
+      casa. O vídeo vertical fica no topo de propósito: num retrato é isso que a
+      pessoa quer publicar, e um retrato que também se mexe é a única coisa aqui
+      que ninguém tem em duplicado no telemóvel.
+    */
     packs: [
-      { name: 'foto', items: ['photoSession', 'privateGallery'] },
-      { name: 'editorial', items: ['photoEditorial', 'privateGallery', 'sneakPeek'] },
+      { name: 'essencia', items: ['photoSession', 'sessao1h', 'fotos10', 'privateGallery'] },
+      {
+        name: 'origem',
+        items: ['photoEditorial', 'sessao2h', 'fotos20', 'privateGallery', 'sneakPeek'],
+      },
+      {
+        name: 'nebula',
+        herda: 'origem',
+        items: ['sessao3h', 'preparacao', 'fotosTodas', 'verticalReels', 'entregaRapida'],
+      },
     ],
   },
   {
