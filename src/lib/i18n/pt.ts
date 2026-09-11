@@ -145,13 +145,15 @@ export const pt = {
       fotos200: '200 a 300 fotografias editadas',
       fotos300: '300 a 500 fotografias editadas',
       /*
-        No pack de topo, as duas linhas que substituem as do pack anterior
-        dizem-no à frente. Sem isso, um cartão que promete herdar tudo o que o
-        outro tem e a seguir fala de dia completo está a dizer duas coisas
-        diferentes sobre a mesma hora, e quem lê fica sem saber qual vale.
+        Estas linhas substituem as do pack de baixo em vez de se somarem a elas.
+
+        Já disseram isso à frente ("em vez de 8 horas"), e ficava pesado: cada
+        cartão passava a carregar a comparação em vez do que oferece. Sem a
+        muleta, conta-se com quem lê perceber que o número maior manda, que é o
+        que qualquer pessoa percebe ao comparar dois cartões lado a lado.
       */
-      diaCompleto: 'Cobertura do dia completo, em vez de 8 horas',
-      fotosTodas: 'Todas as fotografias selecionadas, sem número fixo',
+      diaCompleto: 'Cobertura do dia completo',
+      fotosTodas: 'Todas as fotografias selecionadas',
       verticalReels: 'Vídeo vertical até 1 minuto para redes',
       entregaRapida: 'Entrega em prazo reduzido',
       privateGallery: 'Galeria online privada',
@@ -169,13 +171,8 @@ export const pt = {
       */
       sessao1h: '1 hora, uma roupa',
       sessao2h: '2 horas, duas roupas',
-      /*
-        O "em vez de" existe porque o cartão de cima herda o de baixo. Sem ele,
-        um pack que promete tudo o que a Essência tem e a seguir fala de três
-        roupas estaria a dizer duas coisas sobre a mesma sessão.
-      */
-      sessao3h: 'Até 3 horas e três roupas, em vez de uma',
-      fotos20Mais: '20 a 50 fotografias editadas, em vez de 10 a 20',
+      sessao3h: 'Até 3 horas e três roupas',
+      fotos20Mais: '20 a 50 fotografias editadas',
       localEscolha: 'Exterior ou estúdio, à escolha',
       preparacao: 'Preparação antes do dia: roupas e referências',
       fotos10: '10 a 20 fotografias editadas',
