@@ -125,6 +125,8 @@ export const pt = {
     label: 'Serviços',
     title: 'Feito para o teu momento.',
     seeWork: 'Ver trabalhos desta categoria',
+    /* Usado no pack de topo: "Tudo o que o Origem tem, e ainda:" */
+    inheritsFrom: (pack: string) => `Tudo o que o ${pack} tem, e ainda`,
     addonLabel: 'À medida',
     addonTitle: 'Monta o teu pack',
     addonText:
@@ -133,9 +135,11 @@ export const pt = {
       photoEditorial: 'Fotografia editorial',
       privateGallery: 'Galeria online privada',
       sneakPeek: 'Sneak Peek em 24h',
-      photoVideo4k: 'Fotografia + Vídeo 4K',
+      photoVideo4k: 'Fotografia + Filme 4K',
       preWedding: 'Pré-wedding incluído',
-      drone: 'Cobertura com Drone',
+      drone: 'Filmagens de drone',
+      team: 'Equipa de três: dois fotógrafos e um videógrafo',
+      guestGallery: 'Galeria de convidados online',
       photoSession: 'Sessão de fotografia',
       photoVideoLifestyle: 'Fotografia + Vídeo lifestyle',
       coupleSession: 'Sessão a dois',

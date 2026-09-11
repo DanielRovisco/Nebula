@@ -131,6 +131,7 @@ export const en: Dict = {
     label: 'Services',
     title: 'Made for your moment.',
     seeWork: 'See work in this category',
+    inheritsFrom: (pack: string) => `Everything in ${pack}, plus`,
     addonLabel: 'Made to fit',
     addonTitle: 'Build your own package',
     addonText:
@@ -141,7 +142,9 @@ export const en: Dict = {
       sneakPeek: 'Sneak peek within 24h',
       photoVideo4k: 'Photography + 4K film',
       preWedding: 'Pre-wedding session included',
-      drone: 'Drone coverage',
+      drone: 'Drone filming',
+      team: 'A team of three: two photographers and one videographer',
+      guestGallery: 'Online guest gallery',
       photoSession: 'Photography session',
       photoVideoLifestyle: 'Photography + lifestyle film',
       coupleSession: 'Session for two',

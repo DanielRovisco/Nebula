@@ -25,8 +25,20 @@ const CATEGORIES = [
     portfolio: null,
     packs: [
       { name: 'essencia', items: ['photoEditorial', 'privateGallery', 'sneakPeek'] },
-      { name: 'origem', items: ['photoVideo4k', 'privateGallery', 'sneakPeek', 'preWedding'] },
-      { name: 'nebula', items: ['photoVideo4k', 'drone', 'preWedding', 'privateGallery', 'sneakPeek'] },
+      {
+        name: 'origem',
+        items: ['photoVideo4k', 'team', 'preWedding', 'guestGallery', 'privateGallery', 'sneakPeek'],
+      },
+      /*
+        O pack de topo mostra só o que acrescenta, e não a lista toda outra vez.
+
+        Repetir as seis linhas do anterior mais uma nova obriga quem lê a
+        comparar dois blocos quase iguais para descobrir onde está a diferença,
+        e a maior parte das pessoas não o faz: desiste e fica pelo do meio.
+        Dizer "tudo o que o Origem tem, e ainda" põe a diferença sozinha no
+        ecrã, que é o único sítio onde ela pode ser vista.
+      */
+      { name: 'nebula', herda: 'origem', items: ['drone'] },
     ],
   },
   {
@@ -437,6 +449,11 @@ export default function Services() {
                       className="border border-white/10 rounded-xl p-4 sm:p-5 flex flex-col hover:border-white/20 transition-colors"
                     >
                       <h3 className="text-base mb-3">{t.services.packs[pack.name]}</h3>
+                      {'herda' in pack && (
+                        <p className="text-sm text-titanium/45 mb-2.5 leading-snug">
+                          {t.services.inheritsFrom(t.services.packs[pack.herda])}
+                        </p>
+                      )}
                       <ul className="space-y-2 flex-1">
                         {pack.items.map((item) => (
                           <li key={item} className="flex items-start gap-2.5 text-sm text-titanium/55">
