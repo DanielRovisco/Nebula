@@ -32,7 +32,7 @@ export const MODELOS: Modelo[] = [
     id: 'editorial',
     nome: 'Editorial',
     titulo: 'Viste alguma coisa bonita? Deixa-a aqui.',
-    mensagem: 'Aponta a câmara ao código. Sem aplicações, sem contas, sem demoras.',
+    mensagem: 'Aponta a câmara e escolhe as tuas. Não é preciso mais nada.',
   },
   {
     id: 'noite',
