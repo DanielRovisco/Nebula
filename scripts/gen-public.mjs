@@ -104,9 +104,19 @@ Allow: /
 # vem depois dela, e uma página que só pede password não ganha nada em aparecer
 # numa pesquisa. Por isso também não vai no sitemap — pedir que indexem e
 # proibir a indexação da mesma página é uma contradição que o Google reporta.
+# As páginas dos casamentos também não. A dos convidados é semi-pública, porque
+# o endereço está impresso nas mesas, mas semi-pública não é o mesmo que
+# pesquisável: ninguém deve encontrar as fotografias de um casamento alheio a
+# escrever o nome dos noivos no Google. A dos noivos é privada e leva a chave.
+#
+# Estas duas são desenhadas pelo browser e não vêm prontas do servidor, por isso
+# o noindex que elas têm só existe depois de o JavaScript correr. Esta linha
+# vale antes disso, e vale para quem não corre JavaScript nenhum.
 Disallow: ${base}admin
 Disallow: ${base}galeria
 Disallow: ${base}en/gallery
+Disallow: ${base}e/
+Disallow: ${base}casamento/
 
 Sitemap: ${origin}${base}sitemap.xml
 `
