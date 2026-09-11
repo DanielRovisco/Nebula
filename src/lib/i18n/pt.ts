@@ -155,10 +155,13 @@ export const pt = {
       team: 'Equipa de três: dois fotógrafos e um videógrafo',
       guestGallery: 'Galeria de convidados online',
       photoSession: 'Sessão de fotografia',
-      // Sem repetir a palavra: a linha de cima já diz que é uma sessão.
-      sessao1h: '1 hora, num local',
-      sessao2h: 'Sessão de 2 horas',
-      doisAmbientes: 'Dois ambientes ou duas mudanças de roupa',
+      /*
+        Duração e roupas na mesma linha, e as duas linhas com a mesma forma.
+        Postas em paralelo, a diferença entre os packs lê-se sem ser preciso
+        comparar palavra a palavra: um e um, contra dois e dois.
+      */
+      sessao1h: '1 hora, uma roupa',
+      sessao2h: '2 horas, duas roupas',
       fotos10: '10 a 20 fotografias editadas',
       fotos20: '20 a 40 fotografias editadas',
       photoVideoLifestyle: 'Fotografia + Vídeo lifestyle',

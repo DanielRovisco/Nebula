@@ -72,7 +72,7 @@ const CATEGORIES = [
       { name: 'essencia', items: ['photoSession', 'sessao1h', 'fotos10', 'privateGallery'] },
       {
         name: 'origem',
-        items: ['photoVideoLifestyle', 'sessao2h', 'doisAmbientes', 'fotos20', 'privateGallery', 'sneakPeek'],
+        items: ['photoVideoLifestyle', 'sessao2h', 'fotos20', 'privateGallery', 'sneakPeek'],
       },
       {
         name: 'nebula',
