@@ -133,6 +133,20 @@ export const pt = {
       'Nenhum pack tem de ficar como está. Junta vídeo 4K, drone, mais horas ou uma segunda sessão. Diz-nos o que imaginas e fazemos as contas.',
     items: {
       photoEditorial: 'Fotografia editorial',
+      horas6: 'Cobertura de 6 horas',
+      horas8: 'Cobertura de 8 horas',
+      fotos200: '200 a 300 fotografias editadas',
+      fotos300: '300 a 500 fotografias editadas',
+      /*
+        No pack de topo, as duas linhas que substituem as do pack anterior
+        dizem-no à frente. Sem isso, um cartão que promete herdar tudo o que o
+        outro tem e a seguir fala de dia completo está a dizer duas coisas
+        diferentes sobre a mesma hora, e quem lê fica sem saber qual vale.
+      */
+      diaCompleto: 'Cobertura do dia completo, em vez de 8 horas',
+      fotosTodas: 'Todas as fotografias selecionadas, sem número fixo',
+      verticalReels: 'Vídeo vertical até 1 minuto para redes',
+      entregaRapida: 'Entrega em prazo reduzido',
       privateGallery: 'Galeria online privada',
       sneakPeek: 'Sneak Peek em 24h',
       photoVideo4k: 'Fotografia + Filme 4K',

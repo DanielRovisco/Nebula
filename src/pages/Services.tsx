@@ -24,10 +24,21 @@ const CATEGORIES = [
     // Sem correspondência no portfólio: ainda não há fotografias de casamento.
     portfolio: null,
     packs: [
-      { name: 'essencia', items: ['photoEditorial', 'privateGallery', 'sneakPeek'] },
+      /*
+        A ordem das linhas não é decorativa: primeiro o que se recebe (o
+        trabalho, as horas, quantas fotografias), depois os extras. É por aí que
+        os olhos passam, e é aí que se decide se vale o preço.
+      */
+      {
+        name: 'essencia',
+        items: ['photoEditorial', 'horas6', 'fotos200', 'privateGallery', 'sneakPeek'],
+      },
       {
         name: 'origem',
-        items: ['photoVideo4k', 'team', 'preWedding', 'guestGallery', 'privateGallery', 'sneakPeek'],
+        items: [
+          'photoVideo4k', 'horas8', 'fotos300', 'team',
+          'preWedding', 'guestGallery', 'privateGallery', 'sneakPeek',
+        ],
       },
       /*
         O pack de topo mostra só o que acrescenta, e não a lista toda outra vez.
@@ -38,7 +49,11 @@ const CATEGORIES = [
         Dizer "tudo o que o Origem tem, e ainda" põe a diferença sozinha no
         ecrã, que é o único sítio onde ela pode ser vista.
       */
-      { name: 'nebula', herda: 'origem', items: ['drone'] },
+      {
+        name: 'nebula',
+        herda: 'origem',
+        items: ['diaCompleto', 'fotosTodas', 'drone', 'verticalReels', 'entregaRapida'],
+      },
     ],
   },
   {
