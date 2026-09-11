@@ -59,10 +59,26 @@ const CATEGORIES = [
   {
     id: 'maternidade',
     portfolio: 'maternidade',
+    /*
+      Os mesmos três nomes dos casamentos, de propósito.
+
+      Antes eram Essência, Cinema & Foto e Íntimo, e esses dois últimos liam-se
+      como sabores ao lado um do outro e não como degraus. Quando não se percebe
+      qual é o melhor, escolhe-se o mais barato. Com os nomes repetidos em todas
+      as categorias, quem já viu os packs de casamento reconhece a escada sem a
+      ter de ler outra vez.
+    */
     packs: [
-      { name: 'essencia', items: ['photoSession', 'privateGallery'] },
-      { name: 'cinemaFoto', items: ['photoVideoLifestyle', 'privateGallery', 'sneakPeek'] },
-      { name: 'intimo', items: ['coupleSession', 'photoEditorial', 'privateGallery'] },
+      { name: 'essencia', items: ['photoSession', 'sessao1h', 'fotos10', 'privateGallery'] },
+      {
+        name: 'origem',
+        items: ['photoVideoLifestyle', 'sessao2h', 'doisAmbientes', 'fotos20', 'privateGallery', 'sneakPeek'],
+      },
+      {
+        name: 'nebula',
+        herda: 'origem',
+        items: ['fotosTodas', 'verticalReels', 'entregaRapida'],
+      },
     ],
   },
   {
