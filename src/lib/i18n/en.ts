@@ -145,18 +145,16 @@ export const en: Dict = {
       limite: 'Photos and video, up to 500 MB each',
       nome: 'Your name, if you like',
       naGaleria: 'In the gallery',
-      nota: 'Real screens, with a made-up wedding.',
     },
     galerias: {
       label: 'The delivery',
       titulo: 'The photographs live somewhere that is only yours.',
-      texto: 'We do not send links that expire or folders shared with half the world. Every piece of work gets its own gallery, with its own address and password, where you download everything at once or pick photographs one by one, at a quality that holds up in print.',
+      texto: 'We do not send links that expire or folders shared with half the world. Every piece of work gets its own gallery, with its own address and password, where you download everything at once or pick photographs one by one, ready to print or to post.',
       pontos: [
         'An address and password that are only yours',
         'Download everything, or choose one by one',
         'No watermark, and no deadline to decide',
       ],
-      cta: 'See the gallery door',
     },
     convidados: {
       label: 'On the day itself',
@@ -177,22 +175,22 @@ export const en: Dict = {
         seoDescription:
           'Wedding photography and film in Lisbon, Sintra and Portalegre. A team of three, drone, guest gallery and first photographs within 24 hours.',
         intro:
-          'A wedding happens once and never happens again. There is no second attempt, no running the plan twice, no asking the bride to walk in once more. That is why we work as a team rather than alone, and why the first photographs reach you the next day.',
+          'A wedding happens once and never happens again. There is no second attempt, no running the plan twice, no asking the bride to walk in once more, and that is what makes it what it is. Which is exactly why there is a whole team on every one of those moments.',
         blocos: [
           {
-            titulo: 'How we work on the day',
+            titulo: 'On the day',
             texto:
-              'There are three of us: two photographers and one videographer. While one is with the bride getting ready, the other is with the groom, and nobody has to choose between two halves of the same morning. During the ceremony, two angles at once, with no one running down the aisle. We work quietly: the day belongs to you and your guests, not to us.',
+              'There are three of us: two photographers and one videographer. While one is with the bride getting ready, the other is with the groom, and nobody has to choose between two halves of the same morning. Several angles, for every feeling this day carries.',
           },
           {
-            titulo: 'Photography and film, made together',
+            titulo: 'Photography and film, together',
             texto:
-              'Photography and video are not two jobs forced into the same day. Whoever is filming has been with us from the start, knows what is coming next and never needs to stop the moment to shoot it again. Packages with film also include a vertical video of up to a minute, in the shape and format social media asks for.',
+              'With photographers and a videographer on the same team, we work in step so that nothing about the day goes unrecorded. Each of us with a job of our own, and all of us with the same one: making that day last.',
           },
           {
             titulo: 'After the wedding',
             texto:
-              'The next day you receive a first selection, to show the people who were there and the ones who could not come. The full set arrives in a private online gallery, with an address and password that are only yours, where you download everything at once or pick photographs one by one. Nothing is published anywhere without your yes.',
+              'The next day you receive a first selection, to show the people who were there and the ones who could not come. The full set arrives in a private online gallery, with an address and password that are only yours, where you download everything at once or pick photographs one by one.',
           },
         ],
       },
@@ -211,17 +209,12 @@ export const en: Dict = {
           {
             titulo: 'Studio or outdoors',
             texto:
-              'In the studio we control the light and the background, and the result is more editorial, cleaner, closer to a magazine. Outdoors you gain the place and the hour: late afternoon, the countryside, the beach. Neither is better; there is only what you want hanging on a wall ten years from now. You choose, and we help you choose.',
-          },
-          {
-            titulo: 'Who is in the photographs',
-            texto:
-              'The father is in them whenever he wants to be, and so are the children already here. No package offers less because of that, and we do not charge per person. What changes between packages is how long the session runs and how many outfits fit into it without rushing.',
+              'In the studio we control the light and the background, and the result is more editorial, cleaner, closer to a magazine. Outdoors you gain the place and the hour: late afternoon, the countryside, the beach. Neither is better; there is only what you want hanging on a wall ten years from now.',
           },
           {
             titulo: 'What you get',
             texto:
-              'The chosen photographs, edited, in a private online gallery where you download whatever you like at a quality that holds up in print. Packages with video also include a short film, the kind you keep and watch again, and a vertical cut to share.',
+              'The chosen photographs, edited, in a private online gallery where you download whatever you like, ready to print or to post. Packages with video also include a short film, the kind you keep and watch again, and a vertical cut to share.',
           },
         ],
       },
@@ -240,17 +233,12 @@ export const en: Dict = {
           {
             titulo: 'You do not need to know how to pose',
             texto:
-              'Nobody knows how to pose, and those who say they do usually come out worse. The direction is ours: we say where to put your weight, where to look, what to do with your arms. In packages with preparation we talk before the day about clothes and references, so you arrive with the decisions already made rather than choosing at the door.',
-          },
-          {
-            titulo: 'Studio or outdoors',
-            texto:
-              'In the studio the light is ours and the background disappears: the person is left, and nothing else. Outdoors the place, the hour and chance all come in, and the portrait starts telling you where it was made too. Both can happen in the same session, if there is time for it.',
+              'If you find it difficult, do not worry, we help you with the posing: we say where to put your weight, where to look, what to do with your arms. In packages with preparation we talk before the day about clothes and references, so you arrive with everything already decided.',
           },
           {
             titulo: 'What you get',
             texto:
-              'The edited photographs in a private online gallery, ready to print and to use anywhere. We do not stamp our name on them and we do not ask for credit to use them. They are yours.',
+              'The edited photographs in a private online gallery, ready to print or to post, and to use anywhere.',
           },
         ],
       },
@@ -259,12 +247,12 @@ export const en: Dict = {
         seoDescription:
           'Photography and video coverage for parties, birthdays and company events, in Lisbon, Sintra and Portalegre.',
         intro:
-          'Birthdays, christenings, company dinners, launches. An event has no script the way a wedding does, so it has no fixed package either: we agree on what is needed, and charge what was agreed.',
+          'Birthdays, christenings, company dinners, launches. An event has no script the way a wedding does, so it has no fixed package either: tell us what you need and we take it from there.',
         blocos: [
           {
             titulo: 'Why there are no packages here',
             texto:
-              'Because we have not yet done enough events to promise numbers honestly. A package is a promise with hours and quantities inside it, and writing that without knowing would mean finding out alongside the client, on the day itself. We would rather agree it with you and tell you what we can do.',
+              'Every event is its own thing, and we would rather build the right service for each kind of event. A fixed package would mean promising the same hours and the same quantities to a company dinner and to a birthday party, which do not need the same. We would rather listen first and propose afterwards.',
           },
           {
             titulo: 'What we agree on',
@@ -299,8 +287,9 @@ export const en: Dict = {
       photoSession: 'Photography session',
       sessao1h: 'One hour, one outfit',
       sessao2h: 'Two hours, two outfits',
-      sessao3h: 'Up to three hours and three outfits',
-      fotos20Mais: '20 to 50 edited photographs',
+      sessao2h3roupas: 'Two hours, three outfits',
+      fotos20a30: '20 to 30 edited photographs',
+      fotos30a60: '30 to 60 edited photographs',
       localEscolha: 'Outdoors or in studio, your choice',
       preparacao: 'Planning beforehand: outfits and references',
       fotos10: '10 to 20 edited photographs',
@@ -333,6 +322,11 @@ export const en: Dict = {
   },
 
   contact: {
+    prefill: (servico: string, pack: string | null) =>
+      pack
+        ? `Hi! We would like a proposal for the ${pack} package, in ${servico}.\n\n`
+        : `Hi! We would like a proposal for ${servico}.\n\n`,
+
     seoTitle: 'Contact | NEBULA Photography & Film',
     seoDescription:
       'Talk to us by email or Instagram about your wedding, maternity session, portraits or event. Lisbon and the Alentejo. We reply within 24 hours.',

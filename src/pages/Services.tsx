@@ -124,15 +124,13 @@ const CATEGORIES = [
       que ninguém tem em duplicado no telemóvel.
     */
     /*
-      Dois degraus e não três.
+      Três degraus, com os mesmos nomes das outras categorias.
 
-      Um retrato é um serviço simples: uma pessoa, uma sessão, uma entrega. Três
-      níveis obrigavam a inventar uma diferença a meio que não existe, e um
-      degrau inventado nota-se — faz o cliente desconfiar dos outros dois.
-
-      O de cima chama-se Nebula e não Origem de propósito: em todas as
-      categorias, Nebula quer dizer o mais completo que há. Retratos apenas não
-      tem o degrau do meio.
+      Era um serviço de dois, e o do meio faltava mesmo: entre uma hora com uma
+      roupa e o pack completo havia um salto que obrigava quem só queria um
+      bocadinho mais a pagar tudo. O Origem é esse bocadinho mais, e o que
+      separa os três é o tempo, as roupas, quantas fotografias saem e a
+      rapidez da entrega.
     */
     packs: [
       {
@@ -140,12 +138,14 @@ const CATEGORIES = [
         items: ['photoSession', 'sessao1h', 'localEscolha', 'fotos10', 'privateGallery'],
       },
       {
-        name: 'nebula',
+        name: 'origem',
         herda: 'essencia',
-        items: [
-          'photoEditorial', 'sessao3h', 'fotos20Mais', 'preparacao',
-          'sneakPeek', 'verticalReels', 'entregaRapida',
-        ],
+        items: ['sessao2h3roupas', 'fotos20a30', 'preparacao'],
+      },
+      {
+        name: 'nebula',
+        herda: 'origem',
+        items: ['fotos30a60', 'verticalReels', 'entregaRapida'],
       },
     ],
   },
@@ -279,6 +279,18 @@ export default function Services() {
   if (servico && !doUrl) return <Navigate to={link('services')} replace />
 
   const cat = CATEGORIES.find((c) => c.id === aberto)!
+
+  /*
+    O pedido leva o serviço, e o pack quando vier de um cartão.
+
+    Carregar em "pedir proposta" dentro do Origem e aterrar numa folha em
+    branco obriga a pessoa a escrever outra vez o que acabou de escolher, e
+    metade delas não escreve: fica "quero uma proposta" e ninguém sabe de quê.
+    Com isto, o formulário abre com o serviço escolhido e a mensagem começada
+    (ver pages/Contact).
+  */
+  const pedido = (pack?: string) =>
+    `${link('contact')}?servico=${aberto}${pack ? `&pack=${pack}` : ''}`
   const pagina = t.services.paginas[aberto]
   const capa = capas[aberto]
   const local = CAPAS_LOCAIS[aberto]
@@ -517,7 +529,7 @@ export default function Services() {
 
               <div className="mt-9 flex flex-wrap items-center gap-4">
                 <Link
-                  to={link('contact')}
+                  to={pedido()}
                   className="group inline-flex items-center gap-3 bg-titanium text-eerie px-8 py-4 rounded-full text-[11px] uppercase tracking-[0.2em] font-semibold hover:gap-5 transition-all active:scale-95"
                 >
                   {t.common.requestProposal}
@@ -593,12 +605,6 @@ export default function Services() {
                     <Ponto key={p}>{p}</Ponto>
                   ))}
                 </ul>
-                <Link
-                  to={link('gallery')}
-                  className="mt-8 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all min-h-[44px]"
-                >
-                  {t.services.galerias.cta} <ArrowUpRight size={13} />
-                </Link>
               </Reveal>
             </div>
           </div>
@@ -636,17 +642,11 @@ export default function Services() {
                     ))}
                   </ul>
                   <Link
-                    to={link('contact')}
+                    to={pedido()}
                     className="mt-8 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all min-h-[44px]"
                   >
                     {t.services.convidados.cta} <ArrowUpRight size={13} />
                   </Link>
-                  {/*
-                    A nota de que o casamento é inventado. Pequena, mas tem de
-                    lá estar: sem ela, aquilo parece o casamento de clientes
-                    nossos posto numa página de vendas.
-                  */}
-                  <p className="mt-6 text-[11px] text-titanium/30">{t.services.mockup.nota}</p>
                 </Reveal>
               </div>
             </div>
@@ -682,7 +682,7 @@ export default function Services() {
                     ))}
                   </ul>
                   <Link
-                    to={link('contact')}
+                    to={pedido(pack.name)}
                     className="mt-6 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all w-fit min-h-[44px]"
                   >
                     {t.common.requestProposal} <ArrowRight size={12} />
@@ -703,7 +703,7 @@ export default function Services() {
                 {t.services.addonText}
               </p>
               <Link
-                to={link('contact')}
+                to={pedido()}
                 className="inline-flex items-center gap-3 bg-titanium text-eerie px-9 py-5 rounded-full text-[11px] uppercase tracking-[0.2em] font-semibold group hover:gap-5 transition-all active:scale-95"
               >
                 {t.common.requestQuote}

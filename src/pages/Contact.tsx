@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Mail, MapPin } from 'lucide-react'
 import Reveal from '../lib/Reveal'
 import Seo from '../lib/Seo'
 import InstagramIcon from '../lib/InstagramIcon'
 import { CONTACT } from '../lib/site'
 import { useLink, useT } from '../lib/i18n'
+import { SERVICOS, type ServicoId } from '../lib/i18n/routes'
 import Breadcrumbs from '../components/Breadcrumbs'
 import { breadcrumbJsonLd } from '../lib/breadcrumbJsonLd'
 import { track } from '../lib/track'
@@ -18,7 +19,7 @@ const ENDPOINT = import.meta.env.VITE_CONTACT_ENDPOINT as string | undefined
 
 // Os valores do <select> seguem a língua do visitante: é o que vai no email,
 // e um pedido em inglês a dizer "Casamentos" lê-se mal dos dois lados.
-const SERVICE_KEYS = ['casamentos', 'maternidade', 'eventos'] as const
+const SERVICE_KEYS = ['casamentos', 'maternidade', 'retratos', 'eventos'] as const
 
 type Status = 'idle' | 'sending' | 'error'
 
@@ -61,7 +62,36 @@ export default function Contact() {
   // Lido uma única vez, na montagem: se relesse a cada render, o que a pessoa
   // está a escrever agora seria substituído pelo que estava guardado.
   const [rascunho] = useState(lerRascunho)
-  const [form, setForm] = useState<Campos>(rascunho ?? VAZIO)
+
+  /*
+    Quem chega de um pack traz o pedido escrito no endereço.
+
+    A página de serviços manda para cá com `?servico=casamentos&pack=origem`, e
+    é a única coisa que falta para o pedido não começar numa folha em branco:
+    o serviço fica escolhido na lista e a mensagem já diz qual foi o pack. Os
+    valores no endereço são os internos e não os traduzidos, senão um link
+    partilhado entre as duas línguas deixava de casar com coisa nenhuma.
+
+    A mensagem só é escrita se não houver nada escrito: quem voltou a esta
+    página com um rascunho a meio não pode ver o seu texto substituído por um
+    nosso por ter carregado noutro sítio.
+  */
+  const [busca] = useSearchParams()
+  const [form, setForm] = useState<Campos>(() => {
+    const base = rascunho ?? VAZIO
+    const id = busca.get('servico')
+    if (!id || !(id in SERVICOS)) return base
+    const servico = t.home.services[id as ServicoId].title
+    const pack = busca.get('pack')
+    const nome = pack && pack in t.services.packs
+      ? t.services.packs[pack as keyof typeof t.services.packs]
+      : null
+    return {
+      ...base,
+      service: servico,
+      message: base.message.trim() ? base.message : t.contact.prefill(servico, nome),
+    }
+  })
   const [tocado, setTocado] = useState<Partial<Record<keyof Campos, boolean>>>({})
 
   // Armadilha para robôs: um campo que ninguém vê e que só um preenchimento

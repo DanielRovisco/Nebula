@@ -164,18 +164,16 @@ export const pt = {
       limite: 'Fotografias e vídeos, até 500 MB cada',
       nome: 'O teu nome, se quiseres',
       naGaleria: 'Na galeria',
-      nota: 'Ecrãs verdadeiros, com um casamento de exemplo.',
     },
     galerias: {
       label: 'A entrega',
       titulo: 'As fotografias ficam num sítio só vosso.',
-      texto: 'Não mandamos links que expiram nem pastas partilhadas com meio mundo. Cada trabalho tem a sua galeria, com endereço e palavra-passe próprios, de onde descarregam tudo de uma vez ou escolhem uma a uma, na qualidade que serve para imprimir.',
+      texto: 'Não mandamos links que expiram nem pastas partilhadas com meio mundo. Cada trabalho tem a sua galeria, com endereço e palavra-passe próprios, de onde descarregam tudo de uma vez ou escolhem uma a uma, prontas a imprimir ou a postar.',
       pontos: [
         'Endereço e palavra-passe só vossos',
         'Descarregar tudo ou escolher uma a uma',
         'Sem marca de água e sem prazo para decidir',
       ],
-      cta: 'Ver a porta das galerias',
     },
     convidados: {
       label: 'No próprio dia',
@@ -196,22 +194,22 @@ export const pt = {
         seoDescription:
           'Fotografia e vídeo de casamento em Lisboa, Sintra e Portalegre. Equipa de três, drone, galeria de convidados e primeiras fotografias em 24 horas.',
         intro:
-          'Um casamento acontece uma vez e não volta a acontecer. Não há segunda tentativa, não há repetir o plano, não há pedir à noiva que volte a entrar. É por isso que trabalhamos em equipa e não sozinhos, e é por isso que entregamos as primeiras fotografias no dia seguinte.',
+          'Um casamento acontece uma vez e não volta a acontecer. Não há segunda tentativa, não há repetir o plano, não há pedir à noiva que volte a entrar, é isso que o torna especial. E por isso mesmo temos uma equipa dedicada a todos estes momentos.',
         blocos: [
           {
-            titulo: 'Como trabalhamos no dia',
+            titulo: 'No dia',
             texto:
-              'Somos três: dois fotógrafos e um videógrafo. Enquanto um está com a noiva a preparar-se, o outro está com o noivo, e ninguém tem de escolher entre os dois lados da mesma manhã. Durante a cerimónia, dois ângulos ao mesmo tempo, sem ninguém a correr pelo corredor. Trabalhamos de forma discreta: o dia é vosso e dos vossos convidados, não nosso.',
+              'Somos três: dois fotógrafos e um videógrafo. Enquanto um está com a noiva a preparar-se, o outro está com o noivo, e ninguém tem de escolher entre os dois lados da mesma manhã. Vários ângulos para todas as emoções deste grande dia.',
           },
           {
-            titulo: 'Fotografia e filme, feitos juntos',
+            titulo: 'Fotografia e Vídeo, juntos',
             texto:
-              'A fotografia e o vídeo não são dois trabalhos encaixados à força no mesmo dia. Quem filma está connosco desde o princípio, sabe o que vai acontecer a seguir e não precisa de mandar parar para gravar outra vez. Nos packs com filme entregamos também um vídeo vertical de até um minuto, do tamanho e do formato que as redes pedem.',
+              'Com uma equipa com fotógrafos e videógrafo, trabalhamos em sincronia para não faltarem registos deste dia. Cada um com uma função, mas com o mesmo objetivo: eternizar aquele dia.',
           },
           {
             titulo: 'Depois do casamento',
             texto:
-              'No dia seguinte recebem uma primeira seleção, para poderem mostrar a quem esteve lá e a quem não pôde ir. As fotografias completas chegam numa galeria online privada, com endereço e palavra-passe só vossos, de onde descarregam tudo de uma vez ou escolhem uma a uma. Não são publicadas em lado nenhum sem vocês dizerem que sim.',
+              'No dia seguinte recebem uma primeira seleção, para poderem mostrar a quem esteve lá e a quem não pôde ir. As fotografias completas chegam numa galeria online privada, com endereço e palavra-passe só vossos, de onde descarregam tudo de uma vez ou escolhem uma a uma.',
           },
         ],
       },
@@ -230,17 +228,12 @@ export const pt = {
           {
             titulo: 'Estúdio ou exterior',
             texto:
-              'Em estúdio controlamos a luz e o fundo, e o resultado é mais editorial, mais limpo, mais de revista. No exterior ganha-se o sítio e a hora: o fim de tarde, o campo, a praia. Não há melhor nem pior, há o que se quer pendurado na parede daqui a dez anos. Escolhem, e ajudamos a escolher.',
-          },
-          {
-            titulo: 'Quem entra na fotografia',
-            texto:
-              'O pai entra sempre que quiser, e os filhos que já cá estão também. Não há packs a menos por causa disso, e não cobramos por pessoa. O que muda entre um pack e outro é o tempo que a sessão tem e quantas roupas dá para vestir sem andar com pressa.',
+              'Em estúdio controlamos a luz e o fundo, e o resultado é mais editorial, mais limpo, mais de revista. No exterior ganha-se o sítio e a hora: o fim de tarde, o campo, a praia. Não há melhor nem pior, há o que se quer pendurado na parede daqui a dez anos.',
           },
           {
             titulo: 'O que recebem',
             texto:
-              'As fotografias escolhidas e tratadas, numa galeria online privada de onde descarregam o que quiserem, com a qualidade que serve para imprimir. Nos packs com vídeo entregamos também um filme curto, do género que se guarda e se volta a ver, e um vertical para partilhar.',
+              'As fotografias escolhidas e tratadas, numa galeria online privada de onde descarregam o que quiserem, prontas a imprimir ou a postar. Nos packs com vídeo entregamos também um filme curto, do género que se guarda e se volta a ver, e um vertical para partilhar.',
           },
         ],
       },
@@ -259,17 +252,12 @@ export const pt = {
           {
             titulo: 'Não é preciso saber posar',
             texto:
-              'Ninguém sabe posar, e quem diz que sabe costuma ficar pior. A direcção é nossa: dizemos onde pôr o peso, para onde olhar, o que fazer com os braços. Nos packs com preparação, falamos antes do dia sobre roupas e referências, para chegar à sessão com as decisões tomadas e não a escolher à porta.',
-          },
-          {
-            titulo: 'Estúdio ou exterior',
-            texto:
-              'Em estúdio a luz é nossa e o fundo desaparece: fica a pessoa e mais nada. No exterior entra o sítio, a hora e o acaso, e o retrato passa a contar também onde foi feito. Dá para fazer os dois na mesma sessão, se houver tempo para isso.',
+              'Se tiveres dificuldades não te preocupes, ajudamos-te com as poses: dizemos onde pôr o peso, para onde olhar, o que fazer com os braços. Nos packs com preparação, falamos antes do dia sobre roupas e referências, para chegar à sessão com tudo decidido.',
           },
           {
             titulo: 'O que recebem',
             texto:
-              'As fotografias tratadas numa galeria online privada, prontas para imprimir e para usar em qualquer lado. Não marcamos as fotografias com o nosso nome nem pedimos crédito para as usar. São vossas.',
+              'As fotografias tratadas numa galeria online privada, prontas a imprimir ou a postar, e para usar em qualquer lado.',
           },
         ],
       },
@@ -278,12 +266,12 @@ export const pt = {
         seoDescription:
           'Cobertura fotográfica e de vídeo para festas, aniversários e eventos de empresa, em Lisboa, Sintra e Portalegre.',
         intro:
-          'Festas de anos, baptizados, jantares de empresa, lançamentos. Um evento não tem um guião como um casamento, e por isso não tem um pack fixo: combina-se o que é preciso, e cobra-se o que for combinado.',
+          'Festas de anos, baptizados, jantares de empresa, lançamentos. Um evento não tem um guião como um casamento, e por isso não tem um pack fixo: diz-nos o que precisas e seguimos a partir daí.',
         blocos: [
           {
             titulo: 'Porque não há packs aqui',
             texto:
-              'Porque ainda não fizemos eventos que cheguem para prometer números com honestidade. Um pack é uma promessa com horas e quantidades lá dentro, e escrever isso sem saber seria descobri-lo ao mesmo tempo que o cliente, no próprio dia. Preferimos combinar convosco e dizer o que conseguimos fazer.',
+              'Cada evento é único, e gostamos de montar o serviço certo para cada tipo de evento. Um pack fixo obrigava a prometer as mesmas horas e as mesmas quantidades a um jantar de empresa e a uma festa de anos, que não precisam do mesmo. Preferimos ouvir primeiro e propor depois.',
           },
           {
             titulo: 'O que combinamos',
@@ -331,8 +319,9 @@ export const pt = {
       */
       sessao1h: '1 hora, uma roupa',
       sessao2h: '2 horas, duas roupas',
-      sessao3h: 'Até 3 horas e três roupas',
-      fotos20Mais: '20 a 50 fotografias editadas',
+      sessao2h3roupas: '2 horas, três roupas',
+      fotos20a30: '20 a 30 fotografias editadas',
+      fotos30a60: '30 a 60 fotografias editadas',
       localEscolha: 'Exterior ou estúdio, à escolha',
       preparacao: 'Preparação antes do dia: roupas e referências',
       fotos10: '10 a 20 fotografias editadas',
@@ -365,6 +354,18 @@ export const pt = {
   },
 
   contact: {
+    /*
+      A mensagem que já vem escrita a quem chega de um pack.
+
+      Curta de propósito: é um ponto de partida para a pessoa continuar, e não
+      um texto pronto que ela se limita a enviar. Um pedido que diz só o pack e
+      mais nada não nos ajuda a responder.
+    */
+    prefill: (servico: string, pack: string | null) =>
+      pack
+        ? `Olá! Gostávamos de pedir uma proposta para o pack ${pack}, em ${servico}.\n\n`
+        : `Olá! Gostávamos de pedir uma proposta para ${servico}.\n\n`,
+
     seoTitle: 'Contacto | NEBULA Fotografia & Vídeo',
     seoDescription:
       'Fale connosco por email ou Instagram sobre o vosso casamento, sessão de maternidade, retratos ou evento. Lisboa e Portalegre. Resposta em menos de 24 horas.',
