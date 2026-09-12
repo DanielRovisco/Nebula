@@ -3,6 +3,8 @@ import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-route
 import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight, ArrowUpRight, Check } from 'lucide-react'
 import Reveal from '../lib/Reveal'
+import Mascara from '../lib/Mascara'
+import Paralaxe from '../lib/Paralaxe'
 import Picture from '../lib/Picture'
 import Telemovel from '../components/servicos/Telemovel'
 import EcraGaleria from '../components/servicos/EcraGaleria'
@@ -180,13 +182,32 @@ function categoriaDoHash(hash: string) {
   return CATEGORIES.some((c) => c.id === id) ? (id as ServicoId) : null
 }
 
-/** Ponto de uma lista curta, com o visto que o resto da página usa. */
-function Ponto({ children }: { children: React.ReactNode }) {
+/**
+ * Lista curta, com os pontos a entrar um a seguir ao outro.
+ *
+ * Escalonados e não todos de uma vez: três linhas a aparecerem juntas são um
+ * bloco que acende, e a vista não sabe por onde começar. Uma a seguir à outra,
+ * a leitura vai atrás delas.
+ */
+function Pontos({ itens }: { itens: readonly string[] }) {
+  const reduzido = useReducedMotion()
+
   return (
-    <li className="flex items-start gap-3 text-sm text-titanium/60">
-      <Check size={14} className="mt-0.5 shrink-0 text-titanium/70" />
-      {children}
-    </li>
+    <ul className="mt-7 space-y-3">
+      {itens.map((texto, i) => (
+        <motion.li
+          key={texto}
+          className="flex items-start gap-3 text-sm text-titanium/60"
+          initial={reduzido ? undefined : { opacity: 0, x: -14 }}
+          whileInView={reduzido ? undefined : { opacity: 1, x: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.7, delay: 0.15 + i * 0.12, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <Check size={14} className="mt-0.5 shrink-0 text-titanium/70" />
+          {texto}
+        </motion.li>
+      ))}
+    </ul>
   )
 }
 
@@ -341,8 +362,14 @@ export default function Services() {
         quatro vezes a competir consigo próprio.
       */}
       <Seo
-        title={pagina.seoTitle}
-        description={pagina.seoDescription}
+        /*
+          Na página do serviço, o título é o dele. Em /servicos, que mostra
+          casamentos mas é a lista, fica o título geral: o mesmo título em dois
+          endereços é o que o Google conta como duas páginas iguais, e o
+          canonical que as junta não apaga o que se lê num link partilhado.
+        */
+        title={doUrl ? pagina.seoTitle : t.services.seoTitle}
+        description={doUrl ? pagina.seoDescription : t.services.seoDescription}
         image={absoluteUrl(`/brand/portfolio/${local.image}-1440.webp`)}
         /*
           Em /servicos mostra-se o primeiro serviço, e o canonical aponta para
@@ -370,9 +397,16 @@ export default function Services() {
             description: pagina.seoDescription,
             serviceType: t.home.services[aberto].title,
             provider: { '@type': 'LocalBusiness', name: 'NEBULA', '@id': `${SITE_URL}/` },
-            areaServed: { '@type': 'Country', name: 'Portugal' },
+            /*
+              Os sítios onde trabalhamos mesmo, e não só "Portugal". É o que o
+              LocalBusiness do index.html já declara, e tem de dizer o mesmo:
+              quem procura "fotógrafo de casamentos Sintra" está a fazer uma
+              pergunta com um sítio lá dentro.
+            */
+            areaServed: ['Lisboa', 'Sintra', 'Mem Martins', 'Portalegre', 'Portugal'],
             image: absoluteUrl(`/brand/portfolio/${local.image}-1440.webp`),
-            url: `${SITE_URL}${servicoPath(aberto, lang)}`,
+            // Com barra final, como o canonical e o sitemap.
+            url: `${SITE_URL}${servicoPath(aberto, lang)}/`,
           },
         ]}
       />
@@ -490,7 +524,14 @@ export default function Services() {
         */}
         <section className="container-px mt-10 sm:mt-14">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 xl:gap-20 lg:items-center">
+            {/*
+              A fotografia anda mais devagar do que a página dentro da sua
+              moldura. Por isso ela é maior do que a caixa (`scale-110`): sem
+              folga, o movimento descobria o fundo por cima ou por baixo.
+            */}
             <Reveal y={24}>
+              <div className="overflow-hidden rounded-2xl">
+              <Paralaxe quanto={26} className="scale-110">
               {capa ? (
                 /*
                   Capa carregada no painel. É uma <img> simples e não o
@@ -513,15 +554,14 @@ export default function Services() {
                   className={`w-full aspect-[4/5] lg:max-h-[600px] rounded-2xl object-cover ${local.imgPos}`}
                 />
               )}
+              </Paralaxe>
+              </div>
             </Reveal>
 
             <Reveal y={24} delay={0.12}>
               <span className="label-sm">{t.services.label}</span>
-              <h1
-                className="mt-3 leading-[1.02]"
-                style={{ fontSize: 'clamp(2.4rem, 5vw, 4rem)' }}
-              >
-                {t.home.services[aberto].title}
+              <h1 className="mt-3 leading-[1.02]" style={{ fontSize: 'clamp(2.4rem, 5vw, 4rem)' }}>
+                <Mascara>{t.home.services[aberto].title}</Mascara>
               </h1>
               <p className="mt-6 text-titanium/60 leading-relaxed text-[15px] sm:text-base">
                 {pagina.intro}
@@ -564,8 +604,10 @@ export default function Services() {
         <section className="container-px mt-20 sm:mt-28">
           <div className="grid gap-x-14 gap-y-10 md:grid-cols-2">
             {pagina.blocos.map((bloco, i) => (
-              <Reveal key={bloco.titulo} delay={i * 0.08} y={28}>
-                <h2 className="text-xl sm:text-2xl mb-3">{bloco.titulo}</h2>
+              <Reveal key={bloco.titulo} delay={i * 0.12} y={34}>
+                <h2 className="text-xl sm:text-2xl mb-3">
+                  <Mascara delay={i * 0.12}>{bloco.titulo}</Mascara>
+                </h2>
                 <p className="text-titanium/55 text-sm sm:text-[15px] leading-relaxed">
                   {bloco.texto}
                 </p>
@@ -583,7 +625,7 @@ export default function Services() {
         <section className="container-px mt-24 sm:mt-36">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className="relative flex justify-center lg:justify-start">
-              <Telemovel inclinacao={-3}>
+              <Telemovel inclinacao={-3} deslize={34}>
                 <EcraGaleria />
               </Telemovel>
             </div>
@@ -591,20 +633,13 @@ export default function Services() {
             <div>
               <Reveal y={28}>
                 <span className="label-sm">{t.services.galerias.label}</span>
-                <h2
-                  className="mt-3 leading-[1.08]"
-                  style={{ fontSize: 'clamp(1.9rem, 3.4vw, 2.8rem)' }}
-                >
-                  {t.services.galerias.titulo}
+                <h2 className="mt-3 leading-[1.08]" style={{ fontSize: 'clamp(1.9rem, 3.4vw, 2.8rem)' }}>
+                  <Mascara delay={0.05}>{t.services.galerias.titulo}</Mascara>
                 </h2>
                 <p className="mt-5 text-titanium/55 leading-relaxed text-[15px]">
                   {t.services.galerias.texto}
                 </p>
-                <ul className="mt-7 space-y-3">
-                  {t.services.galerias.pontos.map((p) => (
-                    <Ponto key={p}>{p}</Ponto>
-                  ))}
-                </ul>
+                <Pontos itens={t.services.galerias.pontos} />
               </Reveal>
             </div>
           </div>
@@ -619,7 +654,7 @@ export default function Services() {
           <section className="container-px mt-24 sm:mt-36">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
               <div className="order-1 lg:order-2 relative flex justify-center lg:justify-end">
-                <Telemovel inclinacao={3} atraso={0.1}>
+                <Telemovel inclinacao={3} atraso={0.1} deslize={96}>
                   <EcraConvidados />
                 </Telemovel>
               </div>
@@ -627,20 +662,13 @@ export default function Services() {
               <div className="order-2 lg:order-1">
                 <Reveal y={28}>
                   <span className="label-sm">{t.services.convidados.label}</span>
-                  <h2
-                    className="mt-3 leading-[1.08]"
-                    style={{ fontSize: 'clamp(1.9rem, 3.4vw, 2.8rem)' }}
-                  >
-                    {t.services.convidados.titulo}
+                  <h2 className="mt-3 leading-[1.08]" style={{ fontSize: 'clamp(1.9rem, 3.4vw, 2.8rem)' }}>
+                    <Mascara delay={0.05}>{t.services.convidados.titulo}</Mascara>
                   </h2>
                   <p className="mt-5 text-titanium/55 leading-relaxed text-[15px]">
                     {t.services.convidados.texto}
                   </p>
-                  <ul className="mt-7 space-y-3">
-                    {t.services.convidados.pontos.map((p) => (
-                      <Ponto key={p}>{p}</Ponto>
-                    ))}
-                  </ul>
+                  <Pontos itens={t.services.convidados.pontos} />
                   <Link
                     to={pedido()}
                     className="mt-8 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all min-h-[44px]"
@@ -657,13 +685,15 @@ export default function Services() {
         <section className="container-px mt-24 sm:mt-36">
           <Reveal className="mb-8 sm:mb-10">
             <span className="label-sm">{t.services.packsLabel}</span>
-            <h2 className="mt-3 text-3xl sm:text-4xl">{t.services.packsTitulo}</h2>
+            <h2 className="mt-3 text-3xl sm:text-4xl">
+              <Mascara delay={0.05}>{t.services.packsTitulo}</Mascara>
+            </h2>
           </Reveal>
 
           <div className={`grid gap-4 sm:gap-5 ${colunas(cat.packs.length)}`}>
             {cat.packs.map((pack, i) => (
               <Reveal key={pack.name} delay={i * 0.1} y={30}>
-                <div className="h-full border border-white/10 rounded-2xl p-6 sm:p-7 flex flex-col hover:border-white/25 transition-colors duration-500">
+                <div className="h-full border border-white/10 rounded-2xl p-6 sm:p-7 flex flex-col transition-[transform,border-color,background-color] duration-500 hover:border-white/25 hover:bg-white/[0.02] hover:-translate-y-1.5">
                   <h3 className="text-xl mb-4">{t.services.packs[pack.name]}</h3>
                   {'herda' in pack && (
                     <p className="text-sm text-titanium/45 mb-3 leading-snug">

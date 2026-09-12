@@ -28,7 +28,7 @@ export default function EcraConvidados() {
   const m = t.services.mockup
 
   return (
-    <div className="h-full px-5 pt-14 text-center">
+    <div className="min-h-full px-5 pt-14 pb-12 text-center">
       <img
         src={asset('brand/logo-symbol-white.png')}
         alt=""

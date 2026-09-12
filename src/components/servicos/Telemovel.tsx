@@ -1,5 +1,6 @@
-import { motion, useReducedMotion } from 'framer-motion'
-import type { ReactNode } from 'react'
+import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion'
+import { useRef, type ReactNode } from 'react'
+import Paralaxe from '../../lib/Paralaxe'
 
 /**
  * O corpo do telemóvel onde os ecrãs de exemplo vivem.
@@ -23,21 +24,40 @@ export default function Telemovel({
   className = '',
   atraso = 0,
   inclinacao = 0,
+  deslize = 70,
 }: {
   children: ReactNode
   className?: string
   atraso?: number
   /** Graus de rotação em repouso. Dois telemóveis direitos lêem-se como uma captura de ecrã. */
   inclinacao?: number
+  /** Pixels que o conteúdo do ecrã sobe ao longo da travessia, como se alguém estivesse a rolar. */
+  deslize?: number
 }) {
   const reduzido = useReducedMotion()
 
+  /*
+    O conteúdo rola dentro do ecrã enquanto a página rola.
+
+    É o detalhe que faz a diferença entre um telemóvel e uma fotografia de um
+    telemóvel: um aparelho parado com uma imagem parada lá dentro lê-se como
+    uma captura de ecrã colada numa moldura. Com o conteúdo a andar, aquilo
+    passa a ser uma coisa a funcionar.
+  */
+  const ref = useRef<HTMLDivElement | null>(null)
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
+  const suave = useSpring(scrollYProgress, { stiffness: 80, damping: 24, mass: 0.6 })
+  const ecraY = useTransform(suave, [0.15, 0.9], [0, -deslize])
+
   return (
+    <Paralaxe quanto={34} rodar={inclinacao ? 1.6 : 0} className={`relative ${className}`}>
     <motion.div
+      ref={ref}
       aria-hidden="true"
-      className={`relative pointer-events-none select-none ${className}`}
-      initial={reduzido ? undefined : { opacity: 0, y: 60, rotate: inclinacao * 2.2, scale: 0.94 }}
-      whileInView={reduzido ? undefined : { opacity: 1, y: 0, rotate: inclinacao, scale: 1 }}
+      className="relative pointer-events-none select-none"
+      style={{ rotate: inclinacao }}
+      initial={reduzido ? undefined : { opacity: 0, y: 70, scale: 0.93 }}
+      whileInView={reduzido ? undefined : { opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, margin: '-100px' }}
       transition={{ duration: 1.1, delay: atraso, ease: [0.16, 1, 0.3, 1] }}
     >
@@ -67,7 +87,9 @@ export default function Telemovel({
             que passa da altura é cortado de propósito: um ecrã cortado a meio
             lê-se como uma página que continua, que é verdade.
           */}
-          <div className="h-full overflow-hidden">{children}</div>
+          <div className="h-full overflow-hidden">
+            <motion.div className="h-full" style={reduzido ? undefined : { y: ecraY }}>{children}</motion.div>
+          </div>
           {/* Desvanecimento no fundo, para o corte não parecer um erro. */}
           <div
             className="absolute inset-x-0 bottom-0 h-20"
@@ -77,5 +99,6 @@ export default function Telemovel({
         </div>
       </div>
     </motion.div>
+    </Paralaxe>
   )
 }

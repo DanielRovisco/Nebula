@@ -17,7 +17,7 @@ export default function EcraGaleria() {
   const t = useT()
 
   return (
-    <div className="h-full px-6 pt-16 flex flex-col justify-center">
+    <div className="min-h-full px-6 pt-16 pb-10 flex flex-col justify-center">
       <div className="w-9 h-9 rounded-full border border-white/15 flex items-center justify-center mb-6">
         <Lock size={13} className="text-titanium/60" />
       </div>
