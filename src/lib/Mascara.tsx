@@ -26,17 +26,33 @@ export default function Mascara({
 
   if (reduzido) return <span className={`block ${className ?? ''}`}>{children}</span>
 
+  /*
+    Quem olha para o ecrã é a máscara, e não o texto que está dentro dela.
+
+    Ao contrário: o texto começa uma altura inteira abaixo, e a máscara corta
+    tudo o que passa da caixa. Um observador posto no texto nunca o via entrar
+    no ecrã, porque a máscara o esconde, e a animação que o tirava de lá ficava
+    à espera de um sinal que só chegaria depois de ela correr. O título ficava
+    invisível para sempre.
+
+    A `whileInView` fica na máscara, que está à vista, e o texto lá dentro
+    segue-a pelo nome do estado. É o que as variantes servem: a mãe decide, as
+    filhas acompanham.
+  */
   return (
-    <span className={`block overflow-hidden pb-[0.14em] -mb-[0.14em] ${className ?? ''}`}>
+    <motion.span
+      className={`block overflow-hidden pb-[0.14em] -mb-[0.14em] ${className ?? ''}`}
+      initial="escondido"
+      whileInView="mostrado"
+      viewport={{ once: true, margin: '-60px' }}
+    >
       <motion.span
         className="block"
-        initial={{ y: '115%' }}
-        whileInView={{ y: 0 }}
-        viewport={{ once: true, margin: '-60px' }}
+        variants={{ escondido: { y: '115%' }, mostrado: { y: 0 } }}
         transition={{ duration: 1.1, delay, ease: [0.16, 1, 0.3, 1] }}
       >
         {children}
       </motion.span>
-    </span>
+    </motion.span>
   )
 }
