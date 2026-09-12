@@ -138,6 +138,129 @@ export const pt = {
     addonTitle: 'Monta o teu pack',
     addonText:
       'Nenhum pack tem de ficar como está. Junta vídeo 4K, drone, mais horas ou uma segunda sessão. Diz-nos o que imaginas e fazemos as contas.',
+
+    /*
+      O texto próprio de cada serviço.
+
+      Vive aqui e não na página porque cada serviço passou a ter endereço
+      próprio, e é este texto que faz cada um deles valer alguma coisa numa
+      pesquisa: quem procura "fotógrafo de maternidade" encontra uma página
+      sobre maternidade, e não uma frase sobre maternidade dentro de uma página
+      sobre tudo.
+    */
+    paginas: {
+      casamentos: {
+        seoTitle: 'Fotógrafo de Casamentos | NEBULA',
+        seoDescription:
+          'Fotografia e vídeo de casamento em Lisboa, Sintra e Portalegre. Equipa de três, drone, galeria de convidados e primeiras fotografias em 24 horas.',
+        intro:
+          'Um casamento acontece uma vez e não volta a acontecer. Não há segunda tentativa, não há repetir o plano, não há pedir à noiva que volte a entrar. É por isso que trabalhamos em equipa e não sozinhos, e é por isso que entregamos as primeiras fotografias no dia seguinte.',
+        blocos: [
+          {
+            titulo: 'Como trabalhamos no dia',
+            texto:
+              'Somos três: dois fotógrafos e um videógrafo. Enquanto um está com a noiva a preparar-se, o outro está com o noivo, e ninguém tem de escolher entre os dois lados da mesma manhã. Durante a cerimónia, dois ângulos ao mesmo tempo, sem ninguém a correr pelo corredor. Trabalhamos de forma discreta: o dia é vosso e dos vossos convidados, não nosso.',
+          },
+          {
+            titulo: 'Fotografia e filme, feitos juntos',
+            texto:
+              'A fotografia e o vídeo não são dois trabalhos encaixados à força no mesmo dia. Quem filma está connosco desde o princípio, sabe o que vai acontecer a seguir e não precisa de mandar parar para gravar outra vez. Nos packs com filme entregamos também um vídeo vertical de até um minuto, do tamanho e do formato que as redes pedem.',
+          },
+          {
+            titulo: 'O que os vossos convidados viram',
+            texto:
+              'As melhores fotografias da noite estão quase sempre nos telemóveis dos convidados, e acabam perdidas em conversas de grupo. Cada casamento nosso tem um código próprio, que se imprime e se põe nas mesas: quem o lê entrega as fotografias que tirou, sem instalar nada e sem criar conta nenhuma. Vocês recebem tudo organizado, e decidem o que fica.',
+          },
+          {
+            titulo: 'Depois do casamento',
+            texto:
+              'No dia seguinte recebem uma primeira seleção, para poderem mostrar a quem esteve lá e a quem não pôde ir. As fotografias completas chegam numa galeria online privada, com endereço e palavra-passe só vossos, de onde descarregam tudo de uma vez ou escolhem uma a uma. Não são publicadas em lado nenhum sem vocês dizerem que sim.',
+          },
+        ],
+      },
+      maternidade: {
+        seoTitle: 'Fotografia de Maternidade e Gravidez | NEBULA',
+        seoDescription:
+          'Sessões de maternidade em estúdio ou exterior, em Lisboa, Sintra e Portalegre. Fotografia e vídeo lifestyle, com galeria online privada.',
+        intro:
+          'Uma barriga muda de semana para semana e depois desaparece. A sessão de maternidade não é sobre estar grávida: é sobre o intervalo curto em que já se é mãe e ainda não se conhece a cara de quem vem.',
+        blocos: [
+          {
+            titulo: 'Quando marcar',
+            texto:
+              'Entre as 28 e as 34 semanas é onde a barriga já se vê bem e o corpo ainda não pesa tanto que uma sessão canse. Mais tarde é possível, mas marca-se com margem: a partir das 36 semanas há sempre a hipótese de o bebé decidir antecipar tudo.',
+          },
+          {
+            titulo: 'Estúdio ou exterior',
+            texto:
+              'Em estúdio controlamos a luz e o fundo, e o resultado é mais editorial, mais limpo, mais de revista. No exterior ganha-se o sítio e a hora: o fim de tarde, o campo, a praia. Não há melhor nem pior, há o que se quer pendurado na parede daqui a dez anos. Escolhem, e ajudamos a escolher.',
+          },
+          {
+            titulo: 'Quem entra na fotografia',
+            texto:
+              'O pai entra sempre que quiser, e os filhos que já cá estão também. Não há packs a menos por causa disso, e não cobramos por pessoa. O que muda entre um pack e outro é o tempo que a sessão tem e quantas roupas dá para vestir sem andar com pressa.',
+          },
+          {
+            titulo: 'O que recebem',
+            texto:
+              'As fotografias escolhidas e tratadas, numa galeria online privada de onde descarregam o que quiserem, com a qualidade que serve para imprimir. Nos packs com vídeo entregamos também um filme curto, do género que se guarda e se volta a ver, e um vertical para partilhar.',
+          },
+        ],
+      },
+      retratos: {
+        seoTitle: 'Retratos e Book Fotográfico | NEBULA',
+        seoDescription:
+          'Retrato editorial em estúdio ou exterior, em Lisboa, Sintra e Portalegre. Para marca pessoal, book ou uso próprio, com galeria online privada.',
+        intro:
+          'A maior parte das pessoas não gosta de ser fotografada, e quase sempre é porque nunca foi fotografada bem. Um retrato que presta não é uma questão de sorte nem de ser fotogénico: é luz, tempo e alguém que diga o que fazer com as mãos.',
+        blocos: [
+          {
+            titulo: 'Para que serve um retrato',
+            texto:
+              'Para uma marca pessoal que precisa de uma cara, para um book de quem trabalha com a imagem, para um perfil que ainda tem uma fotografia tirada por um amigo há seis anos. E para nada disso: há quem faça um retrato só porque quer uma fotografia sua de que goste, e essa é uma razão tão boa como as outras.',
+          },
+          {
+            titulo: 'Não é preciso saber posar',
+            texto:
+              'Ninguém sabe posar, e quem diz que sabe costuma ficar pior. A direcção é nossa: dizemos onde pôr o peso, para onde olhar, o que fazer com os braços. Nos packs com preparação, falamos antes do dia sobre roupas e referências, para chegar à sessão com as decisões tomadas e não a escolher à porta.',
+          },
+          {
+            titulo: 'Estúdio ou exterior',
+            texto:
+              'Em estúdio a luz é nossa e o fundo desaparece: fica a pessoa e mais nada. No exterior entra o sítio, a hora e o acaso, e o retrato passa a contar também onde foi feito. Dá para fazer os dois na mesma sessão, se houver tempo para isso.',
+          },
+          {
+            titulo: 'O que recebem',
+            texto:
+              'As fotografias tratadas numa galeria online privada, prontas para imprimir e para usar em qualquer lado. Não marcamos as fotografias com o nosso nome nem pedimos crédito para as usar. São vossas.',
+          },
+        ],
+      },
+      eventos: {
+        seoTitle: 'Fotografia de Eventos | NEBULA',
+        seoDescription:
+          'Cobertura fotográfica e de vídeo para festas, aniversários e eventos de empresa, em Lisboa, Sintra e Portalegre.',
+        intro:
+          'Festas de anos, baptizados, jantares de empresa, lançamentos. Um evento não tem um guião como um casamento, e por isso não tem um pack fixo: combina-se o que é preciso, e cobra-se o que for combinado.',
+        blocos: [
+          {
+            titulo: 'Porque não há packs aqui',
+            texto:
+              'Porque ainda não fizemos eventos que cheguem para prometer números com honestidade. Um pack é uma promessa com horas e quantidades lá dentro, e escrever isso sem saber seria descobri-lo ao mesmo tempo que o cliente, no próprio dia. Preferimos combinar convosco e dizer o que conseguimos fazer.',
+          },
+          {
+            titulo: 'O que combinamos',
+            texto:
+              'Quantas horas, quantas pessoas da nossa parte, se há vídeo além de fotografia, e o que é que tem mesmo de ficar registado. Um jantar de empresa quer os discursos e os grupos; uma festa de anos quer o bolo e a cara de quem o sopra. Não é o mesmo trabalho e não se resolve com o mesmo plano.',
+          },
+          {
+            titulo: 'Também aqui há galeria privada',
+            texto:
+              'As fotografias chegam numa galeria online com endereço e palavra-passe próprios, de onde a empresa ou a família descarrega o que quiser. Para eventos de empresa, isso resolve o problema habitual de andar a mandar ficheiros grandes por email a dez pessoas diferentes.',
+          },
+        ],
+      },
+    },
     items: {
       photoEditorial: 'Fotografia editorial',
       horas6: 'Cobertura de 6 horas',

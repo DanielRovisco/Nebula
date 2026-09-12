@@ -13,6 +13,7 @@ import SmoothScroll from './lib/SmoothScroll'
 import PageTransition from './lib/PageTransition'
 import ScrollToTop from './lib/ScrollToTop'
 import Home from './pages/Home'
+import { grupoDeRota } from './lib/i18n'
 
 // A Home fica no bundle inicial (é a entrada da maioria das visitas); as
 // restantes rotas são chunks separados, carregados quando alguém navega.
@@ -109,7 +110,17 @@ export default function App() {
       <ScrollToTop />
       <Navbar />
       <AnimatePresence mode="wait">
-        <PageTransition key={location.pathname}>
+        {/*
+          Os quatro serviços partilham a mesma chave de transição.
+
+          Com a chave no caminho inteiro, passar de um serviço para o outro
+          desmontava a página e voltava a montá-la com o fundido de entrada —
+          clicar numa aba parecia carregar a página toda outra vez, que é
+          precisamente o que ter abas evita. Com a chave comum, a transição
+          fica para quem entra e sai dos serviços, e lá dentro troca-se só o
+          conteúdo do painel.
+        */}
+        <PageTransition key={grupoDeRota(location.pathname)}>
           <main>
             {/* min-h evita o Footer saltar para cima enquanto o chunk carrega. */}
             <Rede><Suspense fallback={<Loading />}>
@@ -126,7 +137,14 @@ export default function App() {
                 <Route path="/sobre" element={<About />} />
                 <Route path="/en/about" element={<About />} />
                 <Route path="/servicos" element={<Services />} />
+                {/*
+                  Cada serviço no seu endereço. É a mesma página: troca-se o
+                  que está no painel sem recarregar nada, e o endereço é o que
+                  diz qual deles está aberto (ver pages/Services).
+                */}
+                <Route path="/servicos/:servico" element={<Services />} />
                 <Route path="/en/services" element={<Services />} />
+                <Route path="/en/services/:servico" element={<Services />} />
                 <Route path="/portfolio" element={<Portfolio />} />
                 <Route path="/en/portfolio" element={<Portfolio />} />
                 <Route path="/contacto" element={<Contact />} />

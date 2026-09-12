@@ -18,6 +18,14 @@ interface SeoProps {
    * de cada página — o serviço, a coleção de imagens, as migalhas.
    */
   jsonLd?: Record<string, unknown> | Record<string, unknown>[]
+  /**
+   * Endereço canónico, quando não é o da própria página.
+   *
+   * Serve para /servicos, que mostra o mesmo que /servicos/casamentos. Sem
+   * isto seriam duas páginas com o mesmo conteúdo a competir uma com a outra, e
+   * o Google escolhia sozinho qual mostrar.
+   */
+  canonical?: string
 }
 
 function setMeta(selector: string, attr: 'name' | 'property', key: string, content: string) {
@@ -36,7 +44,9 @@ function setMeta(selector: string, attr: 'name' | 'property', key: string, conte
  * (scripts/prerender.mjs) grava o resultado no HTML publicado, para não
  * dependerem de o visitante executar JavaScript.
  */
-export default function Seo({ title, description, image, noindex = false, jsonLd }: SeoProps) {
+export default function Seo({
+  title, description, image, noindex = false, jsonLd, canonical,
+}: SeoProps) {
   const { pathname } = useLocation()
 
   /*
@@ -84,13 +94,13 @@ export default function Seo({ title, description, image, noindex = false, jsonLd
     const url = `${SITE_URL}${comBarra(pathname)}`
     setMeta('meta[property="og:url"]', 'property', 'og:url', url)
 
-    let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')
-    if (!canonical) {
-      canonical = document.createElement('link')
-      canonical.rel = 'canonical'
-      document.head.appendChild(canonical)
+    let etiqueta = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')
+    if (!etiqueta) {
+      etiqueta = document.createElement('link')
+      etiqueta.rel = 'canonical'
+      document.head.appendChild(etiqueta)
     }
-    canonical.href = url
+    etiqueta.href = canonical ? `${SITE_URL}${comBarra(canonical)}` : url
 
     // Um único <script> gerido por nós, substituído a cada página. Vários
     // acumulados dariam ao Google a soma dos dados de todas as páginas por onde
@@ -130,7 +140,7 @@ export default function Seo({ title, description, image, noindex = false, jsonLd
       }
       link.href = href
     }
-  }, [title, description, image, noindex, jsonLdTexto, pathname])
+  }, [title, description, image, noindex, jsonLdTexto, pathname, canonical])
 
   return null
 }

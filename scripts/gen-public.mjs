@@ -48,13 +48,30 @@ const url = (caminho) => {
 const ROTAS = [
   ['/', 'monthly', '1.0'],
   ['/portfolio', 'monthly', '0.9'],
-  ['/servicos', 'monthly', '0.9'],
+  /*
+    Cada serviço tem endereço próprio, e é aqui que eles valem alguma coisa:
+    são as páginas que respondem a "fotógrafo de casamentos" e a "fotografia de
+    maternidade".
+
+    A lista (/servicos) não vai aqui, e não é esquecimento: ela mostra o
+    primeiro serviço e declara como canónico o endereço próprio dele. Pedir que
+    indexem uma página que ela própria aponta para outra é a mesma contradição
+    que a porta das galerias tem, e o Google reporta-a. Continua a existir, com
+    link na navegação, e é por lá que se chega às quatro.
+  */
+  ['/servicos/casamentos', 'monthly', '0.9'],
+  ['/servicos/maternidade', 'monthly', '0.9'],
+  ['/servicos/retratos', 'monthly', '0.8'],
+  ['/servicos/eventos', 'monthly', '0.7'],
   ['/sobre', 'yearly', '0.7'],
   ['/contacto', 'yearly', '0.8'],
   ['/privacidade', 'yearly', '0.2'],
   ['/en', 'monthly', '0.9'],
   ['/en/portfolio', 'monthly', '0.8'],
-  ['/en/services', 'monthly', '0.8'],
+  ['/en/services/weddings', 'monthly', '0.8'],
+  ['/en/services/maternity', 'monthly', '0.8'],
+  ['/en/services/portraits', 'monthly', '0.7'],
+  ['/en/services/events', 'monthly', '0.6'],
   ['/en/about', 'yearly', '0.6'],
   ['/en/contact', 'yearly', '0.7'],
   ['/en/privacy', 'yearly', '0.2'],
@@ -66,6 +83,12 @@ const PARES = {
   '/': '/en',
   '/portfolio': '/en/portfolio',
   '/servicos': '/en/services',
+  // Os endereços dos serviços também são traduzidos, e não apenas prefixados:
+  // /servicos/casamentos é /en/services/weddings. Ver lib/i18n/routes.ts.
+  '/servicos/casamentos': '/en/services/weddings',
+  '/servicos/maternidade': '/en/services/maternity',
+  '/servicos/retratos': '/en/services/portraits',
+  '/servicos/eventos': '/en/services/events',
   '/sobre': '/en/about',
   '/contacto': '/en/contact',
   '/galeria': '/en/gallery',

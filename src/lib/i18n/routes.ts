@@ -23,6 +23,47 @@ export const ROUTES = {
 
 export type RouteKey = keyof typeof ROUTES
 
+/**
+ * Cada serviço tem endereço próprio, e traduzido.
+ *
+ * Antes os quatro viviam em /servicos e trocavam-se por abas. Para quem visita
+ * dava no mesmo; para o Google era uma página só a competir com quatro
+ * pesquisas diferentes, e a ganhar nenhuma. Com endereços próprios, quem
+ * procura "fotógrafo de maternidade" encontra uma página sobre maternidade e
+ * não uma página sobre tudo.
+ */
+export const SERVICOS = {
+  casamentos: { pt: 'casamentos', en: 'weddings' },
+  maternidade: { pt: 'maternidade', en: 'maternity' },
+  retratos: { pt: 'retratos', en: 'portraits' },
+  eventos: { pt: 'eventos', en: 'events' },
+} as const
+
+export type ServicoId = keyof typeof SERVICOS
+
+/** O endereço completo de um serviço numa língua. */
+export const servicoPath = (id: ServicoId, lang: Lang) =>
+  `${ROUTES.services[lang]}/${SERVICOS[id][lang]}`
+
+/** De volta: que serviço é este pedaço de endereço, nesta língua. */
+export function servicoDoSlug(slug: string | undefined, lang: Lang): ServicoId | null {
+  if (!slug) return null
+  const par = (Object.keys(SERVICOS) as ServicoId[]).find((id) => SERVICOS[id][lang] === slug)
+  return par ?? null
+}
+
+/**
+ * O grupo a que um endereço pertence: o mesmo caminho, com o serviço aberto
+ * cortado fora.
+ *
+ * Os quatro serviços são a mesma página com conteúdo diferente, e há duas
+ * coisas que têm de saber isso: a transição de página (senão trocar de serviço
+ * parece recarregar o site) e o salto para o topo (senão a página foge para
+ * cima a cada aba clicada). Ambas comparam grupos, e não caminhos.
+ */
+export const grupoDeRota = (pathname: string) =>
+  pathname.replace(/^(\/en)?(\/servicos|\/services)\/[^/]+$/, '$1$2')
+
 /** A galeria aberta: /galeria/<slug>/ver e /en/gallery/<slug>/view. */
 export const GALLERY_VIEW = { pt: 'ver', en: 'view' } as const
 
@@ -39,6 +80,14 @@ export const path = (key: RouteKey, lang: Lang) => ROUTES[key][lang]
 export function switchLang(pathname: string, para: Lang): string {
   const atual = langFromPath(pathname)
   if (atual === para) return pathname
+
+  // Um serviço traduz-se para o mesmo serviço na outra língua, e não para a
+  // lista: quem está a ler sobre casamentos quer ler sobre casamentos.
+  const baseServicos = ROUTES.services[atual]
+  if (pathname.startsWith(`${baseServicos}/`)) {
+    const id = servicoDoSlug(pathname.slice(baseServicos.length + 1), atual)
+    if (id) return servicoPath(id, para)
+  }
 
   for (const key of Object.keys(ROUTES) as RouteKey[]) {
     const base = ROUTES[key][atual]

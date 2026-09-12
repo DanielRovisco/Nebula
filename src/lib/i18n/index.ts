@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import { en } from './en'
 import { pt, type Dict } from './pt'
-import { langFromPath, path, type Lang, type RouteKey } from './routes'
+import { langFromPath, path, servicoPath, type Lang, type RouteKey, type ServicoId } from './routes'
 
 const DICTS: Record<Lang, Dict> = { pt, en }
 
@@ -29,6 +29,15 @@ export function useLink() {
   return useCallback((key: RouteKey) => path(key, lang), [lang])
 }
 
-export { LANGS, ROUTES, GALLERY_VIEW, langFromPath, path, switchLang } from './routes'
-export type { Lang, RouteKey } from './routes'
+/** Endereço da página de um serviço na língua atual: `to(linkServico('casamentos'))`. */
+export function useLinkServico() {
+  const lang = useLang()
+  return useCallback((id: ServicoId) => servicoPath(id, lang), [lang])
+}
+
+export {
+  LANGS, ROUTES, SERVICOS, GALLERY_VIEW,
+  langFromPath, path, servicoPath, servicoDoSlug, grupoDeRota, switchLang,
+} from './routes'
+export type { Lang, RouteKey, ServicoId } from './routes'
 export type { Dict } from './pt'

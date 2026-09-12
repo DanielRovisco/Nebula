@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Check } from 'lucide-react'
 import Reveal from '../lib/Reveal'
@@ -9,7 +9,8 @@ import { publicUrl } from '../lib/site-content/public'
 import { useServiceCovers } from '../lib/site-content/useSiteContent'
 import Seo from '../lib/Seo'
 import { SITE_URL, absoluteUrl } from '../lib/site'
-import { useLink, useT } from '../lib/i18n'
+import { useLang, useLink, useT } from '../lib/i18n'
+import { servicoDoSlug, servicoPath, type ServicoId } from '../lib/i18n/routes'
 import Breadcrumbs from '../components/Breadcrumbs'
 import { breadcrumbJsonLd } from '../lib/breadcrumbJsonLd'
 
@@ -172,54 +173,71 @@ const CATEGORIES = [
 */
 const PAINEL = '#1c1c1c'
 
-/** Só abrimos a categoria pedida se ela existir — o hash vem do URL. */
+/** Só abrimos a categoria pedida se ela existir. O hash vem do URL. */
 function categoriaDoHash(hash: string) {
   const id = decodeURIComponent(hash.replace('#', ''))
-  return CATEGORIES.some((c) => c.id === id) ? id : null
+  return CATEGORIES.some((c) => c.id === id) ? (id as ServicoId) : null
 }
 
 export default function Services() {
   const t = useT()
   const link = useLink()
+  const lang = useLang()
+  const navigate = useNavigate()
   const { hash } = useLocation()
+  const { servico } = useParams()
   // Capas escolhidas no painel. Serviço sem capa lá fica com a do repositório.
   const capas = useServiceCovers()
-  // Vindo de um cartão da página inicial (/servicos#maternidade), abre logo essa
-  // categoria em vez da primeira.
-  const [open, setOpen] = useState<string>(() => categoriaDoHash(hash) ?? 'casamentos')
+
   /*
-    A barra das abas, para o salto vindo de um cartão da página inicial ficar
-    com as abas à vista e não com o painel colado ao topo. Antes havia uma
-    referência por categoria porque cada uma era uma secção; agora o painel é
-    um só e o que interessa mostrar é a escolha.
+    O serviço escolhido vem do endereço, e não de um estado guardado aqui.
+
+    É a diferença entre uma aba e uma página: assim cada serviço tem endereço
+    próprio para partilhar, para indexar e para o botão de voltar entender, e
+    continua a trocar-se sem recarregar nada — é o router a mudar o que está
+    dentro do painel, exactamente como as abas faziam.
+
+    Sem serviço no endereço (alguém em /servicos) mostra-se o primeiro, e o
+    canonical aponta para o endereço próprio dele. Duas páginas com o mesmo
+    conteúdo a competir uma com a outra seria pior do que não ter nenhuma.
   */
+  const doUrl = servicoDoSlug(servico, lang)
+  const aberto: ServicoId = doUrl ?? 'casamentos'
+
   const barraRef = useRef<HTMLDivElement | null>(null)
-  const botoesRef = useRef<Record<string, HTMLButtonElement | null>>({})
+  const abasRef = useRef<Record<string, HTMLAnchorElement | null>>({})
 
-  // Se o hash mudar sem sair da página (clicar noutro cartão a partir daqui),
-  // acompanha-o já no render — sem efeito a disparar um segundo render.
-  const [hashVisto, setHashVisto] = useState(hash)
-  if (hash !== hashVisto) {
-    setHashVisto(hash)
-    const id = categoriaDoHash(hash)
-    if (id && id !== open) setOpen(id)
-  }
-
+  /*
+    Trocar de serviço não sobe a página ao topo (ver lib/ScrollToTop), mas se
+    as abas já ficaram acima do ecrã, o conteúdo trocava sem se ver o que o
+    trocou: parecia que a página tinha mudado sozinha. Nesse caso, e só nesse,
+    trazem-se as abas de volta à vista, com os 96px de desconto da barra fixa
+    do topo.
+  */
   useEffect(() => {
-    const id = categoriaDoHash(hash)
-    if (!id) return
-    // Duas razões para o atraso: o ScrollToTop corre na mesma passagem e
-    // desfaria o salto, e o painel ainda está a abrir — esperamos que assente
-    // antes de medir. O desconto de 96px tira a categoria de debaixo da barra
-    // fixa do topo.
-    const t = setTimeout(() => {
-      const el = barraRef.current
-      if (!el) return
-      const topo = el.getBoundingClientRect().top + window.scrollY - 96
-      window.scrollTo({ top: Math.max(0, topo), behavior: 'smooth' })
-    }, 150)
-    return () => clearTimeout(t)
-  }, [hash])
+    const el = barraRef.current
+    if (!el) return
+    const topo = el.getBoundingClientRect().top
+    if (topo >= 96) return
+    window.scrollTo({ top: Math.max(0, topo + window.scrollY - 96), behavior: 'smooth' })
+  }, [aberto])
+
+  /*
+    Endereços antigos com hash (/servicos#maternidade) ainda andam por aí: em
+    ligações partilhadas, no histórico de quem já cá esteve, e possivelmente no
+    índice do Google. Levam ao sítio certo, uma vez, sem entrada no histórico.
+  */
+  const doHash = servico ? null : categoriaDoHash(hash)
+  if (doHash) return <Navigate to={servicoPath(doHash, lang)} replace />
+
+  /*
+    Um slug que não é serviço nenhum (/servicos/casamento, /servicos/qualquer)
+    não pode ficar a mostrar casamentos num endereço inventado: seria uma
+    página a existir em endereços infinitos. Volta à lista.
+  */
+  if (servico && !doUrl) return <Navigate to={link('services')} replace />
+
+  const pagina = t.services.paginas[aberto]
 
   /*
     Setas para mudar de aba, Home e End para a primeira e a última. É o que a
@@ -232,61 +250,94 @@ export default function Services() {
     que está escolhido.
   */
   function aoTeclado(e: React.KeyboardEvent<HTMLDivElement>) {
-    // `string[]` e não a união literal: o `open` é uma string vinda do URL.
-    const ids: string[] = CATEGORIES.map((c) => c.id)
-    const i = ids.indexOf(open)
-    let destino: string | null = null
+    const ids = CATEGORIES.map((c) => c.id) as ServicoId[]
+    const i = ids.indexOf(aberto)
+    let destino: ServicoId | null = null
     if (e.key === 'ArrowRight') destino = ids[(i + 1) % ids.length]
     else if (e.key === 'ArrowLeft') destino = ids[(i - 1 + ids.length) % ids.length]
     else if (e.key === 'Home') destino = ids[0]
     else if (e.key === 'End') destino = ids[ids.length - 1]
     if (!destino) return
     e.preventDefault()
-    setOpen(destino)
-    botoesRef.current[destino]?.focus()
+    /*
+      Navegar e não trocar estado: a barra passou a ser feita de ligações, e a
+      seta tem de fazer o mesmo que o clique faria. `replace` para as setas não
+      encherem o histórico — quem percorreu as quatro com o teclado quer que o
+      botão de voltar o leve à página de onde veio, e não três vezes a esta.
+    */
+    navigate(servicoPath(destino, lang), { replace: true })
+    abasRef.current[destino]?.focus()
   }
 
   return (
     <div className="pt-24 sm:pt-28 lg:pt-24 pb-16 sm:pb-20">
+      {/*
+        O título e a descrição são os do serviço aberto, e não os da lista.
+
+        É metade da razão de dar endereço próprio a cada um: quem procura
+        "fotógrafo de maternidade" vê no resultado do Google uma página sobre
+        maternidade, com esse título, e não o mesmo "Serviços e Packs" repetido
+        quatro vezes a competir consigo próprio.
+      */}
       <Seo
-        title={t.services.seoTitle}
-        description={t.services.seoDescription}
-        image={absoluteUrl('/brand/portfolio/forest-bride-1440.webp')}
+        title={pagina.seoTitle}
+        description={pagina.seoDescription}
+        image={absoluteUrl(`/brand/portfolio/${CAPAS_LOCAIS[aberto].image}-1440.webp`)}
+        /*
+          Em /servicos mostra-se o primeiro serviço, e o canonical aponta para
+          o endereço próprio dele. Já na página do serviço não há canonical a
+          declarar: é a própria.
+        */
+        canonical={doUrl ? undefined : servicoPath(aberto, lang)}
         jsonLd={[
           breadcrumbJsonLd([
             { nome: t.nav.home, caminho: link('home') },
             { nome: t.nav.services, caminho: link('services') },
+            { nome: t.home.services[aberto].title, caminho: servicoPath(aberto, lang) },
           ]),
-          // Um `Service` por categoria. Sem preços: declarar uma oferta sem
-          // valor é pior do que não a declarar.
-          ...CATEGORIES.map((cat) => ({
+          /*
+            Um `Service` só, o desta página, e não os quatro de cada vez.
+
+            Com os quatro em todas as páginas, cada uma declarava ao Google que
+            era sobre casamentos, maternidade, retratos e eventos ao mesmo
+            tempo — o oposto do que se ganha em separá-las. Sem preços:
+            declarar uma oferta sem valor é pior do que não a declarar.
+          */
+          {
             '@context': 'https://schema.org',
             '@type': 'Service',
-            name: t.home.services[cat.id].title,
-            description: t.home.services[cat.id].tagline,
-            serviceType: t.home.services[cat.id].title,
+            name: t.home.services[aberto].title,
+            description: pagina.seoDescription,
+            serviceType: t.home.services[aberto].title,
             provider: { '@type': 'LocalBusiness', name: 'NEBULA', '@id': `${SITE_URL}/` },
             areaServed: { '@type': 'Country', name: 'Portugal' },
-            image: absoluteUrl(`/brand/portfolio/${CAPAS_LOCAIS[cat.id].image}-1440.webp`),
-            url: `${SITE_URL}${link('services')}#${cat.id}`,
-          })),
+            image: absoluteUrl(`/brand/portfolio/${CAPAS_LOCAIS[aberto].image}-1440.webp`),
+            url: `${SITE_URL}${servicoPath(aberto, lang)}`,
+          },
         ]}
       />
 
       {/* Header */}
       <section className="container-px mb-8 sm:mb-10">
-        <Breadcrumbs items={[{ label: t.nav.services }]} />
+        <Breadcrumbs
+          items={[
+            { label: t.nav.services, to: 'services' },
+            { label: t.home.services[aberto].title },
+          ]}
+        />
         <Reveal>
           <span className="label-sm">{t.services.label}</span>
           {/*
-            Menor a partir de lg do que nas outras páginas: aqui o objetivo é a
-            página inteira caber num ecrã, e um título de 80px comia sozinho um
-            quinto da altura disponível. No telemóvel fica igual ao resto do
-            site, porque lá a página rola de qualquer maneira.
+            O h1 é o nome do serviço, e não o título da lista.
+
+            Numa página que existe para responder a "fotógrafo de casamentos",
+            o cabeçalho principal tem de dizer isso. O título antigo continua
+            a servir de subtítulo: é a frase da marca, não a da página.
           */}
           <h1 className="mt-3 max-w-3xl leading-[1.05]" style={{ fontSize: 'clamp(2.2rem, 3.6vw, 3.2rem)' }}>
-            {t.services.title}
+            {t.home.services[aberto].title}
           </h1>
+          <p className="mt-4 max-w-2xl text-titanium/60 leading-relaxed">{pagina.intro}</p>
         </Reveal>
       </section>
 
@@ -325,12 +376,21 @@ export default function Services() {
           className="flex items-end overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {CATEGORIES.map((cat) => {
-            const activa = open === cat.id
+            const activa = aberto === cat.id
             return (
-              <button
+              /*
+                Uma ligação a sério, e não um botão a fingir de aba.
+
+                Faz o que o clique já fazia, e mais: abre em separador novo com
+                o meio do rato, copia-se com o botão direito, e o Google segue-a
+                até à página do serviço. Um botão não faz nada disto, e era
+                exactamente o que faltava aqui.
+              */
+              <Link
                 key={cat.id}
+                to={servicoPath(cat.id as ServicoId, lang)}
                 ref={(el) => {
-                  botoesRef.current[cat.id] = el
+                  abasRef.current[cat.id] = el
                 }}
                 role="tab"
                 id={`aba-${cat.id}`}
@@ -342,7 +402,6 @@ export default function Services() {
                   muda-se com as setas, e sai-se para o conteúdo.
                 */
                 tabIndex={activa ? 0 : -1}
-                onClick={() => setOpen(cat.id)}
                 /*
                   A aba escolhida cola-se ao painel: mesma cor de fundo, e a
                   borda de baixo pintada dessa cor a tapar a borda do painel.
@@ -418,7 +477,7 @@ export default function Services() {
                 >
                   {t.home.services[cat.id].title}
                 </span>
-              </button>
+              </Link>
             )
           })}
         </div>
@@ -432,13 +491,13 @@ export default function Services() {
         <div
           role="tabpanel"
           id="painel-servico"
-          aria-labelledby={`aba-${open}`}
+          aria-labelledby={`aba-${aberto}`}
           tabIndex={0}
           style={{ background: PAINEL }}
           className="border border-white/12 rounded-b-2xl rounded-tr-2xl p-5 sm:p-7 xl:p-8"
         >
           <AnimatePresence mode="wait">
-            {CATEGORIES.filter((c) => c.id === open).map((cat) => {
+            {CATEGORIES.filter((c) => c.id === aberto).map((cat) => {
               const capa = capas[cat.id]
               // Fotografia do repositório, partilhada com os cartões da home.
               const local = CAPAS_LOCAIS[cat.id]
@@ -450,8 +509,6 @@ export default function Services() {
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               >
-                <p className="text-titanium/60 text-sm mb-5">{t.home.services[cat.id].tagline}</p>
-
                 {/*
                   A fotografia ao lado dos packs e em retrato, não numa faixa
                   atravessada por cima deles.
@@ -586,6 +643,29 @@ export default function Services() {
               )
             })}
           </AnimatePresence>
+        </div>
+      </section>
+
+      {/*
+        O que fazemos, em texto corrido, por baixo dos packs.
+
+        Esta é a outra metade da razão de cada serviço ter página própria: uma
+        lista de packs diz o que se compra, mas não diz como trabalhamos, quando
+        se marca, o que chega ao fim. Quem está a decidir quer as duas coisas, e
+        quem pesquisa no Google só encontra a segunda — uma página feita de
+        rótulos e preços não tem texto nenhum para encontrar.
+
+        Fica depois dos packs e não antes porque quem chega já decidido vai
+        direito ao que está incluído, e não se lhe põe três parágrafos à frente.
+      */}
+      <section className="container-px mt-12 sm:mt-16">
+        <div className="grid gap-8 sm:gap-10 md:grid-cols-2">
+          {pagina.blocos.map((bloco, i) => (
+            <Reveal key={bloco.titulo} delay={i * 0.08}>
+              <h2 className="text-xl sm:text-2xl mb-3">{bloco.titulo}</h2>
+              <p className="text-titanium/55 text-sm sm:text-base leading-relaxed">{bloco.texto}</p>
+            </Reveal>
+          ))}
         </div>
       </section>
 

@@ -136,6 +136,119 @@ export const en: Dict = {
     addonTitle: 'Build your own package',
     addonText:
       'No package has to stay as it is. Add 4K film, drone, more hours or a second session. Tell us what you have in mind and we will price it.',
+    paginas: {
+      casamentos: {
+        seoTitle: 'Wedding Photographer | NEBULA',
+        seoDescription:
+          'Wedding photography and film in Lisbon, Sintra and Portalegre. A team of three, drone, guest gallery and first photographs within 24 hours.',
+        intro:
+          'A wedding happens once and never happens again. There is no second attempt, no running the plan twice, no asking the bride to walk in once more. That is why we work as a team rather than alone, and why the first photographs reach you the next day.',
+        blocos: [
+          {
+            titulo: 'How we work on the day',
+            texto:
+              'There are three of us: two photographers and one videographer. While one is with the bride getting ready, the other is with the groom, and nobody has to choose between two halves of the same morning. During the ceremony, two angles at once, with no one running down the aisle. We work quietly: the day belongs to you and your guests, not to us.',
+          },
+          {
+            titulo: 'Photography and film, made together',
+            texto:
+              'Photography and video are not two jobs forced into the same day. Whoever is filming has been with us from the start, knows what is coming next and never needs to stop the moment to shoot it again. Packages with film also include a vertical video of up to a minute, in the shape and format social media asks for.',
+          },
+          {
+            titulo: 'What your guests saw',
+            texto:
+              'The best photographs of the night are almost always on your guests’ phones, and they end up lost in group chats. Every wedding of ours has its own code, printed and placed on the tables: anyone who scans it hands over the photographs they took, with nothing to install and no account to create. You get everything in one place, and you decide what stays.',
+          },
+          {
+            titulo: 'After the wedding',
+            texto:
+              'The next day you receive a first selection, to show the people who were there and the ones who could not come. The full set arrives in a private online gallery, with an address and password that are only yours, where you download everything at once or pick photographs one by one. Nothing is published anywhere without your yes.',
+          },
+        ],
+      },
+      maternidade: {
+        seoTitle: 'Maternity and Pregnancy Photography | NEBULA',
+        seoDescription:
+          'Maternity sessions in the studio or outdoors, in Lisbon, Sintra and Portalegre. Lifestyle photography and film, with a private online gallery.',
+        intro:
+          'A bump changes from one week to the next and then it is gone. A maternity session is not about being pregnant: it is about the short stretch where you are already a mother and still do not know the face of the person coming.',
+        blocos: [
+          {
+            titulo: 'When to book',
+            texto:
+              'Between 28 and 34 weeks the bump shows well and the body is not yet heavy enough for a session to be tiring. Later is possible, but book with room to spare: from 36 weeks onwards the baby can always decide to bring everything forward.',
+          },
+          {
+            titulo: 'Studio or outdoors',
+            texto:
+              'In the studio we control the light and the background, and the result is more editorial, cleaner, closer to a magazine. Outdoors you gain the place and the hour: late afternoon, the countryside, the beach. Neither is better; there is only what you want hanging on a wall ten years from now. You choose, and we help you choose.',
+          },
+          {
+            titulo: 'Who is in the photographs',
+            texto:
+              'The father is in them whenever he wants to be, and so are the children already here. No package offers less because of that, and we do not charge per person. What changes between packages is how long the session runs and how many outfits fit into it without rushing.',
+          },
+          {
+            titulo: 'What you get',
+            texto:
+              'The chosen photographs, edited, in a private online gallery where you download whatever you like at a quality that holds up in print. Packages with video also include a short film, the kind you keep and watch again, and a vertical cut to share.',
+          },
+        ],
+      },
+      retratos: {
+        seoTitle: 'Portraits and Photographic Books | NEBULA',
+        seoDescription:
+          'Editorial portraiture in the studio or outdoors, in Lisbon, Sintra and Portalegre. For personal branding, a book or yourself, with a private online gallery.',
+        intro:
+          'Most people do not like being photographed, and nearly always it is because they have never been photographed well. A portrait that works is not a matter of luck or of being photogenic: it is light, time and someone telling you what to do with your hands.',
+        blocos: [
+          {
+            titulo: 'What a portrait is for',
+            texto:
+              'For a personal brand that needs a face, for the book of someone who works with their image, for a profile still carrying a photograph a friend took six years ago. And for none of that: some people sit for a portrait simply because they want a photograph of themselves they actually like, and that is as good a reason as any.',
+          },
+          {
+            titulo: 'You do not need to know how to pose',
+            texto:
+              'Nobody knows how to pose, and those who say they do usually come out worse. The direction is ours: we say where to put your weight, where to look, what to do with your arms. In packages with preparation we talk before the day about clothes and references, so you arrive with the decisions already made rather than choosing at the door.',
+          },
+          {
+            titulo: 'Studio or outdoors',
+            texto:
+              'In the studio the light is ours and the background disappears: the person is left, and nothing else. Outdoors the place, the hour and chance all come in, and the portrait starts telling you where it was made too. Both can happen in the same session, if there is time for it.',
+          },
+          {
+            titulo: 'What you get',
+            texto:
+              'The edited photographs in a private online gallery, ready to print and to use anywhere. We do not stamp our name on them and we do not ask for credit to use them. They are yours.',
+          },
+        ],
+      },
+      eventos: {
+        seoTitle: 'Event Photography | NEBULA',
+        seoDescription:
+          'Photography and video coverage for parties, birthdays and company events, in Lisbon, Sintra and Portalegre.',
+        intro:
+          'Birthdays, christenings, company dinners, launches. An event has no script the way a wedding does, so it has no fixed package either: we agree on what is needed, and charge what was agreed.',
+        blocos: [
+          {
+            titulo: 'Why there are no packages here',
+            texto:
+              'Because we have not yet done enough events to promise numbers honestly. A package is a promise with hours and quantities inside it, and writing that without knowing would mean finding out alongside the client, on the day itself. We would rather agree it with you and tell you what we can do.',
+          },
+          {
+            titulo: 'What we agree on',
+            texto:
+              'How many hours, how many of us, whether there is video as well as photography, and what really has to be on record. A company dinner wants the speeches and the group shots; a birthday wants the cake and the face of whoever blows it out. It is not the same job and it is not solved by the same plan.',
+          },
+          {
+            titulo: 'A private gallery here too',
+            texto:
+              'The photographs arrive in an online gallery with its own address and password, where the company or the family downloads whatever they want. For company events, that settles the usual problem of emailing large files to ten different people.',
+          },
+        ],
+      },
+    },
     items: {
       photoEditorial: 'Editorial photography',
       horas6: '6 hours of coverage',

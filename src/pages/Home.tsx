@@ -10,7 +10,7 @@ import { usePortfolio, useServiceCovers } from '../lib/site-content/useSiteConte
 import CountUp from '../lib/CountUp'
 import Seo from '../lib/Seo'
 import SiteIntro from '../components/SiteIntro'
-import { useLink, useT } from '../lib/i18n'
+import { useLink, useLinkServico, useT } from '../lib/i18n'
 import { track } from '../lib/track'
 import Testimonials from '../components/Testimonials'
 import { asset } from '../lib/asset'
@@ -67,6 +67,7 @@ const INTRO_KEY = 'nebula-intro-site'
 export default function Home() {
   const t = useT()
   const link = useLink()
+  const linkServico = useLinkServico()
   const reduced = useReducedMotion()
   const heroRef = useRef<HTMLDivElement>(null)
   // As mesmas capas da página de serviços, para as duas páginas não se
@@ -314,7 +315,7 @@ export default function Home() {
               return (
               <Reveal key={id} delay={i * 0.1}>
                 <Link
-                  to={`${link('services')}#${id}`}
+                  to={linkServico(id)}
                   className="block relative rounded-2xl overflow-hidden group"
                   style={{ height: 'clamp(48vh, 60vh, 68vh)' }}
                 >
