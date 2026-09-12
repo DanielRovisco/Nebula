@@ -1,0 +1,1 @@
+import{n as e}from"./site-Crmro6yF.js";var t=e=>e.endsWith(`/`)?e:`${e}/`;function n(n){return{"@context":`https://schema.org`,"@type":`BreadcrumbList`,itemListElement:n.map((n,r)=>({"@type":`ListItem`,position:r+1,name:n.nome,item:`${e}${t(n.caminho)}`}))}}export{n as t};
