@@ -148,6 +148,48 @@ export const pt = {
       sobre maternidade, e não uma frase sobre maternidade dentro de uma página
       sobre tudo.
     */
+    /*
+      Os textos dos ecrãs de exemplo e das duas secções que os mostram.
+
+      O casal é inventado, e tem de continuar a ser: pôr aqui o nome de
+      clientes nossos seria mostrar o casamento deles numa página de vendas sem
+      lhes ter perguntado nada.
+    */
+    mockup: {
+      codigo: 'ana-e-tiago',
+      casal: 'Ana & Tiago',
+      data: '14 de Junho de 2025',
+      frase: 'Queremos ver o nosso dia pelos olhos daqueles que mais gostamos! Partilha o teu olhar 🤍',
+      botao: 'Escolher fotografias',
+      limite: 'Fotografias e vídeos, até 500 MB cada',
+      nome: 'O teu nome, se quiseres',
+      naGaleria: 'Na galeria',
+      nota: 'Ecrãs verdadeiros, com um casamento de exemplo.',
+    },
+    galerias: {
+      label: 'A entrega',
+      titulo: 'As fotografias ficam num sítio só vosso.',
+      texto: 'Não mandamos links que expiram nem pastas partilhadas com meio mundo. Cada trabalho tem a sua galeria, com endereço e palavra-passe próprios, de onde descarregam tudo de uma vez ou escolhem uma a uma, na qualidade que serve para imprimir.',
+      pontos: [
+        'Endereço e palavra-passe só vossos',
+        'Descarregar tudo ou escolher uma a uma',
+        'Sem marca de água e sem prazo para decidir',
+      ],
+      cta: 'Ver a porta das galerias',
+    },
+    convidados: {
+      label: 'No próprio dia',
+      titulo: 'E o que os vossos convidados viram.',
+      texto: 'As melhores fotografias da noite estão nos telemóveis de quem lá esteve, e acabam perdidas em conversas de grupo. Cada casamento nosso tem um código próprio, que se imprime e se põe nas mesas: quem o lê entrega as fotografias que tirou, sem instalar nada e sem criar conta nenhuma.',
+      pontos: [
+        'Basta apontar a câmara ao código',
+        'Sem aplicações, sem contas, sem palavras-passe',
+        'Vocês aprovam o que entra na galeria',
+      ],
+      cta: 'Falar connosco sobre isto',
+    },
+    packsLabel: 'O que está incluído',
+    packsTitulo: 'Escolham por onde começar.',
     paginas: {
       casamentos: {
         seoTitle: 'Fotógrafo de Casamentos | NEBULA',
@@ -165,11 +207,6 @@ export const pt = {
             titulo: 'Fotografia e filme, feitos juntos',
             texto:
               'A fotografia e o vídeo não são dois trabalhos encaixados à força no mesmo dia. Quem filma está connosco desde o princípio, sabe o que vai acontecer a seguir e não precisa de mandar parar para gravar outra vez. Nos packs com filme entregamos também um vídeo vertical de até um minuto, do tamanho e do formato que as redes pedem.',
-          },
-          {
-            titulo: 'O que os vossos convidados viram',
-            texto:
-              'As melhores fotografias da noite estão quase sempre nos telemóveis dos convidados, e acabam perdidas em conversas de grupo. Cada casamento nosso tem um código próprio, que se imprime e se põe nas mesas: quem o lê entrega as fotografias que tirou, sem instalar nada e sem criar conta nenhuma. Vocês recebem tudo organizado, e decidem o que fica.',
           },
           {
             titulo: 'Depois do casamento',

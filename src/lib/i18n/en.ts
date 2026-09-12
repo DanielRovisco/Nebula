@@ -136,6 +136,41 @@ export const en: Dict = {
     addonTitle: 'Build your own package',
     addonText:
       'No package has to stay as it is. Add 4K film, drone, more hours or a second session. Tell us what you have in mind and we will price it.',
+    mockup: {
+      codigo: 'ana-e-tiago',
+      casal: 'Ana & Tiago',
+      data: '14 June 2025',
+      frase: 'We want to see our day through the eyes of the people we love most. Share what you saw 🤍',
+      botao: 'Choose photographs',
+      limite: 'Photos and video, up to 500 MB each',
+      nome: 'Your name, if you like',
+      naGaleria: 'In the gallery',
+      nota: 'Real screens, with a made-up wedding.',
+    },
+    galerias: {
+      label: 'The delivery',
+      titulo: 'The photographs live somewhere that is only yours.',
+      texto: 'We do not send links that expire or folders shared with half the world. Every piece of work gets its own gallery, with its own address and password, where you download everything at once or pick photographs one by one, at a quality that holds up in print.',
+      pontos: [
+        'An address and password that are only yours',
+        'Download everything, or choose one by one',
+        'No watermark, and no deadline to decide',
+      ],
+      cta: 'See the gallery door',
+    },
+    convidados: {
+      label: 'On the day itself',
+      titulo: 'And what your guests saw.',
+      texto: 'The best photographs of the night are on the phones of the people who were there, and they end up lost in group chats. Every wedding of ours has its own code, printed and placed on the tables: anyone who scans it hands over the photographs they took, with nothing to install and no account to create.',
+      pontos: [
+        'Just point the camera at the code',
+        'No apps, no accounts, no passwords',
+        'You approve what goes into the gallery',
+      ],
+      cta: 'Talk to us about this',
+    },
+    packsLabel: 'What is included',
+    packsTitulo: 'Choose where to start.',
     paginas: {
       casamentos: {
         seoTitle: 'Wedding Photographer | NEBULA',
@@ -153,11 +188,6 @@ export const en: Dict = {
             titulo: 'Photography and film, made together',
             texto:
               'Photography and video are not two jobs forced into the same day. Whoever is filming has been with us from the start, knows what is coming next and never needs to stop the moment to shoot it again. Packages with film also include a vertical video of up to a minute, in the shape and format social media asks for.',
-          },
-          {
-            titulo: 'What your guests saw',
-            texto:
-              'The best photographs of the night are almost always on your guests’ phones, and they end up lost in group chats. Every wedding of ours has its own code, printed and placed on the tables: anyone who scans it hands over the photographs they took, with nothing to install and no account to create. You get everything in one place, and you decide what stays.',
           },
           {
             titulo: 'After the wedding',

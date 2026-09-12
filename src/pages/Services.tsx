@@ -1,9 +1,12 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Check } from 'lucide-react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { ArrowRight, ArrowUpRight, Check } from 'lucide-react'
 import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
+import Telemovel from '../components/servicos/Telemovel'
+import EcraGaleria from '../components/servicos/EcraGaleria'
+import EcraConvidados from '../components/servicos/EcraConvidados'
 import { CAPAS_LOCAIS } from '../lib/servicosCapas'
 import { publicUrl } from '../lib/site-content/public'
 import { useServiceCovers } from '../lib/site-content/useSiteContent'
@@ -14,11 +17,6 @@ import { servicoDoSlug, servicoPath, type ServicoId } from '../lib/i18n/routes'
 import Breadcrumbs from '../components/Breadcrumbs'
 import { breadcrumbJsonLd } from '../lib/breadcrumbJsonLd'
 
-/**
- * A estrutura dos packs vive aqui; os nomes e os itens vêm do dicionário. Assim
- * acrescentar um item a um pack é uma linha em cada língua, e nunca fica um
- * pack meio traduzido.
- */
 /**
  * Quantas colunas para os cartões que existem.
  *
@@ -38,11 +36,24 @@ const colunas = (quantos: number) =>
       ? 'sm:grid-cols-2'
       : 'sm:grid-cols-2 lg:grid-cols-3'
 
+/**
+ * A estrutura dos packs vive aqui; os nomes e os itens vêm do dicionário. Assim
+ * acrescentar um item a um pack é uma linha em cada língua, e nunca fica um
+ * pack meio traduzido.
+ */
 const CATEGORIES = [
   {
     id: 'casamentos',
     // Sem correspondência no portfólio: ainda não há fotografias de casamento.
     portfolio: null,
+    /*
+      Só os casamentos mostram a página dos convidados, e não é esquecimento
+      nas outras: a galeria de convidados existe porque num casamento há cem
+      pessoas com o telemóvel na mão. Numa sessão de maternidade há duas, e
+      são as nossas clientes. Anunciar ali a mesma coisa seria vender um
+      serviço que não faz sentido nenhum naquele contexto.
+    */
+    convidados: true,
     packs: [
       /*
         A ordem das linhas não é decorativa: primeiro o que se recebe (o
@@ -163,20 +174,20 @@ const CATEGORIES = [
   },
 ] as const
 
-/*
-  Fundo do painel dos serviços, e da aba escolhida.
-
-  Sólido e não um branco translúcido porque a aba tem de tapar a borda do
-  painel com a mesma cor exacta, e uma cor translúcida deixava a linha a
-  transparecer por baixo. Um pouco acima do fundo da página (#141414), o
-  suficiente para o painel se destacar sem parecer outra caixa.
-*/
-const PAINEL = '#1c1c1c'
-
 /** Só abrimos a categoria pedida se ela existir. O hash vem do URL. */
 function categoriaDoHash(hash: string) {
   const id = decodeURIComponent(hash.replace('#', ''))
   return CATEGORIES.some((c) => c.id === id) ? (id as ServicoId) : null
+}
+
+/** Ponto de uma lista curta, com o visto que o resto da página usa. */
+function Ponto({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-3 text-sm text-titanium/60">
+      <Check size={14} className="mt-0.5 shrink-0 text-titanium/70" />
+      {children}
+    </li>
+  )
 }
 
 export default function Services() {
@@ -184,6 +195,7 @@ export default function Services() {
   const link = useLink()
   const lang = useLang()
   const navigate = useNavigate()
+  const reduzido = useReducedMotion()
   const { hash } = useLocation()
   const { servico } = useParams()
   // Capas escolhidas no painel. Serviço sem capa lá fica com a do repositório.
@@ -194,8 +206,7 @@ export default function Services() {
 
     É a diferença entre uma aba e uma página: assim cada serviço tem endereço
     próprio para partilhar, para indexar e para o botão de voltar entender, e
-    continua a trocar-se sem recarregar nada — é o router a mudar o que está
-    dentro do painel, exactamente como as abas faziam.
+    continua a trocar-se sem recarregar nada.
 
     Sem serviço no endereço (alguém em /servicos) mostra-se o primeiro, e o
     canonical aponta para o endereço próprio dele. Duas páginas com o mesmo
@@ -208,11 +219,41 @@ export default function Services() {
   const abasRef = useRef<Record<string, HTMLAnchorElement | null>>({})
 
   /*
+    A posição e a largura da aba escolhida, medidas do que está no ecrã.
+
+    Era o framer-motion a tratar disto com `layoutId`, e o efeito era um salto:
+    o realce vivia dentro de cada aba, e cada aba corta o que lhe sai fora, por
+    isso ele desaparecia de um lado e reaparecia do outro. Agora é um elemento
+    só, filho da barra, que viaja de uma posição para a outra e passa por cima
+    das abas do meio pelo caminho.
+
+    Medido em `useLayoutEffect` e não `useEffect`: entre pintar na posição
+    antiga e corrigir para a certa há um fotograma, e esse fotograma vê-se.
+  */
+  const [marca, setMarca] = useState<{ x: number; w: number } | null>(null)
+  useLayoutEffect(() => {
+    const medir = () => {
+      const el = abasRef.current[aberto]
+      if (!el) return
+      setMarca({ x: el.offsetLeft, w: el.offsetWidth })
+    }
+    medir()
+    /*
+      As letras mudam de largura quando a fonte verdadeira chega, e as abas
+      mudam de tamanho com o ecrã. Sem voltar a medir nesses dois momentos, o
+      realce fica ao lado da aba que devia estar a marcar.
+    */
+    const observador = new ResizeObserver(medir)
+    if (barraRef.current) observador.observe(barraRef.current)
+    document.fonts?.ready.then(medir).catch(() => {})
+    return () => observador.disconnect()
+  }, [aberto])
+
+  /*
     Trocar de serviço não sobe a página ao topo (ver lib/ScrollToTop), mas se
     as abas já ficaram acima do ecrã, o conteúdo trocava sem se ver o que o
     trocou: parecia que a página tinha mudado sozinha. Nesse caso, e só nesse,
-    trazem-se as abas de volta à vista, com os 96px de desconto da barra fixa
-    do topo.
+    trazem-se as abas de volta à vista, com os 96px de desconto da barra fixa.
   */
   useEffect(() => {
     const el = barraRef.current
@@ -237,17 +278,16 @@ export default function Services() {
   */
   if (servico && !doUrl) return <Navigate to={link('services')} replace />
 
+  const cat = CATEGORIES.find((c) => c.id === aberto)!
   const pagina = t.services.paginas[aberto]
+  const capa = capas[aberto]
+  const local = CAPAS_LOCAIS[aberto]
 
   /*
     Setas para mudar de aba, Home e End para a primeira e a última. É o que a
     norma manda para este padrão e é o que torna a barra utilizável sem rato:
     sem isto, e com uma só paragem de tabulação, quem navega por teclado
     chegava à barra e não conseguia sair da primeira aba.
-
-    O foco vai para a aba nova a seguir a mudá-la, senão a selecção andava e o
-    foco ficava para trás, e a leitura em voz alta deixava de corresponder ao
-    que está escolhido.
   */
   function aoTeclado(e: React.KeyboardEvent<HTMLDivElement>) {
     const ids = CATEGORIES.map((c) => c.id) as ServicoId[]
@@ -260,17 +300,26 @@ export default function Services() {
     if (!destino) return
     e.preventDefault()
     /*
-      Navegar e não trocar estado: a barra passou a ser feita de ligações, e a
-      seta tem de fazer o mesmo que o clique faria. `replace` para as setas não
-      encherem o histórico — quem percorreu as quatro com o teclado quer que o
-      botão de voltar o leve à página de onde veio, e não três vezes a esta.
+      Navegar e não trocar estado: a barra é feita de ligações, e a seta tem de
+      fazer o mesmo que o clique faria. `replace` para as setas não encherem o
+      histórico.
     */
     navigate(servicoPath(destino, lang), { replace: true })
     abasRef.current[destino]?.focus()
   }
 
+  /*
+    A viagem do realce de uma aba para a outra.
+
+    Uma mola e não uma duração fixa: com duração fixa, ir da primeira à última
+    demora o mesmo que ir da primeira à segunda, e a viagem longa fica lenta e
+    a curta fica brusca. A mola resolve isso sozinha, e o `damping` alto tira a
+    oscilação no fim, que aqui pareceria um defeito e não um movimento.
+  */
+  const viagem = { type: 'spring' as const, stiffness: 130, damping: 24, mass: 1 }
+
   return (
-    <div className="pt-24 sm:pt-28 lg:pt-24 pb-16 sm:pb-20">
+    <div className="pt-24 sm:pt-28 lg:pt-24 pb-16 sm:pb-24">
       {/*
         O título e a descrição são os do serviço aberto, e não os da lista.
 
@@ -282,7 +331,7 @@ export default function Services() {
       <Seo
         title={pagina.seoTitle}
         description={pagina.seoDescription}
-        image={absoluteUrl(`/brand/portfolio/${CAPAS_LOCAIS[aberto].image}-1440.webp`)}
+        image={absoluteUrl(`/brand/portfolio/${local.image}-1440.webp`)}
         /*
           Em /servicos mostra-se o primeiro serviço, e o canonical aponta para
           o endereço próprio dele. Já na página do serviço não há canonical a
@@ -296,12 +345,11 @@ export default function Services() {
             { nome: t.home.services[aberto].title, caminho: servicoPath(aberto, lang) },
           ]),
           /*
-            Um `Service` só, o desta página, e não os quatro de cada vez.
-
-            Com os quatro em todas as páginas, cada uma declarava ao Google que
-            era sobre casamentos, maternidade, retratos e eventos ao mesmo
-            tempo — o oposto do que se ganha em separá-las. Sem preços:
-            declarar uma oferta sem valor é pior do que não a declarar.
+            Um `Service` só, o desta página, e não os quatro de cada vez. Com os
+            quatro em todas as páginas, cada uma declarava ao Google que era
+            sobre casamentos, maternidade, retratos e eventos ao mesmo tempo, o
+            oposto do que se ganha em separá-las. Sem preços: declarar uma
+            oferta sem valor é pior do que não a declarar.
           */
           {
             '@context': 'https://schema.org',
@@ -311,383 +359,360 @@ export default function Services() {
             serviceType: t.home.services[aberto].title,
             provider: { '@type': 'LocalBusiness', name: 'NEBULA', '@id': `${SITE_URL}/` },
             areaServed: { '@type': 'Country', name: 'Portugal' },
-            image: absoluteUrl(`/brand/portfolio/${CAPAS_LOCAIS[aberto].image}-1440.webp`),
+            image: absoluteUrl(`/brand/portfolio/${local.image}-1440.webp`),
             url: `${SITE_URL}${servicoPath(aberto, lang)}`,
           },
         ]}
       />
 
-      {/* Header */}
-      <section className="container-px mb-8 sm:mb-10">
+      <section className="container-px">
         <Breadcrumbs
           items={[
             { label: t.nav.services, to: 'services' },
             { label: t.home.services[aberto].title },
           ]}
         />
-        <Reveal>
-          <span className="label-sm">{t.services.label}</span>
-          {/*
-            O h1 é o nome do serviço, e não o título da lista.
 
-            Numa página que existe para responder a "fotógrafo de casamentos",
-            o cabeçalho principal tem de dizer isso. O título antigo continua
-            a servir de subtítulo: é a frase da marca, não a da página.
-          */}
-          <h1 className="mt-3 max-w-3xl leading-[1.05]" style={{ fontSize: 'clamp(2.2rem, 3.6vw, 3.2rem)' }}>
-            {t.home.services[aberto].title}
-          </h1>
-          <p className="mt-4 max-w-2xl text-titanium/60 leading-relaxed">{pagina.intro}</p>
-        </Reveal>
-      </section>
+        {/*
+          As quatro abas em cima de tudo, antes do título.
 
-      {/*
-        Abas lado a lado, e não uma lista de painéis empilhados.
+          É a primeira coisa que se vê depois das migalhas, e tem de ser: quem
+          chega de uma pesquisa cai numa das quatro páginas, e o que precisa de
+          perceber em primeiro lugar é que há mais três. Ao fundo da página
+          isso descobria-se tarde de mais.
 
-        Empilhadas, os quatro serviços ocupavam quatro ecrãs e quem chegava
-        aqui via um e tinha de rolar para descobrir que havia mais. Lado a
-        lado, a oferta toda lê-se de uma vez e comparar dois é um clique em vez
-        de um passeio.
-
-        Segue o padrão de abas da norma: `tablist`, `tab` e `tabpanel` com as
-        ligações entre eles, uma só paragem de tabulação na barra, e as setas a
-        mudar de aba. Sem isso são quatro botões que por acaso parecem abas, e
-        quem navega por teclado tem de passar por todos para chegar ao último.
-      */}
-      <section className="container-px">
+          Segue o padrão de abas da norma: `tablist`, `tab` e `tabpanel` com as
+          ligações entre eles, uma só paragem de tabulação na barra, e as setas
+          a mudar de aba.
+        */}
         <div
           ref={barraRef}
           role="tablist"
           aria-label={t.services.label}
           onKeyDown={aoTeclado}
           /*
-            `overflow-x-auto` é rede de segurança, não o plano.
-
-            Os espaçamentos abaixo foram apertados até as quatro abas caberem
-            num telemóvel sem rolar. Mas há ecrãs mais estreitos do que os que
-            se testam, e línguas com palavras mais longas: sem isto, a última
-            aba ficava cortada pela margem e sem maneira nenhuma de lá chegar,
-            porque o body corta o que passa da largura. Com isto, no pior caso
-            arrasta-se.
-
-            A barra de rolagem fica escondida: aqui ela lia-se como um risco
-            cinzento debaixo das abas e não como um controlo.
+            `overflow-x-auto` é rede de segurança, não o plano: os espaçamentos
+            foram apertados até as quatro caberem num telemóvel. Mas há ecrãs
+            mais estreitos do que os que se testam, e sem isto a última aba
+            ficava cortada pela margem e sem maneira de lá chegar.
           */
-          className="flex items-end overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="relative flex border-b border-white/10 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {CATEGORIES.map((cat) => {
-            const activa = aberto === cat.id
+          {/*
+            O realce e o risco que viajam. Ficam por baixo dos rótulos (`z-0`
+            contra o `relative` de cada aba) e fora do fluxo, por isso não
+            empurram nada enquanto se movem.
+          */}
+          {marca && (
+            <>
+              <motion.span
+                aria-hidden="true"
+                className="absolute top-0 bottom-0 left-0 rounded-t-lg"
+                initial={false}
+                animate={{ x: marca.x, width: marca.w }}
+                transition={reduzido ? { duration: 0 } : viagem}
+                style={{
+                  background:
+                    'linear-gradient(to bottom, rgba(252,255,240,0.10), rgba(252,255,240,0) 85%)',
+                }}
+              />
+              <motion.span
+                aria-hidden="true"
+                className="absolute bottom-0 left-0 h-[2px] bg-titanium rounded-full"
+                initial={false}
+                animate={{ x: marca.x, width: marca.w }}
+                transition={reduzido ? { duration: 0 } : viagem}
+              />
+            </>
+          )}
+
+          {CATEGORIES.map((c) => {
+            const activa = aberto === c.id
             return (
               /*
-                Uma ligação a sério, e não um botão a fingir de aba.
-
-                Faz o que o clique já fazia, e mais: abre em separador novo com
-                o meio do rato, copia-se com o botão direito, e o Google segue-a
-                até à página do serviço. Um botão não faz nada disto, e era
-                exactamente o que faltava aqui.
+                Uma ligação a sério, e não um botão a fingir de aba: abre em
+                separador novo com o botão do meio, copia-se, e o Google
+                segue-a até à página do serviço.
               */
               <Link
-                key={cat.id}
-                to={servicoPath(cat.id as ServicoId, lang)}
+                key={c.id}
+                to={servicoPath(c.id as ServicoId, lang)}
                 ref={(el) => {
-                  abasRef.current[cat.id] = el
+                  abasRef.current[c.id] = el
                 }}
                 role="tab"
-                id={`aba-${cat.id}`}
+                id={`aba-${c.id}`}
                 aria-selected={activa}
                 aria-controls="painel-servico"
-                /*
-                  Só a aba escolhida recebe tabulação. É o que faz a barra
-                  contar como uma paragem e não como quatro: entra-se nela,
-                  muda-se com as setas, e sai-se para o conteúdo.
-                */
+                // Só a aba escolhida recebe tabulação: é o que faz a barra
+                // contar como uma paragem e não como quatro.
                 tabIndex={activa ? 0 : -1}
-                /*
-                  A aba escolhida cola-se ao painel: mesma cor de fundo, e a
-                  borda de baixo pintada dessa cor a tapar a borda do painel.
-                  É o `-mb-px` que a faz descer o pixel exacto que sobrepõe a
-                  linha. Sem essa sobreposição fica um risco a atravessar a
-                  aba, e o que devia ser uma pasta aberta lê-se como um botão
-                  pousado por cima de uma caixa.
-
-                  Por isso o painel tem fundo sólido e não translúcido: para a
-                  borda de baixo da aba poder tapar a linha por completo. Um
-                  branco a 4 por cento deixava-a a transparecer.
-                */
-                style={
-                  activa
-                    ? { background: PAINEL, borderBottomColor: PAINEL }
-                    : undefined
-                }
-                /*
-                  No telemóvel cada aba mede o que o texto pede; a partir de sm
-                  dividem a largura por igual.
-
-                  Com larguras iguais em 390px cada uma ficava com 86px e
-                  "Maternidade" saía cortada a meio com reticências. Uma aba que
-                  não diz o nome inteiro do serviço não serve para nada. Pelo
-                  conteúdo, as quatro somam cerca de 305px e cabem à vontade.
-                */
-                className={`group relative -mb-px min-w-0 shrink-0 sm:shrink sm:flex-1 overflow-hidden border rounded-t-xl px-2 sm:px-4 py-3 sm:py-4 transition-colors min-h-[48px] ${
-                  activa
-                    ? 'z-10 border-white/12 text-titanium'
-                    : 'border-transparent bg-white/[0.02] text-titanium/45 hover:bg-white/[0.05] hover:text-titanium/85'
+                className={`relative z-10 min-w-0 shrink-0 sm:shrink sm:flex-1 px-2 sm:px-5 py-4 min-h-[48px] text-center sm:text-left transition-colors duration-500 ${
+                  activa ? 'text-titanium' : 'text-titanium/40 hover:text-titanium/80'
                 }`}
               >
-                {/*
-                  Realce e risco da aba escolhida, desenhados com `layoutId`.
-
-                  É o mesmo par de elementos a mudar de sítio, não um a
-                  aparecer e outro a desaparecer: o framer-motion trata dois
-                  elementos com o mesmo `layoutId` como o mesmo objeto e anima-o
-                  de uma posição para a outra. O resultado é o realce a deslizar
-                  de aba em aba, que é o que dá vida a uma barra que sem isso
-                  são quatro rectângulos a acender e apagar.
-
-                  Ficam fora do fluxo e por baixo do rótulo: quem lê tem o texto
-                  por cima, e o realce é fundo.
-                */}
-                {activa && (
-                  <>
-                    <motion.span
-                      layoutId="aba-realce"
-                      aria-hidden="true"
-                      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute inset-0 rounded-t-xl"
-                      style={{
-                        background:
-                          'linear-gradient(to bottom, rgba(252,255,240,0.12), rgba(252,255,240,0) 70%)',
-                      }}
-                    />
-                    <motion.span
-                      layoutId="aba-risco"
-                      aria-hidden="true"
-                      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute top-0 left-3 right-3 h-[2px] rounded-full"
-                      style={{
-                        background:
-                          'linear-gradient(to right, rgba(252,255,240,0), rgba(252,255,240,0.85), rgba(252,255,240,0))',
-                      }}
-                    />
-                  </>
-                )}
                 <span
-                  className="relative block truncate text-center sm:text-left uppercase tracking-[0.05em] sm:tracking-[0.12em] transition-transform duration-300 group-hover:-translate-y-px"
+                  className="block truncate uppercase tracking-[0.03em] sm:tracking-[0.14em]"
                   style={{ fontSize: 'clamp(0.6rem, 1.1vw, 0.75rem)' }}
                 >
-                  {t.home.services[cat.id].title}
+                  {t.home.services[c.id].title}
                 </span>
               </Link>
             )
           })}
         </div>
+      </section>
 
+      {/*
+        Daqui para baixo é tudo o painel da aba escolhida: a fotografia, o
+        texto, as galerias e os packs deste serviço.
+      */}
+      <div role="tabpanel" id="painel-servico" aria-labelledby={`aba-${aberto}`} tabIndex={-1}>
         {/*
-          Um painel só, que troca de conteúdo. A transição é uma passagem de
-          opacidade curta e não uma abertura em altura: com as abas fixas por
-          cima, animar a altura fazia a página saltar debaixo do cursor de cada
-          vez que se mudava de serviço.
+          A fotografia à esquerda e o serviço à direita.
+
+          A fotografia é metade do argumento numa página de fotografia, e antes
+          estava espremida ao lado de três cartões de packs. Aqui tem uma
+          coluna inteira, em retrato, que é o formato em que as fotografias
+          foram tiradas.
         */}
-        <div
-          role="tabpanel"
-          id="painel-servico"
-          aria-labelledby={`aba-${aberto}`}
-          tabIndex={0}
-          style={{ background: PAINEL }}
-          className="border border-white/12 rounded-b-2xl rounded-tr-2xl p-5 sm:p-7 xl:p-8"
-        >
-          <AnimatePresence mode="wait">
-            {CATEGORIES.filter((c) => c.id === aberto).map((cat) => {
-              const capa = capas[cat.id]
-              // Fotografia do repositório, partilhada com os cartões da home.
-              const local = CAPAS_LOCAIS[cat.id]
-              return (
-              <motion.div
-                key={cat.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+        <section className="container-px mt-10 sm:mt-14">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 xl:gap-20 lg:items-center">
+            <Reveal y={24}>
+              {capa ? (
+                /*
+                  Capa carregada no painel. É uma <img> simples e não o
+                  <Picture>: o <Picture> escolhe entre tamanhos que só existem
+                  para as fotografias do repositório, e uma capa carregada tem
+                  um ficheiro só.
+                */
+                <img
+                  src={publicUrl(capa.storageKey)}
+                  alt={capa.alt || local.alt}
+                  decoding="async"
+                  style={{ objectPosition: capa.pos }}
+                  className="w-full aspect-[4/5] lg:max-h-[600px] rounded-2xl object-cover"
+                />
+              ) : (
+                <Picture
+                  name={local.image}
+                  alt={local.alt}
+                  sizes="(max-width: 1024px) 100vw, 45vw"
+                  className={`w-full aspect-[4/5] lg:max-h-[600px] rounded-2xl object-cover ${local.imgPos}`}
+                />
+              )}
+            </Reveal>
+
+            <Reveal y={24} delay={0.12}>
+              <span className="label-sm">{t.services.label}</span>
+              <h1
+                className="mt-3 leading-[1.02]"
+                style={{ fontSize: 'clamp(2.4rem, 5vw, 4rem)' }}
               >
+                {t.home.services[aberto].title}
+              </h1>
+              <p className="mt-6 text-titanium/60 leading-relaxed text-[15px] sm:text-base">
+                {pagina.intro}
+              </p>
+
+              <div className="mt-9 flex flex-wrap items-center gap-4">
+                <Link
+                  to={link('contact')}
+                  className="group inline-flex items-center gap-3 bg-titanium text-eerie px-8 py-4 rounded-full text-[11px] uppercase tracking-[0.2em] font-semibold hover:gap-5 transition-all active:scale-95"
+                >
+                  {t.common.requestProposal}
+                  <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" />
+                </Link>
                 {/*
-                  A fotografia ao lado dos packs e em retrato, não numa faixa
-                  atravessada por cima deles.
-
-                  A faixa tinha 64px de altura numa largura de mil e tal: nesse
-                  formato não cabe fotografia nenhuma inteira, corta-se sempre
-                  a cabeça ou os pés e o que sobra é uma tira de fundo. Num
-                  site de fotografia, mostrar mal uma fotografia é o pior
-                  defeito que uma página pode ter.
-
-                  No telemóvel volta a ficar por cima, porque duas colunas
-                  numa largura de 390px davam duas colunas más em vez de uma
-                  boa, mas mantém o formato vertical.
-                */}
-                <div className="lg:grid lg:grid-cols-[auto_1fr] lg:gap-7 lg:items-start">
-                  {/*
-                    A altura da fotografia é o que sobra do ecrã, não um
-                    número escolhido a olho: `100svh` menos os 470px que o resto
-                    da página ocupa sempre (topo, título, abas, margens do
-                    painel, packs e o link de baixo). Assim ela cresce num
-                    monitor alto e encolhe num portátil baixo, e a página acaba
-                    sempre à tangente do fundo do ecrã em vez de deixar folga
-                    desperdiçada.
-
-                    Com a altura definida e a proporção 3:4, é a largura que se
-                    deduz — e por isso a coluna é `auto`. Os limites em cima e
-                    em baixo existem para os extremos: num ecrã muito alto a
-                    fotografia deixaria de caber ao lado dos packs, e num muito
-                    baixo ficaria um selo.
-
-                    3:4 e não outra proporção qualquer: é exactamente a das
-                    fotografias de origem (480x640, 960x1280, 1440x1920), por
-                    isso três das quatro categorias não sofrem corte nenhum. A
-                    dos eventos é 0.89 e perde um pouco dos lados, e é para
-                    isso que serve o `imgPos` de cada categoria.
-
-                    O `sizes` leva 30vw e não uma largura fixa: a coluna
-                    acompanha o ecrã, e num ecrã de alta densidade o browser
-                    precisa de saber o espaço real para pedir a versão de 960 em
-                    vez da de 480. Com uma largura fixa de 400px pedia a
-                    pequena e entregava uma fotografia desfocada, que num site
-                    de fotografia é o defeito que menos se pode dar ao luxo.
-                  */}
-                  {capa ? (
-                    /*
-                      Capa carregada no painel. É uma <img> simples e não o
-                      <Picture>: o <Picture> escolhe entre tamanhos que só
-                      existem para as fotografias do repositório, e uma capa
-                      carregada tem um ficheiro só.
-
-                      O recorte vem do painel em `pos` e entra por estilo, não
-                      por classe: é um valor livre escolhido por quem carregou
-                      a foto, e as classes do Tailwind são escritas antes de
-                      existir alguém para as escolher.
-                    */
-                    <img
-                      src={publicUrl(capa.storageKey)}
-                      alt={capa.alt || local.alt}
-                      loading="lazy"
-                      decoding="async"
-                      style={{ objectPosition: capa.pos }}
-                      className="w-full aspect-[3/4] lg:w-auto lg:h-[calc(100svh-470px)] lg:max-h-[62vh] lg:min-h-[255px] rounded-xl object-cover mb-6 lg:mb-0"
-                    />
-                  ) : (
-                    <Picture
-                      name={local.image}
-                      alt={local.alt}
-                      sizes="(max-width: 1024px) 100vw, 30vw"
-                      className={`w-full aspect-[3/4] lg:w-auto lg:h-[calc(100svh-470px)] lg:max-h-[62vh] lg:min-h-[255px] rounded-xl object-cover ${local.imgPos} mb-6 lg:mb-0`}
-                    />
-                  )}
-
-                  <div>
-                {/*
-                  Os packs em tantas colunas quantos eles são, até três. Em duas
-                  colunas, três packs ocupavam duas linhas e a página crescia
-                  cerca de 200px por nada: a coluna da direita tem largura de
-                  sobra para os três lado a lado.
-                */}
-                <div className={`grid gap-3 sm:gap-4 ${colunas(cat.packs.length)}`}>
-                  {cat.packs.map((pack) => (
-                    <div
-                      key={pack.name}
-                      className="border border-white/10 rounded-xl p-4 sm:p-5 flex flex-col hover:border-white/20 transition-colors"
-                    >
-                      <h3 className="text-base mb-3">{t.services.packs[pack.name]}</h3>
-                      {'herda' in pack && (
-                        <p className="text-sm text-titanium/45 mb-2.5 leading-snug">
-                          {t.services.inheritsFrom(t.services.packs[pack.herda])}
-                        </p>
-                      )}
-                      <ul className="space-y-2 flex-1">
-                        {pack.items.map((item) => (
-                          <li key={item} className="flex items-start gap-2.5 text-sm text-titanium/55">
-                            <Check size={13} className="mt-0.5 shrink-0 text-titanium/70" />
-                            {t.services.items[item]}
-                          </li>
-                        ))}
-                      </ul>
-                      <Link
-                        to={link('contact')}
-                        className="mt-4 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all w-fit min-h-[44px]"
-                      >
-                        {t.common.requestProposal} <ArrowRight size={12} />
-                      </Link>
-                    </div>
-                  ))}
-                </div>
-
-                {/*
-                  Quem acaba de ler o que está incluído quer ver como fica, e o
-                  portfólio abre já filtrado por esta categoria em vez de o
-                  obrigar a procurar o filtro.
-
-                  Só aparece quando o serviço tem mesmo uma categoria
-                  correspondente. Um hash que não casa com categoria nenhuma
-                  não dá erro: mostra o portfólio inteiro, sem filtro, como se
-                  a ligação não tivesse feito nada, e quem clicou fica sem
-                  perceber porquê.
+                  Só aparece quando o serviço tem mesmo uma categoria no
+                  portefólio. Uma ligação que abre o portefólio inteiro sem
+                  filtro lê-se como uma ligação partida.
                 */}
                 {cat.portfolio && (
                   <Link
                     to={`${link('portfolio')}#${cat.portfolio}`}
-                    className="mt-6 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all"
+                    className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all min-h-[44px]"
                   >
-                    {t.services.seeWork} <ArrowRight size={12} />
+                    {t.services.seeWork} <ArrowUpRight size={13} />
                   </Link>
                 )}
-                  </div>
-                </div>
-              </motion.div>
-              )
-            })}
-          </AnimatePresence>
-        </div>
-      </section>
-
-      {/*
-        O que fazemos, em texto corrido, por baixo dos packs.
-
-        Esta é a outra metade da razão de cada serviço ter página própria: uma
-        lista de packs diz o que se compra, mas não diz como trabalhamos, quando
-        se marca, o que chega ao fim. Quem está a decidir quer as duas coisas, e
-        quem pesquisa no Google só encontra a segunda — uma página feita de
-        rótulos e preços não tem texto nenhum para encontrar.
-
-        Fica depois dos packs e não antes porque quem chega já decidido vai
-        direito ao que está incluído, e não se lhe põe três parágrafos à frente.
-      */}
-      <section className="container-px mt-12 sm:mt-16">
-        <div className="grid gap-8 sm:gap-10 md:grid-cols-2">
-          {pagina.blocos.map((bloco, i) => (
-            <Reveal key={bloco.titulo} delay={i * 0.08}>
-              <h2 className="text-xl sm:text-2xl mb-3">{bloco.titulo}</h2>
-              <p className="text-titanium/55 text-sm sm:text-base leading-relaxed">{bloco.texto}</p>
+              </div>
             </Reveal>
-          ))}
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* Upsell */}
-      <section className="container-px mt-12 sm:mt-16">
-        <div className="border border-white/10 rounded-2xl p-8 sm:p-12 text-center">
-          <Reveal>
-            <span className="label-sm">{t.services.addonLabel}</span>
-            <h2 className="text-2xl sm:text-4xl mt-4 mb-5">{t.services.addonTitle}</h2>
-            <p className="text-titanium/55 max-w-md mx-auto text-sm leading-relaxed mb-8">
-              {t.services.addonText}
-            </p>
-            <Link
-              to={link('contact')}
-              className="inline-flex items-center gap-3 bg-titanium text-eerie px-9 py-5 rounded-full text-[11px] uppercase tracking-[0.2em] font-semibold group hover:gap-5 transition-all active:scale-95"
-            >
-              {t.common.requestQuote}
-              <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
-            </Link>
+        {/*
+          O que fazemos, em texto corrido.
+
+          Uma lista de packs diz o que se compra, mas não diz como trabalhamos,
+          quando se marca, o que chega ao fim. Quem está a decidir quer as duas
+          coisas, e quem pesquisa no Google só encontra a segunda: uma página
+          feita de rótulos e preços não tem texto nenhum para encontrar.
+        */}
+        <section className="container-px mt-20 sm:mt-28">
+          <div className="grid gap-x-14 gap-y-10 md:grid-cols-2">
+            {pagina.blocos.map((bloco, i) => (
+              <Reveal key={bloco.titulo} delay={i * 0.08} y={28}>
+                <h2 className="text-xl sm:text-2xl mb-3">{bloco.titulo}</h2>
+                <p className="text-titanium/55 text-sm sm:text-[15px] leading-relaxed">
+                  {bloco.texto}
+                </p>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+
+        {/*
+          As galerias privadas, com o ecrã verdadeiro dentro de um telemóvel.
+
+          "Galeria online privada" é uma linha que está em todos os sites de
+          fotografia do país e não quer dizer nada a ninguém. O ecrã diz.
+        */}
+        <section className="container-px mt-24 sm:mt-36">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div className="relative flex justify-center lg:justify-start">
+              <Telemovel inclinacao={-3}>
+                <EcraGaleria />
+              </Telemovel>
+            </div>
+
+            <div>
+              <Reveal y={28}>
+                <span className="label-sm">{t.services.galerias.label}</span>
+                <h2
+                  className="mt-3 leading-[1.08]"
+                  style={{ fontSize: 'clamp(1.9rem, 3.4vw, 2.8rem)' }}
+                >
+                  {t.services.galerias.titulo}
+                </h2>
+                <p className="mt-5 text-titanium/55 leading-relaxed text-[15px]">
+                  {t.services.galerias.texto}
+                </p>
+                <ul className="mt-7 space-y-3">
+                  {t.services.galerias.pontos.map((p) => (
+                    <Ponto key={p}>{p}</Ponto>
+                  ))}
+                </ul>
+                <Link
+                  to={link('gallery')}
+                  className="mt-8 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all min-h-[44px]"
+                >
+                  {t.services.galerias.cta} <ArrowUpRight size={13} />
+                </Link>
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
+        {/*
+          A página dos convidados, só nos casamentos (ver a marca `convidados`
+          em CATEGORIES). O telemóvel fica do lado oposto ao das galerias: dois
+          seguidos do mesmo lado liam-se como a mesma secção repetida.
+        */}
+        {'convidados' in cat && cat.convidados && (
+          <section className="container-px mt-24 sm:mt-36">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <div className="order-1 lg:order-2 relative flex justify-center lg:justify-end">
+                <Telemovel inclinacao={3} atraso={0.1}>
+                  <EcraConvidados />
+                </Telemovel>
+              </div>
+
+              <div className="order-2 lg:order-1">
+                <Reveal y={28}>
+                  <span className="label-sm">{t.services.convidados.label}</span>
+                  <h2
+                    className="mt-3 leading-[1.08]"
+                    style={{ fontSize: 'clamp(1.9rem, 3.4vw, 2.8rem)' }}
+                  >
+                    {t.services.convidados.titulo}
+                  </h2>
+                  <p className="mt-5 text-titanium/55 leading-relaxed text-[15px]">
+                    {t.services.convidados.texto}
+                  </p>
+                  <ul className="mt-7 space-y-3">
+                    {t.services.convidados.pontos.map((p) => (
+                      <Ponto key={p}>{p}</Ponto>
+                    ))}
+                  </ul>
+                  <Link
+                    to={link('contact')}
+                    className="mt-8 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all min-h-[44px]"
+                  >
+                    {t.services.convidados.cta} <ArrowUpRight size={13} />
+                  </Link>
+                  {/*
+                    A nota de que o casamento é inventado. Pequena, mas tem de
+                    lá estar: sem ela, aquilo parece o casamento de clientes
+                    nossos posto numa página de vendas.
+                  */}
+                  <p className="mt-6 text-[11px] text-titanium/30">{t.services.mockup.nota}</p>
+                </Reveal>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Os packs, agora no fim: quem chegou até aqui já sabe o que compra. */}
+        <section className="container-px mt-24 sm:mt-36">
+          <Reveal className="mb-8 sm:mb-10">
+            <span className="label-sm">{t.services.packsLabel}</span>
+            <h2 className="mt-3 text-3xl sm:text-4xl">{t.services.packsTitulo}</h2>
           </Reveal>
-        </div>
-      </section>
+
+          <div className={`grid gap-4 sm:gap-5 ${colunas(cat.packs.length)}`}>
+            {cat.packs.map((pack, i) => (
+              <Reveal key={pack.name} delay={i * 0.1} y={30}>
+                <div className="h-full border border-white/10 rounded-2xl p-6 sm:p-7 flex flex-col hover:border-white/25 transition-colors duration-500">
+                  <h3 className="text-xl mb-4">{t.services.packs[pack.name]}</h3>
+                  {'herda' in pack && (
+                    <p className="text-sm text-titanium/45 mb-3 leading-snug">
+                      {t.services.inheritsFrom(t.services.packs[pack.herda])}
+                    </p>
+                  )}
+                  <ul className="space-y-2.5 flex-1">
+                    {pack.items.map((item) => (
+                      <li
+                        key={item}
+                        className="flex items-start gap-2.5 text-sm text-titanium/55"
+                      >
+                        <Check size={13} className="mt-0.5 shrink-0 text-titanium/70" />
+                        {t.services.items[item]}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    to={link('contact')}
+                    className="mt-6 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all w-fit min-h-[44px]"
+                  >
+                    {t.common.requestProposal} <ArrowRight size={12} />
+                  </Link>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+
+        {/* Upsell */}
+        <section className="container-px mt-16 sm:mt-24">
+          <div className="border border-white/10 rounded-2xl p-8 sm:p-12 text-center">
+            <Reveal>
+              <span className="label-sm">{t.services.addonLabel}</span>
+              <h2 className="text-2xl sm:text-4xl mt-4 mb-5">{t.services.addonTitle}</h2>
+              <p className="text-titanium/55 max-w-md mx-auto text-sm leading-relaxed mb-8">
+                {t.services.addonText}
+              </p>
+              <Link
+                to={link('contact')}
+                className="inline-flex items-center gap-3 bg-titanium text-eerie px-9 py-5 rounded-full text-[11px] uppercase tracking-[0.2em] font-semibold group hover:gap-5 transition-all active:scale-95"
+              >
+                {t.common.requestQuote}
+                <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Reveal>
+          </div>
+        </section>
+      </div>
     </div>
   )
 }
