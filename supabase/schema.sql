@@ -856,3 +856,192 @@ create policy "casal gere as suas fotografias" on event_media
   for all to authenticated
   using (exists (select 1 from events e where e.id = event_id and e.owner_id = (select auth.uid())))
   with check (exists (select 1 from events e where e.id = event_id and e.owner_id = (select auth.uid())));
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Mostras: a galeria de visualização da estação de impressão
+-- ═══════════════════════════════════════════════════════════════════════════
+--
+-- O que é: durante o casamento, entre o jantar e a pista, há uma mesa com uma
+-- impressora. Nós carregamos as fotografias acabadas de tirar, cada uma com um
+-- número, e os convidados vêem-nas no telemóvel a partir de um código QR. Quem
+-- quiser uma diz o número ao operador, que a imprime.
+--
+-- Não é a galeria de convidados nem a galeria do casal, e por isso não vive nas
+-- mesmas tabelas. Tudo aqui é oposto ao que aquelas fazem: ninguém carrega nada,
+-- ninguém descarrega nada, não há conta, e o que se guarda é de propósito
+-- pequeno e marcado. Vive dias, não anos.
+--
+-- O ponto que decide o desenho todo: o que se guarda no R2 já vem reduzido e
+-- com a marca queimada nos pixels, feito no browser de quem carrega. Não há
+-- versão grande escondida atrás de uma permissão, porque uma versão grande que
+-- existe é uma versão grande que alguém acaba por ir buscar. O que o visitante
+-- puder extrair é exactamente o que nós decidimos mostrar, e mais nada.
+
+create table if not exists print_galleries (
+  id uuid primary key default gen_random_uuid(),
+
+  /*
+    O endereço, impresso no código QR que fica em cima da mesa. Imutável pela
+    mesma razão que o dos eventos: no minuto em que o cartão sai da impressora,
+    mudá-lo é deitar a mesa fora.
+  */
+  slug text not null unique,
+
+  name text not null,
+  event_date date,
+
+  /*
+    A hora a que isto deixa de abrir, e é a sério: quem pede as fotografias
+    depois desta hora não recebe lista nenhuma nem URL nenhum, e os URLs que já
+    tinha em mão expiram sozinhos em duas horas. Não é um estado no browser.
+  */
+  expires_at timestamptz not null,
+
+  /*
+    O próximo número a atribuir. Vive aqui e não se calcula com um max() sobre
+    as fotografias, de propósito.
+
+    O convidado diz "quero a 37" ao operador. Se apagar a 37 fizesse a 38 passar
+    a 37, o operador imprimia outra fotografia a alguém que pediu aquela, e
+    ninguém daria por isso. Os números atribuem-se uma vez e nunca se
+    reaproveitam: apagar deixa um buraco, que é o comportamento certo.
+  */
+  next_number int not null default 1,
+
+  owner_id uuid not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists print_galleries_slug_idx on print_galleries (slug);
+create index if not exists print_galleries_owner_idx on print_galleries (owner_id);
+
+create table if not exists print_photos (
+  id uuid primary key default gen_random_uuid(),
+  gallery_id uuid not null references print_galleries(id) on delete cascade,
+
+  -- O número que o convidado lê no ecrã e diz ao operador.
+  numero int not null,
+
+  -- Chave no bucket privado. Já reduzida, já marcada. Não há original aqui.
+  storage_key text not null,
+  -- A miniatura da grelha, mais pequena ainda: é ela que carrega numa rede de
+  -- casamento, com duzentas pessoas no mesmo ponto de acesso.
+  thumb_key text not null,
+
+  width int,
+  height int,
+  size_bytes bigint not null default 0,
+  created_at timestamptz not null default now(),
+
+  unique (gallery_id, numero)
+);
+
+create index if not exists print_photos_gallery_idx on print_photos (gallery_id, numero);
+
+/*
+  O slug e o id não mudam depois de existirem, como nos eventos. A hora de fim
+  pode mudar: prolongar uma mostra a meio da festa é uma coisa que acontece, e
+  não parte nada.
+*/
+create or replace function mostras_imutaveis() returns trigger
+language plpgsql
+set search_path = public as $$
+begin
+  if new.slug is distinct from old.slug then
+    raise exception
+      'O endereço de uma mostra não pode mudar: o código QR já está em cima da mesa. Cria uma mostra nova.'
+      using errcode = 'check_violation';
+  end if;
+  if new.id is distinct from old.id then
+    raise exception 'O id de uma mostra não pode mudar.' using errcode = 'check_violation';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists print_galleries_imutaveis on print_galleries;
+create trigger print_galleries_imutaveis before update on print_galleries
+  for each row execute function mostras_imutaveis();
+
+/*
+  O número de uma fotografia não muda depois de atribuído, e a chave também não.
+  Ver a nota em `next_number`: é o número que liga o que o convidado diz ao que
+  o operador imprime.
+*/
+create or replace function mostra_foto_imutavel() returns trigger
+language plpgsql
+set search_path = public as $$
+begin
+  if new.numero is distinct from old.numero then
+    raise exception 'O número de uma fotografia não pode mudar: já está no ecrã de quem o vai dizer.'
+      using errcode = 'check_violation';
+  end if;
+  if new.gallery_id is distinct from old.gallery_id
+     or new.storage_key is distinct from old.storage_key then
+    raise exception 'A mostra e o ficheiro de uma fotografia não podem mudar.'
+      using errcode = 'check_violation';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists print_photos_imutavel on print_photos;
+create trigger print_photos_imutavel before update on print_photos
+  for each row execute function mostra_foto_imutavel();
+
+drop trigger if exists print_galleries_touch on print_galleries;
+create trigger print_galleries_touch before update on print_galleries
+  for each row execute function touch_updated_at();
+
+/*
+  Atribui o número seguinte e avança o contador, numa operação só.
+
+  Numa mesa de impressão há duas pessoas a carregar fotografias ao mesmo tempo,
+  cada uma do seu portátil. Ler o contador, somar um e escrever de volta em três
+  passos dá duas fotografias com o mesmo número mais vezes do que se pensa. Isto
+  é um update atómico, e o `unique (gallery_id, numero)` é a rede por baixo.
+*/
+create or replace function mostra_proximo_numero(p_gallery uuid) returns int
+language plpgsql
+security definer
+set search_path = public as $$
+declare
+  n int;
+begin
+  update print_galleries
+     set next_number = next_number + 1
+   where id = p_gallery
+     and owner_id = (select auth.uid())
+  returning next_number - 1 into n;
+  if n is null then
+    raise exception 'Mostra não encontrada.' using errcode = 'no_data_found';
+  end if;
+  return n;
+end $$;
+
+revoke all on function mostra_proximo_numero(uuid) from public;
+grant execute on function mostra_proximo_numero(uuid) to authenticated;
+
+alter table print_galleries enable row level security;
+alter table print_photos enable row level security;
+
+/*
+  Ninguém lê isto sem conta, nem sequer as linhas.
+
+  O convidado não tem conta e não fala com a base de dados: fala com a Edge
+  Function `print-gallery`, que corre com a service role e é ela que decide se a
+  mostra ainda está a horas. A regra do tempo tem de viver lá, e não aqui numa
+  política que o browser podia contornar pedindo outra coisa.
+*/
+drop policy if exists "dono gere as suas mostras" on print_galleries;
+create policy "dono gere as suas mostras" on print_galleries
+  for all to authenticated
+  using (owner_id = (select auth.uid()))
+  with check (owner_id = (select auth.uid()));
+
+drop policy if exists "dono gere as fotografias das suas mostras" on print_photos;
+create policy "dono gere as fotografias das suas mostras" on print_photos
+  for all to authenticated
+  using (exists (
+    select 1 from print_galleries g where g.id = gallery_id and g.owner_id = (select auth.uid())))
+  with check (exists (
+    select 1 from print_galleries g where g.id = gallery_id and g.owner_id = (select auth.uid())));

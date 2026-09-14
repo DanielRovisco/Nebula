@@ -580,3 +580,81 @@ npx supabase functions deploy event-owner --no-verify-jwt
 O `--no-verify-jwt` é deliberado nas três: quem chama são convidados e noivos,
 nenhum deles com conta. Toda a autorização está dentro das funções — o slug e a
 janela de tempo nas duas primeiras, a chave do casamento na terceira.
+
+## Impressão ao vivo: a mostra da mesa
+
+Durante a festa, entre o jantar e a pista, há uma mesa com uma impressora. Nós
+carregamos as fotografias acabadas de tirar, cada uma com um número, e os
+convidados vêem-nas no telemóvel a partir de um código QR em cima da mesa. Quem
+quiser uma diz o número ao operador, que a imprime.
+
+Painel em `/admin/impressao`, página do convidado em `/p/<slug>`.
+
+Não é a galeria dos convidados nem a do casal, e por isso não partilha tabelas
+com elas. Tudo aqui é o contrário do que aquelas fazem: ninguém carrega, ninguém
+descarrega, não há conta, e o que se guarda é de propósito pequeno. Vive dias,
+não anos.
+
+### "Não pode dar para descarregar"
+
+Vale a pena ser claro sobre o que isto é e o que não é, porque o pedido era esse
+e a resposta honesta tem duas metades.
+
+**O que não existe:** não há maneira nenhuma de mostrar uma imagem num browser e
+impedir que ela seja guardada. Os bytes têm de chegar ao aparelho para
+aparecerem no ecrã, e a partir daí pertencem a quem lá está. Desligar o botão
+direito não desliga o inspector. E a captura de ecrã não é sequer uma questão de
+esforço: nenhum browser avisa que ela vai acontecer, não há evento para ouvir,
+não há API para a bloquear. Quem disser o contrário está a vender alguma coisa.
+
+**O que se fez em vez disso:** a defesa não está no browser, está no ficheiro.
+
+1. **O que sobe já vem reduzido e marcado.** O redimensionamento para 820 pixels
+   no lado maior e o carimbo com o número e o símbolo acontecem no browser de
+   quem carrega (`src/lib/impressao/processar.ts`), antes de sair do portátil.
+   Não existe versão grande em lado nenhum, nem atrás de uma permissão nem atrás
+   de um URL difícil. Quem extrair a imagem extrai exactamente o que decidimos
+   mostrar: boa para a pessoa se ver, má para imprimir em casa, e marcada.
+2. **O bucket é privado.** Não há endereço público para nenhuma destas
+   fotografias. O que sai da Edge Function são URLs assinados de duas horas.
+3. **A hora de fim é do servidor.** Passada a hora, não sai lista nem sai URL, e
+   os que andarem por aí expiram sozinhos. Não há link que sobreviva à festa.
+4. **As fotografias são fundos CSS e não `<img>`.** O toque longo do telemóvel
+   não abre "Guardar imagem", e arrastar não guarda nada. É o gesto que
+   praticamente toda a gente usaria, e fica fechado.
+5. **Imprimir a página dá uma folha preta com a marca.** Esta funciona a sério,
+   porque o browser avisa que vai imprimir.
+6. **Trocar de aplicação tapa as fotografias**, o que apanha o retrato que o
+   telemóvel guarda da página e as gravações de ecrã que passam por segundo
+   plano. Não apanha uma captura de ecrã.
+
+Resumindo: uma captura de ecrã vai continuar a ser possível, sempre. O que ela
+dá é uma imagem pequena com o nosso símbolo e um número, que é precisamente o
+que queremos que circule.
+
+### Números
+
+Atribuídos pela base de dados, um a um, com um `update` atómico
+(`mostra_proximo_numero`). Nunca se reaproveitam: apagar a 37 deixa um buraco e
+a seguinte continua a ser a 38. É de propósito, e é a regra mais importante
+deste módulo — o convidado diz "a 37" ao operador, e se os números andassem para
+trás alguém levava para casa a fotografia de outra pessoa.
+
+### Edge Function
+
+```bash
+npx supabase functions deploy print-gallery --no-verify-jwt
+```
+
+`--no-verify-jwt` pela mesma razão das outras: quem abre isto é um convidado sem
+conta. A autorização é o slug mais a hora de fim, verificados lá dentro.
+
+O carregamento reutiliza a `admin-storage`, que já existe e já exige sessão.
+
+### Depois da festa
+
+Passada a hora, a mostra fecha-se sozinha e ninguém vê nada. Os ficheiros
+continuam a ocupar espaço até alguém carregar em "apagar tudo" no painel, que
+apaga os objetos do R2 e a mostra. Não há nada a apagar sozinho: apagar
+fotografias em silêncio, por relógio, é a última coisa que este projeto deve
+fazer sem alguém a dizer que sim.

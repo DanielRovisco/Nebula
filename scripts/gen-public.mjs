@@ -140,6 +140,10 @@ Disallow: ${base}galeria
 Disallow: ${base}en/gallery
 Disallow: ${base}e/
 Disallow: ${base}casamento/
+# A mostra da estação de impressão: um endereço de uma noite, com fotografias de
+# quem foi a uma festa. Não tem nada que apareça numa pesquisa, nem nessa noite
+# nem nunca.
+Disallow: ${base}p/
 
 Sitemap: ${origin}${base}sitemap.xml
 `

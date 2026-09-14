@@ -35,6 +35,11 @@ const EventoPage = lazyComRecarga(() => import('./pages/evento/EventoPage'))
 // casamento deles, não uma secção do nosso portefólio.
 const PainelNoivos = lazyComRecarga(() => import('./pages/evento/noivos/PainelNoivos'))
 
+// A mostra da estação de impressão. Também fora do site, e pela mesma razão: o
+// convidado veio de um código QR em cima de uma mesa para ver um número, não
+// para navegar o nosso portefólio.
+const MostraPage = lazyComRecarga(() => import('./pages/impressao/MostraPage'))
+
 // O painel e o cliente de Supabase só são descarregados por quem lá vai —
 // não pesam na visita normal ao site.
 const AdminShell = lazyComRecarga(() => import('./pages/admin/AdminShell'))
@@ -43,6 +48,8 @@ const GalleryEditor = lazyComRecarga(() => import('./pages/admin/GalleryEditor')
 const SiteAdmin = lazyComRecarga(() => import('./pages/admin/SiteAdmin'))
 const EventList = lazyComRecarga(() => import('./pages/admin/EventList'))
 const EventEditor = lazyComRecarga(() => import('./pages/admin/EventEditor'))
+const PrintList = lazyComRecarga(() => import('./pages/admin/PrintList'))
+const PrintEditor = lazyComRecarga(() => import('./pages/admin/PrintEditor'))
 
 const Loading = () => <div className="min-h-screen" />
 
@@ -61,6 +68,8 @@ export default function App() {
             <Route path="/admin/site" element={<SiteAdmin />} />
             <Route path="/admin/eventos" element={<EventList />} />
             <Route path="/admin/eventos/:id" element={<EventEditor />} />
+            <Route path="/admin/impressao" element={<PrintList />} />
+            <Route path="/admin/impressao/:id" element={<PrintEditor />} />
             <Route path="/admin/:id" element={<GalleryEditor />} />
           </Routes>
         </AdminShell>
@@ -77,13 +86,14 @@ export default function App() {
     está veio de um código QR numa mesa de casamento, para deixar fotografias, e
     a navegação do site só lhe daria maneiras de sair de onde queria estar.
   */
-  if (/^\/(e|casamento)\/[^/]+$/.test(location.pathname)) {
+  if (/^\/(e|casamento|p)\/[^/]+$/.test(location.pathname)) {
     return (
       <Rede><Suspense fallback={<Loading />}>
         <ScrollToTop />
         <Routes>
           <Route path="/e/:slug" element={<EventoPage />} />
           <Route path="/casamento/:slug" element={<PainelNoivos />} />
+          <Route path="/p/:slug" element={<MostraPage />} />
         </Routes>
       </Suspense></Rede>
     )

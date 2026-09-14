@@ -446,6 +446,33 @@ body::after {
     transform: none !important;
     height: auto !important;
   }
+
+  /*
+    A mostra da estação de impressão não se imprime.
+
+    Quem mandar imprimir, ou "guardar como PDF", leva uma folha preta com a
+    marca e mais nada. É a única proteção desta página que funciona a sério,
+    e funciona porque o browser avisa que vai imprimir. A captura de ecrã não
+    avisa ninguém, e nenhuma linha de CSS a impede.
+
+    O `:has` desfaz a regra de cima, que esconde tudo o que não seja um cartaz:
+    aqui não se quer esconder a página, quer-se trocá-la por outra coisa.
+  */
+  body:has(.mostra-raiz) > * {
+    display: revert !important;
+  }
+  .mostra-raiz .sem-impressao {
+    display: none !important;
+  }
+  .mostra-raiz .so-impressao {
+    display: flex !important;
+  }
+  .mostra-raiz {
+    background: #000 !important;
+    /* Sem isto o browser "poupa tinta" e imprime a folha em branco. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
 
 @page {
