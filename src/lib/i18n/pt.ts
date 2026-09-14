@@ -32,7 +32,7 @@ export const pt = {
     place: 'Lisboa & Portalegre',
     headline: ['Histórias que ficam', 'Para sempre'],
     heroCta: 'Marcar Sessão',
-    heroNote: 'Datas 2026 disponíveis',
+    heroNote: 'Datas 2027 disponíveis',
     manifesto: ['O tempo passa.', 'As imagens ficam'],
     servicesLabel: 'O que fazemos',
     servicesTitle: 'Os nossos serviços',

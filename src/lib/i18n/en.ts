@@ -38,7 +38,7 @@ export const en: Dict = {
     place: 'Lisbon & Portalegre',
     headline: ['Stories that stay', 'Forever'],
     heroCta: 'Book a session',
-    heroNote: '2026 dates available',
+    heroNote: '2027 dates available',
     manifesto: ['Time passes.', 'The images stay'],
     servicesLabel: 'What we do',
     servicesTitle: 'Our services',
