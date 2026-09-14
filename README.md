@@ -676,7 +676,7 @@ não há API para a bloquear. Quem disser o contrário está a vender alguma coi
 
 **O que se fez em vez disso:** a defesa não está no browser, está no ficheiro.
 
-1. **O que sobe já vem reduzido e marcado.** O redimensionamento para 820 pixels
+1. **O que sobe já vem reduzido e marcado.** O redimensionamento para 680 pixels
    no lado maior e o carimbo com o número e o símbolo acontecem no browser de
    quem carrega (`src/lib/impressao/processar.ts`), antes de sair do portátil.
    Não existe versão grande em lado nenhum, nem atrás de uma permissão nem atrás
@@ -702,11 +702,33 @@ que queremos que circule.
 
 ### Números
 
-Atribuídos pela base de dados, um a um, com um `update` atómico
-(`mostra_proximo_numero`). Nunca se reaproveitam: apagar a 37 deixa um buraco e
-a seguinte continua a ser a 38. É de propósito, e é a regra mais importante
-deste módulo — o convidado diz "a 37" ao operador, e se os números andassem para
-trás alguém levava para casa a fotografia de outra pessoa.
+**O número sai do nome do ficheiro.** O fluxo é: escolher as fotografias da
+noite, renomeá-las de 1 a duzentas no computador, largá-las no painel. A
+fotografia chamada `10.jpg` é a 10 no telemóvel de quem estiver na festa.
+
+É isso que faz a promessa aguentar o que acontece numa mesa real: um envio que
+falha a meio, o mesmo ficheiro largado outra vez, um segundo lote uma hora
+depois. Com o número a sair da ordem de chegada, qualquer um dos três
+desalinhava tudo em silêncio.
+
+Só conta um nome que seja um número e mais nada (`10.jpg`, `010.jpg`). Um
+`DSC_0010.jpg` não conta, de propósito: nessas máquinas o contador já vai em
+oitocentos, e ninguém quer a primeira fotografia da noite a chamar-se 812. Sem
+número no nome, a base de dados dá o primeiro livre a seguir ao maior que lá
+está.
+
+Quem confirma e reserva é a base de dados (`mostra_numero`), e não o browser:
+com dois portáteis a carregar para a mesma mostra, decidir números do lado do
+cliente dá duas fotografias com o mesmo número. Pedir um número que já existe é
+recusado com uma frase que se percebe, e não com "duplicate key value violates
+unique constraint" à frente de quem está de pé ao lado de uma impressora.
+
+Os ficheiros são enviados por ordem de nome, e não pela ordem que o sistema
+entrega ao largar uma pasta — num Windows não é a mesma que se vê no explorador.
+
+A grelha do convidado e a do painel mostram os dois por **ordem crescente**, do
+001 para a frente. Tem de ser a mesma nos dois sítios: uma ordem no painel e
+outra no telemóvel era garantir que alguém aponta para uma e pede outra.
 
 ### Edge Function
 

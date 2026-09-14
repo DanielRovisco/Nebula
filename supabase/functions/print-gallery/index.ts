@@ -1,9 +1,9 @@
 // Edge Function: a mostra da estação de impressão, vista pelo convidado.
 //
-//   { slug, antes?, limite? }
+//   { slug, depois?, limite? }
 //     → { name, eventDate, expiresAt, fotos: [...], proximo }
-//       As fotografias mais recentes primeiro, às páginas. `antes` é o número
-//       da última que já se tem: pede as anteriores a essa.
+//       Por ordem crescente de número, às páginas. `depois` é o número da última
+//       que já se tem: pede as seguintes a essa.
 //
 // Deploy: supabase functions deploy print-gallery --no-verify-jwt
 // (sem verificação de JWT de propósito: quem abre isto é um convidado sem
@@ -88,18 +88,25 @@ Deno.serve(async (req) => {
     return json({ name: mostra.name, expiresAt: mostra.expires_at, terminada: true, fotos: [] })
   }
 
-  const antes = Number(body.antes ?? 0)
+  const depois = Number(body.depois ?? 0)
   const limite = Math.min(Math.max(Number(body.limite ?? POR_PAGINA), 1), POR_PAGINA)
 
+  /*
+    Por ordem crescente, do 001 para a frente.
+
+    É a ordem em que os ficheiros são numerados na mesa, e tem de ser a mesma nos
+    dois sítios: quem está a carregar vê a lista a crescer pelo fim, e quem
+    procura a sua no telemóvel sabe que o 40 vem depois do 39. Uma ordem no
+    painel e outra no telemóvel era garantir que alguém apontava para uma e
+    pedia outra.
+  */
   let q = sb
     .from('print_photos')
     .select('numero, storage_key, thumb_key, width, height')
     .eq('gallery_id', mostra.id)
-    .order('numero', { ascending: false })
+    .order('numero', { ascending: true })
     .limit(limite + 1)
-  // As mais recentes primeiro: quem acabou de ser fotografado quer a sua, e
-  // não a primeira da noite.
-  if (antes > 0) q = q.lt('numero', antes)
+  if (depois > 0) q = q.gt('numero', depois)
 
   const { data: linhas, error } = await q
   if (error) return json({ error: 'erro' }, 500)
@@ -128,7 +135,7 @@ Deno.serve(async (req) => {
     expiresAt: mostra.expires_at,
     terminada: false,
     fotos,
-    // O número a pedir a seguir, ou nulo quando já não há mais nada para trás.
+    // O número a pedir a seguir, ou nulo quando já não há mais nada à frente.
     proximo: ha && pagina.length ? pagina[pagina.length - 1].numero : null,
   })
 })

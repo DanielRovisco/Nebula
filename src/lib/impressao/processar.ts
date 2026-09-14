@@ -26,27 +26,31 @@ import { simbolo } from '../qr/simbolo'
 /*
   O lado maior da imagem que o convidado vê.
 
-  Oitocentos e vinte é o resultado de duas contas opostas. Num telemóvel de 390
-  pontos com três pixels cada, uma imagem em ecrã cheio pede cerca de 1170: a
-  820 fica ligeiramente macia com o zoom no máximo, e perfeitamente nítida ao
-  tamanho a que se olha para ela. Impressa a 10 por 15 centímetros dá menos de
-  140 pontos por polegada, que é o suficiente para se ver que foi tirada de um
-  ecrã. É esse o ponto: boa para olhar, má para roubar.
+  Seiscentos e oitenta é o resultado de duas contas opostas. Num telemóvel de
+  390 pontos com três pixels cada, uma imagem em ecrã cheio pede cerca de 1170:
+  a 680 fica macia com o zoom no máximo, e nítida que chegue ao tamanho a que se
+  olha para ela, que é o ecrã inteiro sem ampliar. Impressa a 10 por 15
+  centímetros dá menos de 115 pontos por polegada, o suficiente para se ver de
+  longe que foi tirada de um ecrã.
+
+  É esse o ponto, e é uma escolha com um custo: uma prova pior de ver é uma
+  prova mais difícil de roubar. Se um dia parecer má de mais no ecrã de alguém,
+  este número sobe e é a única coisa que é preciso mexer.
 */
-const LADO_VER = 820
+const LADO_VER = 680
 
 /*
   A miniatura da grelha. Numa rede de casamento é isto que decide se a página
-  abre ou fica a girar: a 360 pesa uns 20 kB, e quarenta e oito delas cabem no
+  abre ou fica a girar: a 320 pesa uns 15 kB, e quarenta e oito delas cabem no
   que uma única fotografia grande ocuparia.
 */
-const LADO_THUMB = 360
+const LADO_THUMB = 320
 
 // WebP e não JPEG: ao mesmo aspecto pesa cerca de um terço menos, e menos bytes
 // numa rede má é a diferença entre ver e desistir.
 const TIPO = 'image/webp'
-const QUALIDADE_VER = 0.72
-const QUALIDADE_THUMB = 0.6
+const QUALIDADE_VER = 0.62
+const QUALIDADE_THUMB = 0.5
 
 export interface Preparada {
   ver: Blob
@@ -77,7 +81,7 @@ function carimbar(
   numero: number,
   marca: HTMLImageElement | null,
 ) {
-  const escala = Math.max(largura, altura) / 820
+  const escala = Math.max(largura, altura) / LADO_VER
   const texto = String(numero).padStart(3, '0')
   const corpo = Math.round(34 * escala)
   const margem = Math.round(18 * escala)

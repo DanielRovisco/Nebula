@@ -23,7 +23,7 @@ export interface PaginaMostra {
   expiresAt: string | null
   terminada: boolean
   fotos: FotoPublica[]
-  /** O número a pedir a seguir, ou nulo quando já não há mais para trás. */
+  /** O número a pedir a seguir, ou nulo quando já não há mais à frente. */
   proximo: number | null
 }
 
@@ -38,13 +38,13 @@ export class ErroMostra extends Error {
   }
 }
 
-export async function lerMostra(slug: string, antes?: number | null): Promise<PaginaMostra> {
+export async function lerMostra(slug: string, depois?: number | null): Promise<PaginaMostra> {
   let res: Response
   try {
     res = await fetch(functionsUrl('print-gallery'), {
       method: 'POST',
       headers: { 'content-type': 'application/json', apikey: anonKey() },
-      body: JSON.stringify({ slug, antes: antes ?? 0 }),
+      body: JSON.stringify({ slug, depois: depois ?? 0 }),
       // Sem cache: entram fotografias novas de minuto a minuto, e uma resposta
       // guardada mostrava a mesa como ela estava há meia hora.
       cache: 'no-store',

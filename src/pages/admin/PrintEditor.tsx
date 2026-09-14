@@ -1,14 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useParams } from 'react-router-dom'
-import { ArrowLeft, ImagePlus, Trash2 } from 'lucide-react'
+import { Link, useParams } from 'react-router-dom'
+import { ArrowLeft, Download, ImagePlus, Printer, Trash2 } from 'lucide-react'
 import QrNebula from '../../components/QrNebula'
+import Templates from '../evento/noivos/Templates'
+import { guardarQr } from '../../lib/qr/exportar'
 import { SITE_URL } from '../../lib/site'
 import {
   type FotoMostra, type Mostra,
   apagarFoto, apagarMostra, assinarMiniaturas, carregarFotos, estaAberta,
   fechar, lerMostra, listarFotos, reabrir,
 } from '../../lib/impressao/admin'
+
+/** A data do evento por extenso, como os cartazes a mostram. Vazia se não houver. */
+const porExtenso = (iso: string | null) =>
+  iso
+    ? new Date(iso).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' })
+    : ''
 
 const quando = (iso: string) =>
   new Date(iso).toLocaleString('pt-PT', {
@@ -30,6 +37,7 @@ export default function PrintEditor() {
   const [aArrastar, setAArrastar] = useState(false)
   const [progresso, setProgresso] = useState<{ feitas: number; total: number } | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
+  const [cartazes, setCartazes] = useState(false)
   const escolher = useRef<HTMLInputElement>(null)
 
   const recarregar = useCallback(
@@ -68,6 +76,15 @@ export default function PrintEditor() {
 
   return (
     <div className="container-px pb-24">
+      {cartazes && (
+        <Templates
+          url={endereco}
+          casal={mostra.name}
+          data={porExtenso(mostra.event_date)}
+          aoFechar={() => setCartazes(false)}
+        />
+      )}
+
       <Link
         to="/admin/impressao"
         className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-titanium/50 hover:text-titanium/80 transition-colors"
@@ -90,9 +107,31 @@ export default function PrintEditor() {
           O código QR aqui e não noutra página: o cartão em cima da mesa
           desaparece debaixo de um copo pelo menos uma vez por casamento, e
           quem está na mesa não pode ir procurá-lo a outro sítio do painel.
+
+          O que se leva para o casamento é papel, e por isso há as duas saídas.
+          O PNG é transparente e sem fundo, para quem quiser montá-lo à mão num
+          documento qualquer; os cartazes são as cinco folhas A4 já compostas,
+          as mesmas que os noivos têm, e é o caminho de quem quer imprimir e
+          sair de casa.
         */}
-        <div className="bg-white rounded-xl p-3">
-          <QrNebula url={endereco} tamanho={320} cor="preto" fundo="#ffffff" className="w-28 h-28" />
+        <div className="flex items-start gap-4">
+          <div className="bg-white rounded-xl p-3 shrink-0">
+            <QrNebula url={endereco} tamanho={320} cor="preto" fundo="#ffffff" className="w-28 h-28" />
+          </div>
+          <div className="flex flex-col gap-2 pt-1">
+            <button
+              onClick={() => setCartazes(true)}
+              className="flex items-center gap-2 text-xs text-titanium/60 hover:text-titanium transition-colors"
+            >
+              <Printer size={13} /> Cartazes para imprimir
+            </button>
+            <button
+              onClick={() => guardarQr(endereco, 'preto', mostra.name)}
+              className="flex items-center gap-2 text-xs text-titanium/45 hover:text-titanium/80 transition-colors"
+            >
+              <Download size={12} /> Guardar só o código
+            </button>
+          </div>
         </div>
       </div>
 

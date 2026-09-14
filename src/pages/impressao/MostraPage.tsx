@@ -69,35 +69,37 @@ export default function MostraPage() {
     pedido: o estado muda quando a resposta chega, e não a meio de um efeito a
     correr.
   */
-  const aplicar = useCallback((p: PaginaMostra, antes: number | null) => {
+  const aplicar = useCallback((p: PaginaMostra, depois: number | null) => {
     setNome(p.name)
     setTerminada(p.terminada)
     setErro(null)
-    if (antes === null) {
-      /*
-        Página um: junta as novas por cima sem mexer no que já está.
+    /*
+      Junta o que vier ao que já lá está, sem repetir e sempre por ordem de
+      número.
 
-        Substituir a lista toda parece mais simples e é pior: as imagens já
-        carregadas voltavam a pedir-se com URLs assinados novos, e num telemóvel
-        a meio de uma festa isso é a grelha inteira a piscar de vinte e cinco em
-        vinte e cinco segundos.
-      */
-      setFotos((antigas) => {
-        if (!antigas.length) return p.fotos
-        const tenho = new Set(antigas.map((f) => f.numero))
-        const novas = p.fotos.filter((f) => !tenho.has(f.numero))
-        return novas.length ? [...novas, ...antigas] : antigas
-      })
-      if (primeira.current) {
-        setProximo(p.proximo)
-        primeira.current = false
-      }
-    } else {
-      setFotos((antigas) => {
-        const tenho = new Set(antigas.map((f) => f.numero))
-        return [...antigas, ...p.fotos.filter((f) => !tenho.has(f.numero))]
-      })
+      Substituir a lista toda parece mais simples e é pior: as imagens já
+      carregadas voltavam a pedir-se com URLs assinados novos, e num telemóvel a
+      meio de uma festa isso é a grelha inteira a piscar de vinte e cinco em
+      vinte e cinco segundos.
+    */
+    setFotos((antigas) => {
+      const tenho = new Set(antigas.map((f) => f.numero))
+      const novas = p.fotos.filter((f) => !tenho.has(f.numero))
+      if (!novas.length) return antigas
+      return [...antigas, ...novas].sort((a, b) => a.numero - b.numero)
+    })
+    /*
+      Quem manda no "há mais para ver" é a última página pedida, e não a
+      primeira que voltar.
+
+      A repetição de vinte e cinco em vinte e cinco segundos pede sempre a
+      página um. Se ela mexesse neste valor, carregar "ver mais" e esperar meio
+      minuto voltava a pôr o botão no princípio, e a pessoa andava para trás
+      sozinha.
+    */
+    if (depois !== null || primeira.current) {
       setProximo(p.proximo)
+      primeira.current = false
     }
   }, [])
 
@@ -281,7 +283,7 @@ export default function MostraPage() {
                     disabled={aCarregar}
                     className="inline-flex items-center gap-2 border border-white/15 rounded-full px-7 py-4 text-[11px] uppercase tracking-[0.18em] text-titanium/70 active:scale-95 transition-transform disabled:opacity-50"
                   >
-                    {aCarregar ? 'A carregar…' : 'Ver as anteriores'}
+                    {aCarregar ? 'A carregar…' : 'Ver mais'}
                   </button>
                 </div>
               )}

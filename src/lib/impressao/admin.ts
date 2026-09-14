@@ -102,7 +102,9 @@ export async function listarFotos(galeriaId: string): Promise<FotoMostra[]> {
     .from('print_photos')
     .select('*')
     .eq('gallery_id', galeriaId)
-    .order('numero', { ascending: false })
+    // Crescente, como na página do convidado: a mesa e o telemóvel têm de
+    // mostrar a mesma ordem, senão o que se aponta num não é o que se vê noutro.
+    .order('numero', { ascending: true })
   if (error) throw new Error(error.message)
   return (data ?? []) as FotoMostra[]
 }
@@ -151,23 +153,70 @@ export async function assinarMiniaturas(fotos: FotoMostra[]): Promise<FotoMostra
   return assinados
 }
 
+/**
+ * O número que o nome do ficheiro pede, quando ele pede algum.
+ *
+ * Quem carrega renomeia as fotografias de 1 a duzentas antes de as largar, e é
+ * disso que depende a promessa toda: a número 10 no ecrã tem de ser o ficheiro
+ * chamado 10. Tirar o número do nome, e não da ordem de chegada, é o que faz
+ * essa promessa aguentar um envio falhado a meio, um ficheiro carregado outra
+ * vez, ou um segundo lote largado uma hora depois.
+ *
+ * Só nomes que são um número e mais nada: `10.jpg`, `010.jpg`, `10 .jpg`. Um
+ * `DSC_0010.jpg` não conta, e é de propósito — nessas máquinas o 0010 é um
+ * contador do aparelho que já vai em oitocentos, e ninguém quer a primeira
+ * fotografia da noite a chamar-se 812.
+ *
+ * Devolve `null` quando o nome não diz nada, e aí quem numera é a base de dados.
+ */
+export function numeroDoNome(nome: string): number | null {
+  const semExtensao = nome.replace(/\.[^.]+$/, '').trim()
+  if (!/^\d{1,6}$/.test(semExtensao)) return null
+  const n = Number(semExtensao)
+  return n > 0 ? n : null
+}
+
+/**
+ * Por ordem de nome, e não pela ordem em que o sistema os entregou.
+ *
+ * Largar uma pasta não garante ordem nenhuma: o browser entrega os ficheiros
+ * pela ordem que o sistema lhe der, que num Windows não é a mesma que se vê no
+ * explorador. Sem isto, a barra de progresso andava aos saltos e, para os
+ * ficheiros sem número no nome, a numeração automática saía baralhada.
+ *
+ * Os numerados vêm primeiro e por ordem crescente; os outros a seguir, por
+ * nome, com a comparação que põe o 2 antes do 10.
+ */
+export function porNome(ficheiros: File[]): File[] {
+  const colador = new Intl.Collator('pt', { numeric: true, sensitivity: 'base' })
+  return [...ficheiros].sort((a, b) => {
+    const na = numeroDoNome(a.name)
+    const nb = numeroDoNome(b.name)
+    if (na !== null && nb !== null) return na - nb
+    if (na !== null) return -1
+    if (nb !== null) return 1
+    return colador.compare(a.name, b.name)
+  })
+}
+
 export interface ResultadoCarregar {
   entraram: number
   falharam: { nome: string; porque: string }[]
 }
 
 /**
- * Carrega fotografias para a mostra, uma a uma, pela ordem em que vieram.
+ * Carrega fotografias para a mostra, uma a uma, por ordem de nome.
  *
  * Uma a uma e não todas ao mesmo tempo, e é uma decisão e não uma falta de
  * ambição: cada fotografia é descodificada e redesenhada duas vezes num canvas,
  * e fazer isso a dez em paralelo põe o portátil de joelhos a meio de um
  * casamento. A sério: já vi acontecer com menos.
  *
- * O número é pedido à base de dados imediatamente antes de subir cada uma, e é
- * ela que o atribui de forma atómica. Calcular números do lado do browser, com
- * dois portáteis a carregar para a mesma mostra, dá duas fotografias com o
- * mesmo número e um convidado a receber a fotografia de outra pessoa.
+ * O número sai do nome do ficheiro quando o nome é um número (ver
+ * `numeroDoNome`), e é a base de dados que o confirma e o reserva. Confirmar lá
+ * e não aqui não é cerimónia: com dois portáteis a carregar para a mesma mostra,
+ * decidir números no browser dá duas fotografias com o mesmo número e um
+ * convidado a receber a fotografia de outra pessoa.
  */
 export async function carregarFotos(
   galeriaId: string,
@@ -178,12 +227,13 @@ export async function carregarFotos(
   const falharam: { nome: string; porque: string }[] = []
   let entraram = 0
 
-  for (const ficheiro of ficheiros) {
+  for (const ficheiro of porNome(ficheiros)) {
     try {
       if (!ficheiro.type.startsWith('image/')) throw new Error('Não é uma fotografia.')
 
-      const { data: numero, error: erroNum } = await sb.rpc('mostra_proximo_numero', {
+      const { data: numero, error: erroNum } = await sb.rpc('mostra_numero', {
         p_gallery: galeriaId,
+        p_pedido: numeroDoNome(ficheiro.name),
       })
       if (erroNum || typeof numero !== 'number') {
         throw new Error(erroNum?.message ?? 'Não consegui atribuir o número.')
@@ -220,8 +270,9 @@ export async function carregarFotos(
           A linha não entrou: os dois objetos ficariam no R2 sem ninguém que os
           consiga ver nem apagar pela interface. Limpa-se já.
 
-          O número fica queimado, e fica bem: é preferível um buraco na
-          sequência a um número usado duas vezes.
+          O número volta a ficar livre para quem o pedir pelo nome, que é o que
+          se quer: quem largar outra vez o ficheiro 37 depois de uma falha tem
+          de o ver aparecer como 37.
         */
         await callAdmin({ action: 'delete', keys: [chaveVer, chaveThumb] }).catch(() => {})
         throw new Error(error.message)

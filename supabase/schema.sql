@@ -905,13 +905,16 @@ create table if not exists print_galleries (
   expires_at timestamptz,
 
   /*
-    O próximo número a atribuir. Vive aqui e não se calcula com um max() sobre
-    as fotografias, de propósito.
+    O próximo número a dar a uma fotografia que chegue sem nome numerado.
 
-    O convidado diz "quero a 37" ao operador. Se apagar a 37 fizesse a 38 passar
-    a 37, o operador imprimia outra fotografia a alguém que pediu aquela, e
-    ninguém daria por isso. Os números atribuem-se uma vez e nunca se
-    reaproveitam: apagar deixa um buraco, que é o comportamento certo.
+    O caminho normal é outro: quem carrega renomeia os ficheiros de 1 a duzentos
+    e o número sai do nome (ver `mostra_numero`). Este contador é a rede para
+    quando um ficheiro chega com um nome que não diz nada.
+
+    Nunca recua. O convidado diz "quero a 37" ao operador, e se apagar a 37
+    fizesse a 38 passar a 37, o operador imprimia outra fotografia a alguém que
+    pediu aquela. Por este caminho, apagar deixa um buraco e a seguinte continua
+    a andar para a frente.
   */
   next_number int not null default 1,
 
@@ -1004,33 +1007,70 @@ create trigger print_galleries_touch before update on print_galleries
   for each row execute function touch_updated_at();
 
 /*
-  Atribui o número seguinte e avança o contador, numa operação só.
+  Dá a uma fotografia o número com que ela vai ser pedida em voz alta.
 
-  Numa mesa de impressão há duas pessoas a carregar fotografias ao mesmo tempo,
-  cada uma do seu portátil. Ler o contador, somar um e escrever de volta em três
-  passos dá duas fotografias com o mesmo número mais vezes do que se pensa. Isto
-  é um update atómico, e o `unique (gallery_id, numero)` é a rede por baixo.
+  Com `p_pedido`, é esse o número: quem carrega renomeia os ficheiros de 1 a
+  duzentos antes de os largar, e a fotografia chamada 10 tem de ser a 10 no
+  ecrã. Sem ele, dá o primeiro livre a seguir ao maior que lá está.
+
+  O primeiro livre conta com o que já existe e não só com o contador, e isso
+  importa: misturar um lote com nomes numerados e outro sem eles, sem olhar ao
+  que está lá, era distribuir um número já usado e ver a inserção falhar a meio
+  de uma festa.
+
+  Um número pedido que já exista é recusado aqui, com uma frase que se percebe.
+  Podia deixar-se o índice único fazê-lo, mas o que ele diz é "duplicate key
+  value violates unique constraint", e quem o lê está de pé ao lado de uma
+  impressora.
 */
-create or replace function mostra_proximo_numero(p_gallery uuid) returns int
+create or replace function mostra_numero(p_gallery uuid, p_pedido int default null)
+returns int
 language plpgsql
 security definer
 set search_path = public as $$
 declare
   n int;
 begin
-  update print_galleries
-     set next_number = next_number + 1
-   where id = p_gallery
-     and owner_id = (select auth.uid())
-  returning next_number - 1 into n;
-  if n is null then
+  -- O dono, e a existência da mostra, confirmados antes de tudo.
+  if not exists (
+    select 1 from print_galleries
+     where id = p_gallery and owner_id = (select auth.uid())
+  ) then
     raise exception 'Mostra não encontrada.' using errcode = 'no_data_found';
   end if;
+
+  if p_pedido is not null and p_pedido > 0 then
+    if exists (select 1 from print_photos where gallery_id = p_gallery and numero = p_pedido) then
+      raise exception 'Já existe a fotografia número %. Muda o nome do ficheiro ou apaga a que lá está.', p_pedido
+        using errcode = 'unique_violation';
+    end if;
+    n := p_pedido;
+  else
+    select greatest(
+             (select next_number from print_galleries where id = p_gallery),
+             coalesce((select max(numero) from print_photos where gallery_id = p_gallery), 0) + 1
+           ) into n;
+  end if;
+
+  /*
+    O contador fica sempre à frente do maior número usado.
+
+    É ele que garante que um lote sem nomes numerados, largado a seguir a um
+    lote numerado, não volta ao princípio e não colide com nada.
+  */
+  update print_galleries
+     set next_number = greatest(next_number, n + 1)
+   where id = p_gallery;
+
   return n;
 end $$;
 
-revoke all on function mostra_proximo_numero(uuid) from public;
-grant execute on function mostra_proximo_numero(uuid) to authenticated;
+revoke all on function mostra_numero(uuid, int) from public;
+grant execute on function mostra_numero(uuid, int) to authenticated;
+
+-- A versão anterior, que só sabia dar o número seguinte. Sai: quem a chamasse
+-- passava por cima da regra dos nomes.
+drop function if exists mostra_proximo_numero(uuid);
 
 alter table print_galleries enable row level security;
 alter table print_photos enable row level security;
