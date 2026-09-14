@@ -56,7 +56,7 @@ export const pt = {
     steps: [
       {
         title: 'Primeiro contacto',
-        desc: 'Envie-nos uma mensagem pelo Instagram ou email. Respondemos em menos de 24 horas.',
+        desc: 'Enviem-nos uma mensagem pelo Instagram ou email. Respondemos em menos de 24 horas.',
       },
       {
         title: 'A vossa sessão',
@@ -368,7 +368,7 @@ export const pt = {
 
     seoTitle: 'Contacto | NEBULA Fotografia & Vídeo',
     seoDescription:
-      'Fale connosco por email ou Instagram sobre o vosso casamento, sessão de maternidade, retratos ou evento. Lisboa e Portalegre. Resposta em menos de 24 horas.',
+      'Falem connosco por email ou Instagram sobre o vosso casamento, sessão de maternidade, retratos ou evento. Lisboa e Portalegre. Resposta em menos de 24 horas.',
     label: 'Contacto',
     title: 'Vamos falar sobre o vosso projeto.',
     replyTime: 'Respondemos em menos de 24 horas',
