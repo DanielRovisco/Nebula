@@ -19,5 +19,9 @@ Disallow: /galeria
 Disallow: /en/gallery
 Disallow: /e/
 Disallow: /casamento/
+# A mostra da estação de impressão: um endereço de uma noite, com fotografias de
+# quem foi a uma festa. Não tem nada que apareça numa pesquisa, nem nessa noite
+# nem nunca.
+Disallow: /p/
 
 Sitemap: https://proj3ctnebula.pt/sitemap.xml
