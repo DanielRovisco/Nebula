@@ -179,6 +179,51 @@ Cada cliente recebe um link `/galeria/<código>` e uma password. A administraç�
 das galerias vive em `/admin` — **não há link para lá em lado nenhum do site**,
 por opção.
 
+### O esquema e as funções aplicam-se sozinhos
+
+O `supabase/schema.sql` e as Edge Functions são aplicados pelo GitHub Actions a
+cada publicação, antes de o site subir (job `base-de-dados` em
+`.github/workflows/deploy.yml`). Não há nada para correr à mão depois da
+instalação inicial.
+
+Estavam os dois por correr à mão, e à mão é onde isto se desencontra: um commit
+que acrescenta uma tabela e uma página que a usa publica-se em segundos, a
+tabela fica para depois, e quem descobre é quem abrir o painel.
+
+**O site espera pela base de dados.** É o contrário da regra do resto do
+workflow, onde falhar um passo publica-se à mesma. Uma pré-renderização falhada
+dá um site com metadados piores; um esquema por aplicar dá um painel a escrever
+para tabelas que não existem, e esse é pior do que não publicar.
+
+**Aplicar o esquema inteiro de cada vez é seguro**, e não por optimismo: o
+ficheiro é escrito para isso — tudo `if not exists`, `create or replace` e
+`drop policy if exists` — e não tem um `drop table`, um `delete` nem um
+`truncate` em lado nenhum. Verificado a aplicá-lo três vezes seguidas a uma base
+de dados com fotografias, eventos e contadores lá dentro, contando as linhas
+antes e depois: nada mudou. Corre numa transação só, por isso ou entra tudo ou
+fica tudo como estava.
+
+**A lista de funções sai dos próprios ficheiros.** Cada uma traz no cabeçalho a
+linha `// Deploy: supabase functions deploy <nome> [--no-verify-jwt]`, e é essa
+que o workflow corre. Uma pasta sem essa linha **faz falhar** a publicação, em
+vez de ser saltada em silêncio: uma função que não se publica não dá erro nenhum
+até alguém a chamar, e aí dá-o à frente de um convidado. Escrever a lista no
+workflow era ter dois sítios a dizer a mesma coisa, e o segundo a ficar para
+trás na primeira função nova.
+
+**Dois secrets**, em Settings → Secrets and variables → Actions:
+
+| Secret | Onde se vai buscar |
+| --- | --- |
+| `SUPABASE_DB_URL` | Supabase → Project Settings → Database → Connection string → **Session pooler** (porta 5432). O de transações, na 6543, não serve para aplicar esquemas, e o workflow recusa-o com essa explicação. |
+| `SUPABASE_ACCESS_TOKEN` | supabase.com/dashboard/account/tokens |
+
+Sem eles, o passo respectivo é saltado com um aviso amarelo e o site publica-se
+à mesma: é o estado em que isto fica até alguém os pôr, e não uma avaria.
+
+O ref do projeto não é secret novo nenhum — sai do `VITE_SUPABASE_URL`, que já
+lá está.
+
 ### Porque é que isto precisa de backend
 
 O site é estático no GitHub Pages, e num site estático uma password em
@@ -245,7 +290,9 @@ ADMIN_EMAIL=eu@proj3ctnebula.pt ADMIN_PASSWORD=... npm run setup:check
 
 1. Criar o projeto em supabase.com (ou reutilizar um existente).
 2. SQL Editor → colar `supabase/schema.sql` → Run. Cria as tabelas, as
-   políticas RLS e as funções de password.
+   políticas RLS e as funções de password. **Só desta primeira vez:** a partir
+   daqui é o GitHub Actions que o aplica a cada publicação (ver "O esquema e as
+   funções aplicam-se sozinhos").
 3. Authentication → Users → Add user, com o email e password de quem vai gerir.
    Não há registo aberto — só entra quem for criado aqui.
 
@@ -283,6 +330,10 @@ supabase functions deploy gallery-access --no-verify-jwt
 supabase functions deploy gallery-log --no-verify-jwt
 supabase functions deploy admin-storage
 ```
+
+Estes três são para a primeira vez, antes de o GitHub Actions ter os secrets
+dele. Depois disso não é preciso correr nenhum à mão: todas as funções se
+publicam a cada `git push` (ver a secção a seguir).
 
 O `--no-verify-jwt` na primeira é necessário porque o cliente é anónimo: quem
 autoriza é a password da galeria, validada lá dentro. A segunda fica **com**
@@ -571,6 +622,9 @@ definitivo desconta.
 
 ### Edge Functions
 
+Publicam-se sozinhas a cada `git push`, como todas as outras. À mão, se for
+preciso:
+
 ```bash
 npx supabase functions deploy event-upload --no-verify-jwt
 npx supabase functions deploy event-gallery --no-verify-jwt
@@ -643,12 +697,14 @@ trás alguém levava para casa a fotografia de outra pessoa.
 
 ### Edge Function
 
+Publica-se sozinha a cada `git push`. À mão, se for preciso:
+
 ```bash
 npx supabase functions deploy print-gallery --no-verify-jwt
 ```
 
 `--no-verify-jwt` pela mesma razão das outras: quem abre isto é um convidado sem
-conta. A autorização é o slug mais a hora de fim, verificados lá dentro.
+conta. A autorização é o slug mais o estar aberta, verificados lá dentro.
 
 O carregamento reutiliza a `admin-storage`, que já existe e já exige sessão.
 

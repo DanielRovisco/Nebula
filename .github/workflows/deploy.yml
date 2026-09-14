@@ -12,7 +12,123 @@ permissions:
   contents: write
 
 jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # A base de dados e as Edge Functions, antes do site
+  # ───────────────────────────────────────────────────────────────────────────
+  #
+  # Estavam as duas por correr à mão, e à mão é onde isto se desencontra: um
+  # commit que acrescenta uma tabela e uma página que a usa publica-se em
+  # segundos, a tabela fica para depois, e quem descobre é quem abrir o painel.
+  # Aqui vão juntos ou não vão.
+  #
+  # O `deploy` do site espera por este trabalho de propósito. É o contrário da
+  # regra do resto do ficheiro, onde falhar um passo publica-se à mesma: uma
+  # pré-renderização falhada dá um site com metadados piores, enquanto um
+  # esquema por aplicar dá um painel a escrever para tabelas que não existem.
+  # O segundo é pior do que não publicar.
+  base-de-dados:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # O ref do projecto sai do endereço do Supabase, que já é secret. Um
+      # secret a menos para manter, e um a menos para pôr errado.
+      - name: Ler o projecto
+        env:
+          URL: ${{ secrets.VITE_SUPABASE_URL }}
+        run: |
+          REF="$(printf '%s' "$URL" | sed -n 's#^https\?://\([a-z0-9-]*\)\.supabase\.co/*$#\1#p')"
+          if [ -z "$REF" ]; then
+            echo "::error::Não consegui ler o ref do projecto a partir de VITE_SUPABASE_URL."
+            exit 1
+          fi
+          echo "PROJECT_REF=$REF" >> "$GITHUB_ENV"
+          echo "Projecto: $REF"
+
+      # ── O esquema ───────────────────────────────────────────────────────────
+      #
+      # O supabase/schema.sql inteiro, de cada vez. É escrito para isso: tudo
+      # `if not exists`, `create or replace` e `drop policy if exists`, e não há
+      # um `drop table`, um `delete` nem um `truncate` no ficheiro todo.
+      # Verificado a aplicá-lo três vezes seguidas a uma base de dados com
+      # fotografias, eventos e contadores lá dentro, e a contar as linhas antes
+      # e depois: nada mudou.
+      #
+      # `ON_ERROR_STOP=1` e uma transação só: ou entra tudo, ou não entra nada e
+      # a base de dados fica exactamente como estava.
+      - name: Aplicar o esquema
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$DB_URL" ]; then
+            echo "::warning::SUPABASE_DB_URL por definir: o esquema não foi aplicado. Settings → Secrets and variables → Actions, e o valor é a connection string do 'Session pooler' do Supabase (Project Settings → Database)."
+            exit 0
+          fi
+
+          # Espaços à volta são o erro mais comum a colar uma connection string,
+          # e já custou uma publicação inteira deste site uma vez, com o
+          # endereço do Worker. Limpam-se e segue.
+          DB_URL="$(printf '%s' "$DB_URL" | tr -d '[:space:]')"
+          case "$DB_URL" in
+            postgres://*|postgresql://*) : ;;
+            *) echo "::error::SUPABASE_DB_URL não parece uma connection string; deve começar por postgresql://"; exit 1 ;;
+          esac
+          # O pooler de transações (6543) não serve para isto: não guarda estado
+          # entre comandos, e um ficheiro de esquema numa transação só morre lá
+          # com um erro que não diz o que se passa. O de sessões é o 5432.
+          case "$DB_URL" in
+            *:6543/*) echo "::error::SUPABASE_DB_URL aponta para o pooler de transações (porta 6543). Para aplicar o esquema é preciso o 'Session pooler', na porta 5432."; exit 1 ;;
+          esac
+
+          # A imagem do runner costuma trazer o psql. Quando não trouxer, não é
+          # razão para não publicar nada.
+          command -v psql >/dev/null || sudo apt-get install -y --no-install-recommends postgresql-client
+
+          psql "$DB_URL" -v ON_ERROR_STOP=1 --single-transaction -f supabase/schema.sql
+          echo "Esquema aplicado."
+
+      # ── As Edge Functions ───────────────────────────────────────────────────
+      #
+      # A lista sai dos próprios ficheiros: cada função traz no cabeçalho a
+      # linha `// Deploy: supabase functions deploy <nome> [--no-verify-jwt]`, e
+      # é essa que se corre. Escrever a lista aqui era ter dois sítios a dizer a
+      # mesma coisa, e o segundo a ficar para trás na primeira função nova —
+      # que é precisamente o que acabou de acontecer com a print-gallery.
+      #
+      # Uma pasta sem essa linha faz falhar o trabalho em vez de ser saltada em
+      # silêncio: uma função que não se publica não dá erro nenhum até alguém a
+      # chamar, e aí dá-o à frente de um convidado.
+      - name: Publicar as Edge Functions
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::warning::SUPABASE_ACCESS_TOKEN por definir: as Edge Functions não foram publicadas. Cria um em supabase.com/dashboard/account/tokens."
+            exit 0
+          fi
+          falhou=0
+          for dir in supabase/functions/*/; do
+            nome="$(basename "$dir")"
+            case "$nome" in _*) continue ;; esac
+            linha="$(grep -m1 -o "functions deploy $nome[^\"]*" "$dir/index.ts" || true)"
+            if [ -z "$linha" ]; then
+              echo "::error::supabase/functions/$nome não diz como se publica. Falta a linha '// Deploy: supabase functions deploy $nome ...' no cabeçalho."
+              falhou=1
+              continue
+            fi
+            # Só a flag é lida da linha; o nome vem da pasta, para um copiar-colar
+            # no cabeçalho não publicar uma função por cima de outra.
+            flag=""
+            case "$linha" in *--no-verify-jwt*) flag="--no-verify-jwt" ;; esac
+            echo "→ $nome $flag"
+            npx --yes supabase@latest functions deploy "$nome" \
+              --project-ref "$PROJECT_REF" $flag || falhou=1
+          done
+          [ "$falhou" -eq 0 ] || { echo "::error::Houve funções por publicar."; exit 1; }
+          echo "Edge Functions publicadas."
+
   deploy:
+    needs: base-de-dados
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
