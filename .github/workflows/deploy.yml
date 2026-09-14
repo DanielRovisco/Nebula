@@ -30,6 +30,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        # O histórico todo, para se saber o que mudou neste push. Ver o passo
+        # "O que mudou" logo a seguir.
+        with:
+          fetch-depth: 0
+
+      # ── O que mudou neste push ──────────────────────────────────────────────
+      #
+      # Serve para decidir o que fazer quando um secret falta ou já não vale.
+      #
+      # Sem esta distinção havia só duas opções, e ambas más. Ou um token
+      # expirado deixava de publicar o site — e um token expira sempre no pior
+      # dia, que é aquele em que se está a mudar uma frase a correr. Ou passava
+      # a aviso, e um dia o site ia para o ar a chamar uma função que não estava
+      # publicada, coisa que só se descobre à frente de um convidado.
+      #
+      # Com isto, a regra é uma só e diz-se numa linha: se o que este passo
+      # publica não mudou neste push, um secret em falta é um aviso; se mudou, é
+      # erro e o site não sai à frente do que precisa.
+      - name: O que mudou
+        env:
+          ANTES: ${{ github.event.before }}
+        run: |
+          mudou_esquema=0
+          mudou_funcoes=0
+          # Num `workflow_dispatch`, ou num primeiro push, não há antes com que
+          # comparar. Aí assume-se que não mudou nada: é o lado que deixa
+          # publicar, e o aviso amarelo fica à vista de quem olhar.
+          if [ -n "$ANTES" ] && git cat-file -e "$ANTES^{commit}" 2>/dev/null; then
+            ficheiros="$(git diff --name-only "$ANTES" "$GITHUB_SHA")"
+            printf '%s\n' "$ficheiros" | grep -q '^supabase/schema\.sql$' && mudou_esquema=1
+            printf '%s\n' "$ficheiros" | grep -q '^supabase/functions/' && mudou_funcoes=1
+          fi
+          echo "MUDOU_ESQUEMA=$mudou_esquema" >> "$GITHUB_ENV"
+          echo "MUDOU_FUNCOES=$mudou_funcoes" >> "$GITHUB_ENV"
+          echo "esquema mudou: $mudou_esquema | funções mudaram: $mudou_funcoes"
 
       # O ref do projecto sai do endereço do Supabase, que já é secret. Um
       # secret a menos para manter, e um a menos para pôr errado.
@@ -61,7 +96,12 @@ jobs:
           DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           if [ -z "$DB_URL" ]; then
-            echo "::warning::SUPABASE_DB_URL por definir: o esquema não foi aplicado. Settings → Secrets and variables → Actions, e o valor é a connection string do 'Session pooler' do Supabase (Project Settings → Database)."
+            recado="SUPABASE_DB_URL por definir: o esquema não foi aplicado. Settings → Secrets and variables → Actions, e o valor é a connection string do 'Session pooler' (botão Connect, no topo do painel do Supabase)."
+            if [ "$MUDOU_ESQUEMA" = "1" ]; then
+              echo "::error::$recado E este push muda o supabase/schema.sql, por isso o site ficaria à frente da base de dados."
+              exit 1
+            fi
+            echo "::warning::$recado"
             exit 0
           fi
 
@@ -102,10 +142,45 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
+          recado_token="Cria um em supabase.com/dashboard/account/tokens, com acesso de escrita às Edge Functions, e guarda-o em Settings → Secrets and variables → Actions."
+
           if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
-            echo "::warning::SUPABASE_ACCESS_TOKEN por definir: as Edge Functions não foram publicadas. Cria um em supabase.com/dashboard/account/tokens."
+            if [ "$MUDOU_FUNCOES" = "1" ]; then
+              echo "::error::SUPABASE_ACCESS_TOKEN por definir, e este push muda Edge Functions: o site iria para o ar a chamar código que não está publicado. $recado_token"
+              exit 1
+            fi
+            echo "::warning::SUPABASE_ACCESS_TOKEN por definir: as Edge Functions não foram publicadas. $recado_token"
             exit 0
           fi
+
+          # ── O token ainda vale? ───────────────────────────────────────────
+          #
+          # Perguntado antes de tentar publicar, e não descoberto a meio.
+          #
+          # Estes tokens têm prazo, e um token expirado dá um erro do CLI que
+          # não diz "expirou": diz qualquer coisa sobre autorização, no meio da
+          # saída de uma publicação falhada, e quem o lê às dez da noite antes
+          # de um casamento não faz ideia do que se passa. Um pedido a perguntar
+          # as horas custa um segundo e transforma isso numa frase que se
+          # percebe.
+          codigo="$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            https://api.supabase.com/v1/projects || echo 000)"
+          case "$codigo" in
+            200) : ;;
+            401|403)
+              recado="O SUPABASE_ACCESS_TOKEN já não vale (o Supabase respondeu $codigo). Ou expirou, ou foi apagado, ou não tem permissões que cheguem. $recado_token"
+              if [ "$MUDOU_FUNCOES" = "1" ]; then
+                echo "::error::$recado E este push muda Edge Functions, por isso não se publica o site à frente delas."
+                exit 1
+              fi
+              echo "::warning::$recado As funções que já estão publicadas continuam a correr."
+              exit 0 ;;
+            000)
+              echo "::warning::Não consegui falar com a api.supabase.com para confirmar o token. Segue-se em frente; se ele não valer, o passo a seguir falha."
+              ;;
+            *) echo "::warning::A api.supabase.com respondeu $codigo ao confirmar o token. Segue-se em frente." ;;
+          esac
           falhou=0
           for dir in supabase/functions/*/; do
             nome="$(basename "$dir")"

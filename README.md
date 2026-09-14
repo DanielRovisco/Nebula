@@ -215,11 +215,24 @@ trás na primeira função nova.
 
 | Secret | Onde se vai buscar |
 | --- | --- |
-| `SUPABASE_DB_URL` | Supabase → Project Settings → Database → Connection string → **Session pooler** (porta 5432). O de transações, na 6543, não serve para aplicar esquemas, e o workflow recusa-o com essa explicação. |
-| `SUPABASE_ACCESS_TOKEN` | supabase.com/dashboard/account/tokens |
+| `SUPABASE_DB_URL` | Botão **Connect**, no topo do painel do Supabase → Connection String → **Session pooler** (porta 5432). A "Direct connection" só responde em IPv6 e o GitHub Actions não tem IPv6; o pooler de transações, na 6543, não serve para aplicar esquemas. O workflow recusa esse último com essa explicação. |
+| `SUPABASE_ACCESS_TOKEN` | supabase.com/dashboard/account/tokens. Precisa de **escrita nas Edge Functions**; o resto pode ficar em leitura ou sem acesso nenhum. |
 
-Sem eles, o passo respectivo é saltado com um aviso amarelo e o site publica-se
-à mesma: é o estado em que isto fica até alguém os pôr, e não uma avaria.
+**Quando um secret falta, ou já não vale**, a regra é uma e diz-se numa linha:
+se o que esse passo publica não mudou neste push, é um aviso amarelo e o site
+publica-se à mesma; se mudou, é erro e o site não sai à frente do que precisa.
+
+É a diferença entre as duas maneiras de isto correr mal, e ambas acontecem. Um
+token expira sempre no pior dia — aquele em que se está a mudar uma frase a
+correr — e bloquear a publicação do site por causa disso é caro por nada, se
+nenhuma função mudou. Mas publicar o site a chamar uma função que não está lá
+é pior: não dá erro nenhum até alguém a chamar, e aí dá-o à frente de um
+convidado.
+
+**O token é confirmado antes de se tentar publicar.** Um token expirado dá um
+erro do CLI que não diz "expirou": diz qualquer coisa sobre autorização, no meio
+da saída de uma publicação falhada. Um pedido à `api.supabase.com` custa um
+segundo e transforma isso numa frase que se percebe.
 
 O ref do projeto não é secret novo nenhum — sai do `VITE_SUPABASE_URL`, que já
 lá está.
