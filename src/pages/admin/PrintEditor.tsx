@@ -6,12 +6,9 @@ import QrNebula from '../../components/QrNebula'
 import { SITE_URL } from '../../lib/site'
 import {
   type FotoMostra, type Mostra,
-  apagarFoto, apagarMostra, assinarMiniaturas, carregarFotos,
-  lerMostra, listarFotos, mudarFim, terminarJa,
+  apagarFoto, apagarMostra, assinarMiniaturas, carregarFotos, estaAberta,
+  fechar, lerMostra, listarFotos, reabrir,
 } from '../../lib/impressao/admin'
-
-/** Leitura do relógio, fora do componente: não é estado do React. */
-const aindaActiva = (iso: string) => new Date(iso).getTime() > Date.now()
 
 const quando = (iso: string) =>
   new Date(iso).toLocaleString('pt-PT', {
@@ -66,7 +63,7 @@ export default function PrintEditor() {
 
   if (!mostra) return <div className="container-px min-h-[40vh]" />
 
-  const viva = aindaActiva(mostra.expires_at)
+  const aberta = estaAberta(mostra)
   const endereco = `${SITE_URL}/p/${mostra.slug}`
 
   return (
@@ -82,7 +79,10 @@ export default function PrintEditor() {
         <div>
           <h1 className="text-2xl">{mostra.name}</h1>
           <p className="text-xs text-titanium/40 mt-2">
-            {endereco} · {viva ? `activa até ${quando(mostra.expires_at)}` : 'terminada'}
+            {endereco} ·{' '}
+            {aberta
+              ? 'aberta'
+              : `fechada ${mostra.expires_at ? `às ${quando(mostra.expires_at)}` : ''}`}
           </p>
         </div>
 
@@ -178,35 +178,41 @@ export default function PrintEditor() {
         </p>
       )}
 
-      {/* Fim da mostra */}
-      <div className="mt-16 border-t border-white/10 pt-8 flex flex-wrap gap-3">
-        {viva ? (
+      {/*
+        Abrir e fechar, à mão.
+
+        Não há relógio nenhum a fechar isto: enquanto estiver aberta, está
+        aberta, e quem tiver o endereço vê as fotografias. É uma escolha, e o
+        botão está aqui porque a decisão é de quem está na mesa e não de um
+        temporizador que ninguém se lembra de ter posto.
+      */}
+      <div className="mt-16 border-t border-white/10 pt-8 flex flex-wrap items-center gap-3">
+        {aberta ? (
+          <button
+            onClick={async () => {
+              if (!confirm('Fechar a mostra? Os telemóveis deixam de ver as fotografias.')) return
+              await fechar(mostra.id)
+              await recarregar()
+            }}
+            className="px-5 py-3 rounded-full border border-white/15 text-[11px] uppercase tracking-[0.14em] min-h-[44px]"
+          >
+            Fechar a mostra
+          </button>
+        ) : (
           <>
             <button
               onClick={async () => {
-                await mudarFim(mostra.id, new Date(new Date(mostra.expires_at).getTime() + 12 * 3600_000))
+                await reabrir(mostra.id)
                 await recarregar()
               }}
               className="px-5 py-3 rounded-full border border-white/15 text-[11px] uppercase tracking-[0.14em] min-h-[44px]"
             >
-              Mais 12 horas
+              Voltar a abrir
             </button>
-            <button
-              onClick={async () => {
-                if (!confirm('Terminar já? Os telemóveis deixam de ver as fotografias.')) return
-                await terminarJa(mostra.id)
-                await recarregar()
-              }}
-              className="px-5 py-3 rounded-full border border-white/15 text-[11px] uppercase tracking-[0.14em] min-h-[44px]"
-            >
-              Terminar já
-            </button>
+            <p className="text-sm text-titanium/40">
+              Fechada. As fotografias continuam a ocupar espaço até serem apagadas.
+            </p>
           </>
-        ) : (
-          <p className="text-sm text-titanium/40">
-            Terminada. Ninguém vê as fotografias, mas elas continuam a ocupar
-            espaço até serem apagadas.
-          </p>
         )}
         <button
           onClick={async () => {

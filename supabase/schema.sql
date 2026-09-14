@@ -891,11 +891,18 @@ create table if not exists print_galleries (
   event_date date,
 
   /*
-    A hora a que isto deixa de abrir, e é a sério: quem pede as fotografias
-    depois desta hora não recebe lista nenhuma nem URL nenhum, e os URLs que já
-    tinha em mão expiram sozinhos em duas horas. Não é um estado no browser.
+    Quando é que isto fechou. Nulo quer dizer aberta.
+
+    Nada fecha sozinho, e é uma decisão: a mesa é nossa e a noite é de quem a
+    está a viver, e uma galeria que se apaga a meio porque um relógio chegou ao
+    fim é o género de surpresa que não se quer a meio de um casamento. Fecha
+    quando alguém carregar em fechar, e reabre da mesma maneira.
+
+    Quando fecha, fecha a sério: quem pedir as fotografias a partir daí não
+    recebe lista nenhuma nem URL nenhum, e os URLs que já tivesse em mão expiram
+    sozinhos em duas horas. Não é um estado guardado no browser de ninguém.
   */
-  expires_at timestamptz not null,
+  expires_at timestamptz,
 
   /*
     O próximo número a atribuir. Vive aqui e não se calcula com um max() sobre
@@ -912,6 +919,10 @@ create table if not exists print_galleries (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Para quem já tinha corrido a versão anterior deste ficheiro, em que a mostra
+-- se fechava sozinha ao fim de um número de horas.
+alter table print_galleries alter column expires_at drop not null;
 
 create index if not exists print_galleries_slug_idx on print_galleries (slug);
 create index if not exists print_galleries_owner_idx on print_galleries (owner_id);

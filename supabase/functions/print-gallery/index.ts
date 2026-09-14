@@ -73,13 +73,18 @@ Deno.serve(async (req) => {
   // ninguém que mostras há, nem se deixa adivinhar slugs por tentativa.
   if (!mostra) return json({ error: 'nao_encontrado' }, 404)
 
-  const fim = new Date(mostra.expires_at as string).getTime()
-  if (fim <= Date.now()) {
-    /*
-      Acabou. Devolve-se o nome e mais nada: quem tem o link aberto desde ontem
-      merece ler "isto terminou" em vez de um erro, mas não leva fotografia
-      nenhuma, nem o número de quantas havia.
-    */
+  /*
+    Fechada é `expires_at` preenchida e já passada. Nula é aberta, e fica aberta
+    até alguém a fechar: nada aqui se fecha por relógio.
+
+    Devolve-se o nome e mais nada: quem tem o link aberto desde ontem merece ler
+    "isto terminou" em vez de um erro, mas não leva fotografia nenhuma, nem o
+    número de quantas havia.
+  */
+  const fechada = mostra.expires_at
+    ? new Date(mostra.expires_at as string).getTime() <= Date.now()
+    : false
+  if (fechada) {
     return json({ name: mostra.name, expiresAt: mostra.expires_at, terminada: true, fotos: [] })
   }
 

@@ -118,7 +118,16 @@ export default function MostraPage() {
   }, [slug, aplicar, falhou])
 
   useEffect(() => {
-    if (terminada || erro === 'nao_encontrado') return
+    /*
+      Continua a perguntar mesmo depois de fechada, e é de propósito.
+
+      Fechar é um botão que alguém carrega, e um botão que alguém carrega é um
+      botão em que alguém carrega por engano. Sem isto, quem estivesse com a
+      página aberta no momento do engano ficava com "isto terminou" no ecrã até
+      recarregar à mão, mesmo depois de a mostra voltar a abrir. Só se desiste
+      quando a mostra não existe de todo, que é a única coisa que não se desfaz.
+    */
+    if (erro === 'nao_encontrado') return
     let vivo = true
     const pedir = () => {
       lerMostra(slug, null)
@@ -135,7 +144,7 @@ export default function MostraPage() {
       clearInterval(t)
       window.removeEventListener('online', pedir)
     }
-  }, [slug, aplicar, terminada, erro])
+  }, [slug, aplicar, erro])
 
   function mais() {
     if (!proximo || aCarregar) return

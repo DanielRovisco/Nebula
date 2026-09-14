@@ -617,8 +617,9 @@ não há API para a bloquear. Quem disser o contrário está a vender alguma coi
    mostrar: boa para a pessoa se ver, má para imprimir em casa, e marcada.
 2. **O bucket é privado.** Não há endereço público para nenhuma destas
    fotografias. O que sai da Edge Function são URLs assinados de duas horas.
-3. **A hora de fim é do servidor.** Passada a hora, não sai lista nem sai URL, e
-   os que andarem por aí expiram sozinhos. Não há link que sobreviva à festa.
+3. **Fechar é do servidor.** Depois de fechada, não sai lista nem sai URL, e os
+   que andarem por aí expiram sozinhos em duas horas. Fecha-se à mão, no painel,
+   e reabre-se da mesma maneira: nada aqui fecha por relógio.
 4. **As fotografias são fundos CSS e não `<img>`.** O toque longo do telemóvel
    não abre "Guardar imagem", e arrastar não guarda nada. É o gesto que
    praticamente toda a gente usaria, e fica fechado.
@@ -651,10 +652,18 @@ conta. A autorização é o slug mais a hora de fim, verificados lá dentro.
 
 O carregamento reutiliza a `admin-storage`, que já existe e já exige sessão.
 
-### Depois da festa
+### Abrir e fechar
 
-Passada a hora, a mostra fecha-se sozinha e ninguém vê nada. Os ficheiros
-continuam a ocupar espaço até alguém carregar em "apagar tudo" no painel, que
-apaga os objetos do R2 e a mostra. Não há nada a apagar sozinho: apagar
-fotografias em silêncio, por relógio, é a última coisa que este projeto deve
-fazer sem alguém a dizer que sim.
+A mostra nasce aberta e fica aberta até alguém a fechar no painel. Não há
+relógio nenhum: enquanto estiver aberta, quem tiver o endereço vê as
+fotografias.
+
+É uma escolha deliberada. Uma galeria que se fecha a meio porque um temporizador
+que ninguém se lembra de ter posto chegou ao fim é o género de surpresa que não
+se quer a meio de um casamento, e a decisão de fechar pertence a quem está na
+mesa. Fechada, reabre-se com o mesmo endereço e os mesmos números.
+
+Os ficheiros continuam a ocupar espaço até alguém carregar em "apagar tudo", que
+apaga os objetos do R2 e a mostra. Também aqui não há nada a apagar sozinho:
+apagar fotografias em silêncio é a última coisa que este projeto deve fazer sem
+alguém a dizer que sim.

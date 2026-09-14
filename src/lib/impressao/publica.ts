@@ -19,7 +19,8 @@ export interface FotoPublica {
 export interface PaginaMostra {
   name: string
   eventDate: string | null
-  expiresAt: string
+  /** Quando fechou. Nulo é aberta. */
+  expiresAt: string | null
   terminada: boolean
   fotos: FotoPublica[]
   /** O número a pedir a seguir, ou nulo quando já não há mais para trás. */

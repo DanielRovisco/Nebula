@@ -14,7 +14,8 @@ export interface Mostra {
   slug: string
   name: string
   event_date: string | null
-  expires_at: string
+  /** Quando foi fechada. Nulo é aberta, e fica aberta até alguém a fechar. */
+  expires_at: string | null
   next_number: number
   created_at: string
 }
@@ -32,8 +33,9 @@ export interface FotoMostra {
   thumbUrl?: string
 }
 
-/** Quantas horas dura uma mostra, se ninguém escolher outra coisa. */
-export const HORAS_OMISSAO = 36
+/** Aberta é `expires_at` por preencher, ou ainda no futuro. */
+export const estaAberta = (m: Pick<Mostra, 'expires_at'>) =>
+  !m.expires_at || new Date(m.expires_at).getTime() > Date.now()
 
 export const slugificar = (texto: string) =>
   texto
@@ -68,20 +70,19 @@ export async function criarMostra(dados: {
   name: string
   slug: string
   eventDate: string | null
-  horas: number
 }): Promise<Mostra> {
   const sb = supabase()
   const { data: sessao } = await sb.auth.getUser()
   if (!sessao.user) throw new Error('Sessão expirada. Volta a entrar.')
 
-  const expira = new Date(Date.now() + dados.horas * 3600_000).toISOString()
   const { data, error } = await sb
     .from('print_galleries')
     .insert({
       slug: dados.slug,
       name: dados.name,
       event_date: dados.eventDate,
-      expires_at: expira,
+      // Nasce aberta e sem hora para fechar. Fecha quando alguém a fechar.
+      expires_at: null,
       owner_id: sessao.user.id,
     })
     .select()
@@ -106,17 +107,26 @@ export async function listarFotos(galeriaId: string): Promise<FotoMostra[]> {
   return (data ?? []) as FotoMostra[]
 }
 
-/** Prolonga (ou encurta) a mostra. É a única coisa que se pode mudar depois. */
-export async function mudarFim(id: string, quando: Date): Promise<void> {
+/**
+ * Abre ou fecha a mostra. É a única coisa que se pode mudar depois de criada.
+ *
+ * Fechar é marcar a hora; abrir é apagá-la. Guardado como instante e não como
+ * um sim ou não porque assim a mostra sabe quando fechou, o que é a única coisa
+ * que se quer saber sobre ela depois da festa.
+ */
+async function marcarFim(id: string, quando: Date | null): Promise<void> {
   const { error } = await supabase()
     .from('print_galleries')
-    .update({ expires_at: quando.toISOString() })
+    .update({ expires_at: quando ? quando.toISOString() : null })
     .eq('id', id)
   if (error) throw new Error(error.message)
 }
 
-/** Termina já: põe a hora de fim no passado. Os URLs por aí morrem sozinhos. */
-export const terminarJa = (id: string) => mudarFim(id, new Date(Date.now() - 1000))
+/** Fecha já. Os telemóveis deixam de ver, e os URLs por aí morrem sozinhos. */
+export const fechar = (id: string) => marcarFim(id, new Date())
+
+/** Volta a abrir, com o mesmo endereço e os mesmos números. */
+export const reabrir = (id: string) => marcarFim(id, null)
 
 /**
  * Miniaturas para o painel ver o que já entrou.

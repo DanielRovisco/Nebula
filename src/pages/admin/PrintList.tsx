@@ -2,15 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import {
-  type Mostra, HORAS_OMISSAO, criarMostra, listarMostras, slugificar,
+  type Mostra, criarMostra, estaAberta, listarMostras, slugificar,
 } from '../../lib/impressao/admin'
-
-const activa = (iso: string) => new Date(iso).getTime() > Date.now()
-
-const quando = (iso: string) =>
-  new Date(iso).toLocaleString('pt-PT', {
-    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
-  })
 
 /**
  * As mostras da estação de impressão.
@@ -58,7 +51,7 @@ export default function PrintList() {
 
       <ul className="mt-8 space-y-2">
         {mostras.map((m) => {
-          const viva = activa(m.expires_at)
+          const aberta = estaAberta(m)
           return (
             <li key={m.id}>
               <Link
@@ -73,12 +66,12 @@ export default function PrintList() {
                 </div>
                 <span
                   className={`shrink-0 text-[10px] uppercase tracking-[0.14em] px-3 py-1.5 rounded-full border ${
-                    viva
+                    aberta
                       ? 'border-emerald-400/30 text-emerald-200/80'
                       : 'border-white/10 text-titanium/35'
                   }`}
                 >
-                  {viva ? `até ${quando(m.expires_at)}` : 'terminada'}
+                  {aberta ? 'aberta' : 'fechada'}
                 </span>
               </Link>
             </li>
@@ -98,7 +91,6 @@ function Formulario({
   const [nome, setNome] = useState('')
   const [slug, setSlug] = useState('')
   const [data, setData] = useState('')
-  const [horas, setHoras] = useState(HORAS_OMISSAO)
   const [erro, setErro] = useState<string | null>(null)
   const [aGravar, setAGravar] = useState(false)
 
@@ -116,7 +108,6 @@ function Formulario({
         name: nome.trim(),
         slug: slugFinal,
         eventDate: data || null,
-        horas,
       }))
     } catch (e2) {
       setErro((e2 as Error).message)
@@ -155,31 +146,21 @@ function Formulario({
         </p>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-6">
-        <div>
-          <label className="label-sm block mb-2" htmlFor="mostra-data">Data</label>
-          <input
-            id="mostra-data"
-            type="date"
-            value={data}
-            onChange={(e) => setData(e.target.value)}
-            className={`${campo} [color-scheme:dark]`}
-          />
-        </div>
-        <div>
-          <label className="label-sm block mb-2" htmlFor="mostra-horas">Dura</label>
-          <select
-            id="mostra-horas"
-            value={horas}
-            onChange={(e) => setHoras(Number(e.target.value))}
-            className={`${campo} text-titanium`}
-          >
-            {[12, 24, 36, 48, 72].map((h) => (
-              <option key={h} value={h} className="bg-eerie">{h} horas</option>
-            ))}
-          </select>
-        </div>
+      <div>
+        <label className="label-sm block mb-2" htmlFor="mostra-data">Data</label>
+        <input
+          id="mostra-data"
+          type="date"
+          value={data}
+          onChange={(e) => setData(e.target.value)}
+          className={`${campo} [color-scheme:dark] sm:max-w-xs`}
+        />
       </div>
+
+      <p className="text-xs text-titanium/40 leading-relaxed">
+        Nasce aberta e fica aberta. Nada a fecha sozinha: fechas tu, quando
+        quiseres, e podes voltar a abrir depois.
+      </p>
 
       {erro && <p className="text-sm text-red-300/80">{erro}</p>}
 
