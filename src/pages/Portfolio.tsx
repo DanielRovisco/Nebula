@@ -239,8 +239,20 @@ export default function Portfolio() {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                 ) : (
+                  /*
+                    A miniatura, e não o ficheiro inteiro.
+
+                    Num vídeo isto não é uma afinação, é a diferença entre
+                    aparecer e não aparecer: estava aqui uma <img> com o
+                    endereço do .mp4, e uma <img> não sabe desenhar um vídeo.
+                    A grelha ficava com um buraco onde devia estar o trabalho
+                    que mais queremos mostrar.
+
+                    Numa fotografia, de caminho, deixa de se descarregar o
+                    ficheiro de 1600px para o mostrar num quadrado de 400.
+                  */
                   <img
-                    src={item.src}
+                    src={item.thumb || item.src}
                     alt={item.alt}
                     loading="lazy"
                     decoding="async"
@@ -249,9 +261,10 @@ export default function Portfolio() {
                   />
                 )}
                 {/*
-                  Um vídeo com o primeiro fotograma parado é indistinguível de
-                  uma fotografia. O símbolo diz o que vai acontecer ao clicar,
-                  antes de se clicar.
+                  O símbolo diz que aquilo é um vídeo antes de alguém clicar.
+                  Na grelha mostra-se o primeiro fotograma e não o vídeo a
+                  tocar: são doze ou vinte quadrados ao mesmo tempo, e isso é
+                  outra conversa da faixa da página inicial, onde se vêem três.
                 */}
                 {item.video && (
                   <span className="absolute inset-0 flex items-center justify-center pointer-events-none">

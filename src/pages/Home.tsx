@@ -8,6 +8,7 @@ import { CAPAS_LOCAIS, HERO_ID } from '../lib/servicosCapas'
 import { publicUrl } from '../lib/site-content/public'
 import { usePortfolio, useServiceCovers } from '../lib/site-content/useSiteContent'
 import CountUp from '../lib/CountUp'
+import VideoDoSite from '../lib/VideoDoSite'
 import Seo from '../lib/Seo'
 import SiteIntro from '../components/SiteIntro'
 import { useLink, useLinkServico, useT } from '../lib/i18n'
@@ -458,15 +459,23 @@ export default function Home() {
                   As do repositório trazem `localName` e vão pelo <Picture>, que
                   escolhe o tamanho certo. As do painel têm um ficheiro só.
 
-                  De um vídeo mostra-se a miniatura: aqui a faixa anda sozinha e
-                  quatro vídeos a tocar ao mesmo tempo num telemóvel seria o
-                  primeiro ecrã da página inicial a comer a bateria.
+                  Um vídeo toca, e só enquanto está à vista (ver VideoDoSite).
+                  Parado era uma fotografia a fingir: esta faixa é o primeiro
+                  ecrã que alguém vê de nós, e metade do que fazemos mexe.
                 */}
                 {item.localName ? (
                   <Picture
                     name={item.localName}
                     alt={passagem === 1 ? '' : item.alt}
                     sizes="(max-width: 640px) 70vw, (max-width: 768px) 34vw, 27vw"
+                    style={{ objectPosition: item.pos }}
+                    className="w-full h-full object-cover pointer-events-none"
+                  />
+                ) : item.video ? (
+                  <VideoDoSite
+                    src={item.src}
+                    poster={item.thumb}
+                    alt={passagem === 1 ? '' : item.alt}
                     style={{ objectPosition: item.pos }}
                     className="w-full h-full object-cover pointer-events-none"
                   />
