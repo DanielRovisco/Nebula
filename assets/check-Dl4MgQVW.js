@@ -1,0 +1,1 @@
+import{k as e}from"./index-f2Cz9C_X.js";var t=e(`check`,[[`path`,{d:`M20 6 9 17l-5-5`,key:`1gmf2c`}]]);export{t};
