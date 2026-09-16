@@ -33,6 +33,13 @@
       senão o browser descarrega duas vezes: uma para o preload e outra para a
       imagem que acaba por usar. Daí o AVIF aqui e o `type` a dizê-lo. Quem não
       o souber ler ignora este preload e segue pelo caminho normal.
+
+      As larguras abaixo são reescritas no build a partir de src/lib/imagens.json
+      (ver `preloadDoHero` no vite.config.ts), que é o mesmo sítio de onde o
+      <Picture> tira o srcset. Ficam aqui valores válidos para o site abrir em
+      dev sem o plugin ter corrido, mas quem manda é o ficheiro gerado: com uma
+      fotografia de entrada maior, estas larguras mudavam ali e não aqui, e o
+      preload passaria a descarregar uma imagem que ninguém usa.
     -->
     <link
       rel="preload"

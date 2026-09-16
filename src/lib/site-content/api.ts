@@ -326,11 +326,22 @@ export const siteAdmin = DEMO ? demoSiteAdmin : realSiteAdmin
 /**
  * Carrega uma imagem para o bucket público e devolve as chaves.
  *
- * As imagens do site são reduzidas mais do que as das galerias: numa página
- * de portfólio ninguém precisa de mais do que 1600px, e o que se poupa aqui
- * paga-se em tempo de carregamento a cada visita.
+ * Subiu de 1600 para 2400, e a razão é a fotografia de entrada.
+ *
+ * Ela ocupa o ecrã todo, e um portátil com ecrã de retina desenha esse ecrã
+ * com dois pixels por ponto: 1600 pixels esticados por 2880 é o que se vê como
+ * "a foto do início está mole". Nas do portefólio a diferença é pequena,
+ * porque a grelha usa a miniatura e o ficheiro grande só aparece na janela
+ * aberta — mas aí também se ganha.
+ *
+ * O preço é honesto e paga-se no telemóvel: uma fotografia carregada pelo
+ * painel tem um tamanho só, sem `srcset`, por isso quem a abre no telemóvel
+ * leva o mesmo ficheiro de 2400 que um portátil. As do repositório não têm
+ * esse problema (ver scripts/optimize-images.mjs, que gera cinco larguras).
+ * Se um dia isto pesar, o caminho é dar tamanhos às imagens do painel, não
+ * baixar isto outra vez.
  */
-export const SITE_EDGE = 1600
+export const SITE_EDGE = 2400
 
 /**
  * Um fotograma do vídeo, para servir de miniatura.
@@ -411,7 +422,9 @@ export async function uploadSiteVideo(file: File) {
 }
 
 export async function uploadSitePhoto(file: File) {
-  const full = await resize(file, SITE_EDGE, 'image/webp', 0.82)
+  // 0.88 e não 0.82: ao tamanho a que a fotografia de entrada é mostrada, a
+  // compressão via-se no céu e nos tons de pele.
+  const full = await resize(file, SITE_EDGE, 'image/webp', 0.88)
   const thumb = await resize(file, THUMB_EDGE, 'image/webp', THUMB_QUALITY)
 
   const a = await callAdmin<{ key: string; url: string }>({

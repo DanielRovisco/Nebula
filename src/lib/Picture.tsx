@@ -1,7 +1,17 @@
 import { asset } from './asset'
+import LARGURAS from './imagens.json'
 
-// Larguras geradas por scripts/optimize-images.mjs.
-const WIDTHS = [480, 960, 1440] as const
+/*
+  Que larguras existem mesmo para cada fotografia.
+
+  Gerado por scripts/optimize-images.mjs a partir do tamanho de cada original, e
+  não escrito à mão: uma fotografia de 1440 dá três ficheiros, uma de 6000 dá
+  cinco, e anunciar num srcset uma largura que não foi gerada manda o browser
+  buscar um 404 — ou, pior, faz-lhe escolher um ficheiro pequeno a dizer que é
+  grande, que é exactamente o defeito que se queria corrigir.
+*/
+const larguras = (nome: string): number[] =>
+  (LARGURAS as Record<string, number[]>)[nome] ?? [480, 960, 1440]
 
 interface PictureProps {
   /** Slug do ficheiro em public/brand/portfolio/, sem extensão nem sufixo. */
@@ -31,7 +41,9 @@ export default function Picture({
   priority = false,
 }: PictureProps) {
   const srcset = (ext: string) =>
-    WIDTHS.map((w) => `${asset(`/brand/portfolio/${name}-${w}.${ext}`)} ${w}w`).join(', ')
+    larguras(name)
+      .map((w) => `${asset(`/brand/portfolio/${name}-${w}.${ext}`)} ${w}w`)
+      .join(', ')
 
   return (
     // `contents` mantém o <picture> fora do layout: o <img> continua a
