@@ -116,6 +116,9 @@ export async function fetchServiceCovers(): Promise<Record<string, ServiceCover>
     mapa[String(r.service_id)] = {
       serviceId: String(r.service_id),
       storageKey: String(r.storage_key),
+      mediumKey: r.medium_key ? String(r.medium_key) : null,
+      width: r.width ? Number(r.width) : null,
+      height: r.height ? Number(r.height) : null,
       alt: String(r.alt ?? ''),
       pos: String(r.pos ?? '50% 50%'),
     }

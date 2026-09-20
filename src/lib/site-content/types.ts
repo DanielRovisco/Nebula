@@ -69,6 +69,14 @@ export const ehVideo = (p: { contentType: string | null; storageKey?: string }) 
 export interface ServiceCover {
   serviceId: string
   storageKey: string
+  /**
+   * O mesmo, a metade da largura. Nulo nas capas carregadas antes de isto
+   * existir, e aí serve-se só a grande — que é o que já acontecia.
+   */
+  mediumKey: string | null
+  /** Do ficheiro grande. É daqui que sai o descritor do `srcset`. */
+  width: number | null
+  height: number | null
   alt: string
   /** Recorte, como `object-position` do CSS. */
   pos: string

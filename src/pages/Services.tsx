@@ -6,11 +6,11 @@ import Reveal from '../lib/Reveal'
 import Mascara from '../lib/Mascara'
 import Paralaxe from '../lib/Paralaxe'
 import Picture from '../lib/Picture'
+import ImagemCapa from '../lib/ImagemCapa'
 import Telemovel from '../components/servicos/Telemovel'
 import EcraGaleria from '../components/servicos/EcraGaleria'
 import EcraConvidados from '../components/servicos/EcraConvidados'
 import { CAPAS_LOCAIS } from '../lib/servicosCapas'
-import { publicUrl } from '../lib/site-content/public'
 import { useServiceCovers } from '../lib/site-content/useSiteContent'
 import Seo from '../lib/Seo'
 import { SITE_URL, absoluteUrl } from '../lib/site'
@@ -539,11 +539,10 @@ export default function Services() {
                   para as fotografias do repositório, e uma capa carregada tem
                   um ficheiro só.
                 */
-                <img
-                  src={publicUrl(capa.storageKey)}
+                <ImagemCapa
+                  capa={capa}
                   alt={capa.alt || local.alt}
-                  decoding="async"
-                  style={{ objectPosition: capa.pos }}
+                  sizes="(max-width: 1024px) 100vw, 45vw"
                   className="w-full aspect-[4/5] lg:max-h-[600px] rounded-2xl object-cover"
                 />
               ) : (

@@ -542,6 +542,36 @@ create table if not exists site_service_covers (
   updated_at timestamptz not null default now()
 );
 
+/*
+  Tamanhos intermédios das fotografias carregadas pelo painel.
+
+  Uma fotografia carregada tinha um ficheiro só, e isso chegava enquanto ela era
+  reduzida a 1600 pixels. Ao subi-la para 2400 — para a fotografia de entrada
+  deixar de ser esticada num ecrã de retina — passou a ser o telemóvel a
+  descarregar o ficheiro do portátil, num sítio onde ele ocupa o ecrã todo. Era
+  arranjar a nitidez de uns pagando-a com o tempo de espera de outros.
+
+  Com o intermédio, cada um leva o que precisa: o `srcset` oferece os dois e é o
+  browser que escolhe. A largura do intermédio não se guarda porque não é
+  preciso — ele é sempre metade do maior, e o `width` chega para a deduzir.
+
+  Só nas capas, e não nas fotografias do portefólio. Lá o problema não existe: a
+  grelha já usa a miniatura de 640, e a janela em ecrã cheio é para ver grande,
+  que é precisamente quando o ficheiro grande faz sentido. Uma coluna que
+  ninguém lê é pior do que coluna nenhuma.
+
+  Nulo nas linhas antigas, e por isso tudo o que lê isto tem de aguentar a
+  ausência: quem carregou uma capa antes desta coluna existir continua a ter uma
+  só, e continua a funcionar.
+*/
+alter table site_service_covers add column if not exists medium_key text;
+
+-- A capa não guardava dimensões nenhumas. Sem a largura não há descritor para
+-- pôr no `srcset`, e sem descritor o browser não sabe escolher.
+alter table site_service_covers add column if not exists width int;
+alter table site_service_covers add column if not exists height int;
+
+
 alter table site_service_covers enable row level security;
 
 drop policy if exists "todos leem capas dos servicos" on site_service_covers;

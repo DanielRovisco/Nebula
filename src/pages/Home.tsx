@@ -5,10 +5,10 @@ import { ArrowRight, Camera, Images, MessageSquare } from 'lucide-react'
 import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
 import { CAPAS_LOCAIS, HERO_ID } from '../lib/servicosCapas'
-import { publicUrl } from '../lib/site-content/public'
 import { usePortfolio, useServiceCovers } from '../lib/site-content/useSiteContent'
 import CountUp from '../lib/CountUp'
 import VideoDoSite from '../lib/VideoDoSite'
+import ImagemCapa from '../lib/ImagemCapa'
 import Seo from '../lib/Seo'
 import SiteIntro from '../components/SiteIntro'
 import { useLink, useLinkServico, useT } from '../lib/i18n'
@@ -176,12 +176,11 @@ export default function Home() {
             alternativa era não deixar trocar a fotografia mais visível do site.
           */}
           {capas[HERO_ID] ? (
-            <img
-              src={publicUrl(capas[HERO_ID].storageKey)}
+            <ImagemCapa
+              capa={capas[HERO_ID]}
               alt={capas[HERO_ID].alt || CAPAS_LOCAIS[HERO_ID].alt}
-              fetchPriority="high"
-              decoding="async"
-              style={{ objectPosition: capas[HERO_ID].pos }}
+              sizes="100vw"
+              prioridade
               className="w-full h-full object-cover"
             />
           ) : (
@@ -327,12 +326,10 @@ export default function Home() {
                     serviço a dois cliques de distância.
                   */}
                   {capas[id] ? (
-                    <img
-                      src={publicUrl(capas[id].storageKey)}
+                    <ImagemCapa
+                      capa={capas[id]}
                       alt={capas[id].alt || local.alt}
-                      loading="lazy"
-                      decoding="async"
-                      style={{ objectPosition: capas[id].pos }}
+                      sizes="(max-width: 768px) 100vw, 33vw"
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1400ms] group-hover:scale-105"
                     />
                   ) : (

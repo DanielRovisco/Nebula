@@ -162,6 +162,9 @@ export default function SiteAdmin() {
       const cover: ServiceCover = {
         serviceId,
         storageKey: up.storageKey,
+        mediumKey: up.mediumKey,
+        width: up.width,
+        height: up.height,
         alt: file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '),
         pos: capas[serviceId]?.pos ?? '50% 50%',
       }

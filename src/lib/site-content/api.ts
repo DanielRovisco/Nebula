@@ -225,6 +225,9 @@ const realSiteAdmin = {
     return (data ?? []).map((r) => ({
       serviceId: r.service_id as string,
       storageKey: r.storage_key as string,
+      mediumKey: (r.medium_key as string) ?? null,
+      width: (r.width as number) ?? null,
+      height: (r.height as number) ?? null,
       alt: (r.alt as string) ?? '',
       pos: (r.pos as string) ?? '50% 50%',
     }))
@@ -242,6 +245,9 @@ const realSiteAdmin = {
       .upsert({
         service_id: cover.serviceId,
         storage_key: cover.storageKey,
+        medium_key: cover.mediumKey,
+        width: cover.width,
+        height: cover.height,
         alt: cover.alt,
         pos: cover.pos,
         updated_at: new Date().toISOString(),
@@ -425,6 +431,19 @@ export async function uploadSitePhoto(file: File) {
   // 0.88 e não 0.82: ao tamanho a que a fotografia de entrada é mostrada, a
   // compressão via-se no céu e nos tons de pele.
   const full = await resize(file, SITE_EDGE, 'image/webp', 0.88)
+  /*
+    O intermédio, a metade do lado maior.
+
+    Existe por causa do telemóvel. A fotografia de entrada ocupa o ecrã todo, e
+    sem este ficheiro quem a abre no telemóvel descarrega os 2400 pixels que só
+    um portátil de retina aproveita. Metade é o tamanho certo para um ecrã de
+    telemóvel de hoje, e pesa cerca de um quarto.
+
+    Metade e não um número à parte: quem lê isto depois precisa de saber a
+    largura deste ficheiro para o anunciar no `srcset`, e a única coisa que fica
+    guardada é a largura do grande. Sendo metade, deduz-se.
+  */
+  const medium = await resize(file, Math.round(SITE_EDGE / 2), 'image/webp', 0.86)
   const thumb = await resize(file, THUMB_EDGE, 'image/webp', THUMB_QUALITY)
 
   const a = await callAdmin<{ key: string; url: string }>({
@@ -436,6 +455,16 @@ export async function uploadSitePhoto(file: File) {
     kind: 'full',
   })
   await putToR2(a.url, full.blob, 'image/webp')
+
+  const m = await callAdmin<{ key: string; url: string }>({
+    action: 'upload-url',
+    bucket: 'public',
+    galleryId: 'portfolio',
+    fileName: file.name.replace(/\.[^.]+$/, '-m.webp'),
+    contentType: 'image/webp',
+    kind: 'full',
+  })
+  await putToR2(m.url, medium.blob, 'image/webp')
 
   const b = await callAdmin<{ key: string; url: string }>({
     action: 'upload-url',
@@ -449,6 +478,7 @@ export async function uploadSitePhoto(file: File) {
 
   return {
     storageKey: a.key,
+    mediumKey: m.key,
     thumbKey: b.key,
     width: full.width,
     height: full.height,
