@@ -135,7 +135,7 @@ export const en: Dict = {
     addonLabel: 'Made to fit',
     addonTitle: 'Build your own package',
     addonText:
-      'No package has to stay as it is. Add 4K film, drone, more hours or a second session. Tell us what you have in mind and we will price it.',
+      'The packages are a starting point, not a closed list. If you want more hours, more photographs, or something that sits in the package above, tell us what is missing and we will work out the price.',
     mockup: {
       codigo: 'ana-e-tiago',
       casal: 'Ana & Tiago',
@@ -312,6 +312,10 @@ export const en: Dict = {
       'Portraits, maternity sessions and weddings photographed by NEBULA in Lisbon, Portalegre and across Portugal.',
     label: 'Portfolio',
     title: 'Our work.',
+    intro:
+      'Portraits, maternity and the moments people ask us to keep, photographed between Lisbon, Sintra and Portalegre. Every piece of work here was made for one particular person, not to fill a page.',
+    outro:
+      'What is here is a part of it. The rest lives in the private galleries of the people who hired us, which is where someone\u2019s photographs belong. If this looks like what you have in mind, talk to us.',
     all: 'All',
     filterLabel: 'Filter portfolio by category',
     openLarge: 'View larger',

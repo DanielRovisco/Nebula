@@ -136,8 +136,17 @@ export const pt = {
     inheritsFrom: (pack: string) => `Tudo o que o pack ${pack} tem, e ainda`,
     addonLabel: 'À medida',
     addonTitle: 'Monta o teu pack',
+    /*
+      Deixou de convidar a juntar vídeo e drone.
+
+      Convidava, e era uma frase escrita antes de os packs mudarem: o Origem
+      passou a ter filme e o Nebula drone, por isso o convite lia-se como se
+      eles não estivessem lá dentro. Aqui, onde a mesma secção aparece nos
+      quatro serviços, o que se pode prometer com verdade é outra coisa: que a
+      linha entre os packs não é uma parede.
+    */
     addonText:
-      'Nenhum pack tem de ficar como está. Junta vídeo 4K, drone, mais horas ou uma segunda sessão. Diz-nos o que imaginas e fazemos as contas.',
+      'Os packs são um ponto de partida, não uma lista fechada. Se quiserem mais horas, mais fotografias, ou alguma coisa que está no pack de cima, digam-nos o que falta e fazemos as contas.',
 
     /*
       O texto próprio de cada serviço.
@@ -344,6 +353,18 @@ export const pt = {
       'Galeria de retratos, maternidade e casamentos fotografados pela NEBULA em Lisboa, Portalegre e restante Portugal.',
     label: 'Portfólio',
     title: 'O nosso trabalho.',
+    /*
+      Duas frases à volta da grelha, e não decoração.
+
+      Esta era a página mais fraca do site para quem pesquisa: cento e vinte
+      palavras, quase todas de navegação, numa das que mais interessa. Uma
+      página feita só de imagens não tem nada para o Google encontrar, por
+      melhores que as imagens sejam.
+    */
+    intro:
+      'Retratos, maternidade e os momentos que nos pedem para guardar, fotografados entre Lisboa, Sintra e Portalegre. Cada trabalho aqui foi feito para uma pessoa em concreto, e não para encher uma página.',
+    outro:
+      'O que está aqui é uma parte. O resto vive nas galerias privadas de quem nos contratou, que é onde as fotografias de alguém devem estar. Se isto se parece com o que imaginam para vocês, falem connosco.',
     all: 'Todos',
     filterLabel: 'Filtrar portfólio por categoria',
     openLarge: 'Ver em grande',

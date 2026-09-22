@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { flushSync } from 'react-dom'
 import { motion, useReducedMotion } from 'framer-motion'
-import { Play } from 'lucide-react'
+import { ArrowRight, Play } from 'lucide-react'
 import Reveal from '../lib/Reveal'
 import Picture from '../lib/Picture'
 import Seo from '../lib/Seo'
@@ -182,6 +182,9 @@ export default function Portfolio() {
           <h1 className="mt-4 max-w-3xl leading-[1.05]" style={{ fontSize: 'clamp(2.2rem, 6vw, 5rem)' }}>
             {t.portfolio.title}
           </h1>
+          <p className="mt-6 max-w-2xl text-titanium/60 leading-relaxed text-[15px] sm:text-base">
+            {t.portfolio.intro}
+          </p>
         </Reveal>
       </section>
 
@@ -281,6 +284,26 @@ export default function Portfolio() {
             </motion.div>
           ))}
         </div>
+      </section>
+
+      {/*
+        A segunda frase, depois das fotografias.
+
+        Aqui e não em cima porque é a que fala com quem chegou ao fim da
+        grelha: viu tudo, e o passo seguinte é dizer-lhe o que fazer com isso.
+      */}
+      <section className="container-px mt-14 sm:mt-20">
+        <Reveal>
+          <p className="max-w-2xl text-titanium/55 leading-relaxed text-[15px] sm:text-base">
+            {t.portfolio.outro}
+          </p>
+          <Link
+            to={link('contact')}
+            className="mt-7 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all min-h-[44px]"
+          >
+            {t.common.talkToUs} <ArrowRight size={13} />
+          </Link>
+        </Reveal>
       </section>
 
       {/* Sobre a grelha, o cursor do sistema dá lugar a uma bola com "Ver". */}
