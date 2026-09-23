@@ -34,6 +34,15 @@ export const pt = {
     heroCta: 'Marcar Sessão',
     heroNote: 'Datas 2027 disponíveis',
     manifesto: ['O tempo passa.', 'As imagens ficam'],
+    /*
+      A frase por baixo do manifesto.
+
+      Estava escrita dentro da página e não aqui, e isso tinha uma consequência
+      que ninguém tinha visto: a página inglesa mostrava-a em português, porque
+      não havia tradução nenhuma para mostrar.
+    */
+    manifestoNota:
+      'Porque um casamento acontece uma vez, uma gravidez passa depressa, e um retrato é o que fica quando tudo o resto for esquecido.',
     servicesLabel: 'O que fazemos',
     servicesTitle: 'Os nossos serviços',
     servicesLink: 'Ver todos os serviços & preços',

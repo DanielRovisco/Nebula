@@ -40,6 +40,8 @@ export const en: Dict = {
     heroCta: 'Book a session',
     heroNote: '2027 dates available',
     manifesto: ['Time passes.', 'The images stay'],
+    manifestoNota:
+      'Because a wedding happens once, a pregnancy goes by quickly, and a portrait is what remains when everything else has been forgotten.',
     servicesLabel: 'What we do',
     servicesTitle: 'Our services',
     servicesLink: 'See all services & pricing',

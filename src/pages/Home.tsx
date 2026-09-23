@@ -292,8 +292,7 @@ export default function Home() {
           </Reveal>
           <Reveal delay={0.22} className="mt-10 sm:mt-14">
             <p className="text-sm text-titanium/50 max-w-sm leading-relaxed">
-              Cada projeto é uma narrativa única. Abordamos cada momento com
-              criatividade, rigor e autenticidade. Sem fórmulas, sem repetições.
+              {t.home.manifestoNota}
             </p>
           </Reveal>
         </div>
