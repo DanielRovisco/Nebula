@@ -68,10 +68,7 @@ const CATEGORIES = [
       },
       {
         name: 'origem',
-        items: [
-          'photoVideo4k', 'horas8', 'fotos300', 'team',
-          'preWedding', 'guestGallery', 'privateGallery', 'sneakPeek',
-        ],
+        items: ['photoVideo4k', 'horas8', 'fotos300', 'team', 'privateGallery', 'sneakPeek'],
       },
       /*
         O pack de topo mostra só o que acrescenta, e não a lista toda outra vez.
@@ -85,7 +82,10 @@ const CATEGORIES = [
       {
         name: 'nebula',
         herda: 'origem',
-        items: ['diaCompleto', 'fotosTodas', 'drone', 'verticalReels', 'entregaRapida'],
+        items: [
+          'diaCompleto', 'fotosTodas', 'preWedding', 'drone',
+          'guestGallery', 'verticalReels', 'entregaRapida',
+        ],
       },
     ],
   },
@@ -105,12 +105,12 @@ const CATEGORIES = [
       { name: 'essencia', items: ['photoSession', 'sessao1h', 'fotos10', 'privateGallery'] },
       {
         name: 'origem',
-        items: ['photoVideoLifestyle', 'sessao2h', 'fotos20', 'privateGallery', 'sneakPeek'],
+        items: ['photoVideoLifestyle', 'sessao2h', 'fotos20', 'privateGallery'],
       },
       {
         name: 'nebula',
         herda: 'origem',
-        items: ['fotosTodas', 'verticalReels', 'entregaRapida'],
+        items: ['fotosTodas', 'sneakPeek', 'verticalReels', 'entregaRapida'],
       },
     ],
   },
@@ -142,12 +142,20 @@ const CATEGORIES = [
       {
         name: 'origem',
         herda: 'essencia',
-        items: ['sessao2h3roupas', 'fotos20a30', 'preparacao'],
+        items: ['sessao2h3roupas', 'fotos20a30'],
       },
       {
+        /*
+          Leva "todas as selecionadas" e deixa cair o número.
+
+          Ter as duas linhas no mesmo cartão — "30 a 60" e "todas as
+          selecionadas" — era dizer duas coisas diferentes sobre a mesma
+          promessa e deixar quem lê a decidir qual vale. É a mesma forma que o
+          pack de topo já tem nos casamentos e na maternidade.
+        */
         name: 'nebula',
         herda: 'origem',
-        items: ['fotos30a60', 'verticalReels', 'entregaRapida'],
+        items: ['fotosTodas', 'preparacao', 'verticalReels', 'entregaRapida'],
       },
     ],
   },

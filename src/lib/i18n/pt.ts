@@ -187,7 +187,17 @@ export const pt = {
     convidados: {
       label: 'No próprio dia',
       titulo: 'E o que os vossos convidados viram.',
-      texto: 'As melhores fotografias da noite estão nos telemóveis de quem lá esteve, e acabam perdidas em conversas de grupo. Cada casamento nosso tem um código próprio, que se imprime e se põe nas mesas: quem o lê entrega as fotografias que tirou, sem instalar nada e sem criar conta nenhuma.',
+      /*
+        Diz de que pack é, desde que a galeria de convidados subiu do Origem
+        para o Nebula.
+
+        Dizia "cada casamento nosso tem um código próprio", e a partir do
+        momento em que isto passou a ser do pack de cima deixou de ser verdade.
+        Uma secção inteira a vender uma coisa que dois dos três packs não têm é
+        pior do que não ter a secção: quem a lê escolhe o Essência a contar com
+        ela, e descobre no fim.
+      */
+      texto: 'As melhores fotografias da noite estão nos telemóveis de quem lá esteve, e acabam perdidas em conversas de grupo. No pack Nebula, o vosso casamento tem um código próprio, que se imprime e se põe nas mesas: quem o lê entrega as fotografias que tirou, sem instalar nada e sem criar conta nenhuma.',
       pontos: [
         'Basta apontar a câmara ao código',
         'Sem aplicações, sem contas, sem palavras-passe',
@@ -330,12 +340,11 @@ export const pt = {
       sessao2h: '2 horas, duas roupas',
       sessao2h3roupas: '2 horas, três roupas',
       fotos20a30: '20 a 30 fotografias editadas',
-      fotos30a60: '30 a 60 fotografias editadas',
       localEscolha: 'Exterior ou estúdio, à escolha',
       preparacao: 'Preparação antes do dia: roupas e referências',
       fotos10: '10 a 20 fotografias editadas',
-      fotos20: '20 a 40 fotografias editadas',
-      photoVideoLifestyle: 'Fotografia + Vídeo lifestyle',
+      fotos20: '20 a 50 fotografias editadas',
+      photoVideoLifestyle: 'Fotografia + Vídeo',
       eventoCobertura: 'Cobertura fotográfica, com ou sem vídeo',
       eventoCombinado: 'Horas e equipa combinadas convosco',
     },

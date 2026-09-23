@@ -159,7 +159,7 @@ export const en: Dict = {
     convidados: {
       label: 'On the day itself',
       titulo: 'And what your guests saw.',
-      texto: 'The best photographs of the night are on the phones of the people who were there, and they end up lost in group chats. Every wedding of ours has its own code, printed and placed on the tables: anyone who scans it hands over the photographs they took, with nothing to install and no account to create.',
+      texto: 'The best photographs of the night are on the phones of the people who were there, and they end up lost in group chats. With the Nebula package, your wedding gets its own code, printed and placed on the tables: anyone who scans it hands over the photographs they took, with nothing to install and no account to create.',
       pontos: [
         'Just point the camera at the code',
         'No apps, no accounts, no passwords',
@@ -289,12 +289,11 @@ export const en: Dict = {
       sessao2h: 'Two hours, two outfits',
       sessao2h3roupas: 'Two hours, three outfits',
       fotos20a30: '20 to 30 edited photographs',
-      fotos30a60: '30 to 60 edited photographs',
       localEscolha: 'Outdoors or in studio, your choice',
       preparacao: 'Planning beforehand: outfits and references',
       fotos10: '10 to 20 edited photographs',
-      fotos20: '20 to 40 edited photographs',
-      photoVideoLifestyle: 'Photography + lifestyle film',
+      fotos20: '20 to 50 edited photographs',
+      photoVideoLifestyle: 'Photography + video',
       eventoCobertura: 'Photography coverage, with or without film',
       eventoCombinado: 'Hours and crew agreed with you',
     },
