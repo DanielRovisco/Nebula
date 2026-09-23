@@ -70,7 +70,7 @@ export const en: Dict = {
       },
       {
         title: 'Your gallery',
-        desc: 'A private online gallery with every edited image. Sneak peek within 24 hours of the session.',
+        desc: 'Delivered to your private gallery, with all the best moments.',
       },
     ],
     ctaTitle: ['Shall we tell', 'your story?'],

@@ -64,7 +64,7 @@ export const pt = {
       },
       {
         title: 'Entrega da galeria',
-        desc: 'Galeria online privada com todas as imagens editadas. Sneak peek em 24h após a sessão.',
+        desc: 'Entrega na vossa galeria privada, com todos os melhores momentos.',
       },
     ],
     ctaTitle: ['Vamos contar', 'a vossa história?'],
