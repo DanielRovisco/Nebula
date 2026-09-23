@@ -146,7 +146,7 @@ export const pt = {
       linha entre os packs não é uma parede.
     */
     addonText:
-      'Os packs são um ponto de partida, não uma lista fechada. Se quiserem mais horas, mais fotografias, ou alguma coisa que está no pack de cima, digam-nos o que falta e fazemos as contas.',
+      'Os packs são um ponto de partida, não uma lista fechada. Se quiserem mais horas, mais fotografias, ou alguma coisa que está no pack de cima, digam-nos.',
 
     /*
       O texto próprio de cada serviço.
@@ -362,7 +362,7 @@ export const pt = {
       melhores que as imagens sejam.
     */
     intro:
-      'Retratos, maternidade e os momentos que nos pedem para guardar, fotografados entre Lisboa, Sintra e Portalegre. Cada trabalho aqui foi feito para uma pessoa em concreto, e não para encher uma página.',
+      'Retratos, maternidade e os momentos que nos pedem para guardar, fotografados entre Lisboa, Sintra e Portalegre.',
     outro:
       'O que está aqui é uma parte. O resto vive nas galerias privadas de quem nos contratou, que é onde as fotografias de alguém devem estar. Se isto se parece com o que imaginam para vocês, falem connosco.',
     all: 'Todos',
