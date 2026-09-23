@@ -198,7 +198,7 @@ export const pt = {
         O "podem" resolve sem transformar a secção num cartaz do pack de cima,
         que era o que a versão anterior fazia.
       */
-      texto: 'As melhores fotografias da noite estão nos telemóveis de quem lá esteve, e acabam perdidas em conversas de grupo. Os teus convidados podem ter um código próprio, que se imprime e se põe nas mesas: quem o lê entrega as fotografias que tirou, sem instalar nada e sem criar conta nenhuma.',
+      texto: 'As melhores fotografias da noite estão nos telemóveis de quem lá esteve, e acabam perdidas em conversas de grupo. Os vossos convidados podem ter um código próprio, que se imprime e se põe nas mesas: quem o lê entrega as fotografias que tirou, sem instalar nada e sem criar conta nenhuma.',
       pontos: [
         'Basta apontar a câmara ao código',
         'Sem aplicações, sem contas, sem palavras-passe',
