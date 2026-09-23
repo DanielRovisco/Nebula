@@ -188,16 +188,17 @@ export const pt = {
       label: 'No próprio dia',
       titulo: 'E o que os vossos convidados viram.',
       /*
-        Diz de que pack é, desde que a galeria de convidados subiu do Origem
-        para o Nebula.
+        "Podem ter", e não "cada casamento nosso tem".
 
-        Dizia "cada casamento nosso tem um código próprio", e a partir do
-        momento em que isto passou a ser do pack de cima deixou de ser verdade.
-        Uma secção inteira a vender uma coisa que dois dos três packs não têm é
-        pior do que não ter a secção: quem a lê escolhe o Essência a contar com
-        ela, e descobre no fim.
+        Dizia a segunda, e desde que a galeria de convidados subiu do Origem
+        para o Nebula deixou de ser verdade. Uma secção inteira a vender uma
+        coisa que dois dos três packs não têm é pior do que não ter a secção:
+        quem a lê escolhe o Essência a contar com ela e descobre no fim.
+
+        O "podem" resolve sem transformar a secção num cartaz do pack de cima,
+        que era o que a versão anterior fazia.
       */
-      texto: 'As melhores fotografias da noite estão nos telemóveis de quem lá esteve, e acabam perdidas em conversas de grupo. No pack Nebula, o vosso casamento tem um código próprio, que se imprime e se põe nas mesas: quem o lê entrega as fotografias que tirou, sem instalar nada e sem criar conta nenhuma.',
+      texto: 'As melhores fotografias da noite estão nos telemóveis de quem lá esteve, e acabam perdidas em conversas de grupo. Os teus convidados podem ter um código próprio, que se imprime e se põe nas mesas: quem o lê entrega as fotografias que tirou, sem instalar nada e sem criar conta nenhuma.',
       pontos: [
         'Basta apontar a câmara ao código',
         'Sem aplicações, sem contas, sem palavras-passe',

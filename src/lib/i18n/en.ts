@@ -159,7 +159,7 @@ export const en: Dict = {
     convidados: {
       label: 'On the day itself',
       titulo: 'And what your guests saw.',
-      texto: 'The best photographs of the night are on the phones of the people who were there, and they end up lost in group chats. With the Nebula package, your wedding gets its own code, printed and placed on the tables: anyone who scans it hands over the photographs they took, with nothing to install and no account to create.',
+      texto: 'The best photographs of the night are on the phones of the people who were there, and they end up lost in group chats. Your guests can have a code of their own, printed and placed on the tables: anyone who scans it hands over the photographs they took, with nothing to install and no account to create.',
       pontos: [
         'Just point the camera at the code',
         'No apps, no accounts, no passwords',
