@@ -63,7 +63,7 @@ export const pt = {
         desc: 'No local que escolherem, com toda a atenção ao detalhe, à luz e às emoções do momento.',
       },
       {
-        title: 'Entrega da galeria',
+        title: 'A galeria',
         desc: 'Entrega na vossa galeria privada, com todos os melhores momentos.',
       },
     ],
