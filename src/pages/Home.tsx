@@ -137,7 +137,22 @@ export default function Home() {
 
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
   const imgScale = useTransform(scrollYProgress, [0, 1], [1, 1.18])
-  const textOpacity = useTransform(scrollYProgress, [0, 0.55], [1, 0])
+  /*
+    A opacidade em forma de função, e não como dois intervalos.
+
+    Com `useTransform(p, [0, 0.55], [1, 0])`, o framer reconhece o padrão e
+    entrega a animação ao browser, que a corre sozinho ligado ao scroll. É mais
+    fluido quando funciona, e aqui não funcionava: o título desaparecia a meio
+    do hero e voltava a aparecer por baixo, já fora dele, com a opacidade a
+    subir outra vez de zero até um. Via-se no ecrã e confirmou-se a medir — o
+    `style` inline dizia `opacity: 1` o tempo todo, enquanto o valor calculado
+    fazia o caminho de ida e volta.
+
+    A forma de função não é reconhecida por essa optimização, por isso o valor
+    passa a ser calculado por nós a cada fotograma, e o `Math.max` garante que
+    depois de chegar a zero lá fica.
+  */
+  const textOpacity = useTransform(scrollYProgress, (p) => Math.max(0, 1 - p / 0.55))
   const textY = useTransform(scrollYProgress, [0, 0.55], [0, 90])
 
   return (
