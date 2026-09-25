@@ -1,6 +1,6 @@
 import { useEffect, useState, type ComponentType } from 'react'
 import { createPortal } from 'react-dom'
-import { Printer, X } from 'lucide-react'
+import { Printer, Tag, X } from 'lucide-react'
 
 /**
  * A janela dos cartazes A4: a grelha de modelos, os campos de texto e a folha
@@ -32,6 +32,8 @@ export interface PropsFolha<M extends ModeloCartaz> {
   nome: string
   data: string
   url: string
+  /** O preço já escrito por extenso, ou `null` quando não se mostra. */
+  preco: string | null
 }
 
 export default function JanelaCartazes<M extends ModeloCartaz>({
@@ -42,6 +44,7 @@ export default function JanelaCartazes<M extends ModeloCartaz>({
   url,
   nome,
   data,
+  comPreco = false,
   aoFechar,
 }: {
   modelos: M[]
@@ -53,11 +56,27 @@ export default function JanelaCartazes<M extends ModeloCartaz>({
   url: string
   nome: string
   data: string
+  /** Oferece o preço por fotografia como um campo do cartaz. */
+  comPreco?: boolean
   aoFechar: () => void
 }) {
   const [escolhido, setEscolhido] = useState<M | null>(null)
   const [titulo, setTitulo] = useState('')
   const [mensagem, setMensagem] = useState('')
+  /*
+    O preço é opcional e começa ligado, porque numa mesa de impressão a pergunta
+    que toda a gente faz é quanto custa. Quem não quiser anunciá-lo desliga-o
+    num clique, em vez de ter de apagar texto à mão em cada modelo.
+
+    Fica editável porque quatro euros é o preço de hoje, e um cartaz que obriga
+    a mexer no código para mudar de preço é um cartaz que sai errado.
+  */
+  const [mostrarPreco, setMostrarPreco] = useState(true)
+  const [preco, setPreco] = useState('4')
+
+  const precoEscrito = comPreco && mostrarPreco && preco.trim()
+    ? `${preco.trim()} € por fotografia`
+    : null
 
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => {
@@ -114,6 +133,35 @@ export default function JanelaCartazes<M extends ModeloCartaz>({
           <div className="sem-impressao max-w-[210mm] mx-auto mb-7 space-y-4">
             <Campo etiqueta="Título" valor={titulo} aoMudar={setTitulo} maximo={70} />
             <Campo etiqueta="Mensagem" valor={mensagem} aoMudar={setMensagem} maximo={140} />
+            {comPreco && (
+              <div className="flex items-end gap-4">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={mostrarPreco}
+                  onClick={() => setMostrarPreco((v) => !v)}
+                  className={`inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-full border text-[11px] uppercase tracking-[0.12em] transition-colors ${
+                    mostrarPreco
+                      ? 'bg-titanium text-eerie border-transparent'
+                      : 'border-white/15 text-titanium/55 hover:text-titanium hover:border-white/35'
+                  }`}
+                >
+                  <Tag size={14} /> Preço por fotografia
+                </button>
+                {mostrarPreco && (
+                  <label className="block w-28">
+                    <span className="label-sm">Euros</span>
+                    <input
+                      value={preco}
+                      onChange={(e) => setPreco(e.target.value)}
+                      inputMode="decimal"
+                      maxLength={6}
+                      className="w-full mt-2 bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2.5 text-titanium/85 focus:border-white/30 outline-none transition-colors"
+                    />
+                  </label>
+                )}
+              </div>
+            )}
           </div>
 
           {/*
@@ -130,6 +178,7 @@ export default function JanelaCartazes<M extends ModeloCartaz>({
                 nome={nome}
                 data={data}
                 url={url}
+                preco={precoEscrito}
               />
             </div>
           </div>
@@ -150,6 +199,7 @@ export default function JanelaCartazes<M extends ModeloCartaz>({
                         nome={nome}
                         data={data}
                         url={url}
+                        preco={precoEscrito}
                       />
                     </span>
                   </span>

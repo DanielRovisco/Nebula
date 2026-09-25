@@ -6,7 +6,7 @@ import { MODELOS_IMPRESSAO } from './modelosImpressao'
 
 /* ── a folha ─────────────────────────────────────────────────────────────── */
 
-function Folha({ modelo, titulo, mensagem, nome, data, url }: PropsFolha<ModeloCartaz>) {
+function Folha({ modelo, titulo, mensagem, nome, data, url, preco }: PropsFolha<ModeloCartaz>) {
   const qr = (tamanho = 1400) => (
     <QrNebula
       url={url}
@@ -17,6 +17,26 @@ function Folha({ modelo, titulo, mensagem, nome, data, url }: PropsFolha<ModeloC
   )
 
   const comum = 'folha-a4 relative flex flex-col items-center text-center'
+
+  /*
+    O preço numa etiqueta com contorno, e não misturado no texto.
+
+    É a pergunta que se faz à frente da mesa, e tem de se responder sozinha a
+    quem só olha de passagem. Dentro do parágrafo passava despercebido; com um
+    traço à volta lê-se antes do resto.
+  */
+  const etiquetaPreco = (claro = false) =>
+    preco && (
+      <p
+        className={`inline-block border rounded-full px-[9mm] py-[3.5mm] text-[13pt] tracking-[0.04em] ${
+          claro
+            ? 'border-[#fcfff0]/35 text-[#fcfff0]'
+            : 'border-[#141414]/30 text-[#141414]'
+        }`}
+      >
+        {preco}
+      </p>
+    )
 
   if (modelo.id === 'numero') {
     /*
@@ -46,6 +66,7 @@ function Folha({ modelo, titulo, mensagem, nome, data, url }: PropsFolha<ModeloC
           <h1 className="font-serif text-[40pt] leading-[1.02] mt-[7mm] max-w-[150mm]">{titulo}</h1>
           <div className="w-[92mm] h-[92mm] my-[12mm]">{qr()}</div>
           <p className="text-[13pt] leading-relaxed text-[#141414]/70 max-w-[120mm]">{mensagem}</p>
+          {preco && <div className="mt-[9mm]">{etiquetaPreco()}</div>}
           <p className="font-serif text-[16pt] mt-[10mm]">{nome}</p>
         </div>
       </div>
@@ -71,6 +92,7 @@ function Folha({ modelo, titulo, mensagem, nome, data, url }: PropsFolha<ModeloC
           </div>
         </div>
         <p className="text-[13pt] leading-relaxed text-[#fcfff0]/70 max-w-[125mm]">{mensagem}</p>
+        {preco && <div className="mt-[9mm]">{etiquetaPreco(true)}</div>}
         <p className="text-[8pt] uppercase tracking-[0.34em] text-[#fcfff0]/40 mt-[10mm]">{data}</p>
       </div>
     )
@@ -118,9 +140,14 @@ function Folha({ modelo, titulo, mensagem, nome, data, url }: PropsFolha<ModeloC
         <div className="w-[84mm] h-[84mm] self-center my-auto">{qr()}</div>
 
         <div className="w-full h-px bg-[#141414]/15 mt-auto" />
-        <p className="text-[8pt] uppercase tracking-[0.34em] text-[#141414]/35 mt-[3mm]">
-          proj3ctnebula.pt
-        </p>
+        <div className="flex items-center justify-between gap-[8mm] mt-[3mm]">
+          <p className="text-[8pt] uppercase tracking-[0.34em] text-[#141414]/35">
+            proj3ctnebula.pt
+          </p>
+          {preco && (
+            <p className="text-[13pt] tracking-[0.04em] text-[#141414]">{preco}</p>
+          )}
+        </div>
       </div>
     )
   }
@@ -147,6 +174,7 @@ function Folha({ modelo, titulo, mensagem, nome, data, url }: PropsFolha<ModeloC
         <h1 className="font-serif text-[30pt] leading-[1.05] mt-[5mm] max-w-[140mm]">{titulo}</h1>
         <div className="w-[66mm] h-[66mm] my-[8mm]">{qr(900)}</div>
         <p className="text-[12pt] leading-snug text-[#141414]/65 max-w-[120mm]">{mensagem}</p>
+        {preco && <p className="text-[12pt] tracking-[0.04em] mt-[4mm]">{preco}</p>}
       </div>
     )
     return (
@@ -182,6 +210,7 @@ function Folha({ modelo, titulo, mensagem, nome, data, url }: PropsFolha<ModeloC
         </div>
       </div>
       <p className="text-[14pt] leading-relaxed text-[#fcfff0]/75 max-w-[130mm]">{mensagem}</p>
+      {preco && <div className="mt-[9mm]">{etiquetaPreco(true)}</div>}
       <p className="font-serif text-[17pt] mt-[9mm]">{nome}</p>
     </div>
   )
@@ -206,6 +235,7 @@ export default function CartazesImpressao({
       url={url}
       nome={nome}
       data={data}
+      comPreco
       aoFechar={aoFechar}
     />
   )
