@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Download, ImagePlus, Printer, Trash2 } from 'lucide-react'
 import QrNebula from '../../components/QrNebula'
-import Templates from '../evento/noivos/Templates'
+import CartazesImpressao from '../impressao/CartazesImpressao'
 import { guardarQr } from '../../lib/qr/exportar'
 import { SITE_URL } from '../../lib/site'
 import {
@@ -77,9 +77,9 @@ export default function PrintEditor() {
   return (
     <div className="container-px pb-24">
       {cartazes && (
-        <Templates
+        <CartazesImpressao
           url={endereco}
-          casal={mostra.name}
+          nome={mostra.name}
           data={porExtenso(mostra.event_date)}
           aoFechar={() => setCartazes(false)}
         />
