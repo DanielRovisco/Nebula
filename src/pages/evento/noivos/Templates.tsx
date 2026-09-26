@@ -86,7 +86,22 @@ function Folha({ modelo, titulo, mensagem, nome: casal, data, url }: PropsFolha<
       <div className={`${comum} bg-[#141414] text-[#fcfff0] justify-center px-[22mm] py-[24mm]`}>
         <p className="text-[8pt] uppercase tracking-[0.32em] text-[#fcfff0]/45">{data}</p>
         <h1 className="font-serif text-[30pt] leading-[1.1] mt-[8mm] max-w-[130mm]">{titulo}</h1>
-        <div className="w-[80mm] h-[80mm] my-[14mm]">{qr}</div>
+        {/*
+          O código escuro sobre um quadrado claro, e não claro sobre o preto da
+          folha.
+
+          Um código com as cores trocadas é um código válido, e a câmara do
+          iPhone e o Google Lens lêem-no. Nem todos os leitores o fazem: um
+          descodificador comum devolve "não se lê" e só acerta depois de se lhe
+          trocarem as cores. Num cartaz em cima de uma mesa de casamento não há
+          segunda tentativa — quem aponta a câmara e não vê nada acontecer
+          arruma o telemóvel.
+        */}
+        <div className="bg-[#fcfff0] p-[6mm] rounded-[3mm] my-[14mm]">
+          <div className="w-[80mm] h-[80mm]">
+            <QrNebula url={url} tamanho={1400} cor="preto" className="w-full h-full block" />
+          </div>
+        </div>
         <p className="text-[12pt] leading-relaxed text-[#fcfff0]/60 max-w-[110mm]">{mensagem}</p>
         <p className="font-serif text-[15pt] mt-[12mm]">{casal}</p>
       </div>
