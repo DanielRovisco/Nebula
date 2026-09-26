@@ -63,6 +63,16 @@ export default function MostraPage() {
   const primeira = useRef(true)
 
   /*
+    O que está no ecrã, para a repetição de vinte e cinco em vinte e cinco
+    segundos poder perguntar a coisa certa sem se reiniciar a cada fotografia
+    que chega.
+  */
+  const fotosRef = useRef<FotoPublica[]>([])
+  const proximoRef = useRef<number | null>(null)
+  useEffect(() => { fotosRef.current = fotos }, [fotos])
+  useEffect(() => { proximoRef.current = proximo }, [proximo])
+
+  /*
     Junta uma página de resposta ao que já está no ecrã.
 
     Função à parte, e sem `async`, porque quem a chama é sempre o `.then` de um
@@ -131,9 +141,27 @@ export default function MostraPage() {
     */
     if (erro === 'nao_encontrado') return
     let vivo = true
+    /*
+      Quem já chegou ao fim pergunta pelo que vem depois da última que tem.
+
+      Perguntava sempre pela primeira página, e isso funcionava enquanto a
+      mostra coubesse numa. Passadas quarenta e oito, a repetição relia sempre
+      as mesmas quarenta e oito e as novas nunca apareciam — justamente a quem
+      tinha a página aberta à espera da sua, que é a pessoa para quem isto foi
+      feito.
+
+      Quem ainda tem páginas por ver continua a pedir a primeira: pedir pelo fim
+      antes de a pessoa lá chegar abria um buraco no meio da grelha, e quem
+      manda nesse caso é o botão de ver mais.
+    */
     const pedir = () => {
-      lerMostra(slug, null)
-        .then((p) => { if (vivo) aplicar(p, null) })
+      const noFim = proximoRef.current === null
+      const ultima = fotosRef.current.length
+        ? fotosRef.current[fotosRef.current.length - 1].numero
+        : 0
+      const depois = noFim && ultima > 0 ? ultima : null
+      lerMostra(slug, depois)
+        .then((p) => { if (vivo) aplicar(p, depois) })
         .catch(() => { /* fica o que está no ecrã até à próxima tentativa */ })
     }
     const t = setInterval(() => {

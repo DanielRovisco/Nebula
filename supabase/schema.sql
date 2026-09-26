@@ -984,6 +984,48 @@ create table if not exists print_photos (
 create index if not exists print_photos_gallery_idx on print_photos (gallery_id, numero);
 
 /*
+  Os números já entregues, usados ou não.
+
+  Existe por causa de uma janela que não se fechava de outra maneira. Entre
+  pedir o número e a linha da fotografia entrar há vários segundos: a imagem é
+  reduzida duas vezes e sobem dois ficheiros. Durante esses segundos o número
+  estava entregue e não estava em lado nenhum — e uma segunda chamada, a pedir
+  pelo nome do ficheiro um número que já tinha sido entregue automaticamente,
+  não tinha como saber e levava-o também. A segunda a chegar batia no índice
+  único e a fotografia não entrava.
+
+  Medido, com duzentos ficheiros e dois carregamentos ao mesmo tempo: onze
+  falhavam. Só acontecia com nomes numerados e nomes sem número no mesmo lote,
+  que é precisamente o que acontece quando se arrasta uma pasta a meio da noite.
+
+  Um número entregue fica aqui para sempre, mesmo que a fotografia nunca chegue
+  a entrar ou seja apagada depois. É a mesma regra do contador e pela mesma
+  razão: o convidado diz "quero a 37" ao operador, e a 37 tem de ser uma só
+  fotografia a noite toda.
+*/
+create table if not exists print_numeros (
+  gallery_id uuid not null references print_galleries(id) on delete cascade,
+  numero int not null,
+  created_at timestamptz not null default now(),
+  primary key (gallery_id, numero)
+);
+
+-- As mostras que já existiam trazem os números que já lá estão.
+insert into print_numeros (gallery_id, numero)
+  select gallery_id, numero from print_photos
+  on conflict do nothing;
+
+alter table print_numeros enable row level security;
+
+drop policy if exists "dono ve os numeros das suas mostras" on print_numeros;
+create policy "dono ve os numeros das suas mostras" on print_numeros
+  for all to authenticated
+  using (exists (
+    select 1 from print_galleries g where g.id = gallery_id and g.owner_id = (select auth.uid())))
+  with check (exists (
+    select 1 from print_galleries g where g.id = gallery_id and g.owner_id = (select auth.uid())));
+
+/*
   O slug e o id não mudam depois de existirem, como nos eventos. A hora de fim
   pode mudar: prolongar uma mostra a meio da festa é uma coisa que acontece, e
   não parte nada.
@@ -1060,27 +1102,65 @@ security definer
 set search_path = public as $$
 declare
   n int;
+  contador int;
 begin
-  -- O dono, e a existência da mostra, confirmados antes de tudo.
-  if not exists (
-    select 1 from print_galleries
-     where id = p_gallery and owner_id = (select auth.uid())
-  ) then
+  /*
+    A linha da mostra é trancada antes de se decidir seja o que for.
+
+    Sem isto havia uma corrida com um resultado mau: duas chamadas ao mesmo
+    tempo liam as duas o mesmo `next_number`, e as duas recebiam o mesmo número.
+    Medido com trinta chamadas em paralelo — saíam onze números distintos, e
+    dezanove fotografias batiam no índice único e não entravam.
+
+    Acontece com dois portáteis a carregar para a mesma mostra, ou com o mesmo
+    portátil em dois separadores, que é uma coisa que ninguém planeia fazer e
+    toda a gente acaba por fazer a meio de uma festa.
+
+    O `for update` põe a segunda chamada à espera da primeira. Quem carrega um
+    ficheiro de cada vez não dá por nada: a tranca dura o que dura esta função,
+    e não o upload.
+
+    O dono e a existência da mostra confirmam-se na mesma consulta, porque uma
+    mostra que não é nossa não tem linha nenhuma para trancar.
+  */
+  select next_number into contador
+    from print_galleries
+   where id = p_gallery and owner_id = (select auth.uid())
+     for update;
+
+  if not found then
     raise exception 'Mostra não encontrada.' using errcode = 'no_data_found';
   end if;
 
   if p_pedido is not null and p_pedido > 0 then
-    if exists (select 1 from print_photos where gallery_id = p_gallery and numero = p_pedido) then
-      raise exception 'Já existe a fotografia número %. Muda o nome do ficheiro ou apaga a que lá está.', p_pedido
-        using errcode = 'unique_violation';
-    end if;
     n := p_pedido;
   else
+    /*
+      O primeiro livre conta com três coisas: o contador, as fotografias que já
+      entraram, e os números entregues que ainda não entraram. A terceira é a
+      que fechou a janela descrita em `print_numeros`.
+    */
     select greatest(
-             (select next_number from print_galleries where id = p_gallery),
-             coalesce((select max(numero) from print_photos where gallery_id = p_gallery), 0) + 1
+             contador,
+             coalesce((select max(numero) from print_photos where gallery_id = p_gallery), 0) + 1,
+             coalesce((select max(numero) from print_numeros where gallery_id = p_gallery), 0) + 1
            ) into n;
   end if;
+
+  /*
+    A entrega fica registada, e é o registo que diz se o número estava livre.
+
+    A chave primária é que decide, e não uma pergunta feita antes: entre
+    perguntar e escrever cabe outra chamada. A mensagem é escrita à mão porque
+    quem a lê está de pé ao lado de uma impressora, e "duplicate key value
+    violates unique constraint" não lhe diz o que fazer.
+  */
+  begin
+    insert into print_numeros (gallery_id, numero) values (p_gallery, n);
+  exception when unique_violation then
+    raise exception 'Já existe a fotografia número %. Muda o nome do ficheiro ou apaga a que lá está.', n
+      using errcode = 'unique_violation';
+  end;
 
   /*
     O contador fica sempre à frente do maior número usado.

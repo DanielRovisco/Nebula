@@ -242,16 +242,51 @@ select '24. anon nao pode numerar: ' ||
   case when (select has_function_privilege('anon','mostra_numero(uuid,int)','execute')) = false
        then 'SIM' else 'NAO' end;
 
+-- ── Os números entregues ─────────────────────────────────────────────────────
+--
+-- A tabela `print_numeros` existe para fechar a janela entre entregar um número
+-- e a fotografia entrar. A corrida em si não se testa em SQL — precisa de
+-- ligações em paralelo, e está em `supabase/tests/concorrencia.md` — mas o que
+-- ela garante testa-se aqui.
+
+select '25. entregar um numero deixa-o registado: ' ||
+  case when (select count(*) from print_numeros p join print_galleries g on g.id=p.gallery_id
+             where g.slug='mostra-teste') >= 4 then 'SIM' else 'NAO' end;
+
+-- Apagar a fotografia não devolve o número ao monte.
+delete from print_photos where storage_key='m/2.webp';
+do $$
+declare g uuid; n int;
+begin
+  select id into g from print_galleries where slug='mostra-teste';
+  n := mostra_numero(g, 2);
+  raise notice 'FALHOU: voltou a entregar o numero 2 depois de a fotografia ser apagada';
+exception when unique_violation then null;
+end $$;
+select '26. apagar a fotografia nao liberta o numero: ' ||
+  case when exists (select 1 from print_numeros p join print_galleries g on g.id=p.gallery_id
+                     where g.slug='mostra-teste' and p.numero=2) then 'SIM' else 'NAO' end;
+
+select '27. anon nao le os numeros entregues: ' ||
+  case when has_table_privilege('anon','print_numeros','select') = false
+       then 'SIM' else 'NAO' end;
+
+select '28. RLS ligado na tabela dos numeros: ' ||
+  case when (select relrowsecurity from pg_class where relname='print_numeros')
+       then 'SIM' else 'NAO' end;
+
 -- Apagar a mostra leva as fotografias atrás.
 delete from print_galleries where slug='mostra-teste';
-select '25. apagar a mostra apaga as fotografias: ' ||
+select '29. apagar a mostra apaga as fotografias: ' ||
   case when (select count(*) from print_photos p
+             where not exists (select 1 from print_galleries g where g.id=p.gallery_id)) = 0
+        and (select count(*) from print_numeros p
              where not exists (select 1 from print_galleries g where g.id=p.gallery_id)) = 0
        then 'SIM' else 'NAO' end;
 
 -- Apagar o evento leva as fotografias atrás.
 delete from events where slug='casamento-teste';
-select '26. apagar o evento apaga as fotografias: ' ||
+select '30. apagar o evento apaga as fotografias: ' ||
   case when (select count(*) from event_media m
              where not exists (select 1 from events e where e.id=m.event_id)) = 0
        then 'SIM' else 'NAO' end;
