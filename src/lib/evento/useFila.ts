@@ -77,6 +77,24 @@ export function useFila(slug: string) {
   const aCorrer = useRef(false)
   const montado = useRef(true)
 
+  /*
+    As miniaturas que ainda estão a ser feitas, por id de item.
+
+    Existe por causa de uma corrida que dava sempre o mesmo resultado: as
+    miniaturas são feitas em segundo plano, uma a uma, e o envio arranca no
+    mesmo instante. Com rede rápida o envio ganhava a corrida e registava a
+    fotografia antes de a miniatura existir — e nenhuma fotografia do lote
+    ficava com miniatura no servidor. Com rede lenta ganhava a partir da
+    segunda, mas a primeira perdia sempre.
+
+    O preço era pago na grelha, e no pior sítio: sem miniatura no servidor, a
+    galeria dos convidados passa a puxar os originais de vários megabytes, na
+    rede de uma quinta com duzentas pessoas agarradas a ela.
+
+    Quem envia espera aqui pela miniatura do seu ficheiro, e por mais nada.
+  */
+  const miniaturasAFazer = useRef(new Map<string, Promise<ArrayBuffer | null>>())
+
   const publicar = useCallback((lista: ItemFila[]) => {
     itensRef.current = lista
     if (montado.current) setItens(lista)
@@ -164,9 +182,29 @@ export function useFila(slug: string) {
       // A miniatura é um extra. Se falhar, o ficheiro já está entregue e não se
       // deita fora um upload de 400 MB por causa de uma imagem de 40 KB.
       let thumbKey = item.thumbKey
-      if (!thumbKey && item.tipo.startsWith('image/') && item.miniatura?.byteLength) {
+      let bytesMini = item.miniatura
+      /*
+        Se ela ainda estiver a ser feita, espera-se por ela — mas não para
+        sempre. Oito segundos é mais do que um telemóvel precisa para encolher
+        uma fotografia, e menos do que o que se perde ao ficar sem miniatura.
+        Passado esse tempo segue-se sem ela: o ficheiro já está entregue, e é
+        isso que conta.
+
+        Só se espera quando há mesmo uma a ser feita. Um item retomado de uma
+        sessão anterior não tem nenhuma à espera, e não pode ficar parado.
+      */
+      if (!thumbKey && !bytesMini?.byteLength && item.tipo.startsWith('image/')) {
+        const aCaminho = miniaturasAFazer.current.get(item.id)
+        if (aCaminho) {
+          bytesMini = (await Promise.race([
+            aCaminho,
+            new Promise<null>((r) => setTimeout(() => r(null), 8000)),
+          ])) ?? undefined
+        }
+      }
+      if (!thumbKey && item.tipo.startsWith('image/') && bytesMini?.byteLength) {
         try {
-          const pequena = new Blob([item.miniatura], { type: 'image/jpeg' })
+          const pequena = new Blob([bytesMini], { type: 'image/jpeg' })
           const alvo = await pedirUpload(slug, `mini-${item.nome}.jpg`, 'image/jpeg', pequena.size)
           await enviarFicheiro(alvo.url, pequena, 'image/jpeg', () => {})
           thumbKey = alvo.key
@@ -188,6 +226,7 @@ export function useFila(slug: string) {
         clientId: item.id,
       })
 
+      miniaturasAFazer.current.delete(item.id)
       await actualizar(item.id, {
         estado: 'feito',
         progresso: 1,
@@ -332,7 +371,15 @@ export function useFila(slug: string) {
         await actualizar(it.id, bytes ? { dados: bytes } : { soMemoria: true })
 
         if (!it.tipo.startsWith('image/')) continue
-        const pequena = await miniatura(ficheiro)
+        /*
+          A promessa é anunciada antes de a miniatura estar pronta, para quem
+          está a enviar este ficheiro a poder esperar por ela. Continua a
+          fazer-se uma de cada vez: trinta fotografias descodificadas ao mesmo
+          tempo são trinta ficheiros em memória num telemóvel.
+        */
+        const aFazer = miniatura(ficheiro)
+        miniaturasAFazer.current.set(it.id, aFazer)
+        const pequena = await aFazer
         if (pequena) await actualizar(it.id, { miniatura: pequena })
       }
     },

@@ -45,3 +45,43 @@ create table if not exists storage.objects (
 );
 
 alter table storage.objects enable row level security;
+
+-- ─── O que o Supabase tem e um Postgres vazio não ────────────────────────────
+--
+-- Sem isto o schema.sql não chega ao fim aqui dentro: pára em `auth.uid()`, em
+-- `auth.users` e nos `gen_random_bytes` dos valores de omissão, e o que se
+-- testa a seguir é meia base de dados. Vinte erros no início de um ficheiro
+-- longo passam despercebidos quando o resto parece correr.
+
+-- O `extensions` no caminho de procura, como no Supabase. É isto que faz o
+-- `gen_random_bytes` dos defaults ser encontrado sem ninguém o qualificar.
+do $$
+begin
+  execute format(
+    'alter database %I set search_path = "$user", public, extensions',
+    current_database()
+  );
+end $$;
+set search_path = "$user", public, extensions;
+
+create schema if not exists auth;
+
+-- Só as colunas que o schema.sql toca. Não é a tabela do Supabase, é o
+-- suficiente para as políticas e o `insert into admins` funcionarem.
+create table if not exists auth.users (
+  id uuid primary key default extensions.gen_random_uuid(),
+  email text unique
+);
+
+/*
+  `auth.uid()` lida a partir de uma definição da sessão, como no Supabase.
+
+  É o que permite a um teste dizer "agora sou esta conta" com um `set local`, e
+  ver as políticas responderem-lhe como respondem lá. Sem sessão devolve nulo,
+  que é o caso do anónimo.
+*/
+create or replace function auth.uid() returns uuid
+language sql stable as $$
+  select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
+$$;
+
