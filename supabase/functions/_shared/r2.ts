@@ -147,9 +147,20 @@ export async function bucketSize(kind: BucketKind = 'private'): Promise<{
   objects: number
   /** Verdadeiro se a listagem foi cortada ao fim do tecto de páginas. */
   truncado: boolean
+  /**
+   * Quanto ocupa o que os convidados carregaram, à parte.
+   *
+   * Vive no mesmo bucket que as galerias de cliente, debaixo de `eventos/`, e
+   * a soma sempre o incluiu. Sai separado para o painel poder dizer de onde
+   * vem o número em vez de mostrar um total que se lê como sendo só das
+   * galerias — que é como alguém chega a um casamento convencido de que tem
+   * espaço.
+   */
+  eventos: number
 }> {
   let bytes = 0
   let objects = 0
+  let eventos = 0
   let token: string | undefined
   /*
     Tecto de 50 páginas, ou seja cinquenta mil objetos. Com fotografias de
@@ -172,16 +183,24 @@ export async function bucketSize(kind: BucketKind = 'private'): Promise<{
       é gerada por máquina, tem uma forma fixa, e trazer uma biblioteca de XML
       para uma Edge Function só para somar números seria peso a mais.
     */
-    for (const m of xml.matchAll(/<Size>(\d+)<\/Size>/g)) {
-      bytes += Number(m[1])
+    /*
+      A chave e o tamanho saem do mesmo `<Contents>`, e é preciso lê-los juntos:
+      separados, uma lista de chaves e uma lista de tamanhos podiam emparelhar
+      mal à primeira chave com um caracter escapado.
+    */
+    for (const m of xml.matchAll(/<Contents>([\s\S]*?)<\/Contents>/g)) {
+      const tamanho = Number(m[1].match(/<Size>(\d+)<\/Size>/)?.[1] ?? 0)
+      const chave = m[1].match(/<Key>([^<]*)<\/Key>/)?.[1] ?? ''
+      bytes += tamanho
       objects++
+      if (chave.startsWith('eventos/')) eventos += tamanho
     }
 
     if (!/<IsTruncated>true<\/IsTruncated>/.test(xml)) {
-      return { bytes, objects, truncado: false }
+      return { bytes, objects, truncado: false, eventos }
     }
     token = xml.match(/<NextContinuationToken>([^<]+)<\/NextContinuationToken>/)?.[1]
-    if (!token) return { bytes, objects, truncado: false }
+    if (!token) return { bytes, objects, truncado: false, eventos }
   }
-  return { bytes, objects, truncado: true }
+  return { bytes, objects, truncado: true, eventos }
 }

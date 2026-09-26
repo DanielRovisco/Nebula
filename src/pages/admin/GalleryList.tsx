@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Check, Copy, Images, Plus } from 'lucide-react'
 import { api } from '../../lib/gallery/api'
-import type { Gallery } from '../../lib/gallery/types'
+import type { Espaco, Gallery } from '../../lib/gallery/types'
 import { SITE_URL } from '../../lib/site'
 import NewGalleryForm from './NewGalleryForm'
 
@@ -11,9 +11,16 @@ const LIMITE_BYTES = 10 * 1024 ** 3
 
 const gb = (bytes: number) => (bytes / 1024 ** 3).toFixed(bytes > 1024 ** 3 ? 1 : 2)
 
+const RECADO: Record<string, string> = {
+  nao_consegui_ler_o_privado: 'não consegui ler o espaço das galerias',
+  nao_consegui_ler_o_site: 'não consegui ler o espaço das imagens do site',
+  ficheiros_a_mais_para_contar: 'há ficheiros a mais para os contar todos',
+  so_a_conta_da_base_de_dados: 'esta conta é só da base de dados e fica abaixo da verdade',
+}
+
 export default function GalleryList() {
   const [galleries, setGalleries] = useState<Gallery[] | null>(null)
-  const [usado, setUsado] = useState<number | null>(null)
+  const [usado, setUsado] = useState<Espaco | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
@@ -49,19 +56,42 @@ export default function GalleryList() {
           <h1 className="text-3xl sm:text-4xl">Galerias</h1>
           <p className="text-sm text-titanium/45 mt-2">
             {galleries ? `${galleries.length} no total` : 'A carregar…'}
-            {usado !== null && (
-              <>
-                {' · '}
-                {/*
-                  Amarelo a partir dos 80%: é onde ainda dá para agir com calma,
-                  apagando galerias antigas em vez de a meio de uma entrega.
-                */}
-                <span className={usado / LIMITE_BYTES > 0.8 ? 'text-amber-300/80' : ''}>
-                  {gb(usado)} GB de {LIMITE_BYTES / 1024 ** 3} GB usados
-                </span>
-              </>
-            )}
           </p>
+
+          {/*
+            O espaço é de tudo o que está no R2, e o painel diz isso.
+
+            O número sempre foi o total dos dois buckets — as galerias de
+            cliente, a estação de impressão, os envios dos convidados e as
+            imagens do site vivem lá todos. Mas lia-se debaixo do título
+            "Galerias" como sendo só das galerias, e é assim que alguém sai para
+            um casamento convencido de que tem espaço.
+          */}
+          {usado !== null && (
+            <p className="text-sm text-titanium/45 mt-1.5">
+              {/*
+                Amarelo a partir dos 80%: é onde ainda dá para agir com calma,
+                apagando galerias antigas em vez de a meio de uma entrega.
+              */}
+              <span className={usado.total / LIMITE_BYTES > 0.8 ? 'text-amber-300/80' : ''}>
+                {gb(usado.total)} GB de {LIMITE_BYTES / 1024 ** 3} GB usados no total
+              </span>
+              {usado.galerias !== null && usado.eventos !== null && usado.site !== null && (
+                <span className="text-titanium/30">
+                  {' · '}galerias e impressão {gb(usado.galerias)}
+                  {' · '}convidados {gb(usado.eventos)}
+                  {' · '}site {gb(usado.site)}
+                </span>
+              )}
+              {usado.incompleto && (
+                <span className="block text-amber-300/80 mt-1">
+                  Este número está por baixo da verdade
+                  {usado.porque && RECADO[usado.porque] ? `: ${RECADO[usado.porque]}.` : '.'}
+                  {' '}Não decidas por ele sem confirmar no painel do R2.
+                </span>
+              )}
+            </p>
+          )}
         </div>
         <button
           onClick={() => setCreating(true)}

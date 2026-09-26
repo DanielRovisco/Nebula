@@ -1,7 +1,7 @@
 import { DEMO, anonKey, functionsUrl, supabase } from './config'
 import { dataDaFotografia } from './exif'
 import { demoApi } from './demo'
-import type { Gallery, GalleryAccess, GalleryEvent, GalleryPatch, NewGallery, Photo } from './types'
+import type { Espaco, Gallery, GalleryAccess, GalleryEvent, GalleryPatch, NewGallery, Photo } from './types'
 
 export const THUMB_EDGE = 640
 export const THUMB_QUALITY = 0.78
@@ -479,14 +479,38 @@ const realApi = {
    * nada: o espaço é informação secundária no painel e uma estimativa por
    * baixo continua a valer mais do que um traço.
    */
-  async storageUsed(): Promise<number> {
+  async storageUsed(): Promise<Espaco> {
     try {
-      const r = await callAdmin<{ bytes: number }>({ action: 'usage' })
-      return r.bytes
+      const r = await callAdmin<{
+        bytes: number
+        galerias?: { bytes: number }
+        eventos?: { bytes: number }
+        site?: { bytes: number }
+        incompleto?: boolean
+        porque?: string | null
+      }>({ action: 'usage' })
+      return {
+        total: r.bytes,
+        galerias: r.galerias?.bytes ?? null,
+        eventos: r.eventos?.bytes ?? null,
+        site: r.site?.bytes ?? null,
+        incompleto: Boolean(r.incompleto),
+        porque: r.porque ?? null,
+      }
     } catch {
+      /*
+        A soma da tabela é sempre por baixo — não conta miniaturas, nem os
+        envios dos convidados, nem o bucket do site. Vai marcada como
+        incompleta, porque um número por baixo sobre espaço livre é exactamente
+        o número que faz alguém sair para um casamento sem espaço.
+      */
       const { data, error } = await supabase().from('photos').select('size_bytes')
       if (error) throw new Error(error.message)
-      return (data ?? []).reduce((soma, r) => soma + ((r.size_bytes as number) ?? 0), 0)
+      const soma = (data ?? []).reduce((t, r) => t + ((r.size_bytes as number) ?? 0), 0)
+      return {
+        total: soma, galerias: null, eventos: null, site: null,
+        incompleto: true, porque: 'so_a_conta_da_base_de_dados',
+      }
     }
   },
 

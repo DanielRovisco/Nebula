@@ -1,4 +1,4 @@
-import type { Gallery, GalleryAccess, GalleryEvent, GalleryPatch, NewGallery, Photo } from './types'
+import type { Espaco, Gallery, GalleryAccess, GalleryEvent, GalleryPatch, NewGallery, Photo } from './types'
 import { asset } from '../asset'
 
 // Dados de demonstração: usam as fotos do próprio portfólio, que já estão no
@@ -282,9 +282,13 @@ export const demoApi = {
     save(s)
   },
 
-  async storageUsed(): Promise<number> {
+  async storageUsed(): Promise<Espaco> {
     await wait(120)
-    return load().photos.reduce((soma, p) => soma + (p.sizeBytes ?? 0), 0)
+    const soma = load().photos.reduce((t, p) => t + (p.sizeBytes ?? 0), 0)
+    return {
+      total: soma, galerias: soma, eventos: 0, site: 0,
+      incompleto: false, porque: null,
+    }
   },
 
   async readUrls(keys: string[]): Promise<string[]> {

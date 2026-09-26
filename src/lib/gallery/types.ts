@@ -114,3 +114,26 @@ export type NewGallery = {
 }
 
 export type GalleryPatch = Partial<Omit<NewGallery, 'password'>> & { password?: string }
+
+/**
+ * O espaço ocupado no R2, repartido.
+ *
+ * O total é tudo o que lá está: galerias de cliente, estação de impressão,
+ * envios de convidados e imagens do site. Sai repartido porque um número
+ * sozinho debaixo do título "Galerias" lê-se como sendo só das galerias, e
+ * quem o lê assim pode sair para um casamento convencido de que tem espaço.
+ *
+ * `incompleto` é verdadeiro quando alguma parte não se conseguiu contar. Nesse
+ * caso o total está por baixo da verdade e não serve para decidir nada.
+ */
+export interface Espaco {
+  total: number
+  /** Galerias de cliente e estação de impressão. Nulo se não se soube separar. */
+  galerias: number | null
+  /** O que os convidados carregaram. */
+  eventos: number | null
+  /** As imagens públicas do site. */
+  site: number | null
+  incompleto: boolean
+  porque: string | null
+}

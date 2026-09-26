@@ -14,7 +14,9 @@
 //       saber a password dele.
 //
 //   { action: 'usage' }
-//     → devolve o espaço realmente ocupado nos dois buckets, perguntado ao R2.
+//     → o espaço realmente ocupado nos dois buckets, perguntado ao R2: tudo o
+//       que lá está, galerias de cliente, envios de convidados e estação de
+//       impressão incluídos, repartido e com aviso quando o número não fecha.
 //
 // Deploy:  supabase functions deploy admin-storage
 // (SEM --no-verify-jwt: o gateway do Supabase valida o token antes de chegar
@@ -92,14 +94,38 @@ Deno.serve(async (req) => {
     */
     const [priv, pub] = await Promise.allSettled([bucketSize('private'), bucketSize('public')])
     const ler = (r: PromiseSettledResult<Awaited<ReturnType<typeof bucketSize>>>) =>
-      r.status === 'fulfilled' ? r.value : { bytes: 0, objects: 0, truncado: false, erro: true }
-    const galerias = ler(priv)
+      r.status === 'fulfilled'
+        ? { ...r.value, erro: false }
+        : { bytes: 0, objects: 0, truncado: false, eventos: 0, erro: true }
+    const privado = ler(priv)
     const site = ler(pub)
+
+    /*
+      O número sai repartido, e diz quando está incompleto.
+
+      Uma listagem que falha devolvia zero e somava-se em silêncio: o painel
+      mostrava só o bucket do site e lia-se como sendo tudo. Quem confia nele
+      para saber se tem espaço para o casamento de sábado precisa de saber que
+      o número não é de fiar, e não de um número pequeno e tranquilizador.
+    */
+    const incompleto = privado.erro || site.erro || privado.truncado || site.truncado
+
     return json({
-      galerias,
+      // As galerias de cliente e a estação de impressão partilham o bucket
+      // privado com os envios dos convidados; estes saem à parte.
+      galerias: { ...privado, bytes: privado.bytes - privado.eventos },
+      eventos: { bytes: privado.eventos },
       site,
-      bytes: galerias.bytes + site.bytes,
-      objects: galerias.objects + site.objects,
+      bytes: privado.bytes + site.bytes,
+      objects: privado.objects + site.objects,
+      incompleto,
+      porque: privado.erro
+        ? 'nao_consegui_ler_o_privado'
+        : site.erro
+          ? 'nao_consegui_ler_o_site'
+          : (privado.truncado || site.truncado)
+            ? 'ficheiros_a_mais_para_contar'
+            : null,
     })
   }
 
