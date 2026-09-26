@@ -1,0 +1,1 @@
+import{C as e}from"./index-D5tNReU3.js";var t=new Map;function n(n){let r=t.get(n);if(r)return r;let i=new Promise(t=>{let r=new Image;r.onload=()=>t(r),r.onerror=()=>t(null),r.src=e(`brand/logo-symbol-${n===`preto`?`black`:`white`}.png`)});return t.set(n,i),i}export{n as t};
