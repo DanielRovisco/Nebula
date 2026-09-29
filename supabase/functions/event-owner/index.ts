@@ -6,6 +6,8 @@
 //       espera de aprovação e as escondidas.
 //
 //   { action: 'estado', slug, chave, ids, status }
+//   { action: 'miniatura-url', slug, chave, id }   → PUT para a miniatura
+//   { action: 'miniatura-feita', slug, chave, id, key }
 //   { action: 'apagar', slug, chave, ids }
 //   { action: 'definicoes', slug, chave, ... }
 //
@@ -238,6 +240,53 @@ Deno.serve(async (req) => {
       .in('id', linhas.map((l) => l.id))
     if (error) return json({ error: 'server_error' }, 500)
     return json({ ok: true, purgados: linhas.length })
+  }
+
+  /*
+    A miniatura de um vídeo, feita depois do facto.
+
+    Os vídeos que subiram antes de o envio passar a fazer o fotograma ficaram
+    sem miniatura, e na grelha são um quadrado com um símbolo e mais nada. O
+    casamento não se repete e ninguém vai voltar a carregá-los, por isso a
+    miniatura tem de poder ser feita a partir do que está guardado.
+
+    Quem a faz é o browser do painel, que já tem o vídeo à frente e está numa
+    rede decente. Aqui só se entrega o sítio onde a pôr, e depois se aponta a
+    linha para ela.
+  */
+  if (body.action === 'miniatura-url') {
+    const id = String(body.id ?? '')
+    if (!id) return json({ error: 'bad_request' }, 400)
+    // A fotografia tem de ser deste casamento. Sem isto, a chave deste evento
+    // dava para escrever miniaturas nas linhas de outro.
+    const { data: linha } = await sb
+      .from('event_media')
+      .select('id, kind')
+      .eq('id', id).eq('event_id', evento.id)
+      .maybeSingle()
+    if (!linha) return json({ error: 'nao_encontrado' }, 404)
+    if (linha.kind !== 'video') return json({ error: 'nao_e_video' }, 400)
+
+    const key = `eventos/${evento.id}/thumbs/${id}.jpg`
+    const url = await presign(key, 'PUT', 60 * 10, { 'content-type': 'image/jpeg' })
+    return json({ key, url })
+  }
+
+  if (body.action === 'miniatura-feita') {
+    const id = String(body.id ?? '')
+    const key = String(body.key ?? '')
+    // O caminho tem de ser o que esta função emitiu, para este vídeo. É a
+    // diferença entre registar a miniatura e apontar a linha para um objecto
+    // qualquer do bucket.
+    if (!id || key !== `eventos/${evento.id}/thumbs/${id}.jpg`) {
+      return json({ error: 'chave_invalida' }, 400)
+    }
+    const { error } = await sb
+      .from('event_media')
+      .update({ thumb_key: key })
+      .eq('id', id).eq('event_id', evento.id).eq('kind', 'video')
+    if (error) return json({ error: 'server_error' }, 500)
+    return json({ ok: true })
   }
 
   if (body.action === 'definicoes') {

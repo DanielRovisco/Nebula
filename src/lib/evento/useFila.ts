@@ -18,14 +18,70 @@ const MINIATURA = 480
 const dormir = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 /**
+ * Um fotograma do princípio do vídeo, para servir de miniatura.
+ *
+ * A ideia antiga era não fazer nenhuma e mostrar o vídeo em si na grelha. Não
+ * serve: medido com dois vídeos de 33 MB, o browser puxa 40 MB só para desenhar
+ * um fotograma de cada. Numa rede de casamento isso é a galeria inteira a
+ * arrastar-se para mostrar quadradinhos.
+ *
+ * Fazer o fotograma aqui custa uma descodificação, uma vez, no telemóvel de
+ * quem envia — e não a cada pessoa que abre a galeria, a cada vez que a abre.
+ * O ficheiro não vai para memória: o `createObjectURL` deixa o browser lê-lo do
+ * disco à medida que precisa.
+ *
+ * Tem tecto de tempo porque alguns formatos ficam a pensar para sempre num
+ * telemóvel antigo, e a miniatura nunca pode atrasar o envio: falha, e o vídeo
+ * sobe à mesma.
+ */
+async function fotogramaDeVideo(f: Blob): Promise<Blob | null> {
+  const url = URL.createObjectURL(f)
+  const v = document.createElement('video')
+  try {
+    v.preload = 'metadata'
+    v.muted = true
+    v.playsInline = true
+    v.src = url
+
+    const pronto = await new Promise<boolean>((resolve) => {
+      const desistir = setTimeout(() => resolve(false), 6000)
+      const acabou = (ok: boolean) => { clearTimeout(desistir); resolve(ok) }
+      v.onerror = () => acabou(false)
+      v.onloadeddata = () => {
+        // Um bocadinho para dentro: o primeiro fotograma de muitos vídeos de
+        // telemóvel é o sensor ainda a acertar a exposição, e sai preto.
+        const alvo = Math.min(0.3, (v.duration || 1) / 4)
+        v.onseeked = () => acabou(true)
+        try { v.currentTime = alvo } catch { acabou(v.readyState >= 2) }
+      }
+    })
+    if (!pronto || !v.videoWidth) return null
+
+    const escala = Math.min(1, MINIATURA / Math.max(v.videoWidth, v.videoHeight))
+    const c = document.createElement('canvas')
+    c.width = Math.round(v.videoWidth * escala)
+    c.height = Math.round(v.videoHeight * escala)
+    c.getContext('2d')!.drawImage(v, 0, 0, c.width, c.height)
+    return await new Promise<Blob | null>((r) => c.toBlob(r, 'image/jpeg', 0.75))
+  } catch {
+    return null
+  } finally {
+    v.src = ''
+    URL.revokeObjectURL(url)
+  }
+}
+
+/**
  * Miniatura para a grelha, feita no browser.
  *
- * Só para fotografias. Um vídeo obrigava a desenhar um fotograma num canvas, o
- * que em iOS depende de o ficheiro ser lido inteiro para memória — 500 MB no
- * telemóvel de um convidado, para ganhar uma imagem de pré-visualização. Não
- * compensa: os vídeos mostram-se com o seu próprio primeiro fotograma.
+ * Serve fotografias e vídeos. Num vídeo o fotograma vem de `fotogramaDeVideo`;
+ * numa fotografia, da própria imagem.
  */
-async function miniatura(f: Blob): Promise<ArrayBuffer | null> {
+async function miniatura(f: Blob, tipo: string): Promise<ArrayBuffer | null> {
+  if (tipo.startsWith('video/')) {
+    const fotograma = await fotogramaDeVideo(f)
+    return fotograma ? await bytesDe(fotograma) : null
+  }
   try {
     const bitmap = await createImageBitmap(f)
     const escala = Math.min(1, MINIATURA / Math.max(bitmap.width, bitmap.height))
@@ -193,7 +249,7 @@ export function useFila(slug: string) {
         Só se espera quando há mesmo uma a ser feita. Um item retomado de uma
         sessão anterior não tem nenhuma à espera, e não pode ficar parado.
       */
-      if (!thumbKey && !bytesMini?.byteLength && item.tipo.startsWith('image/')) {
+      if (!thumbKey && !bytesMini?.byteLength) {
         const aCaminho = miniaturasAFazer.current.get(item.id)
         if (aCaminho) {
           bytesMini = (await Promise.race([
@@ -202,7 +258,7 @@ export function useFila(slug: string) {
           ])) ?? undefined
         }
       }
-      if (!thumbKey && item.tipo.startsWith('image/') && bytesMini?.byteLength) {
+      if (!thumbKey && bytesMini?.byteLength) {
         try {
           const pequena = new Blob([bytesMini], { type: 'image/jpeg' })
           const alvo = await pedirUpload(slug, `mini-${item.nome}.jpg`, 'image/jpeg', pequena.size)
@@ -370,14 +426,13 @@ export function useFila(slug: string) {
         // se para a página o poder dizer, em vez de o descobrir mais tarde.
         await actualizar(it.id, bytes ? { dados: bytes } : { soMemoria: true })
 
-        if (!it.tipo.startsWith('image/')) continue
         /*
           A promessa é anunciada antes de a miniatura estar pronta, para quem
           está a enviar este ficheiro a poder esperar por ela. Continua a
           fazer-se uma de cada vez: trinta fotografias descodificadas ao mesmo
           tempo são trinta ficheiros em memória num telemóvel.
         */
-        const aFazer = miniatura(ficheiro)
+        const aFazer = miniatura(ficheiro, it.tipo)
         miniaturasAFazer.current.set(it.id, aFazer)
         const pequena = await aFazer
         if (pequena) await actualizar(it.id, { miniatura: pequena })

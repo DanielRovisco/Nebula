@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Play, X } from 'lucide-react'
+import MiniaturaMedia from './MiniaturaMedia'
 import type { MediaEvento } from '../../lib/evento/api'
 
 /**
@@ -38,10 +39,15 @@ export default function Galeria({ media }: { media: MediaEvento[] }) {
             }}
             className="group relative aspect-square rounded-xl overflow-hidden bg-white/[0.05]"
           >
-            <img
-              src={m.thumbUrl ?? m.url}
-              alt={m.name ? `Fotografia de ${m.name}` : 'Fotografia do casamento'}
-              loading="lazy"
+            <MiniaturaMedia
+              kind={m.kind}
+              url={m.url}
+              thumbUrl={m.thumbUrl}
+              alt={
+                m.kind === 'video'
+                  ? (m.name ? `Vídeo de ${m.name}` : 'Vídeo do casamento')
+                  : (m.name ? `Fotografia de ${m.name}` : 'Fotografia do casamento')
+              }
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.06]"
             />
             {m.kind === 'video' && (

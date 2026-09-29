@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import {
-  Check, Download, EyeOff, Image as ImagemIcone, Loader2, Play, Trash2, Undo2, Users,
+  Check, Download, EyeOff, Film, Image as ImagemIcone, Loader2, Play, Trash2, Undo2, Users,
 } from 'lucide-react'
 import Seo from '../../../lib/Seo'
 import Reveal from '../../../lib/Reveal'
@@ -11,8 +11,8 @@ import { asset } from '../../../lib/asset'
 import { CONTACT, absoluteUrl } from '../../../lib/site'
 import {
   type EstadoMedia, type MediaNoivos, type Painel,
-  SemAcesso, apagarMedia, esquecerChave, guardarChave, guardarDefinicoes,
-  lerChave, lerPainel, mudarEstado, purgarMedia, restaurarMedia,
+  SemAcesso, apagarMedia, esquecerChave, fazerMiniaturaDeVideo, guardarChave,
+  guardarDefinicoes, lerChave, lerPainel, mudarEstado, purgarMedia, restaurarMedia,
 } from '../../../lib/evento/noivos'
 import Codigo from './Codigo'
 import Foto from './Foto'
@@ -70,6 +70,13 @@ export default function PainelNoivos() {
   const [escolhidos, setEscolhidos] = useState<Set<string>>(new Set())
   const [aberto, setAberto] = useState<number | null>(null)
   const [ocupado, setOcupado] = useState(false)
+  /*
+    O trabalho de fazer miniaturas aos vídeos antigos. Nulo enquanto não se
+    carrega no botão; depois conta quantos já foram.
+  */
+  const [miniaturas, setMiniaturas] = useState<{ feitas: number; total: number } | null>(null)
+  /** O que dizer quando o trabalho acaba sem ter feito nada. */
+  const [recadoMiniaturas, setRecadoMiniaturas] = useState<string | null>(null)
 
   /*
     A chave sai do endereço assim que é guardada. Fica no browser e a barra
@@ -167,6 +174,51 @@ export default function PainelNoivos() {
   */
   const abaEfectiva: Aba = aba !== 'todas' && daAba(aba).length === 0 ? 'todas' : aba
   const visiveis = useMemo(() => daAba(abaEfectiva), [daAba, abaEfectiva])
+
+  /** Os vídeos que ficaram sem imagem na grelha. */
+  const semMiniatura = useMemo(
+    () => media.filter((m) => m.kind === 'video' && !m.thumbUrl && !m.apagada),
+    [media],
+  )
+
+  /*
+    Um de cada vez, e não todos ao mesmo tempo: cada um abre um vídeo e
+    descodifica um fotograma, e meia dúzia em paralelo põe um portátil de
+    joelhos. Recarrega-se o painel no fim para as miniaturas novas aparecerem.
+  */
+  const fazerMiniaturas = useCallback(async () => {
+    if (!slug || !chave || !semMiniatura.length) return
+    setMiniaturas({ feitas: 0, total: semMiniatura.length })
+    setRecadoMiniaturas(null)
+    let feitas = 0
+    let semVideo = 0
+    for (const m of semMiniatura) {
+      const r = await fazerMiniaturaDeVideo(slug, chave, m.id, m.url)
+      if (r === 'feita') feitas++
+      else if (r === 'sem_video') semVideo++
+      setMiniaturas({ feitas, total: semMiniatura.length })
+    }
+    /*
+      Nenhuma feita e todas por não abrir o vídeo é quase sempre a mesma coisa:
+      o bucket não responde com CORS, e o browser não deixa ler os fotogramas.
+      Vale a pena dizê-lo por extenso, com o sítio onde se corrige.
+    */
+    if (!feitas && semVideo === semMiniatura.length) {
+      setRecadoMiniaturas(
+        'Não consegui abrir nenhum dos vídeos. Quase sempre é o CORS do bucket: '
+        + 'Cloudflare → R2 → bucket das galerias → Settings → CORS policy, '
+        + 'com a origem deste site em AllowedOrigins e GET em AllowedMethods.',
+      )
+    } else if (!feitas) {
+      setRecadoMiniaturas('Não consegui tirar um fotograma a nenhum destes vídeos.')
+    } else if (feitas < semMiniatura.length) {
+      setRecadoMiniaturas(`Fiz ${feitas} de ${semMiniatura.length}. Os outros este browser não abre.`)
+    }
+    try {
+      setPainel(await lerPainel(slug, chave))
+    } catch { /* fica o que está; as miniaturas aparecem ao recarregar */ }
+    setMiniaturas(null)
+  }, [slug, chave, semMiniatura])
 
   const contar = (s: EstadoMedia) => media.filter((m) => !m.apagada && m.status === s).length
   const noLixo = media.filter((m) => m.apagada).length
@@ -296,15 +348,42 @@ export default function PainelNoivos() {
                     : media.length === 1 ? 'Um momento' : `${media.length} momentos`}
                 </h2>
               </div>
-              {ZIP && media.length > 0 && (
-                <a
-                  href={`${ZIP}?e=${encodeURIComponent(evento.slug)}&t=${encodeURIComponent(chave)}`}
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-titanium text-eerie text-[11px] uppercase tracking-[0.12em] hover:bg-titanium/90 transition-colors min-h-[44px]"
-                >
-                  <Download size={14} /> Descarregar tudo
-                </a>
-              )}
+              <div className="flex flex-wrap items-center gap-3">
+                {/*
+                  Os vídeos que subiram sem miniatura aparecem na galeria como
+                  um quadrado com um símbolo. Este botão faz-lhes o fotograma a
+                  partir do que já está guardado — aqui, neste browser, que é
+                  onde há rede a sério. Uma vez por vídeo e nunca mais.
+                */}
+                {semMiniatura.length > 0 && (
+                  <button
+                    onClick={fazerMiniaturas}
+                    disabled={miniaturas !== null}
+                    className="inline-flex items-center gap-2 px-5 py-3.5 rounded-full border border-white/15 text-titanium/70 text-[11px] uppercase tracking-[0.12em] hover:text-titanium hover:border-white/35 disabled:opacity-50 transition-colors min-h-[44px]"
+                  >
+                    <Film size={14} />
+                    {miniaturas
+                      ? `${miniaturas.feitas} de ${miniaturas.total}`
+                      : semMiniatura.length === 1
+                        ? 'Fazer a imagem do vídeo'
+                        : `Fazer as imagens dos ${semMiniatura.length} vídeos`}
+                  </button>
+                )}
+                {ZIP && media.length > 0 && (
+                  <a
+                    href={`${ZIP}?e=${encodeURIComponent(evento.slug)}&t=${encodeURIComponent(chave)}`}
+                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-titanium text-eerie text-[11px] uppercase tracking-[0.12em] hover:bg-titanium/90 transition-colors min-h-[44px]"
+                  >
+                    <Download size={14} /> Descarregar tudo
+                  </a>
+                )}
+              </div>
             </div>
+            {recadoMiniaturas && (
+              <p className="text-[13px] leading-relaxed text-amber-300/80 mt-3 max-w-xl">
+                {recadoMiniaturas}
+              </p>
+            )}
           </Reveal>
 
           {media.length === 0 ? (

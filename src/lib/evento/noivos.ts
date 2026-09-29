@@ -103,3 +103,82 @@ export const guardarDefinicoes = (
     welcomeMessage?: string | null
   },
 ) => chamar<{ ok: true }>({ action: 'definicoes', slug, chave, ...campos })
+
+/**
+ * Faz a miniatura de um vídeo que subiu sem ela, aqui no browser do painel.
+ *
+ * Os vídeos carregados antes de o envio passar a fazer o fotograma ficaram sem
+ * miniatura, e na grelha da galeria são um quadrado com um símbolo. O casamento
+ * não se repete e ninguém volta a carregá-los, por isso o fotograma tem de sair
+ * do que está guardado.
+ *
+ * Corre aqui e não no telemóvel de ninguém: o painel abre-se num portátil, com
+ * rede a sério, e é uma vez só por vídeo.
+ *
+ * Diz porque não deu, quando não dá. Importa: o `crossOrigin` obriga o bucket a
+ * responder com cabeçalhos de CORS, sem os quais o vídeo nem chega a abrir — e
+ * sem distinguir isso de "este formato não dá", quem carrega no botão via
+ * "0 de 12" e mais nada, sem ideia do que corrigir.
+ */
+export type ResultadoMiniatura = 'feita' | 'sem_video' | 'sem_fotograma' | 'falhou'
+
+export async function fazerMiniaturaDeVideo(
+  slug: string, chave: string, id: string, urlDoVideo: string,
+): Promise<ResultadoMiniatura> {
+  const v = document.createElement('video')
+  try {
+    v.preload = 'metadata'
+    v.muted = true
+    v.playsInline = true
+    v.crossOrigin = 'anonymous'
+    v.src = urlDoVideo
+
+    const pronto = await new Promise<boolean>((resolve) => {
+      const desistir = setTimeout(() => resolve(false), 20000)
+      const fim = (ok: boolean) => { clearTimeout(desistir); resolve(ok) }
+      v.onerror = () => fim(false)
+      v.onloadeddata = () => {
+        v.onseeked = () => fim(true)
+        try { v.currentTime = Math.min(0.3, (v.duration || 1) / 4) } catch { fim(v.readyState >= 2) }
+      }
+    })
+    if (!pronto) return 'sem_video'
+    if (!v.videoWidth) return 'sem_fotograma'
+
+    const lado = 480
+    const escala = Math.min(1, lado / Math.max(v.videoWidth, v.videoHeight))
+    const c = document.createElement('canvas')
+    c.width = Math.round(v.videoWidth * escala)
+    c.height = Math.round(v.videoHeight * escala)
+    const ctx = c.getContext('2d')
+    if (!ctx) return 'falhou'
+    ctx.drawImage(v, 0, 0, c.width, c.height)
+    /*
+      Um canvas com uma imagem de outra origem sem CORS fica "manchado", e o
+      `toBlob` atira em vez de devolver nada. Apanha-se aqui para o recado ser
+      o certo e não um erro genérico.
+    */
+    let jpeg: Blob | null
+    try {
+      jpeg = await new Promise<Blob | null>((r) => c.toBlob(r, 'image/jpeg', 0.75))
+    } catch {
+      return 'sem_video'
+    }
+    if (!jpeg) return 'falhou'
+
+    const { key, url } = await chamar<{ key: string; url: string }>({
+      action: 'miniatura-url', slug, chave, id,
+    })
+    const posto = await fetch(url, {
+      method: 'PUT', body: jpeg, headers: { 'content-type': 'image/jpeg' },
+    })
+    if (!posto.ok) return 'falhou'
+
+    await chamar<{ ok: true }>({ action: 'miniatura-feita', slug, chave, id, key })
+    return 'feita'
+  } catch {
+    return 'falhou'
+  } finally {
+    v.src = ''
+  }
+}
