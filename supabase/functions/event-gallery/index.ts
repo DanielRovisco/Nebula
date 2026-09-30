@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
 
     const { data: m } = await sb
       .from('event_media')
-      .select('storage_key, original_name, kind, status, uploader_key')
+      .select('storage_key, original_name, kind, status, uploader_key, content_type')
       .eq('id', id).eq('event_id', evento.id)
       .neq('status', 'escondido')
       .is('deleted_at', null)
@@ -95,7 +95,9 @@ Deno.serve(async (req) => {
     */
     const nome = String(m.original_name ?? `${m.kind}-${id.slice(0, 8)}`)
     const url = await presignDownload(String(m.storage_key), nome, 60 * 10)
-    return json({ url })
+    // O nome e o tipo vão juntos: do outro lado servem para montar o ficheiro
+    // que se entrega ao menu de partilha do telemóvel.
+    return json({ url, nome, tipo: m.content_type ?? null })
   }
 
   /*
@@ -125,7 +127,7 @@ Deno.serve(async (req) => {
 
   let q = sb
     .from('event_media')
-    .select('id, kind, storage_key, thumb_key, content_type, width, height, taken_at, uploaded_by_name, uploader_key, created_at')
+    .select('id, kind, storage_key, thumb_key, content_type, size_bytes, width, height, taken_at, uploaded_by_name, uploader_key, created_at')
     .eq('event_id', evento.id)
     // Escondido é escondido para toda a gente, incluindo para quem a carregou:
     // foi o casal que a tirou da vista, e isso é uma decisão deles.
@@ -170,6 +172,9 @@ Deno.serve(async (req) => {
       id: m.id,
       kind: m.kind,
       contentType: m.content_type,
+      // Serve para decidir se o ficheiro cabe em memória para ir ao menu de
+      // partilha, ou se é melhor descarregá-lo à moda antiga.
+      bytes: m.size_bytes,
       width: m.width,
       height: m.height,
       takenAt: m.taken_at,

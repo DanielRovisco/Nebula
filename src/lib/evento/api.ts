@@ -32,6 +32,8 @@ export interface MediaEvento {
   id: string
   kind: 'foto' | 'video'
   contentType: string | null
+  /** Tamanho do original. Decide se cabe em memória para o menu de partilha. */
+  bytes?: number
   width: number | null
   height: number | null
   takenAt: string | null
@@ -231,25 +233,40 @@ export function enviarFicheiro(
   })
 }
 
+/*
+  O tecto para passar pelo menu de partilha.
+
+  Partilhar obriga a ter o ficheiro inteiro em memória, e um vídeo de casamento
+  de trezentos megabytes num telemóvel com pouca memória fecha o separador. Daí
+  para cima vai pelo caminho normal, que escreve em disco à medida que chega.
+*/
+const CABE_NA_PARTILHA = 150 * 1024 * 1024
+
 /**
  * Leva um ficheiro para o telemóvel de quem está a ver.
  *
- * O servidor é que responde se pode: o botão desaparece quando o casal desliga
- * a opção, mas um botão que desaparece é só CSS, e quem decide de verdade é a
- * Edge Function.
+ * Dois caminhos, e o primeiro existe por causa do iPhone.
  *
- * O que volta é um endereço que o R2 entrega como anexo, e abre-se com um link
- * normal. De propósito: um link não é um pedido de CORS, e o caminho por
- * `fetch` morre com "blocked by CORS policy" sempre que a configuração do
- * bucket não estiver perfeita — lição já paga no download das galerias de
- * cliente.
+ * Um link para um endereço que o R2 entrega como anexo descarrega — mas no iOS
+ * descarrega para os Ficheiros, não para as Fotos. Quem acabou de ver uma
+ * fotografia do casamento quer que ela apareça na galeria do telemóvel, e ir
+ * buscá-la aos Ficheiros para a guardar outra vez é trabalho que ninguém faz.
+ *
+ * O menu de partilha do sistema resolve isso: leva lá dentro "Guardar imagem" e
+ * "Guardar vídeo", que escrevem mesmo na galeria. Só que obriga a trazer o
+ * ficheiro para memória, o que precisa de CORS no bucket e de o ficheiro não
+ * ser enorme. Quando qualquer uma dessas condições falha, cai-se no link, que
+ * funciona sempre — mal, mas sempre.
  */
 export async function descarregarDoEvento(
-  slug: string, id: string, uploaderKey: string,
+  slug: string, id: string, uploaderKey: string, bytes?: number,
 ): Promise<void> {
-  const { url } = await chamar<{ url: string }>('event-gallery', {
-    action: 'descarregar', slug, id, uploaderKey,
-  })
+  const { url, nome, tipo } = await chamar<{
+    url: string; nome?: string; tipo?: string | null
+  }>('event-gallery', { action: 'descarregar', slug, id, uploaderKey })
+
+  if (await tentarPartilhar(url, nome, tipo, bytes)) return
+
   /*
     Sem o atributo `download`: entre domínios diferentes ele é ignorado e, em
     alguns browsers, a sua presença faz o link abrir num separador em vez de
@@ -261,4 +278,40 @@ export async function descarregarDoEvento(
   document.body.appendChild(a)
   a.click()
   a.remove()
+}
+
+/** Devolve verdadeiro se o ficheiro chegou a ir para o menu de partilha. */
+async function tentarPartilhar(
+  url: string, nome?: string, tipo?: string | null, bytes?: number,
+): Promise<boolean> {
+  if (typeof navigator === 'undefined' || !navigator.canShare || !navigator.share) return false
+  if (bytes && bytes > CABE_NA_PARTILHA) return false
+
+  try {
+    /*
+      `no-store` não é por causa de dados velhos. A mesma fotografia já foi
+      buscada por uma `<img>`, e uma `<img>` não é um pedido de CORS: o browser
+      guardou essa resposta sem cabeçalhos de CORS, porque nunca foram pedidos.
+      Pedi-la agora por `fetch` devolvia essa cópia guardada, sem o
+      `Access-Control-Allow-Origin`, e o browser recusava — com a mesma
+      mensagem que dá um bucket mal configurado, estando o bucket impecável.
+    */
+    const res = await fetch(url, { cache: 'no-store' })
+    if (!res.ok) return false
+    const blob = await res.blob()
+    const ficheiro = new File([blob], nome || 'nebula', {
+      type: tipo || blob.type || 'application/octet-stream',
+    })
+    if (!navigator.canShare({ files: [ficheiro] })) return false
+    await navigator.share({ files: [ficheiro] })
+    return true
+  } catch (e) {
+    /*
+      Cancelar o menu de partilha também chega aqui, como `AbortError`. Nesse
+      caso a pessoa decidiu não guardar, e abrir-lhe um download a seguir seria
+      fazer exactamente o que ela acabou de recusar.
+    */
+    if ((e as Error)?.name === 'AbortError') return true
+    return false
+  }
 }

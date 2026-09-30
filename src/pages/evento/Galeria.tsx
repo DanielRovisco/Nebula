@@ -120,7 +120,7 @@ function EmGrande({
   const levar = async () => {
     setLevantar({ id: item.id, estado: 'espera' })
     try {
-      await descarregarDoEvento(slug, item.id, minhaChave)
+      await descarregarDoEvento(slug, item.id, minhaChave, item.bytes)
       setLevantar(null)
     } catch {
       setLevantar({ id: item.id, estado: 'erro' })
