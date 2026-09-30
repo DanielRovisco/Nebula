@@ -150,7 +150,15 @@ function EmGrande({
       transition={{ duration: 0.25 }}
       className="fixed inset-0 z-[100] bg-eerie flex flex-col"
     >
-      <header className="flex items-center gap-3 px-4 h-16 shrink-0">
+      {/*
+        O cabeçalho acima de tudo o resto, e não só por ordem no documento.
+
+        Um `<video>` que transborde a sua caixa é desenhado por cima do que veio
+        antes dele, e o que vem antes dele é isto: o fechar, a contagem e o
+        guardar. Com a camada, mesmo que alguma coisa transborde outra vez, os
+        botões continuam à frente e continuam a responder ao dedo.
+      */}
+      <header className="relative z-10 flex items-center gap-3 px-4 h-16 shrink-0">
         <button onClick={aoFechar} aria-label="Fechar" className={ICONE}>
           <X size={20} />
         </button>
@@ -182,7 +190,11 @@ function EmGrande({
         </p>
       )}
 
-      <div className="flex-1 min-h-0 relative flex items-center justify-center px-2 pb-6">
+      {/*
+        `overflow-hidden` é a segunda tranca: o que não couber é cortado aqui em
+        vez de ir parar por cima do cabeçalho.
+      */}
+      <div className="flex-1 min-h-0 relative flex items-center justify-center px-2 pb-6 overflow-hidden">
         {total > 1 && (
           <button onClick={() => aoMover(-1)} aria-label="Anterior" className={`${SETA} left-1 sm:left-4`}>
             <ChevronLeft size={22} />
@@ -196,7 +208,17 @@ function EmGrande({
           initial={{ opacity: 0, scale: 0.985 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="max-h-full max-w-full flex items-center justify-center"
+          /*
+            Altura definida, e não `max-h-full`.
+
+            O `max-height: 100%` da fotografia e do vídeo mede-se contra este
+            elemento, e um elemento de altura automática não lhes dá nada contra
+            que medir: a regra cai, o vídeo fica do tamanho que quer e
+            transborda para cima, por cima do cabeçalho. Media-se em telemóvel
+            com as barras do browser à vista — a 700px de altura o vídeo
+            começava aos 38, e o botão de guardar ficava por baixo dele.
+          */
+          className="h-full w-full min-h-0 flex items-center justify-center"
         >
           {item.kind === 'video' ? (
             <video src={item.url} controls autoPlay playsInline className="max-h-full max-w-full rounded-lg" />
