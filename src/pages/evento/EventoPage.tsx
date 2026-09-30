@@ -273,7 +273,12 @@ export default function EventoPage() {
             </p>
           </section>
         ) : (
-          <Galeria media={galeria?.media ?? []} />
+          <Galeria
+            media={galeria?.media ?? []}
+            slug={slug}
+            minhaChave={chave}
+            podeDescarregar={galeria?.podeDescarregar ?? false}
+          />
         )}
 
         <Assinatura />

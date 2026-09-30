@@ -141,6 +141,7 @@ Deno.serve(async (req) => {
         revealAt: evento.reveal_at,
         uploadWindowEndsAt: evento.upload_window_ends_at,
         guestsSeeGallery: evento.guests_see_gallery,
+        guestsCanDownload: evento.guests_can_download,
         moderation: evento.moderation,
         welcomeMessage: evento.welcome_message,
         bytesUsed: evento.bytes_used,
@@ -292,6 +293,7 @@ Deno.serve(async (req) => {
   if (body.action === 'definicoes') {
     const mudanca: Record<string, unknown> = { updated_at: new Date().toISOString() }
     if (typeof body.guestsSeeGallery === 'boolean') mudanca.guests_see_gallery = body.guestsSeeGallery
+    if (typeof body.guestsCanDownload === 'boolean') mudanca.guests_can_download = body.guestsCanDownload
     if (typeof body.moderation === 'boolean') mudanca.moderation = body.moderation
     /*
       A frase. Vazia ou nula quer dizer "queremos a de sempre", e não "queremos

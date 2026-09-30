@@ -179,6 +179,12 @@ export default function EventEditor() {
             nota="Desligado, cada um vê só o que carregou."
           />
           <Interruptor
+            ligado={evento.guests_can_download}
+            aoMudar={(v) => mudar({ guests_can_download: v })}
+            titulo="Os convidados podem guardar"
+            nota="Desligado, veem as fotografias e os vídeos mas não os levam."
+          />
+          <Interruptor
             ligado={evento.moderation}
             aoMudar={(v) => mudar({ moderation: v })}
             titulo="Aprovar antes de aparecer"

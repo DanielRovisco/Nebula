@@ -1,9 +1,11 @@
 // Edge Function: a galeria do evento, para convidados e para o casal.
 //
-//   { slug, ids? }
+//   { slug, uploaderKey? }
 //     → as fotografias visíveis neste momento, já com URLs assinados.
-//       `ids` limita às que este convidado carregou, que é o que o browser
-//       dele guarda localmente.
+//
+//   { action: 'descarregar', slug, id, uploaderKey? }
+//     → um URL que o R2 devolve como anexo, para o convidado levar aquele
+//       ficheiro. Só se o casal tiver deixado.
 //
 // Deploy: supabase functions deploy event-gallery --no-verify-jwt
 //
@@ -14,7 +16,7 @@
 // devia ser visto.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { cors, json, presign } from '../_shared/r2.ts'
+import { cors, json, presign, presignDownload } from '../_shared/r2.ts'
 
 const VER_TTL = 60 * 60 * 2
 
@@ -38,10 +40,63 @@ Deno.serve(async (req) => {
   const sb = admin()
   const { data: evento } = await sb
     .from('events')
-    .select('id, couple_name, event_date, reveal_at, guests_see_gallery, upload_window_ends_at')
+    .select('id, couple_name, event_date, reveal_at, guests_see_gallery, guests_can_download, upload_window_ends_at')
     .eq('slug', slug)
     .maybeSingle()
   if (!evento) return json({ error: 'nao_encontrado' }, 404)
+
+  const bruta = String(body.uploaderKey ?? '')
+  // Só se aceita a chave se ela for o que devia ser. Vai para dentro de um
+  // filtro `or`, e um valor com uma vírgula ou um parêntesis lá dentro deixava
+  // de ser um valor e passava a ser sintaxe da consulta.
+  const minhaChave = /^[0-9a-f]{16,80}$/i.test(bruta) ? bruta : ''
+
+  /*
+    Levar um ficheiro.
+
+    A pergunta "posso?" é feita aqui e não no browser. O botão do lado de lá
+    pode desaparecer com uma linha de CSS; o que impede mesmo alguém de levar
+    as fotografias de um casamento cujos noivos disseram que não é isto.
+
+    As mesmas regras de quem vê: nada antes da hora de revelação, nada do que
+    está no lixo ou escondido, e do que está à espera de aprovação só a própria
+    pessoa leva o que enviou.
+  */
+  if (body.action === 'descarregar') {
+    if (!evento.guests_can_download) return json({ error: 'nao_permitido' }, 403)
+    if (evento.reveal_at && new Date(evento.reveal_at as string).getTime() > Date.now()) {
+      return json({ error: 'ainda_nao' }, 403)
+    }
+
+    const id = String(body.id ?? '')
+    if (!id) return json({ error: 'bad_request' }, 400)
+
+    const { data: m } = await sb
+      .from('event_media')
+      .select('storage_key, original_name, kind, status, uploader_key')
+      .eq('id', id).eq('event_id', evento.id)
+      .neq('status', 'escondido')
+      .is('deleted_at', null)
+      .maybeSingle()
+    if (!m) return json({ error: 'nao_encontrado' }, 404)
+
+    const minha = Boolean(minhaChave) && m.uploader_key === minhaChave
+    // Com a galeria fechada aos convidados, cada um só leva o que enviou.
+    if (!evento.guests_see_gallery && !minha) return json({ error: 'nao_encontrado' }, 404)
+    // O que está à espera de aprovação ainda não é de ninguém a não ser de quem
+    // o enviou.
+    if (m.status !== 'aprovado' && !minha) return json({ error: 'nao_encontrado' }, 404)
+
+    /*
+      Um URL que o R2 devolve como anexo, aberto com um link normal. Não é um
+      pedido de CORS, e é por isso que este caminho não morre quando a política
+      do bucket não está perfeita — a lição que o download das galerias de
+      cliente já tinha aprendido à sua custa.
+    */
+    const nome = String(m.original_name ?? `${m.kind}-${id.slice(0, 8)}`)
+    const url = await presignDownload(String(m.storage_key), nome, 60 * 10)
+    return json({ url })
+  }
 
   /*
     Antes da hora de revelação não se devolve fotografia nenhuma, nem sequer
@@ -67,11 +122,6 @@ Deno.serve(async (req) => {
     quinhentas, e o servidor passa a decidir o que é de quem em vez de o
     perguntar a quem está do outro lado.
   */
-  const bruta = String(body.uploaderKey ?? '')
-  // Só se aceita a chave se ela for o que devia ser. Vai para dentro de um
-  // filtro `or`, e um valor com uma vírgula ou um parêntesis lá dentro deixava
-  // de ser um valor e passava a ser sintaxe da consulta.
-  const minhaChave = /^[0-9a-f]{16,80}$/i.test(bruta) ? bruta : ''
 
   let q = sb
     .from('event_media')
@@ -91,7 +141,13 @@ Deno.serve(async (req) => {
     e pedir uma era exactamente o que se quer evitar nesta página.
   */
   if (!evento.guests_see_gallery) {
-    if (!minhaChave) return json({ coupleName: evento.couple_name, media: [] })
+    if (!minhaChave) {
+      return json({
+        coupleName: evento.couple_name,
+        podeDescarregar: evento.guests_can_download,
+        media: [],
+      })
+    }
     q = q.eq('uploader_key', minhaChave)
   } else if (minhaChave) {
     /*
@@ -131,6 +187,9 @@ Deno.serve(async (req) => {
     coupleName: evento.couple_name,
     eventDate: evento.event_date,
     aberto: new Date(evento.upload_window_ends_at as string).getTime() > Date.now(),
+    // O botão de levar só aparece se o casal tiver deixado. Quem mande o pedido
+    // à mesma leva um 403 daqui.
+    podeDescarregar: evento.guests_can_download,
     media,
     expiresIn: VER_TTL,
   })

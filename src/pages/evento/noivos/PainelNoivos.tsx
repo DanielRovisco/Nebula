@@ -295,6 +295,7 @@ export default function PainelNoivos() {
     */
     const local: Partial<Painel['evento']> = {}
     if (typeof campos.guestsSeeGallery === 'boolean') local.guestsSeeGallery = campos.guestsSeeGallery
+    if (typeof campos.guestsCanDownload === 'boolean') local.guestsCanDownload = campos.guestsCanDownload
     if (typeof campos.moderation === 'boolean') local.moderation = campos.moderation
     if (campos.revealAt !== undefined) local.revealAt = campos.revealAt
     setPainel({ ...painel, evento: { ...painel.evento, ...local } })
@@ -765,6 +766,7 @@ function Definicoes({
   evento: Painel['evento']
   aoMudar: (campos: {
     guestsSeeGallery?: boolean
+    guestsCanDownload?: boolean
     moderation?: boolean
     welcomeMessage?: string | null
   }) => void
@@ -784,6 +786,17 @@ function Definicoes({
           aoMudar={(v) => aoMudar({ guestsSeeGallery: v })}
           titulo="Galeria pública"
           nota="Os convidados podem ver as fotos todas. Desativado, só conseguem ver as que enviaram."
+        />
+        {/*
+          Ligado de origem: metade do que está naquela galeria foi tirado pelos
+          próprios convidados, e quem tira uma fotografia num casamento conta
+          poder ficar com ela. Quem quiser o contrário desliga aqui.
+        */}
+        <Interruptor
+          ligado={evento.guestsCanDownload}
+          aoMudar={(v) => aoMudar({ guestsCanDownload: v })}
+          titulo="Guardar no telemóvel"
+          nota="Os convidados podem guardar as fotografias e os vídeos que veem. Desativado, só conseguem vê-los aqui."
         />
         <Interruptor
           ligado={evento.moderation}

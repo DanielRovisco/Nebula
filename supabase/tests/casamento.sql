@@ -132,7 +132,19 @@ select '11. apagar devolve os bytes: ' ||
   case when (select bytes_used from events where slug='casamento-teste') = 1020
        then 'SIM' else 'NAO (' || (select bytes_used from events where slug='casamento-teste') || ')' end;
 
-select '12. cada evento tem o seu segredo de download: ' ||
+-- A opção de os convidados levarem os ficheiros nasce ligada.
+select '12. convidados podem levar, por omissao: ' ||
+  case when (select bool_and(guests_can_download) from events
+              where slug in ('casamento-teste','casamento-outro')) then 'SIM' else 'NAO' end;
+
+update events set guests_can_download = false where slug='casamento-teste';
+select '13. e os noivos podem desligar: ' ||
+  case when (select guests_can_download from events where slug='casamento-teste') = false
+        and (select guests_can_download from events where slug='casamento-outro') = true
+       then 'SIM' else 'NAO' end;
+update events set guests_can_download = true where slug='casamento-teste';
+
+select '14. cada evento tem o seu segredo de download: ' ||
   case when (select count(distinct download_token) from events
               where slug in ('casamento-teste','casamento-outro')) = 2
         and (select bool_and(length(download_token) = 48) from events) then 'SIM' else 'NAO' end;
@@ -144,7 +156,7 @@ values ('mostra-teste','Ana & Tiago', current_date, '11111111-1111-1111-1111-111
 insert into print_galleries (slug, name, event_date, owner_id)
 values ('mostra-outra','Outros', current_date, '22222222-2222-2222-2222-222222222222');
 
-select '13. mostra sem hora de fim esta aberta: ' ||
+select '15. mostra sem hora de fim esta aberta: ' ||
   case when (select expires_at is null from print_galleries where slug='mostra-teste')
        then 'SIM' else 'NAO' end;
 
@@ -156,7 +168,7 @@ select id, mostra_numero(id, 2), 'm/2.webp','m/2t.webp' from print_galleries whe
 insert into print_photos (gallery_id, numero, storage_key, thumb_key)
 select id, mostra_numero(id, 10), 'm/10.webp','m/10t.webp' from print_galleries where slug='mostra-teste';
 
-select '14. o numero do nome do ficheiro e respeitado: ' ||
+select '16. o numero do nome do ficheiro e respeitado: ' ||
   case when (select array_agg(numero order by numero) from print_photos p
              join print_galleries g on g.id=p.gallery_id where g.slug='mostra-teste')
             = '{1,2,10}'::int[] then 'SIM' else 'NAO' end;
@@ -170,14 +182,14 @@ begin
   raise notice 'FALHOU: deu o numero 2 outra vez';
 exception when unique_violation then null;
 end $$;
-select '15. numero repetido e recusado: ' ||
+select '17. numero repetido e recusado: ' ||
   case when (select count(*) from print_photos p join print_galleries g on g.id=p.gallery_id
              where g.slug='mostra-teste') = 3 then 'SIM' else 'NAO' end;
 
 -- Um lote sem nomes numerados continua a seguir ao maior que lá está.
 insert into print_photos (gallery_id, numero, storage_key, thumb_key)
 select id, mostra_numero(id), 'm/a.webp','m/at.webp' from print_galleries where slug='mostra-teste';
-select '16. o automatico salta os ja usados: ' ||
+select '18. o automatico salta os ja usados: ' ||
   case when (select max(numero) from print_photos p join print_galleries g on g.id=p.gallery_id
              where g.slug='mostra-teste') = 11 then 'SIM' else 'NAO' end;
 
@@ -185,7 +197,7 @@ select '16. o automatico salta os ja usados: ' ||
 delete from print_photos where storage_key='m/a.webp';
 insert into print_photos (gallery_id, numero, storage_key, thumb_key)
 select id, mostra_numero(id), 'm/b.webp','m/bt.webp' from print_galleries where slug='mostra-teste';
-select '17. o contador nunca recua: ' ||
+select '19. o contador nunca recua: ' ||
   case when (select numero from print_photos where storage_key='m/b.webp') = 12
        then 'SIM' else 'NAO (' || (select numero from print_photos where storage_key='m/b.webp') || ')' end;
 
@@ -196,7 +208,7 @@ begin
   raise notice 'FALHOU: o numero mudou';
 exception when check_violation then null;
 end $$;
-select '18. o numero nao muda depois de atribuido: ' ||
+select '20. o numero nao muda depois de atribuido: ' ||
   case when (select numero from print_photos where storage_key='m/1.webp') = 1
        then 'SIM' else 'NAO' end;
 
@@ -209,7 +221,7 @@ begin
   raise notice 'FALHOU: numerou a mostra de outro dono';
 exception when no_data_found then null;
 end $$;
-select '19. nao se numera a mostra de outro dono: ' ||
+select '21. nao se numera a mostra de outro dono: ' ||
   case when (select count(*) from print_photos p join print_galleries g on g.id=p.gallery_id
              where g.slug='mostra-outra') = 0 then 'SIM' else 'NAO' end;
 
@@ -219,26 +231,26 @@ begin
   raise notice 'FALHOU: o endereco da mostra mudou';
 exception when check_violation then null;
 end $$;
-select '20. o endereco da mostra nao muda: ' ||
+select '22. o endereco da mostra nao muda: ' ||
   case when exists (select 1 from print_galleries where slug='mostra-teste')
        then 'SIM' else 'NAO' end;
 
 -- Prolongar a meio da festa tem de ser possível.
 update print_galleries set expires_at = now() + interval '3 hours' where slug='mostra-teste';
-select '21. a hora de fim pode mudar: ' ||
+select '23. a hora de fim pode mudar: ' ||
   case when (select expires_at is not null from print_galleries where slug='mostra-teste')
        then 'SIM' else 'NAO' end;
 
-select '22. RLS ligado nas duas tabelas da mostra: ' ||
+select '24. RLS ligado nas duas tabelas da mostra: ' ||
   case when (select bool_and(relrowsecurity) from pg_class
              where relname in ('print_galleries','print_photos')) then 'SIM' else 'NAO' end;
 
-select '23. anon nao le a mostra nem as fotografias: ' ||
+select '25. anon nao le a mostra nem as fotografias: ' ||
   case when (select has_table_privilege('anon','print_galleries','select')) = false
         and (select has_table_privilege('anon','print_photos','select')) = false
        then 'SIM' else 'NAO' end;
 
-select '24. anon nao pode numerar: ' ||
+select '26. anon nao pode numerar: ' ||
   case when (select has_function_privilege('anon','mostra_numero(uuid,int)','execute')) = false
        then 'SIM' else 'NAO' end;
 
@@ -249,7 +261,7 @@ select '24. anon nao pode numerar: ' ||
 -- ligações em paralelo, e está em `supabase/tests/concorrencia.md` — mas o que
 -- ela garante testa-se aqui.
 
-select '25. entregar um numero deixa-o registado: ' ||
+select '27. entregar um numero deixa-o registado: ' ||
   case when (select count(*) from print_numeros p join print_galleries g on g.id=p.gallery_id
              where g.slug='mostra-teste') >= 4 then 'SIM' else 'NAO' end;
 
@@ -263,21 +275,21 @@ begin
   raise notice 'FALHOU: voltou a entregar o numero 2 depois de a fotografia ser apagada';
 exception when unique_violation then null;
 end $$;
-select '26. apagar a fotografia nao liberta o numero: ' ||
+select '28. apagar a fotografia nao liberta o numero: ' ||
   case when exists (select 1 from print_numeros p join print_galleries g on g.id=p.gallery_id
                      where g.slug='mostra-teste' and p.numero=2) then 'SIM' else 'NAO' end;
 
-select '27. anon nao le os numeros entregues: ' ||
+select '29. anon nao le os numeros entregues: ' ||
   case when has_table_privilege('anon','print_numeros','select') = false
        then 'SIM' else 'NAO' end;
 
-select '28. RLS ligado na tabela dos numeros: ' ||
+select '30. RLS ligado na tabela dos numeros: ' ||
   case when (select relrowsecurity from pg_class where relname='print_numeros')
        then 'SIM' else 'NAO' end;
 
 -- Apagar a mostra leva as fotografias atrás.
 delete from print_galleries where slug='mostra-teste';
-select '29. apagar a mostra apaga as fotografias: ' ||
+select '31. apagar a mostra apaga as fotografias: ' ||
   case when (select count(*) from print_photos p
              where not exists (select 1 from print_galleries g where g.id=p.gallery_id)) = 0
         and (select count(*) from print_numeros p
@@ -286,7 +298,7 @@ select '29. apagar a mostra apaga as fotografias: ' ||
 
 -- Apagar o evento leva as fotografias atrás.
 delete from events where slug='casamento-teste';
-select '30. apagar o evento apaga as fotografias: ' ||
+select '32. apagar o evento apaga as fotografias: ' ||
   case when (select count(*) from event_media m
              where not exists (select 1 from events e where e.id=m.event_id)) = 0
        then 'SIM' else 'NAO' end;

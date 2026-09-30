@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Play, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download, Loader2, Play, X } from 'lucide-react'
 import MiniaturaMedia from './MiniaturaMedia'
-import type { MediaEvento } from '../../lib/evento/api'
+import { type MediaEvento, descarregarDoEvento } from '../../lib/evento/api'
 
 /**
  * O que toda a gente deixou.
@@ -12,7 +12,15 @@ import type { MediaEvento } from '../../lib/evento/api'
  * ficar: chegaram para entregar três fotografias e descobrem o casamento
  * inteiro visto por cem pessoas diferentes.
  */
-export default function Galeria({ media }: { media: MediaEvento[] }) {
+export default function Galeria({
+  media, slug, minhaChave, podeDescarregar = false,
+}: {
+  media: MediaEvento[]
+  slug: string
+  minhaChave: string
+  /** O casal deixa levar os ficheiros. Quem decide mesmo é o servidor. */
+  podeDescarregar?: boolean
+}) {
   const reduzido = useReducedMotion()
   const [aberta, setAberta] = useState<number | null>(null)
 
@@ -75,6 +83,9 @@ export default function Galeria({ media }: { media: MediaEvento[] }) {
             item={media[aberta]}
             indice={aberta}
             total={media.length}
+            slug={slug}
+            minhaChave={minhaChave}
+            podeDescarregar={podeDescarregar}
             aoFechar={() => setAberta(null)}
             aoMover={(d) => setAberta((i) => ((i ?? 0) + d + media.length) % media.length)}
           />
@@ -85,14 +96,37 @@ export default function Galeria({ media }: { media: MediaEvento[] }) {
 }
 
 function EmGrande({
-  item, indice, total, aoFechar, aoMover,
+  item, indice, total, slug, minhaChave, podeDescarregar, aoFechar, aoMover,
 }: {
   item: MediaEvento
   indice: number
   total: number
+  slug: string
+  minhaChave: string
+  podeDescarregar: boolean
   aoFechar: () => void
   aoMover: (d: number) => void
 }) {
+  /*
+    O estado de levar guarda a que fotografia pertence.
+
+    Assim volta ao princípio sozinho quando se muda de fotografia, sem um efeito
+    a limpá-lo depois do facto — que é o que deixava um erro de uma ficar no
+    ecrã por cima da seguinte durante um fotograma.
+  */
+  const [levantar, setLevantar] = useState<{ id: string; estado: 'espera' | 'erro' } | null>(null)
+  const meu = levantar?.id === item.id ? levantar.estado : null
+
+  const levar = async () => {
+    setLevantar({ id: item.id, estado: 'espera' })
+    try {
+      await descarregarDoEvento(slug, item.id, minhaChave)
+      setLevantar(null)
+    } catch {
+      setLevantar({ id: item.id, estado: 'erro' })
+    }
+  }
+
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => {
       if (e.key === 'Escape') aoFechar()
@@ -126,8 +160,27 @@ function EmGrande({
             {indice + 1} de {total}
           </p>
         </div>
-        <span className="w-11 shrink-0" />
+        {podeDescarregar ? (
+          <button
+            onClick={levar}
+            disabled={meu === 'espera'}
+            aria-label={item.kind === 'video' ? 'Guardar o vídeo' : 'Guardar a fotografia'}
+            className={ICONE}
+          >
+            {meu === 'espera'
+              ? <Loader2 size={19} className="animate-spin" />
+              : <Download size={19} />}
+          </button>
+        ) : (
+          <span className="w-11 shrink-0" />
+        )}
       </header>
+
+      {meu === 'erro' && (
+        <p className="text-center text-[13px] text-amber-300/80 px-6 -mt-2">
+          Não consegui guardar. Tenta outra vez.
+        </p>
+      )}
 
       <div className="flex-1 min-h-0 relative flex items-center justify-center px-2 pb-6">
         {total > 1 && (

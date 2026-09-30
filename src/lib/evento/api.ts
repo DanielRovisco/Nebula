@@ -51,6 +51,8 @@ export interface GaleriaEvento {
   /** Verdadeiro antes da hora de revelação: não vem fotografia nenhuma. */
   escondido?: boolean
   revealAt?: string
+  /** O casal deixa os convidados levarem os ficheiros. */
+  podeDescarregar?: boolean
 }
 
 async function chamar<T>(fn: string, body: Record<string, unknown>): Promise<T> {
@@ -227,4 +229,36 @@ export function enviarFicheiro(
     sinal?.addEventListener('abort', () => x.abort(), { once: true })
     x.send(blob)
   })
+}
+
+/**
+ * Leva um ficheiro para o telemóvel de quem está a ver.
+ *
+ * O servidor é que responde se pode: o botão desaparece quando o casal desliga
+ * a opção, mas um botão que desaparece é só CSS, e quem decide de verdade é a
+ * Edge Function.
+ *
+ * O que volta é um endereço que o R2 entrega como anexo, e abre-se com um link
+ * normal. De propósito: um link não é um pedido de CORS, e o caminho por
+ * `fetch` morre com "blocked by CORS policy" sempre que a configuração do
+ * bucket não estiver perfeita — lição já paga no download das galerias de
+ * cliente.
+ */
+export async function descarregarDoEvento(
+  slug: string, id: string, uploaderKey: string,
+): Promise<void> {
+  const { url } = await chamar<{ url: string }>('event-gallery', {
+    action: 'descarregar', slug, id, uploaderKey,
+  })
+  /*
+    Sem o atributo `download`: entre domínios diferentes ele é ignorado e, em
+    alguns browsers, a sua presença faz o link abrir num separador em vez de
+    descarregar. Quem manda no nome do ficheiro é o cabeçalho que vem do R2.
+  */
+  const a = document.createElement('a')
+  a.href = url
+  a.rel = 'noopener'
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
 }

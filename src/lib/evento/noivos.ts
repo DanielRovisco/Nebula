@@ -36,6 +36,8 @@ export interface Painel {
     revealAt: string | null
     uploadWindowEndsAt: string
     guestsSeeGallery: boolean
+    /** Os convidados podem levar as fotografias e os vídeos. */
+    guestsCanDownload: boolean
     moderation: boolean
     welcomeMessage: string
     bytesUsed: number
@@ -97,6 +99,7 @@ export const guardarDefinicoes = (
   chave: string,
   campos: {
     guestsSeeGallery?: boolean
+    guestsCanDownload?: boolean
     moderation?: boolean
     revealAt?: string | null
     /** Nula ou vazia repõe a frase de sempre. */

@@ -648,6 +648,19 @@ create table if not exists events (
   guests_see_gallery boolean not null default true,
 
   /*
+    Os convidados podem levar as fotografias e os vídeos, ou só vê-los.
+
+    Ligado por omissão, porque é o que as pessoas esperam de uma galeria onde
+    elas próprias puseram coisas: metade do que lá está foi tirado por elas, e
+    quem tira uma fotografia num casamento conta poder ficar com ela.
+
+    Fica no esquema e não numa opinião do browser porque é uma decisão do casal
+    sobre fotografias de pessoas, e o que decide quem pode levar o quê não pode
+    viver num sítio onde se muda abrindo as ferramentas do browser.
+  */
+  guests_can_download boolean not null default true,
+
+  /*
     Com moderação, o que chega fica pendente e só aparece depois de o casal
     aprovar. Desligada por omissão: obrigar a aprovar centenas de fotografias
     para elas aparecerem é o género de trabalho que ninguém faz, e a galeria
@@ -692,6 +705,7 @@ create table if not exists events (
 -- Para quem já tinha corrido a versão anterior deste ficheiro.
 alter table events add column if not exists download_token text not null
   default encode(gen_random_bytes(24), 'hex');
+alter table events add column if not exists guests_can_download boolean not null default true;
 alter table events add column if not exists welcome_message text not null
   default 'Queremos ver o nosso dia pelos olhos daqueles que mais gostamos! Partilha o teu olhar 🤍';
 

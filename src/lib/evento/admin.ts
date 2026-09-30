@@ -19,6 +19,7 @@ export interface Evento {
   upload_window_ends_at: string
   retain_until: string | null
   guests_see_gallery: boolean
+  guests_can_download: boolean
   moderation: boolean
   max_file_bytes: number
   max_total_bytes: number
@@ -79,6 +80,8 @@ export async function criarEvento(campos: {
   upload_window_ends_at: string
   moderation: boolean
   guests_see_gallery: boolean
+  /* Por omissão fica o que a coluna diz, que é "podem". */
+  guests_can_download?: boolean
   reveal_at: string | null
 }): Promise<Evento> {
   const { data: sessao } = await supabase().auth.getUser()
