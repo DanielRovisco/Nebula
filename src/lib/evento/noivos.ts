@@ -104,6 +104,8 @@ export const guardarDefinicoes = (
   },
 ) => chamar<{ ok: true }>({ action: 'definicoes', slug, chave, ...campos })
 
+import { fotogramaDeVideo } from './fotograma'
+
 /**
  * Faz a miniatura de um vídeo que subiu sem ela, aqui no browser do painel.
  *
@@ -125,60 +127,22 @@ export type ResultadoMiniatura = 'feita' | 'sem_video' | 'sem_fotograma' | 'falh
 export async function fazerMiniaturaDeVideo(
   slug: string, chave: string, id: string, urlDoVideo: string,
 ): Promise<ResultadoMiniatura> {
-  const v = document.createElement('video')
+  // 20 s por vídeo: aqui o ficheiro vem da rede e não do disco, e um vídeo
+  // longo demora a chegar ao primeiro fotograma.
+  const r = await fotogramaDeVideo(urlDoVideo, { lado: 480, cruzado: true, tempoMax: 20000 })
+  if (!r.ok) return r.porque
+
   try {
-    v.preload = 'metadata'
-    v.muted = true
-    v.playsInline = true
-    v.crossOrigin = 'anonymous'
-    v.src = urlDoVideo
-
-    const pronto = await new Promise<boolean>((resolve) => {
-      const desistir = setTimeout(() => resolve(false), 20000)
-      const fim = (ok: boolean) => { clearTimeout(desistir); resolve(ok) }
-      v.onerror = () => fim(false)
-      v.onloadeddata = () => {
-        v.onseeked = () => fim(true)
-        try { v.currentTime = Math.min(0.3, (v.duration || 1) / 4) } catch { fim(v.readyState >= 2) }
-      }
-    })
-    if (!pronto) return 'sem_video'
-    if (!v.videoWidth) return 'sem_fotograma'
-
-    const lado = 480
-    const escala = Math.min(1, lado / Math.max(v.videoWidth, v.videoHeight))
-    const c = document.createElement('canvas')
-    c.width = Math.round(v.videoWidth * escala)
-    c.height = Math.round(v.videoHeight * escala)
-    const ctx = c.getContext('2d')
-    if (!ctx) return 'falhou'
-    ctx.drawImage(v, 0, 0, c.width, c.height)
-    /*
-      Um canvas com uma imagem de outra origem sem CORS fica "manchado", e o
-      `toBlob` atira em vez de devolver nada. Apanha-se aqui para o recado ser
-      o certo e não um erro genérico.
-    */
-    let jpeg: Blob | null
-    try {
-      jpeg = await new Promise<Blob | null>((r) => c.toBlob(r, 'image/jpeg', 0.75))
-    } catch {
-      return 'sem_video'
-    }
-    if (!jpeg) return 'falhou'
-
     const { key, url } = await chamar<{ key: string; url: string }>({
       action: 'miniatura-url', slug, chave, id,
     })
     const posto = await fetch(url, {
-      method: 'PUT', body: jpeg, headers: { 'content-type': 'image/jpeg' },
+      method: 'PUT', body: r.jpeg, headers: { 'content-type': 'image/jpeg' },
     })
     if (!posto.ok) return 'falhou'
-
     await chamar<{ ok: true }>({ action: 'miniatura-feita', slug, chave, id, key })
     return 'feita'
   } catch {
     return 'falhou'
-  } finally {
-    v.src = ''
   }
 }

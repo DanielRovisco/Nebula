@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Check, Copy, Download, EyeOff, Trash2 } from 'lucide-react'
+import { ArrowLeft, Check, Copy, Download, EyeOff, Film, Trash2 } from 'lucide-react'
 import QrNebula from '../../components/QrNebula'
 import { guardarQr } from '../../lib/qr/exportar'
 import {
   type Evento, type MediaAdmin,
   apagarEvento, apagarMedia, assinar, guardarEvento, lerEvento, listarMedia, mudarEstado,
 } from '../../lib/evento/admin'
+import { fazerMiniaturaDeVideo } from '../../lib/evento/noivos'
 import { Interruptor } from './EventList'
 import { absoluteUrl } from '../../lib/site'
 
@@ -32,6 +33,8 @@ export default function EventEditor() {
   const [aba, setAba] = useState<Aba>('aprovado')
   const [escolhidos, setEscolhidos] = useState<Set<string>>(new Set())
   const [copiado, setCopiado] = useState<'convidados' | 'noivos' | null>(null)
+  const [miniaturas, setMiniaturas] = useState<{ feitas: number; total: number } | null>(null)
+  const [recado, setRecado] = useState<string | null>(null)
 
   useEffect(() => {
     Promise.all([lerEvento(id), listarMedia(id)])
@@ -44,6 +47,52 @@ export default function EventEditor() {
 
   const visiveis = useMemo(() => media.filter((m) => m.status === aba), [media, aba])
   const contar = (s: Aba) => media.filter((m) => m.status === s).length
+
+  /*
+    Os vídeos que ficaram sem imagem na grelha dos convidados.
+
+    O botão está aqui, e não só no painel dos noivos, porque quem abre isto é
+    quem fotografou: um portátil, rede a sério, e a chave do evento já à mão.
+    Fazer o fotograma no telemóvel de quem olha para a galeria custava
+    dezenas de megabytes por vídeo; aqui custa uma vez e acabou.
+  */
+  const semMiniatura = useMemo(
+    () => media.filter((m) => m.kind === 'video' && !m.thumb_key && !m.deleted_at),
+    [media],
+  )
+
+  const fazerMiniaturas = async () => {
+    if (!evento || !semMiniatura.length) return
+    setMiniaturas({ feitas: 0, total: semMiniatura.length })
+    setRecado(null)
+    let feitas = 0
+    let semVideo = 0
+    // Um de cada vez: cada um abre um vídeo e descodifica um fotograma, e meia
+    // dúzia em paralelo põe um portátil de joelhos.
+    for (const m of semMiniatura) {
+      const r = m.url
+        ? await fazerMiniaturaDeVideo(evento.slug, evento.download_token, m.id, m.url)
+        : 'falhou'
+      if (r === 'feita') feitas++
+      else if (r === 'sem_video') semVideo++
+      setMiniaturas({ feitas, total: semMiniatura.length })
+    }
+    if (!feitas && semVideo === semMiniatura.length) {
+      setRecado(
+        'Não consegui abrir nenhum dos vídeos. Quase sempre é o CORS do bucket: '
+        + 'Cloudflare → R2 → bucket das galerias → Settings → CORS policy, '
+        + 'com a origem deste site em AllowedOrigins e GET em AllowedMethods.',
+      )
+    } else if (!feitas) {
+      setRecado('Não consegui tirar um fotograma a nenhum destes vídeos.')
+    } else if (feitas < semMiniatura.length) {
+      setRecado(`Fiz ${feitas} de ${semMiniatura.length}. Os outros este browser não abre.`)
+    }
+    try {
+      setMedia(await assinar(await listarMedia(id)))
+    } catch { /* fica o que está; aparece ao recarregar */ }
+    setMiniaturas(null)
+  }
 
   if (!evento) return <div className="container-px min-h-[40vh]" />
 
@@ -159,6 +208,35 @@ export default function EventEditor() {
         </div>
       </div>
 
+      {/*
+        Os vídeos sem fotograma aparecem na galeria dos convidados como um
+        quadrado com um símbolo. Este botão faz-lhes a imagem a partir do que
+        já está guardado, aqui, uma vez.
+      */}
+      {semMiniatura.length > 0 && (
+        <div className="mt-12 flex flex-wrap items-center gap-3">
+          <button
+            onClick={fazerMiniaturas}
+            disabled={miniaturas !== null}
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-white/15 text-titanium/70 text-[11px] uppercase tracking-[0.12em] hover:text-titanium hover:border-white/35 disabled:opacity-50 transition-colors min-h-[44px]"
+          >
+            <Film size={14} />
+            {miniaturas
+              ? `A fazer… ${miniaturas.feitas} de ${miniaturas.total}`
+              : semMiniatura.length === 1
+                ? 'Fazer a imagem do vídeo'
+                : `Fazer as imagens dos ${semMiniatura.length} vídeos`}
+          </button>
+          <span className="text-xs text-titanium/35 leading-relaxed max-w-sm">
+            Sem isto, os vídeos são um quadrado vazio na galeria dos convidados.
+            Deixa a página aberta até ao fim.
+          </span>
+        </div>
+      )}
+      {recado && (
+        <p className="text-[13px] leading-relaxed text-amber-300/80 mt-3 max-w-xl">{recado}</p>
+      )}
+
       <nav className="flex gap-1 border-b border-white/[0.08] mt-12">
         {([
           ['aprovado', 'Na galeria'],
@@ -206,12 +284,17 @@ export default function EventEditor() {
                   escolhidos.has(m.id) ? 'ring-2 ring-titanium' : 'hover:opacity-80'
                 }`}
               >
-                {m.kind === 'video' ? (
-                  <span className="absolute inset-0 flex items-center justify-center text-[10px] uppercase tracking-widest text-titanium/40">
-                    Vídeo
-                  </span>
-                ) : (
+                {m.thumbUrl ? (
                   <img src={m.thumbUrl} alt="" loading="lazy" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="absolute inset-0 flex items-center justify-center text-[10px] uppercase tracking-widest text-titanium/40">
+                    {m.kind === 'video' ? 'Vídeo' : '—'}
+                  </span>
+                )}
+                {m.kind === 'video' && m.thumbUrl && (
+                  <span aria-hidden className="absolute top-1 left-1 text-titanium/85 drop-shadow">
+                    <Film size={11} />
+                  </span>
                 )}
                 {m.uploaded_by_name && (
                   <span className="absolute bottom-0 inset-x-0 px-1.5 py-1 text-[10px] truncate bg-gradient-to-t from-black/70 to-transparent text-titanium/80">

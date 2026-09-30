@@ -154,9 +154,45 @@ export async function listarMedia(eventId: string): Promise<MediaAdmin[]> {
  */
 export async function assinar(linhas: MediaAdmin[]): Promise<MediaAdmin[]> {
   if (!linhas.length) return linhas
-  const chaves = linhas.map((l) => l.thumb_key ?? l.storage_key)
-  const { urls } = await callAdmin<{ urls: string[] }>({ action: 'read-urls', keys: chaves })
-  return linhas.map((l, i) => ({ ...l, thumbUrl: urls[i], url: urls[i] }))
+
+  /*
+    Duas chaves por linha, e não uma.
+
+    Assinava-se `thumb_key ?? storage_key` e punha-se o mesmo endereço nos dois
+    campos. Dava jeito enquanto nada precisava do ficheiro grande, mas mente nos
+    dois sentidos: num vídeo sem miniatura o `thumbUrl` apontava para o próprio
+    vídeo — e uma `<img>` com um MP4 dentro é o ícone de imagem partida — e numa
+    fotografia com miniatura o `url` apontava para a miniatura em vez do
+    original.
+
+    A miniatura fica nula quando não existe, que é o que deixa quem desenha a
+    grelha decidir o que mostrar.
+  */
+  const resultado: MediaAdmin[] = []
+
+  /*
+    Às fatias: o `read-urls` recusa mais de mil chaves de uma vez, e um
+    casamento com seiscentos ficheiros já lá chegava com duas chaves cada.
+  */
+  const POR_VEZ = 400
+  for (let i = 0; i < linhas.length; i += POR_VEZ) {
+    const fatia = linhas.slice(i, i + POR_VEZ)
+    const chaves: string[] = []
+    const onde = fatia.map((l) => {
+      const original = chaves.push(l.storage_key) - 1
+      const mini = l.thumb_key ? chaves.push(l.thumb_key) - 1 : -1
+      return { original, mini }
+    })
+    const { urls } = await callAdmin<{ urls: string[] }>({ action: 'read-urls', keys: chaves })
+    fatia.forEach((l, j) => {
+      resultado.push({
+        ...l,
+        url: urls[onde[j].original],
+        thumbUrl: onde[j].mini >= 0 ? urls[onde[j].mini] : undefined,
+      })
+    })
+  }
+  return resultado
 }
 
 export async function mudarEstado(ids: string[], status: MediaAdmin['status']): Promise<void> {

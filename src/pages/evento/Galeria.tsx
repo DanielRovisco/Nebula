@@ -50,7 +50,12 @@ export default function Galeria({ media }: { media: MediaEvento[] }) {
               }
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.06]"
             />
-            {m.kind === 'video' && (
+            {/*
+              O distintivo só quando há fotograma por baixo. Sem ele, o quadrado
+              já é um símbolo de reprodução do tamanho do quadrado, e dois
+              símbolos a dizer a mesma coisa no mesmo sítio não dizem mais.
+            */}
+            {m.kind === 'video' && m.thumbUrl && (
               <span aria-hidden className="absolute top-2 left-2 text-titanium/85 drop-shadow">
                 <Play size={14} />
               </span>

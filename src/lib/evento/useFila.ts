@@ -7,6 +7,7 @@ import {
   apagar, bytesDe, copiaDuravel, guardar, juntar, legivel, limparEnviados,
   listar, minhaChave, paraEnviar,
 } from './fila'
+import { fotogramaDeVideo } from './fotograma'
 
 /** Quantas vezes se insiste antes de desistir e mostrar o botão de repetir. */
 const TENTATIVAS_MAX = 5
@@ -18,60 +19,6 @@ const MINIATURA = 480
 const dormir = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 /**
- * Um fotograma do princípio do vídeo, para servir de miniatura.
- *
- * A ideia antiga era não fazer nenhuma e mostrar o vídeo em si na grelha. Não
- * serve: medido com dois vídeos de 33 MB, o browser puxa 40 MB só para desenhar
- * um fotograma de cada. Numa rede de casamento isso é a galeria inteira a
- * arrastar-se para mostrar quadradinhos.
- *
- * Fazer o fotograma aqui custa uma descodificação, uma vez, no telemóvel de
- * quem envia — e não a cada pessoa que abre a galeria, a cada vez que a abre.
- * O ficheiro não vai para memória: o `createObjectURL` deixa o browser lê-lo do
- * disco à medida que precisa.
- *
- * Tem tecto de tempo porque alguns formatos ficam a pensar para sempre num
- * telemóvel antigo, e a miniatura nunca pode atrasar o envio: falha, e o vídeo
- * sobe à mesma.
- */
-async function fotogramaDeVideo(f: Blob): Promise<Blob | null> {
-  const url = URL.createObjectURL(f)
-  const v = document.createElement('video')
-  try {
-    v.preload = 'metadata'
-    v.muted = true
-    v.playsInline = true
-    v.src = url
-
-    const pronto = await new Promise<boolean>((resolve) => {
-      const desistir = setTimeout(() => resolve(false), 6000)
-      const acabou = (ok: boolean) => { clearTimeout(desistir); resolve(ok) }
-      v.onerror = () => acabou(false)
-      v.onloadeddata = () => {
-        // Um bocadinho para dentro: o primeiro fotograma de muitos vídeos de
-        // telemóvel é o sensor ainda a acertar a exposição, e sai preto.
-        const alvo = Math.min(0.3, (v.duration || 1) / 4)
-        v.onseeked = () => acabou(true)
-        try { v.currentTime = alvo } catch { acabou(v.readyState >= 2) }
-      }
-    })
-    if (!pronto || !v.videoWidth) return null
-
-    const escala = Math.min(1, MINIATURA / Math.max(v.videoWidth, v.videoHeight))
-    const c = document.createElement('canvas')
-    c.width = Math.round(v.videoWidth * escala)
-    c.height = Math.round(v.videoHeight * escala)
-    c.getContext('2d')!.drawImage(v, 0, 0, c.width, c.height)
-    return await new Promise<Blob | null>((r) => c.toBlob(r, 'image/jpeg', 0.75))
-  } catch {
-    return null
-  } finally {
-    v.src = ''
-    URL.revokeObjectURL(url)
-  }
-}
-
-/**
  * Miniatura para a grelha, feita no browser.
  *
  * Serve fotografias e vídeos. Num vídeo o fotograma vem de `fotogramaDeVideo`;
@@ -79,8 +26,18 @@ async function fotogramaDeVideo(f: Blob): Promise<Blob | null> {
  */
 async function miniatura(f: Blob, tipo: string): Promise<ArrayBuffer | null> {
   if (tipo.startsWith('video/')) {
-    const fotograma = await fotogramaDeVideo(f)
-    return fotograma ? await bytesDe(fotograma) : null
+    /*
+      O ficheiro não vai para memória: o `createObjectURL` deixa o browser lê-lo
+      do disco à medida que precisa, que é o que permite fazer isto a um vídeo
+      de 500 MB no telemóvel de um convidado.
+    */
+    const endereco = URL.createObjectURL(f)
+    try {
+      const r = await fotogramaDeVideo(endereco, { lado: MINIATURA, tempoMax: 8000 })
+      return r.ok ? await bytesDe(r.jpeg) : null
+    } finally {
+      URL.revokeObjectURL(endereco)
+    }
   }
   try {
     const bitmap = await createImageBitmap(f)
