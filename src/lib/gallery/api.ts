@@ -694,10 +694,28 @@ const realApi = {
    * Passa pela Edge Function porque as credenciais do R2 nunca chegam ao
    * browser — nem ao do admin.
    */
-  async readUrls(keys: string[]): Promise<string[]> {
+  async readUrls(keys: string[], nomes?: string[]): Promise<string[]> {
     if (keys.length === 0) return []
-    const { urls } = await callAdmin<{ urls: string[] }>({ action: 'read-urls', keys })
-    return urls
+    /*
+      Em fatias, porque a função recusa mais de mil chaves de uma vez. Uma
+      galeria de quatrocentas fotografias pede o original, a miniatura e a cópia
+      leve de cada uma, e isso passa o tecto sem ninguém dar por isso: era a
+      pré-visualização a falhar inteira na galeria grande e a funcionar na
+      pequena.
+    */
+    const FATIA = 400
+    const saida: string[] = []
+    for (let i = 0; i < keys.length; i += FATIA) {
+      const { urls } = await callAdmin<{ urls: string[] }>({
+        action: 'read-urls',
+        keys: keys.slice(i, i + FATIA),
+        // Uma chave com nome sai como anexo, para o download se comportar aqui
+        // como se comporta na galeria do cliente.
+        ...(nomes ? { nomes: nomes.slice(i, i + FATIA) } : {}),
+      })
+      saida.push(...urls)
+    }
+    return saida
   },
 
   /** Ids das fotografias marcadas pelo cliente — lido no painel. */

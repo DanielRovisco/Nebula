@@ -8,7 +8,7 @@
 //   { action: 'delete', keys: [...] }
 //     → apaga objetos do R2.
 //
-//   { action: 'read-urls', keys: [...] }
+//   { action: 'read-urls', keys: [...], nomes?: [...] }
 //     → devolve GETs pré-assinados de curta duração. Serve para o painel
 //       pré-visualizar uma galeria exatamente como o cliente a vê, sem ter de
 //       saber a password dele.
@@ -23,7 +23,9 @@
 // aqui, e a verificação abaixo confirma que é mesmo um utilizador válido.)
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { bucketSize, cors, deleteObjects, json, presign, type BucketKind } from '../_shared/r2.ts'
+import {
+  bucketSize, cors, deleteObjects, json, presign, presignDownload, type BucketKind,
+} from '../_shared/r2.ts'
 
 const UPLOAD_TTL = 60 * 15 // 15 min para começar o upload
 const READ_TTL = 60 * 60 * 2 // 2h, igual ao que o cliente recebe
@@ -79,7 +81,18 @@ Deno.serve(async (req) => {
     // Limite defensivo: uma galeria são centenas de ficheiros, não milhares, e
     // assinar sem tecto era um convite a usar isto como oráculo de URLs.
     if (!keys.length || keys.length > 1000) return json({ error: 'bad_request' }, 400)
-    const urls = await Promise.all(keys.map((k) => presign(k, 'GET', READ_TTL, undefined, bucket)))
+    /*
+      Um nome por chave, quando vem, faz o R2 devolver esse ficheiro como anexo.
+      Serve para a pré-visualização do painel: sem isto, descarregar ali abria o
+      vídeo num separador em vez de o guardar, e o que se está a conferir é
+      precisamente a entrega do cliente.
+    */
+    const nomes = Array.isArray(body.nomes) ? body.nomes.map(String) : []
+    const urls = await Promise.all(keys.map((k, i) => (
+      nomes[i]
+        ? presignDownload(k, nomes[i], READ_TTL, bucket)
+        : presign(k, 'GET', READ_TTL, undefined, bucket)
+    )))
     return json({ urls })
   }
 

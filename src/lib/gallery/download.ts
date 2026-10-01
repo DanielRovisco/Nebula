@@ -119,15 +119,19 @@ export async function downloadOne(photo: SignedPhoto, web = false) {
  *
  * O nome leva "leve" à frente e a extensão do formato da cópia, não a do
  * original: a cópia de um `.mov` é um MP4 ou um WebM, e uma extensão errada é um
- * ficheiro que o sistema não sabe abrir.
+ * ficheiro que o sistema não sabe abrir. O painel usa o mesmo nome na
+ * pré-visualização, por isso ele vive à parte.
  */
+export function nomeDaCopiaLeve(fileName: string, previewType: string | null | undefined) {
+  const base = fileName.replace(/\.[^.]+$/, '')
+  return `leve-${base}.${/webm/i.test(previewType ?? '') ? 'webm' : 'mp4'}`
+}
+
 export async function downloadLeve(photo: SignedPhoto) {
   if (!photo.previewDownloadUrl) throw new Error('Sem cópia leve.')
-  const base = photo.fileName.replace(/\.[^.]+$/, '')
-  const extensao = /webm/i.test(photo.previewType ?? '') ? 'webm' : 'mp4'
   await guardarFicheiro(
     photo.previewDownloadUrl,
-    `leve-${base}.${extensao}`,
+    nomeDaCopiaLeve(photo.fileName, photo.previewType),
     photo.previewType,
     photo.previewBytes ?? undefined,
   )

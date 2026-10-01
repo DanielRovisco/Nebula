@@ -12,6 +12,7 @@ import { COVER_FONTS, LOGO_VARIANTS } from '../../lib/gallery/cover'
 import { isVideo, type CoverFont, type LogoVariant } from '../../lib/gallery/types'
 import { slugify } from '../../lib/gallery/helpers'
 import { guardarPassword, lerPassword, mensagemDePartilha } from '../../lib/gallery/partilha'
+import { nomeDaCopiaLeve } from '../../lib/gallery/download'
 import ProvaDeVideo from './ProvaDeVideo'
 import GalleryActivity from './GalleryActivity'
 import GalleryFavorites from './GalleryFavorites'
@@ -336,9 +337,34 @@ export default function GalleryEditor() {
     setPreparando(true)
     setError(null)
     try {
-      const caminhos = photos.flatMap((f) => [f.storagePath, f.thumbPath].filter(Boolean) as string[])
-      const urls = await api.readUrls(caminhos)
+      /*
+        A cópia leve tem de vir aqui, e isto já esteve em falta.
+
+        Faltava, e a pré-visualização entregava o original a si própria: o vídeo
+        que o cliente vê leve, de vinte megabytes, aparecia aqui como o ficheiro
+        da câmara de meio gigabyte. Travava, e travava só aqui, o que mandou
+        procurar o defeito no telemóvel, no formato e no débito durante bem mais
+        tempo do que devia. Uma pré-visualização que não é fiel é pior do que não
+        existir, porque mente com ar de prova.
+      */
+      const caminhos = photos.flatMap(
+        (f) => [f.storagePath, f.thumbPath, f.previewPath].filter(Boolean) as string[],
+      )
+      // E os mesmos ficheiros outra vez, assinados como anexo, para o download
+      // da pré-visualização guardar em vez de abrir.
+      const anexos = photos.flatMap((f) => [
+        { chave: f.storagePath, nome: f.fileName },
+        ...(f.previewPath
+          ? [{ chave: f.previewPath, nome: nomeDaCopiaLeve(f.fileName, f.previewType) }]
+          : []),
+      ])
+
+      const [urls, urlsAnexo] = await Promise.all([
+        api.readUrls(caminhos),
+        api.readUrls(anexos.map((a) => a.chave), anexos.map((a) => a.nome)),
+      ])
       const porCaminho = new Map(caminhos.map((c, i) => [c, urls[i]]))
+      const porAnexo = new Map(anexos.map((a, i) => [a.chave, urlsAnexo[i]]))
 
       const assinadas = photos.map((f) => ({
         id: f.id,
@@ -349,6 +375,11 @@ export default function GalleryEditor() {
         sizeBytes: f.sizeBytes,
         url: porCaminho.get(f.storagePath) ?? null,
         thumbUrl: f.thumbPath ? porCaminho.get(f.thumbPath) ?? null : null,
+        previewUrl: f.previewPath ? porCaminho.get(f.previewPath) ?? null : null,
+        previewType: f.previewType,
+        previewBytes: f.previewBytes,
+        previewDownloadUrl: f.previewPath ? porAnexo.get(f.previewPath) ?? null : null,
+        downloadUrl: porAnexo.get(f.storagePath) ?? null,
       }))
       const capa = gallery.coverPhotoId
         ? assinadas.find((f) => f.id === gallery.coverPhotoId)
@@ -365,7 +396,10 @@ export default function GalleryEditor() {
           coverTitle: gallery.coverTitle,
           coverFont: gallery.coverFont,
           logoVariant: gallery.logoVariant,
-          coverUrl: capa?.url ?? assinadas[0]?.url ?? null,
+            // A capa também pela cópia leve: uma capa em vídeo toca em ciclo, e
+          // em ciclo o original não arranca num telemóvel.
+          coverUrl: capa?.previewUrl ?? capa?.url ?? assinadas[0]?.previewUrl
+            ?? assinadas[0]?.url ?? null,
           expiresAt: gallery.expiresAt,
           coverIsVideo: Boolean((capa ?? assinadas[0])?.contentType?.startsWith('video/')),
         },

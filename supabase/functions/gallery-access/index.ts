@@ -143,7 +143,14 @@ Deno.serve(async (req) => {
       logoVariant: gallery.logo_variant ?? 'white',
       // Sem capa escolhida, a primeira foto serve — uma galeria nunca abre num
       // ecrã vazio.
-      coverUrl: cover?.url ?? signed[0]?.url ?? null,
+      /*
+        A capa dá a cópia leve quando a há.
+
+        Uma capa em vídeo toca em ciclo e é a primeira coisa que o cliente vê.
+        Com o original, isso é meio gigabyte a descarregar antes de se ver a
+        galeria, e num telemóvel não arranca.
+      */
+      coverUrl: cover?.previewUrl ?? cover?.url ?? signed[0]?.previewUrl ?? signed[0]?.url ?? null,
       // Uma capa em vídeo é reproduzida em ciclo; uma imagem é uma imagem.
       coverIsVideo: Boolean((cover ?? signed[0])?.contentType?.startsWith('video/')),
       // Quando a galeria fecha. Null = sem prazo.
