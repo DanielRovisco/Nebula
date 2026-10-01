@@ -1,5 +1,6 @@
 import { DEMO, anonKey, functionsUrl, supabase } from './config'
 import { fotogramaDeVideo } from '../fotograma'
+import { DEBITO_QUE_JA_CHEGA, sabeConverter, versaoLeveDeVideo } from '../versaoLeve'
 import { dataDaFotografia } from './exif'
 import { demoApi } from './demo'
 import type { Espaco, Gallery, GalleryAccess, GalleryEvent, GalleryPatch, NewGallery, Photo } from './types'
@@ -149,6 +150,8 @@ const rowToPhoto = (r: Record<string, unknown>): Photo => ({
   durationSeconds: r.duration_seconds === null || r.duration_seconds === undefined
     ? null
     : Number(r.duration_seconds),
+  previewPath: (r.preview_path as string) ?? null,
+  previewType: (r.preview_type as string) ?? null,
   sortOrder: (r.sort_order as number) ?? 0,
 })
 
@@ -281,9 +284,14 @@ const realApi = {
     const sb = supabase()
     // Apagar os ficheiros primeiro: a linha some por cascade e depois já não
     // saberíamos que caminhos limpar, deixando o storage a pagar por lixo.
-    const { data: photos } = await sb.from('photos').select('storage_path, thumb_path').eq('gallery_id', id)
+    // A cópia leve dos vídeos conta: esquecê-la deixava no bucket um ficheiro
+    // por galeria apagada, pago e invisível.
+    const { data: photos } = await sb
+      .from('photos')
+      .select('storage_path, thumb_path, preview_path')
+      .eq('gallery_id', id)
     const paths = (photos ?? []).flatMap((p) =>
-      [p.storage_path, p.thumb_path].filter(Boolean) as string[],
+      [p.storage_path, p.thumb_path, p.preview_path].filter(Boolean) as string[],
     )
     if (paths.length) await callAdmin({ action: 'delete', keys: paths })
     const { error } = await sb.from('galleries').delete().eq('id', id)
@@ -294,7 +302,15 @@ const realApi = {
     galleryId: string,
     files: File[],
     onProgress: (done: number) => void,
-    options: { maxEdge?: number | null } = {},
+    options: {
+      maxEdge?: number | null
+      /*
+        Vai dizendo em que parte vai a conversão de cada vídeo. Sem isto, quem
+        carrega um vídeo de cinco minutos fica cinco minutos a olhar para uma
+        barra parada, e conclui, com razão, que aquilo bloqueou.
+      */
+      aoConverter?: (nome: string, fraccao: number) => void
+    } = {},
   ) {
     const sb = supabase()
     const { data: existing } = await sb
@@ -349,6 +365,14 @@ const realApi = {
       })
       await putToR2(full.url, payload, contentType)
 
+      /*
+        A cópia leve, feita aqui no browser antes de a linha entrar.
+
+        Só para vídeos, e só quando vale a pena: um ficheiro que já esteja
+        abaixo do que um telemóvel aguenta não ganha nada em ser convertido, e
+        converter é lento — o vídeo é lido ao ritmo a que toca.
+      */
+      let preview: { key: string; tipo: string } | null = null
       let storedThumb: string | null = null
       let segundos: number | null = null
       try {
@@ -374,10 +398,34 @@ const realApi = {
         // uma falha aqui não deve abortar o upload.
       }
 
+      const debitoOriginal = segundos ? (payload.size * 8) / segundos : null
+      if (video && sabeConverter() && (debitoOriginal === null || debitoOriginal > DEBITO_QUE_JA_CHEGA)) {
+        try {
+          const leve = await versaoLeveDeVideo(file, (f) =>
+            options.aoConverter?.(file.name, f))
+          if (leve) {
+            const alvo = await callAdmin<{ key: string; url: string }>({
+              action: 'upload-url',
+              galleryId,
+              fileName: `leve-${file.name}`,
+              contentType: leve.tipo,
+              kind: 'full',
+            })
+            await putToR2(alvo.url, leve.blob, leve.tipo)
+            preview = { key: alvo.key, tipo: leve.tipo }
+            if (segundos === null) segundos = leve.segundos
+          }
+        } catch {
+          // Sem cópia leve a galeria mostra o original, como sempre fez.
+        }
+      }
+
       const { error } = await sb.from('photos').insert({
         gallery_id: galleryId,
         storage_path: full.key,
         thumb_path: storedThumb,
+        preview_path: preview?.key ?? null,
+        preview_type: preview?.tipo ?? null,
         file_name: file.name,
         content_type: contentType,
         width,
@@ -413,6 +461,7 @@ const realApi = {
    */
   async gerarMiniaturaDeVideo(
     photo: Photo,
+    aoConverter?: (fraccao: number) => void,
   ): Promise<'feita' | 'sem_video' | 'sem_fotograma' | 'falhou'> {
     try {
       const [url] = await this.readUrls([photo.storagePath])
@@ -435,9 +484,47 @@ const realApi = {
       })
       await putToR2(t.url, r.imagem, 'image/webp')
 
+      /*
+        E a cópia leve, pelo mesmo caminho.
+
+        Aqui o vídeo vem da rede e não do disco, por isso é mais lento do que no
+        upload — mas é uma vez por vídeo, no portátil de quem edita, e evita ter
+        de voltar a carregar o ficheiro todo só para ter uma versão que corra
+        num telemóvel.
+      */
+      let preview: { key: string; tipo: string } | null = null
+      const debito = photo.sizeBytes && r.segundos
+        ? (photo.sizeBytes * 8) / r.segundos
+        : null
+      if (sabeConverter() && (debito === null || debito > DEBITO_QUE_JA_CHEGA)) {
+        try {
+          const fonte = await fetch(url, { cache: 'no-store' })
+          if (fonte.ok) {
+            const leve = await versaoLeveDeVideo(await fonte.blob(), aoConverter)
+            if (leve) {
+              const alvo = await callAdmin<{ key: string; url: string }>({
+                action: 'upload-url',
+                galleryId: photo.galleryId,
+                fileName: `leve-${photo.fileName}`,
+                contentType: leve.tipo,
+                kind: 'full',
+              })
+              await putToR2(alvo.url, leve.blob, leve.tipo)
+              preview = { key: alvo.key, tipo: leve.tipo }
+            }
+          }
+        } catch {
+          // Fica sem cópia leve; a miniatura já é um ganho.
+        }
+      }
+
       const { error } = await supabase()
         .from('photos')
-        .update({ thumb_path: t.key, duration_seconds: r.segundos })
+        .update({
+          thumb_path: t.key,
+          duration_seconds: r.segundos,
+          ...(preview ? { preview_path: preview.key, preview_type: preview.tipo } : {}),
+        })
         .eq('id', photo.id)
       if (error) return 'falhou'
       return 'feita'
@@ -450,11 +537,12 @@ const realApi = {
     const sb = supabase()
     const { data } = await sb
       .from('photos')
-      .select('storage_path, thumb_path')
+      .select('storage_path, thumb_path, preview_path')
       .eq('id', photoId)
       .single()
     if (data) {
-      const paths = [data.storage_path, data.thumb_path].filter(Boolean) as string[]
+      const paths = [data.storage_path, data.thumb_path, data.preview_path]
+        .filter(Boolean) as string[]
       if (paths.length) await callAdmin({ action: 'delete', keys: paths })
     }
     const { error } = await sb.from('photos').delete().eq('id', photoId)

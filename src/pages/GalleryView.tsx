@@ -566,14 +566,28 @@ export default function GalleryView() {
 
             <div className="flex-1 min-h-0 flex items-center justify-center px-2 sm:px-16 pb-6">
               {isVideo(current) ? (
+                /*
+                  Duas fontes, a leve primeiro.
+
+                  O leitor fica com a primeira que souber ler. A cópia leve é
+                  1080p a cinco megabits e corre num telemóvel; o original vem
+                  da câmara a quinze ou vinte e só corre com rede a sério. Pondo
+                  as duas, quem não souber ler o formato da leve — um iPhone
+                  antigo com um WebM, por exemplo — cai no original sozinho, em
+                  vez de ficar com um ecrã preto.
+                */
                 <video
                   key={current.id}
-                  src={current.url ?? ''}
                   controls
                   autoPlay
                   playsInline
                   className="max-w-full max-h-full"
-                />
+                >
+                  {current.previewUrl && (
+                    <source src={current.previewUrl} type={current.previewType ?? undefined} />
+                  )}
+                  <source src={current.url ?? ''} type={current.contentType ?? undefined} />
+                </video>
               ) : (
                 <img
                   key={current.id}

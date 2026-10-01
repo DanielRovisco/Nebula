@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
 
   const { data: photos, error: photosError } = await admin
     .from('photos')
-    .select('id, storage_path, thumb_path, file_name, content_type, width, height, size_bytes, sort_order')
+    .select('id, storage_path, thumb_path, preview_path, preview_type, file_name, content_type, width, height, size_bytes, sort_order')
     .eq('gallery_id', gallery.id)
     .order('sort_order', { ascending: true })
   if (photosError) {
@@ -73,6 +73,14 @@ Deno.serve(async (req) => {
       height: p.height,
       sizeBytes: p.size_bytes,
       url: await presign(p.storage_path, 'GET', SIGNED_URL_TTL),
+      /*
+        A cópia leve do vídeo, quando existe. É esta que a galeria mostra: o
+        original de uma câmara não corre num telemóvel. O original continua a
+        ser o que se descarrega, e também a segunda fonte do leitor, para quem
+        não souber ler o formato da leve.
+      */
+      previewUrl: p.preview_path ? await presign(p.preview_path, 'GET', SIGNED_URL_TTL) : null,
+      previewType: p.preview_type ?? null,
       thumbUrl: p.thumb_path ? await presign(p.thumb_path, 'GET', SIGNED_URL_TTL) : null,
       // Segundo URL, do mesmo ficheiro, que o R2 devolve como anexo. Serve o
       // download de uma foto sozinha sem passar por `fetch`, ou seja sem

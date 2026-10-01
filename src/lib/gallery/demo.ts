@@ -75,6 +75,8 @@ function seed(): DemoState {
     // Uma hora entre cada, para a ordenação por data ter o que ordenar.
     takenAt: new Date(Date.now() - 864e5 * 3 + i * 36e5).toISOString(),
     durationSeconds: null,
+    previewPath: null,
+    previewType: null,
     sortOrder: i,
   }))
 
@@ -89,6 +91,7 @@ function seed(): DemoState {
       storagePath: '', thumbPath: asset('/brand/portfolio/forest-bride-480.webp'),
       fileName: 'Primeiro beijo.mp4', contentType: 'video/mp4',
       width: 1920, height: 1080, sizeBytes: 24_000_000, durationSeconds: 180,
+      previewPath: null, previewType: null,
       takenAt: null, sortOrder: photos.length,
     },
     {
@@ -96,6 +99,7 @@ function seed(): DemoState {
       storagePath: '', thumbPath: asset('/brand/portfolio/forest-bride-480.webp'),
       fileName: 'Primeira danca.mp4', contentType: 'video/mp4',
       width: 3840, height: 2160, sizeBytes: 43_428_000, durationSeconds: 20,
+      previewPath: null, previewType: null,
       takenAt: null, sortOrder: photos.length + 1,
     },
   )
@@ -252,6 +256,8 @@ export const demoApi = {
         height: null,
         sizeBytes: file.size,
         durationSeconds: null,
+        previewPath: null,
+        previewType: null,
         sortOrder: s.photos.filter((p) => p.galleryId === galleryId).length,
       })
       onProgress(++done)

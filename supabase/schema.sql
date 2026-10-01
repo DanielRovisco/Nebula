@@ -89,7 +89,23 @@ alter table photos
     já está aberto. Fica nula nas fotografias e nos vídeos antigos, até alguém
     lhes mandar fazer a imagem.
   */
-  add column if not exists duration_seconds numeric;
+  add column if not exists duration_seconds numeric,
+  /*
+    A cópia leve de um vídeo, e o tipo dela.
+
+    O original de uma câmara anda nos quinze ou vinte megabits por segundo e não
+    corre num telemóvel — medido: a 25 Mbps de rede corre, a dez nem arranca. A
+    cópia leve é feita no browser de quem carrega, a 1080p e cinco megabits, e é
+    ela que a galeria mostra. O original fica intacto e é o que se descarrega.
+
+    O tipo guarda-se porque não é sempre o mesmo: conforme o browser que a fez,
+    sai MP4 ou WebM. A galeria dá as duas fontes ao leitor — a leve primeiro, o
+    original a seguir — e quem não souber ler a leve cai no original sozinho.
+
+    Nulo nos vídeos antigos e em todas as fotografias.
+  */
+  add column if not exists preview_path text,
+  add column if not exists preview_type text;
 
 create index if not exists photos_gallery_idx on photos (gallery_id, sort_order);
 create index if not exists galleries_slug_idx on galleries (slug);

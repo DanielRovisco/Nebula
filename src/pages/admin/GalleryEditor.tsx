@@ -27,6 +27,7 @@ export default function GalleryEditor() {
   const [notice, setNotice] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [upload, setUpload] = useState<{ done: number; total: number } | null>(null)
+  const [conversao, setConversao] = useState<{ nome: string; percentagem: number } | null>(null)
   const [newPassword, setNewPassword] = useState('')
   const [preparando, setPreparando] = useState(false)
   // Ligado por omissão: uma galeria de entrega não precisa da resolução da
@@ -64,7 +65,9 @@ export default function GalleryEditor() {
   */
   const [thumbs, setThumbs] = useState<Record<string, string>>({})
   /** Vídeos sem fotograma, e o andamento de os fazer. */
-  const [miniaturas, setMiniaturas] = useState<{ feitas: number; total: number } | null>(null)
+  const [miniaturas, setMiniaturas] = useState<
+    { feitas: number; total: number; aConverter?: number } | null
+  >(null)
   const [recado, setRecado] = useState<string | null>(null)
   useEffect(() => {
     if (!photos.length) return
@@ -123,8 +126,17 @@ export default function GalleryEditor() {
         gallery.id,
         files,
         (done) => setUpload({ done, total: files.length }),
-        { maxEdge: shrink ? DELIVERY_EDGE : null },
+        {
+          maxEdge: shrink ? DELIVERY_EDGE : null,
+          /*
+            A conversão de um vídeo demora o tempo do próprio vídeo. Sem este
+            andamento, quem carrega um de cinco minutos fica cinco minutos a
+            olhar para uma barra parada e conclui, com razão, que bloqueou.
+          */
+          aoConverter: (nome, f) => setConversao({ nome, percentagem: Math.round(f * 100) }),
+        },
       )
+      setConversao(null)
       load()
       flash(`${files.length} ${files.length === 1 ? 'foto adicionada' : 'fotos adicionadas'}.`)
     } catch (e) {
@@ -181,7 +193,12 @@ export default function GalleryEditor() {
    * ficheiro não têm relação nenhuma entre si e a ordem por nome conta o dia
    * aos saltos.
    */
-  const semMiniatura = photos.filter((p) => isVideo(p) && !p.thumbPath)
+  /*
+    Vídeos por tratar: sem imagem na grelha, ou sem a cópia leve que é a que
+    corre num telemóvel. O mesmo botão faz as duas coisas, porque abrir o vídeo
+    é o passo caro e vale a pena aproveitá-lo.
+  */
+  const semMiniatura = photos.filter((p) => isVideo(p) && (!p.thumbPath || !p.previewPath))
 
   /*
     O que um vídeo pede à rede, em megabits por segundo.
@@ -198,7 +215,14 @@ export default function GalleryEditor() {
   const debito = (p: Photo): number | null =>
     p.sizeBytes && p.durationSeconds ? (p.sizeBytes * 8) / p.durationSeconds / 1_000_000 : null
 
-  const pesados = photos.filter((p) => isVideo(p) && (debito(p) ?? 0) > TECTO_MBPS)
+  /*
+    Só se avisa de quem não tem cópia leve. Com ela, o débito do original deixa
+    de interessar: o que o cliente vê é a cópia, e o original só desce quando
+    alguém o descarrega de propósito.
+  */
+  const pesados = photos.filter(
+    (p) => isVideo(p) && !p.previewPath && (debito(p) ?? 0) > TECTO_MBPS,
+  )
 
   async function fazerMiniaturas() {
     if (!semMiniatura.length) return
@@ -208,7 +232,8 @@ export default function GalleryEditor() {
     let semVideo = 0
     // Um de cada vez: cada um traz um vídeo da rede e descodifica um fotograma.
     for (const foto of semMiniatura) {
-      const r = await api.gerarMiniaturaDeVideo(foto)
+      const r = await api.gerarMiniaturaDeVideo(foto, (f) =>
+        setMiniaturas({ feitas, total: semMiniatura.length, aConverter: Math.round(f * 100) }))
       if (r === 'feita') feitas++
       else if (r === 'sem_video') semVideo++
       setMiniaturas({ feitas, total: semMiniatura.length })
@@ -497,10 +522,12 @@ export default function GalleryEditor() {
             >
               <Film size={13} />
               {miniaturas
-                ? `A fazer… ${miniaturas.feitas} de ${miniaturas.total}`
+                ? miniaturas.aConverter !== undefined
+                  ? `A converter… ${miniaturas.feitas + 1} de ${miniaturas.total} · ${miniaturas.aConverter}%`
+                  : `A fazer… ${miniaturas.feitas} de ${miniaturas.total}`
                 : semMiniatura.length === 1
-                  ? 'Fazer a imagem do vídeo'
-                  : `Fazer as imagens dos ${semMiniatura.length} vídeos`}
+                  ? 'Preparar o vídeo'
+                  : `Preparar os ${semMiniatura.length} vídeos`}
             </button>
           )}
           {/*
@@ -549,11 +576,23 @@ export default function GalleryEditor() {
         </label>
 
         {upload && (
-          <div className="h-px bg-white/10 mb-6 overflow-hidden">
-            <div
-              className="h-full bg-titanium transition-[width] duration-300"
-              style={{ width: `${Math.round((upload.done / upload.total) * 100)}%` }}
-            />
+          <div className="mb-6">
+            <div className="h-px bg-white/10 overflow-hidden">
+              <div
+                className="h-full bg-titanium transition-[width] duration-300"
+                style={{ width: `${Math.round((upload.done / upload.total) * 100)}%` }}
+              />
+            </div>
+            {/*
+              A conversão de um vídeo demora o tempo do próprio vídeo, e durante
+              esse tempo a barra de cima não mexe. Esta linha diz porquê.
+            */}
+            {conversao && (
+              <p className="text-xs text-titanium/40 mt-2">
+                A preparar a versão leve de “{conversao.nome}” — {conversao.percentagem}%.
+                Demora o tempo do vídeo. Deixa a página aberta.
+              </p>
+            )}
           </div>
         )}
 
@@ -562,9 +601,9 @@ export default function GalleryEditor() {
             {pesados.length === 1
               ? `Um vídeo está acima dos ${TECTO_MBPS} Mbps e vai encravar num telemóvel.`
               : `${pesados.length} vídeos estão acima dos ${TECTO_MBPS} Mbps e vão encravar num telemóvel.`}
-            {' '}O ficheiro sobe tal como foi carregado, e o site não o pode tornar mais leve:
-            exporta outra vez a 1080p e uns {TECTO_MBPS} Mbps, apaga o que está aqui e carrega o
-            novo. No computador corre à mesma, por isso é fácil não dar por isto.
+            {' '}Carrega em "Preparar os vídeos" aqui em cima: faz-se uma cópia a 1080p que
+            corre em qualquer lado, e o original fica guardado para o download. No computador
+            corre à mesma, por isso é fácil não dar por isto.
           </p>
         )}
 
@@ -632,13 +671,14 @@ export default function GalleryEditor() {
                   {isVideo(photo) && debito(photo) !== null && (
                     <span
                       className={`absolute bottom-1 left-1 right-1 px-1.5 py-0.5 rounded text-[9px] text-center pointer-events-none ${
-                        debito(photo)! > TECTO_MBPS
+                        !photo.previewPath && debito(photo)! > TECTO_MBPS
                           ? 'bg-amber-300/90 text-eerie'
                           : 'bg-eerie/70 text-titanium/70'
                       }`}
                     >
-                      {debito(photo)!.toFixed(1)} Mbps
-                      {photo.height ? ` · ${photo.height}p` : ''}
+                      {photo.previewPath
+                        ? 'leve pronta'
+                        : `${debito(photo)!.toFixed(1)} Mbps${photo.height ? ` · ${photo.height}p` : ''}`}
                     </span>
                   )}
 

@@ -37,6 +37,9 @@ export interface Photo {
   takenAt: string | null
   /** Duração em segundos, nos vídeos. Com o tamanho, dá o débito do ficheiro. */
   durationSeconds: number | null
+  /** A cópia leve, que é a que se vê. Nula quando não há. */
+  previewPath: string | null
+  previewType: string | null
   sortOrder: number
 }
 
@@ -57,6 +60,9 @@ export interface SignedPhoto {
    * traz. Nesse caso o download volta ao caminho antigo, que precisa de CORS.
    */
   downloadUrl?: string | null
+  /** A cópia leve, para o leitor experimentar antes do original. */
+  previewUrl?: string | null
+  previewType?: string | null
 }
 
 /** Um item é vídeo se o content type o disser, ou pela extensão em dados antigos. */
