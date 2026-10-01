@@ -12,6 +12,7 @@ import { COVER_FONTS, LOGO_VARIANTS } from '../../lib/gallery/cover'
 import { isVideo, type CoverFont, type LogoVariant } from '../../lib/gallery/types'
 import { slugify } from '../../lib/gallery/helpers'
 import { guardarPassword, lerPassword, mensagemDePartilha } from '../../lib/gallery/partilha'
+import ProvaDeVideo from './ProvaDeVideo'
 import GalleryActivity from './GalleryActivity'
 import GalleryFavorites from './GalleryFavorites'
 
@@ -69,6 +70,8 @@ export default function GalleryEditor() {
     { feitas: number; total: number; aConverter?: number } | null
   >(null)
   const [recado, setRecado] = useState<string | null>(null)
+  /** O vídeo que está a ser posto à prova, quando há um. */
+  const [prova, setProva] = useState<Photo | null>(null)
   useEffect(() => {
     if (!photos.length) return
     let vivo = true
@@ -716,12 +719,23 @@ export default function GalleryEditor() {
                     <span className="absolute inset-0 bg-white/[0.04]" />
                   )}
                   <div className="absolute inset-0 bg-eerie/0 group-hover:bg-eerie/50 transition-colors" />
+                  {/*
+                    O triângulo deixa de ser um enfeite e passa a abrir o vídeo
+                    com os números à frente. É assim que se descobre, no próprio
+                    telemóvel, se um vídeo que trava está a parar por falta de
+                    rede ou a deixar cair imagens por falta de descodificador.
+                  */}
                   {isVideo(photo) && (
-                    <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <button
+                      onClick={() => setProva(photo)}
+                      aria-label={`Testar ${photo.fileName}`}
+                      title="Ver e medir"
+                      className="absolute inset-0 flex items-center justify-center"
+                    >
                       <span className="w-8 h-8 rounded-full bg-eerie/60 flex items-center justify-center">
                         <Play size={12} className="text-titanium ml-0.5" fill="currentColor" />
                       </span>
-                    </span>
+                    </button>
                   )}
                   {/*
                     O débito do vídeo, por baixo. Sem este número, "não corre no
@@ -1046,6 +1060,8 @@ export default function GalleryEditor() {
           Apagar galeria
         </button>
       </section>
+
+      {prova && <ProvaDeVideo photo={prova} aoFechar={() => setProva(null)} />}
     </div>
   )
 }

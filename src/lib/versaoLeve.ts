@@ -62,6 +62,34 @@ export const DEBITO_LEVE = 2_500_000
 export const DEBITO_QUE_JA_CHEGA = 3_500_000
 
 /**
+ * Trinta imagens por segundo, no máximo.
+ *
+ * Um vídeo a 50 ou 60 dá o dobro do trabalho ao descodificador e, para o mesmo
+ * débito, metade dos bits por imagem: num telemóvel isso é a diferença entre
+ * correr e engasgar. Trinta num ecrã de telefone não se distingue de sessenta.
+ *
+ * Só se baixa, nunca se sobe: forçar trinta num vídeo de cinema a 24 obrigava a
+ * repetir uma imagem a cada quatro, e isso vê-se no movimento.
+ */
+const FPS_MAXIMO = 30
+
+/**
+ * O perfil do H.264 que se pede ao codificador.
+ *
+ * Um ficheiro pode dizer H.264 e continuar a não ter descodificador em
+ * hardware: os perfis altos (o High 10, por exemplo, que é por onde sai um vídeo
+ * de dez bits) são descodificados por software nos telemóveis, e aí trava
+ * exactamente como travava o VP9.
+ *
+ * `4D40` é o Main e `42E0` é o Baseline; `28` é o nível 4.0, que chega até
+ * 1080p a trinta imagens. Qualquer iPhone ou Android dos últimos quinze anos
+ * descodifica isto no chip. Experimenta-se pela ordem escrita e, se o browser
+ * não aceitar nenhum, deixa-se a biblioteca escolher, que é melhor do que não
+ * haver cópia leve.
+ */
+const PERFIS_H264 = ['avc1.4D4028', 'avc1.42E028']
+
+/**
  * Uma imagem nova a cada dois segundos.
  *
  * Imagens completas são as únicas por onde se pode começar a ler, e portanto as
@@ -107,9 +135,9 @@ export const sabeConverter = (): boolean =>
  * são o que resta quando o browser de quem carrega não sabe fazer H.264.
  */
 const ALVOS = [
-  { codec: 'avc', contentor: 'mp4', tipo: 'video/mp4', temHardware: true },
-  { codec: 'vp9', contentor: 'webm', tipo: 'video/webm', temHardware: false },
-  { codec: 'vp8', contentor: 'webm', tipo: 'video/webm', temHardware: false },
+  { codec: 'avc', contentor: 'mp4', tipo: 'video/mp4', som: 'aac', temHardware: true },
+  { codec: 'vp9', contentor: 'webm', tipo: 'video/webm', som: 'opus', temHardware: false },
+  { codec: 'vp8', contentor: 'webm', tipo: 'video/webm', som: 'opus', temHardware: false },
 ] as const
 
 /**
@@ -128,23 +156,46 @@ export async function versaoLeveDeVideo(
   try {
     const mb = await import('mediabunny')
 
+    /*
+      Escolhe-se o vídeo e o som ao mesmo tempo, e não um depois do outro.
+
+      Cada contentor tem um som que todos os aparelhos lêem: num MP4 é o AAC,
+      num WebM é o Opus. Opus dentro de um MP4 é um ficheiro válido que um iPhone
+      abre sem som nenhum, o que é pior do que não haver cópia leve, porque passa
+      despercebido a quem carrega e não a quem vê. Por isso, se este browser sabe
+      fazer H.264 mas não sabe fazer AAC, desce-se para o WebM inteiro em vez de
+      se montar um MP4 meio coxo.
+    */
     let alvo: (typeof ALVOS)[number] | null = null
     for (const a of ALVOS) {
-      if (await mb.canEncodeVideo(a.codec)) { alvo = a; break }
+      if (!(await mb.canEncodeVideo(a.codec))) continue
+      if (!(await mb.canEncodeAudio(a.som))) continue
+      alvo = a
+      break
     }
     if (!alvo) return null
+    const codecSom = alvo.som
 
     /*
-      O som é à parte, e tem o mesmo problema do formato.
-
-      Num MP4, o que todos os aparelhos lêem é AAC. A mediabunny também escreve
-      Opus dentro de um MP4, e é um ficheiro válido, mas um iPhone abre-o sem
-      som — o que é pior do que não ter cópia leve, porque passa despercebido a
-      quem carrega e não a quem vê. Daí a ordem.
+      Qual dos perfis é que este browser aceita de facto. Pergunta-se antes de
+      converter porque uma configuração recusada a meio deixava o vídeo sem cópia
+      nenhuma, e porque a resposta é diferente de máquina para máquina.
     */
-    const codecSom = alvo.contentor === 'mp4'
-      ? ((await mb.canEncodeAudio('aac')) ? 'aac' : 'opus')
-      : ((await mb.canEncodeAudio('opus')) ? 'opus' : 'aac')
+    let perfil: string | undefined
+    if (alvo.codec === 'avc') {
+      for (const candidato of PERFIS_H264) {
+        try {
+          const r = await VideoEncoder.isConfigSupported({
+            codec: candidato,
+            width: LADO_CURTO_LEVE,
+            height: LADO_CURTO_LEVE,
+            bitrate: DEBITO_LEVE,
+            framerate: FPS_MAXIMO,
+          })
+          if (r.supported) { perfil = candidato; break }
+        } catch { /* um candidato inválido não é motivo para desistir do resto */ }
+      }
+    }
 
     const input = new mb.Input({
       source: new mb.BlobSource(ficheiro),
@@ -170,6 +221,16 @@ export async function versaoLeveDeVideo(
       ficar exacta. E não se amplia nada: um vídeo que já esteja abaixo de 720
       mantém o tamanho e só perde débito.
     */
+    /*
+      As imagens por segundo da entrada, para só se baixar quando há o que
+      baixar. Mede-se por amostragem dos primeiros pacotes, o que num ficheiro
+      de meio gigabyte custa a leitura de um bocadinho do início.
+    */
+    let fps: number | null = null
+    try {
+      fps = (await faixa.computePacketStats(120)).averagePacketRate || null
+    } catch { /* sem este número mantém-se o ritmo original */ }
+
     const reduzir = curto > LADO_CURTO_LEVE
     const medida = !reduzir ? {} : deitado
       ? { height: LADO_CURTO_LEVE }
@@ -193,6 +254,8 @@ export async function versaoLeveDeVideo(
       video: {
         ...medida,
         codec: alvo.codec,
+        ...(perfil ? { fullCodecString: perfil } : {}),
+        ...(fps && fps > FPS_MAXIMO + 1 ? { frameRate: FPS_MAXIMO } : {}),
         quality: new mb.Quality({ bitrate: DEBITO_LEVE, bitrateMode: 'variable' }),
         keyFrameInterval: INTERVALO_IMAGEM_COMPLETA,
         /*
