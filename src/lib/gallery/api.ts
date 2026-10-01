@@ -155,6 +155,26 @@ const rowToPhoto = (r: Record<string, unknown>): Photo => ({
   sortOrder: (r.sort_order as number) ?? 0,
 })
 
+/** O que aconteceu à cópia leve de um vídeo ao prepará-lo. */
+export type EstadoLeve =
+  | 'feita'
+  /** O original já é leve o suficiente; converter não dava nada. */
+  | 'nao_precisa'
+  /** Este browser não tem as peças para converter. */
+  | 'browser_nao_sabe'
+  /** Não se conseguiu trazer o original. Quase sempre é o CORS do bucket. */
+  | 'nao_trouxe'
+  /** Trouxe-se, mas a conversão não deu nada de útil. */
+  | 'nao_converteu'
+  /** Nem se chegou a tentar: a imagem falhou primeiro. */
+  | 'sem_imagem'
+  | 'falhou'
+
+export interface ResultadoPreparar {
+  imagem: 'feita' | 'sem_video' | 'sem_fotograma' | 'falhou'
+  leve: EstadoLeve
+}
+
 const realApi = {
   async signIn(email: string, password: string) {
     const { data, error } = await supabase().auth.signInWithPassword({ email, password })
@@ -462,10 +482,10 @@ const realApi = {
   async gerarMiniaturaDeVideo(
     photo: Photo,
     aoConverter?: (fraccao: number) => void,
-  ): Promise<'feita' | 'sem_video' | 'sem_fotograma' | 'falhou'> {
+  ): Promise<ResultadoPreparar> {
     try {
       const [url] = await this.readUrls([photo.storagePath])
-      if (!url) return 'falhou'
+      if (!url) return { imagem: 'falhou', leve: 'falhou' }
       const r = await fotogramaDeVideo(url, {
         lado: THUMB_EDGE,
         cruzado: true,
@@ -473,7 +493,7 @@ const realApi = {
         qualidade: THUMB_QUALITY,
         tempoMax: 20000,
       })
-      if (!r.ok) return r.porque
+      if (!r.ok) return { imagem: r.porque, leve: 'sem_imagem' }
 
       const t = await callAdmin<{ key: string; url: string }>({
         action: 'upload-url',
@@ -492,29 +512,50 @@ const realApi = {
         de voltar a carregar o ficheiro todo só para ter uma versão que corra
         num telemóvel.
       */
+      /*
+        E a cópia leve.
+
+        Cada passo diz o que lhe aconteceu, e não é por preciosismo: antes isto
+        era um `try` mudo à volta de tudo, e uma falha a trazer o ficheiro
+        deixava o vídeo sem cópia leve enquanto o botão dizia que tinha
+        corrido bem. Quem carregasse ficava convencido de que estava tratado.
+      */
       let preview: { key: string; tipo: string } | null = null
+      let leve: EstadoLeve = 'falhou'
       const debito = photo.sizeBytes && r.segundos
         ? (photo.sizeBytes * 8) / r.segundos
         : null
-      if (sabeConverter() && (debito === null || debito > DEBITO_QUE_JA_CHEGA)) {
+
+      if (!sabeConverter()) {
+        leve = 'browser_nao_sabe'
+      } else if (debito !== null && debito <= DEBITO_QUE_JA_CHEGA) {
+        leve = 'nao_precisa'
+      } else {
         try {
           const fonte = await fetch(url, { cache: 'no-store' })
-          if (fonte.ok) {
-            const leve = await versaoLeveDeVideo(await fonte.blob(), aoConverter)
-            if (leve) {
+          if (!fonte.ok) {
+            leve = 'nao_trouxe'
+          } else {
+            const feita = await versaoLeveDeVideo(await fonte.blob(), aoConverter)
+            if (!feita) {
+              leve = 'nao_converteu'
+            } else {
               const alvo = await callAdmin<{ key: string; url: string }>({
                 action: 'upload-url',
                 galleryId: photo.galleryId,
                 fileName: `leve-${photo.fileName}`,
-                contentType: leve.tipo,
+                contentType: feita.tipo,
                 kind: 'full',
               })
-              await putToR2(alvo.url, leve.blob, leve.tipo)
-              preview = { key: alvo.key, tipo: leve.tipo }
+              await putToR2(alvo.url, feita.blob, feita.tipo)
+              preview = { key: alvo.key, tipo: feita.tipo }
+              leve = 'feita'
             }
           }
         } catch {
-          // Fica sem cópia leve; a miniatura já é um ganho.
+          // Um `fetch` barrado pelo CORS chega aqui como um erro sem nada
+          // dentro: o browser recusa-se a dizer o que correu mal.
+          leve = 'nao_trouxe'
         }
       }
 
@@ -526,10 +567,10 @@ const realApi = {
           ...(preview ? { preview_path: preview.key, preview_type: preview.tipo } : {}),
         })
         .eq('id', photo.id)
-      if (error) return 'falhou'
-      return 'feita'
+      if (error) return { imagem: 'falhou', leve }
+      return { imagem: 'feita', leve }
     } catch {
-      return 'falhou'
+      return { imagem: 'falhou', leve: 'falhou' }
     }
   },
 

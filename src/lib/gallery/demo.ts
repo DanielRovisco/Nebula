@@ -1,3 +1,4 @@
+import type { ResultadoPreparar } from './api'
 import type { Espaco, Gallery, GalleryAccess, GalleryEvent, GalleryPatch, NewGallery, Photo } from './types'
 import { asset } from '../asset'
 
@@ -266,9 +267,9 @@ export const demoApi = {
   },
 
   /* Na demonstração não há vídeos nem R2: não há fotograma para tirar. */
-  async gerarMiniaturaDeVideo(): Promise<'feita' | 'sem_video' | 'sem_fotograma' | 'falhou'> {
+  async gerarMiniaturaDeVideo(): Promise<ResultadoPreparar> {
     await wait(80)
-    return 'sem_video'
+    return { imagem: 'sem_video', leve: 'sem_imagem' }
   },
 
   async deletePhoto(photoId: string) {

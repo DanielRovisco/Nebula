@@ -228,27 +228,61 @@ export default function GalleryEditor() {
     if (!semMiniatura.length) return
     setMiniaturas({ feitas: 0, total: semMiniatura.length })
     setRecado(null)
-    let feitas = 0
+    let imagens = 0
     let semVideo = 0
+    let leves = 0
+    const porque = new Map<string, number>()
+
     // Um de cada vez: cada um traz um vídeo da rede e descodifica um fotograma.
     for (const foto of semMiniatura) {
       const r = await api.gerarMiniaturaDeVideo(foto, (f) =>
-        setMiniaturas({ feitas, total: semMiniatura.length, aConverter: Math.round(f * 100) }))
-      if (r === 'feita') feitas++
-      else if (r === 'sem_video') semVideo++
-      setMiniaturas({ feitas, total: semMiniatura.length })
+        setMiniaturas({ feitas: imagens, total: semMiniatura.length, aConverter: Math.round(f * 100) }))
+      if (r.imagem === 'feita') imagens++
+      else if (r.imagem === 'sem_video') semVideo++
+      if (r.leve === 'feita') leves++
+      else porque.set(r.leve, (porque.get(r.leve) ?? 0) + 1)
+      setMiniaturas({ feitas: imagens, total: semMiniatura.length })
     }
-    if (!feitas && semVideo === semMiniatura.length) {
-      setRecado(
+
+    /*
+      O recado diz as duas coisas em separado.
+
+      Antes falava só das imagens, e dizia que tinha corrido bem mesmo quando
+      nenhuma cópia leve tinha sido feita — que é precisamente a parte que faz o
+      vídeo correr num telemóvel. Quem carregasse ficava convencido de que
+      estava tratado, e não estava.
+    */
+    const RAZOES: Record<string, string> = {
+      nao_trouxe: 'não consegui trazer o original, e quase sempre isso é o CORS do bucket: '
+        + 'Cloudflare → R2 → bucket das galerias → Settings → CORS policy, com a origem '
+        + 'deste site em AllowedOrigins e GET em AllowedMethods',
+      browser_nao_sabe: 'este browser não sabe converter vídeo — experimenta no Chrome ou no Safari',
+      nao_converteu: 'a conversão não deu nada de útil',
+      nao_precisa: 'já eram leves e não precisavam',
+      sem_imagem: 'nem cheguei a tentar, porque não consegui abrir o vídeo',
+      falhou: 'falhou a meio',
+    }
+    const partes: string[] = []
+    if (!imagens && semVideo === semMiniatura.length) {
+      partes.push(
         'Não consegui abrir nenhum dos vídeos. Quase sempre é o CORS do bucket: '
         + 'Cloudflare → R2 → bucket das galerias → Settings → CORS policy, '
         + 'com a origem deste site em AllowedOrigins e GET em AllowedMethods.',
       )
-    } else if (!feitas) {
-      setRecado('Não consegui tirar um fotograma a nenhum destes vídeos.')
-    } else if (feitas < semMiniatura.length) {
-      setRecado(`Fiz ${feitas} de ${semMiniatura.length}. Os outros este browser não abre.`)
+    } else if (imagens < semMiniatura.length) {
+      partes.push(`Imagens: fiz ${imagens} de ${semMiniatura.length}.`)
     }
+    const semLeve = [...porque.entries()].filter(([k]) => k !== 'nao_precisa')
+    if (semLeve.length) {
+      const maior = semLeve.sort((a, b) => b[1] - a[1])[0]
+      const razao = RAZOES[maior[0]] ? ` — ${RAZOES[maior[0]]}` : ''
+      partes.push(
+        leves
+          ? `Cópias leves: fiz ${leves} de ${semMiniatura.length}${razao}.`
+          : `Não fiz nenhuma cópia leve${razao}. Sem ela o vídeo continua com travagens no telemóvel.`,
+      )
+    }
+    setRecado(partes.length ? partes.join(' ') : null)
     load()
     setMiniaturas(null)
   }

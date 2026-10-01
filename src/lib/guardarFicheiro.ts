@@ -40,11 +40,30 @@ export function abrirDownload(url: string) {
   a.remove()
 }
 
+/**
+ * Se vale a pena oferecer o menu de partilha neste aparelho.
+ *
+ * Só em ecrãs de toque. Num computador o menu não resolve nada — o que a pessoa
+ * quer é o ficheiro na pasta das transferências — e traz um problema a sério:
+ * o `navigator.share` existe no Chrome de secretária e pode recusar com
+ * `AbortError`, que é indistinguível de alguém ter cancelado. Como a cancelar
+ * não se abre download nenhum, o resultado era carregar em descarregar e não
+ * acontecer nada.
+ *
+ * Num telemóvel essa ambiguidade não custa: se o menu abriu e a pessoa fechou,
+ * ela sabe o que fez.
+ */
+const ecraDeToque = () =>
+  typeof navigator !== 'undefined' &&
+  typeof window !== 'undefined' &&
+  (navigator.maxTouchPoints > 0 || window.matchMedia?.('(pointer: coarse)').matches)
+
 /** Verdadeiro se o ficheiro chegou a ir para o menu de partilha do sistema. */
 export async function tentarPartilhar(
   url: string, nome?: string, tipo?: string | null, bytes?: number,
 ): Promise<boolean> {
   if (typeof navigator === 'undefined' || !navigator.canShare || !navigator.share) return false
+  if (!ecraDeToque()) return false
   if (bytes && bytes > CABE_NA_PARTILHA) return false
 
   try {
@@ -67,9 +86,10 @@ export async function tentarPartilhar(
     return true
   } catch (e) {
     /*
-      Cancelar o menu de partilha também chega aqui, como `AbortError`. Nesse
-      caso a pessoa decidiu não guardar, e abrir-lhe um download a seguir seria
-      fazer exactamente o que ela acabou de recusar.
+      Num ecrã de toque, `AbortError` é quase sempre alguém a fechar o menu que
+      viu abrir — e abrir-lhe um download a seguir seria fazer exactamente o que
+      acabou de recusar. Chega-se aqui só em ecrãs de toque, por causa do
+      travão lá em cima.
     */
     if ((e as Error)?.name === 'AbortError') return true
     return false
