@@ -1,4 +1,5 @@
 import { DEMO, anonKey, functionsUrl, supabase } from './config'
+import { fotogramaDeVideo } from '../fotograma'
 import { dataDaFotografia } from './exif'
 import { demoApi } from './demo'
 import type { Espaco, Gallery, GalleryAccess, GalleryEvent, GalleryPatch, NewGallery, Photo } from './types'
@@ -81,53 +82,35 @@ export async function putToR2(url: string, blob: Blob, contentType: string) {
 }
 
 /**
- * Miniatura de um vídeo: carrega-o em memória, salta para um fotograma com
- * conteúdo (o primeiro costuma ser preto) e desenha-o para um canvas.
+ * Miniatura de um vídeo, pelo mesmo caminho que as galerias de convidados.
+ *
+ * Tinha aqui uma cópia própria, mais antiga e sem os cuidados que um Safari de
+ * telemóvel exige: sem `muted` e `playsinline` postos também como atributo, e
+ * sem um `play()` a seguir aos metadados, um iOS não descodifica fotograma
+ * nenhum. A miniatura falhava em silêncio — o `catch` de quem chama engole-a —
+ * e o vídeo ficava na galeria sem imagem, que é o estado que faz a grelha
+ * puxar o ficheiro inteiro para não mostrar nada.
+ *
+ * Uma cópia do mesmo cuidado em dois sítios é uma cópia que fica para trás.
  */
 async function videoThumb(file: File): Promise<Resized> {
-  const url = URL.createObjectURL(file)
+  const endereco = URL.createObjectURL(file)
   try {
-    const video = document.createElement('video')
-    video.src = url
-    video.muted = true
-    video.playsInline = true
-    video.preload = 'metadata'
-
-    await new Promise<void>((resolve, reject) => {
-      video.onloadeddata = () => resolve()
-      video.onerror = () => reject(new Error('Vídeo ilegível.'))
-      setTimeout(() => reject(new Error('Vídeo demorou demasiado.')), 15000)
+    const r = await fotogramaDeVideo(endereco, {
+      lado: THUMB_EDGE,
+      tipo: 'image/webp',
+      qualidade: THUMB_QUALITY,
     })
-
-    // Um segundo dentro, ou a meio se for muito curto.
-    video.currentTime = Math.min(1, (video.duration || 2) / 2)
-    await new Promise<void>((resolve, reject) => {
-      video.onseeked = () => resolve()
-      video.onerror = () => reject(new Error('Não foi possível avançar o vídeo.'))
-      setTimeout(() => resolve(), 5000)
-    })
-
-    const ow = video.videoWidth
-    const oh = video.videoHeight
-    const scale = Math.min(1, THUMB_EDGE / Math.max(ow, oh))
-    const canvas = document.createElement('canvas')
-    canvas.width = Math.round(ow * scale)
-    canvas.height = Math.round(oh * scale)
-    canvas.getContext('2d')!.drawImage(video, 0, 0, canvas.width, canvas.height)
-
-    const blob = await new Promise<Blob | null>((res) =>
-      canvas.toBlob(res, 'image/webp', THUMB_QUALITY),
-    )
-    if (!blob) throw new Error('Não foi possível gerar a miniatura do vídeo.')
+    if (!r.ok) throw new Error(`Não foi possível tirar um fotograma ao vídeo (${r.porque}).`)
     return {
-      blob,
-      width: canvas.width,
-      height: canvas.height,
-      originalWidth: ow,
-      originalHeight: oh,
+      blob: r.imagem,
+      width: r.largura,
+      height: r.altura,
+      originalWidth: r.larguraOriginal,
+      originalHeight: r.alturaOriginal,
     }
   } finally {
-    URL.revokeObjectURL(url)
+    URL.revokeObjectURL(endereco)
   }
 }
 
@@ -405,6 +388,52 @@ const realApi = {
         throw new Error(`${file.name}: ${error.message}`)
       }
       onProgress(++done)
+    }
+  },
+
+  /**
+   * Faz a miniatura de um vídeo que ficou sem ela.
+   *
+   * Os vídeos carregados antes de a feitura do fotograma ser endurecida podem
+   * ter ficado sem miniatura — a falha é engolida de propósito, para não deitar
+   * abaixo um upload de 400 MB por causa de uma imagem de 40 kB. O preço
+   * aparece depois, na galeria: um vídeo sem miniatura é um quadrado vazio.
+   *
+   * Corre aqui, no browser de quem edita, que está num portátil com rede a
+   * sério. Devolve o motivo quando não dá, em vez de um falso calado.
+   */
+  async gerarMiniaturaDeVideo(
+    photo: Photo,
+  ): Promise<'feita' | 'sem_video' | 'sem_fotograma' | 'falhou'> {
+    try {
+      const [url] = await this.readUrls([photo.storagePath])
+      if (!url) return 'falhou'
+      const r = await fotogramaDeVideo(url, {
+        lado: THUMB_EDGE,
+        cruzado: true,
+        tipo: 'image/webp',
+        qualidade: THUMB_QUALITY,
+        tempoMax: 20000,
+      })
+      if (!r.ok) return r.porque
+
+      const t = await callAdmin<{ key: string; url: string }>({
+        action: 'upload-url',
+        galleryId: photo.galleryId,
+        fileName: photo.fileName,
+        contentType: 'image/webp',
+        kind: 'thumb',
+      })
+      await putToR2(t.url, r.imagem, 'image/webp')
+
+      const { error } = await supabase()
+        .from('photos')
+        .update({ thumb_path: t.key })
+        .eq('id', photo.id)
+      if (error) return 'falhou'
+      return 'feita'
+    } catch {
+      return 'falhou'
     }
   },
 

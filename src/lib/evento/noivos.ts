@@ -107,7 +107,7 @@ export const guardarDefinicoes = (
   },
 ) => chamar<{ ok: true }>({ action: 'definicoes', slug, chave, ...campos })
 
-import { fotogramaDeVideo } from './fotograma'
+import { fotogramaDeVideo } from '../fotograma'
 
 /**
  * Faz a miniatura de um vídeo que subiu sem ela, aqui no browser do painel.
@@ -140,7 +140,7 @@ export async function fazerMiniaturaDeVideo(
       action: 'miniatura-url', slug, chave, id,
     })
     const posto = await fetch(url, {
-      method: 'PUT', body: r.jpeg, headers: { 'content-type': 'image/jpeg' },
+      method: 'PUT', body: r.imagem, headers: { 'content-type': 'image/jpeg' },
     })
     if (!posto.ok) return 'falhou'
     await chamar<{ ok: true }>({ action: 'miniatura-feita', slug, chave, id, key })

@@ -1,16 +1,26 @@
 /**
  * Tirar um fotograma a um vídeo, dentro do browser.
  *
- * Serve os dois sítios que precisam disto: o envio, que faz a miniatura do
- * vídeo no telemóvel de quem o manda, e o painel, que a faz depois do facto
- * aos vídeos que subiram antes de isto existir.
+ * Serve os sítios todos que precisam disto: o envio dos convidados, que faz a
+ * miniatura no telemóvel de quem manda o vídeo; os painéis, que a fazem depois
+ * do facto aos vídeos que subiram antes de isto existir; e o carregamento das
+ * galerias de cliente.
  *
  * Vive num ficheiro próprio porque o que aqui está é quase todo cuidado com
  * browsers, e ter duas cópias desse cuidado é ter uma que fica para trás.
  */
 
 export type Fotograma =
-  | { ok: true; jpeg: Blob }
+  | {
+      ok: true
+      imagem: Blob
+      /** Medidas da imagem que saiu. */
+      largura: number
+      altura: number
+      /** Medidas do vídeo, que não são as mesmas. */
+      larguraOriginal: number
+      alturaOriginal: number
+    }
   /** O browser não conseguiu abrir o vídeo. Formato que não lê, ou CORS. */
   | { ok: false; porque: 'sem_video' }
   /** Abriu, mas não deu fotograma nenhum a tempo. */
@@ -23,12 +33,17 @@ export async function fotogramaDeVideo(
     lado,
     cruzado = false,
     tempoMax = 15000,
+    tipo = 'image/jpeg',
+    qualidade = 0.75,
   }: {
     /** O maior lado da imagem que sai. */
     lado: number
     /** Vídeo de outra origem: obriga o bucket a responder com CORS. */
     cruzado?: boolean
     tempoMax?: number
+    /** O formato de saída. As galerias de cliente guardam WebP. */
+    tipo?: 'image/jpeg' | 'image/webp'
+    qualidade?: number
   },
 ): Promise<Fotograma> {
   const v = document.createElement('video')
@@ -101,13 +116,22 @@ export async function fotogramaDeVideo(
       o `toBlob` atira em vez de devolver nada. Apanha-se aqui para o recado
       ser o certo, e não um erro genérico.
     */
-    let jpeg: Blob | null
+    let imagem: Blob | null
     try {
-      jpeg = await new Promise<Blob | null>((r) => c.toBlob(r, 'image/jpeg', 0.75))
+      imagem = await new Promise<Blob | null>((r) => c.toBlob(r, tipo, qualidade))
     } catch {
       return { ok: false, porque: 'sem_video' }
     }
-    return jpeg ? { ok: true, jpeg } : { ok: false, porque: 'falhou' }
+    return imagem
+      ? {
+          ok: true,
+          imagem,
+          largura: c.width,
+          altura: c.height,
+          larguraOriginal: v.videoWidth,
+          alturaOriginal: v.videoHeight,
+        }
+      : { ok: false, porque: 'falhou' }
   } catch {
     return { ok: false, porque: 'falhou' }
   } finally {

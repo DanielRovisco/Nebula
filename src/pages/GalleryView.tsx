@@ -426,13 +426,26 @@ export default function GalleryView() {
                     className="absolute inset-0 w-full h-full"
                     aria-label={`${t.gallery.open} ${photo.fileName}`}
                   >
-                    <img
-                      src={photo.thumbUrl ?? photo.url ?? ''}
-                      alt={photo.fileName}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
+                    {/*
+                      Um vídeo sem miniatura não vai para dentro de uma `<img>`.
+
+                      Um browser não desenha um ficheiro de vídeo numa `<img>`:
+                      o que aparecia era o quadrado vazio — e, pior, o vídeo
+                      inteiro era descarregado para ser deitado fora. Medido com
+                      um de 29 MB: a grelha puxava os 29 MB para mostrar nada, e
+                      é isso que faz uma galeria com vídeos arrastar-se a abrir.
+                    */}
+                    {photo.thumbUrl || !isVideo(photo) ? (
+                      <img
+                        src={photo.thumbUrl ?? photo.url ?? ''}
+                        alt={photo.fileName}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                    ) : (
+                      <span className="w-full h-full bg-white/[0.04]" />
+                    )}
                     <span className="absolute inset-0 bg-eerie/0 group-hover:bg-eerie/25 transition-colors" />
                     {isVideo(photo) && (
                       <span className="absolute inset-0 flex items-center justify-center">

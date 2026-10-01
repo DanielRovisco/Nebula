@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ChevronLeft, ChevronRight, Clock, Copy, Play, Star, Trash2, Upload } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Clock, Copy, Film, Play, Star, Trash2, Upload } from 'lucide-react'
 import { useArrastar } from './useArrastar'
 import { api } from '../../lib/gallery/api'
 import type { Gallery, Photo } from '../../lib/gallery/types'
@@ -63,15 +63,24 @@ export default function GalleryEditor() {
     edição inteira sem os voltar a pedir.
   */
   const [thumbs, setThumbs] = useState<Record<string, string>>({})
+  /** Vídeos sem fotograma, e o andamento de os fazer. */
+  const [miniaturas, setMiniaturas] = useState<{ feitas: number; total: number } | null>(null)
+  const [recado, setRecado] = useState<string | null>(null)
   useEffect(() => {
     if (!photos.length) return
     let vivo = true
-    const chaves = photos.map((f) => f.thumbPath ?? f.storagePath)
+    /*
+      Pede-se a miniatura quando ela existe, e o original só para as
+      fotografias. Pedir o original de um vídeo era assiná-lo para o pôr dentro
+      de uma `<img>`, e isso descarrega o vídeo inteiro para não mostrar nada.
+    */
+    const comImagem = photos.filter((f) => f.thumbPath || !isVideo(f))
+    const chaves = comImagem.map((f) => f.thumbPath ?? f.storagePath)
     api
       .readUrls(chaves)
       .then((urls) => {
         if (!vivo) return
-        setThumbs(Object.fromEntries(photos.map((f, i) => [f.id, urls[i]])))
+        setThumbs(Object.fromEntries(comImagem.map((f, i) => [f.id, urls[i]])))
       })
       .catch(() => {
         /* sem miniaturas a grelha fica sem imagens, mas o resto funciona */
@@ -172,6 +181,36 @@ export default function GalleryEditor() {
    * ficheiro não têm relação nenhuma entre si e a ordem por nome conta o dia
    * aos saltos.
    */
+  const semMiniatura = photos.filter((p) => isVideo(p) && !p.thumbPath)
+
+  async function fazerMiniaturas() {
+    if (!semMiniatura.length) return
+    setMiniaturas({ feitas: 0, total: semMiniatura.length })
+    setRecado(null)
+    let feitas = 0
+    let semVideo = 0
+    // Um de cada vez: cada um traz um vídeo da rede e descodifica um fotograma.
+    for (const foto of semMiniatura) {
+      const r = await api.gerarMiniaturaDeVideo(foto)
+      if (r === 'feita') feitas++
+      else if (r === 'sem_video') semVideo++
+      setMiniaturas({ feitas, total: semMiniatura.length })
+    }
+    if (!feitas && semVideo === semMiniatura.length) {
+      setRecado(
+        'Não consegui abrir nenhum dos vídeos. Quase sempre é o CORS do bucket: '
+        + 'Cloudflare → R2 → bucket das galerias → Settings → CORS policy, '
+        + 'com a origem deste site em AllowedOrigins e GET em AllowedMethods.',
+      )
+    } else if (!feitas) {
+      setRecado('Não consegui tirar um fotograma a nenhum destes vídeos.')
+    } else if (feitas < semMiniatura.length) {
+      setRecado(`Fiz ${feitas} de ${semMiniatura.length}. Os outros este browser não abre.`)
+    }
+    load()
+    setMiniaturas(null)
+  }
+
   async function ordenarPorData() {
     if (!gallery) return
     setSaving(true)
@@ -429,6 +468,25 @@ export default function GalleryEditor() {
             Fotografias <span className="text-titanium/35 text-base">({photos.length})</span>
           </h2>
           {/*
+            Um vídeo sem fotograma é um quadrado vazio na galeria do cliente.
+            Este botão faz-lhe a imagem a partir do ficheiro que já está
+            guardado, aqui, sem ninguém ter de o voltar a carregar.
+          */}
+          {semMiniatura.length > 0 && (
+            <button
+              onClick={fazerMiniaturas}
+              disabled={miniaturas !== null || saving}
+              className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-titanium/45 hover:text-titanium/80 transition-colors px-3 py-2 disabled:opacity-40"
+            >
+              <Film size={13} />
+              {miniaturas
+                ? `A fazer… ${miniaturas.feitas} de ${miniaturas.total}`
+                : semMiniatura.length === 1
+                  ? 'Fazer a imagem do vídeo'
+                  : `Fazer as imagens dos ${semMiniatura.length} vídeos`}
+            </button>
+          )}
+          {/*
             Só faz sentido oferecer se houver datas para ordenar: fotografias
             exportadas sem EXIF e vídeos não trazem nenhuma.
           */}
@@ -482,6 +540,10 @@ export default function GalleryEditor() {
           </div>
         )}
 
+        {recado && (
+          <p className="text-[13px] leading-relaxed text-amber-300/80 mb-5 max-w-xl">{recado}</p>
+        )}
+
         {photos.length === 0 ? (
           <div
             onDragOver={(e) => e.preventDefault()}
@@ -511,12 +573,21 @@ export default function GalleryEditor() {
                     aArrastar === i ? 'opacity-40' : ''
                   }`}
                 >
-                  <img
-                    src={thumbs[photo.id] ?? ''}
-                    alt={photo.fileName}
-                    loading="lazy"
-                    className="w-full h-full object-cover pointer-events-none"
-                  />
+                  {/*
+                    Um vídeo sem miniatura não entra numa `<img>`: o browser não
+                    o desenha e descarrega-o inteiro para nada. Aqui dá-se por
+                    isso, porque é aqui que se corrige.
+                  */}
+                  {photo.thumbPath || !isVideo(photo) ? (
+                    <img
+                      src={thumbs[photo.id] ?? ''}
+                      alt={photo.fileName}
+                      loading="lazy"
+                      className="w-full h-full object-cover pointer-events-none"
+                    />
+                  ) : (
+                    <span className="absolute inset-0 bg-white/[0.04]" />
+                  )}
                   <div className="absolute inset-0 bg-eerie/0 group-hover:bg-eerie/50 transition-colors" />
                   {isVideo(photo) && (
                     <span className="absolute inset-0 flex items-center justify-center pointer-events-none">

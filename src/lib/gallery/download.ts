@@ -1,4 +1,5 @@
 import { zip } from 'fflate'
+import { guardarFicheiro } from '../guardarFicheiro'
 import type { SignedPhoto } from './types'
 
 /**
@@ -76,20 +77,26 @@ async function fetchComRetry(url: string, signal?: AbortSignal, tentativas = 3):
 /**
  * Descarrega um ficheiro único.
  *
- * O caminho normal é um link directo para um URL assinado que o R2 devolve
- * como anexo (`response-content-disposition`). Um link não é um pedido de
- * CORS: o browser descarrega e não pergunta nada ao bucket. Isto interessa
- * porque o caminho por `fetch` morre com "blocked by CORS policy" sempre que a
- * configuração do bucket não estiver perfeita, e aí o cliente fica sem as
- * fotografias sem perceber porquê.
+ * O caminho normal é um URL assinado que o R2 devolve como anexo
+ * (`response-content-disposition`), entregue pelo menu de partilha do sistema
+ * quando o aparelho o tem, e por um link quando não tem. O link não é um
+ * pedido de CORS: o browser descarrega e não pergunta nada ao bucket, e é isso
+ * que o torna a rede de segurança de tudo o resto.
  *
- * Só se recorre ao `fetch` quando não há alternativa: para a versão reduzida,
- * que tem de ser processada no browser, ou quando a galeria foi aberta com uma
- * versão antiga da Edge Function que ainda não devolve `downloadUrl`.
+ * O menu importa sobretudo nos vídeos e no iPhone. Em iOS um link para um
+ * vídeo abre muitas vezes o leitor em vez de descarregar, e quando descarrega
+ * vai para os Ficheiros e não para as Fotos. Pelo menu há "Guardar vídeo".
+ *
+ * Só se recorre ao `fetch` directo quando não há alternativa: para a versão
+ * reduzida, que tem de ser processada no browser, ou quando a galeria foi
+ * aberta com uma versão antiga da Edge Function que ainda não devolve
+ * `downloadUrl`.
  */
 export async function downloadOne(photo: SignedPhoto, web = false) {
   if (!web && photo.downloadUrl) {
-    abrirDownload(photo.downloadUrl)
+    await guardarFicheiro(
+      photo.downloadUrl, photo.fileName, photo.contentType, photo.sizeBytes ?? undefined,
+    )
     return
   }
   if (!photo.url) throw new Error('Foto indisponível.')
@@ -100,20 +107,6 @@ export async function downloadOne(photo: SignedPhoto, web = false) {
   }
   const reduzido = await paraWeb(new Uint8Array(await res.arrayBuffer()), photo.contentType)
   triggerSave(new Blob([reduzido.buffer as ArrayBuffer]), photo.fileName)
-}
-
-/*
-  Sem `download` no elemento: o atributo é ignorado entre domínios diferentes e,
-  pior, em alguns browsers a sua presença faz o link abrir num separador em vez
-  de descarregar. Quem manda no nome do ficheiro é o cabeçalho que vem do R2.
-*/
-function abrirDownload(url: string) {
-  const a = document.createElement('a')
-  a.href = url
-  a.rel = 'noopener'
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
 }
 
 /**

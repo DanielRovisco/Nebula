@@ -7,6 +7,7 @@
  * entrada, não porque identifique alguém.
  */
 import { anonKey, functionsUrl } from '../gallery/config'
+import { guardarFicheiro } from '../guardarFicheiro'
 
 export interface InfoEvento {
   coupleName: string
@@ -233,30 +234,15 @@ export function enviarFicheiro(
   })
 }
 
-/*
-  O tecto para passar pelo menu de partilha.
-
-  Partilhar obriga a ter o ficheiro inteiro em memória, e um vídeo de casamento
-  de trezentos megabytes num telemóvel com pouca memória fecha o separador. Daí
-  para cima vai pelo caminho normal, que escreve em disco à medida que chega.
-*/
-const CABE_NA_PARTILHA = 150 * 1024 * 1024
-
 /**
  * Leva um ficheiro para o telemóvel de quem está a ver.
  *
- * Dois caminhos, e o primeiro existe por causa do iPhone.
+ * O servidor é que responde se pode: o botão desaparece quando o casal desliga
+ * a opção, mas um botão que desaparece é só CSS, e quem decide de verdade é a
+ * Edge Function.
  *
- * Um link para um endereço que o R2 entrega como anexo descarrega — mas no iOS
- * descarrega para os Ficheiros, não para as Fotos. Quem acabou de ver uma
- * fotografia do casamento quer que ela apareça na galeria do telemóvel, e ir
- * buscá-la aos Ficheiros para a guardar outra vez é trabalho que ninguém faz.
- *
- * O menu de partilha do sistema resolve isso: leva lá dentro "Guardar imagem" e
- * "Guardar vídeo", que escrevem mesmo na galeria. Só que obriga a trazer o
- * ficheiro para memória, o que precisa de CORS no bucket e de o ficheiro não
- * ser enorme. Quando qualquer uma dessas condições falha, cai-se no link, que
- * funciona sempre — mal, mas sempre.
+ * O resto — menu de partilha do sistema, com o link como rede de segurança —
+ * está em `lib/guardarFicheiro`, partilhado com as galerias de cliente.
  */
 export async function descarregarDoEvento(
   slug: string, id: string, uploaderKey: string, bytes?: number,
@@ -264,54 +250,5 @@ export async function descarregarDoEvento(
   const { url, nome, tipo } = await chamar<{
     url: string; nome?: string; tipo?: string | null
   }>('event-gallery', { action: 'descarregar', slug, id, uploaderKey })
-
-  if (await tentarPartilhar(url, nome, tipo, bytes)) return
-
-  /*
-    Sem o atributo `download`: entre domínios diferentes ele é ignorado e, em
-    alguns browsers, a sua presença faz o link abrir num separador em vez de
-    descarregar. Quem manda no nome do ficheiro é o cabeçalho que vem do R2.
-  */
-  const a = document.createElement('a')
-  a.href = url
-  a.rel = 'noopener'
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-}
-
-/** Devolve verdadeiro se o ficheiro chegou a ir para o menu de partilha. */
-async function tentarPartilhar(
-  url: string, nome?: string, tipo?: string | null, bytes?: number,
-): Promise<boolean> {
-  if (typeof navigator === 'undefined' || !navigator.canShare || !navigator.share) return false
-  if (bytes && bytes > CABE_NA_PARTILHA) return false
-
-  try {
-    /*
-      `no-store` não é por causa de dados velhos. A mesma fotografia já foi
-      buscada por uma `<img>`, e uma `<img>` não é um pedido de CORS: o browser
-      guardou essa resposta sem cabeçalhos de CORS, porque nunca foram pedidos.
-      Pedi-la agora por `fetch` devolvia essa cópia guardada, sem o
-      `Access-Control-Allow-Origin`, e o browser recusava — com a mesma
-      mensagem que dá um bucket mal configurado, estando o bucket impecável.
-    */
-    const res = await fetch(url, { cache: 'no-store' })
-    if (!res.ok) return false
-    const blob = await res.blob()
-    const ficheiro = new File([blob], nome || 'nebula', {
-      type: tipo || blob.type || 'application/octet-stream',
-    })
-    if (!navigator.canShare({ files: [ficheiro] })) return false
-    await navigator.share({ files: [ficheiro] })
-    return true
-  } catch (e) {
-    /*
-      Cancelar o menu de partilha também chega aqui, como `AbortError`. Nesse
-      caso a pessoa decidiu não guardar, e abrir-lhe um download a seguir seria
-      fazer exactamente o que ela acabou de recusar.
-    */
-    if ((e as Error)?.name === 'AbortError') return true
-    return false
-  }
+  await guardarFicheiro(url, nome, tipo, bytes)
 }

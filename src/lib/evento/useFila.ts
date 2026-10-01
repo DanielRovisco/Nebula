@@ -7,7 +7,7 @@ import {
   apagar, bytesDe, copiaDuravel, guardar, juntar, legivel, limparEnviados,
   listar, minhaChave, paraEnviar,
 } from './fila'
-import { fotogramaDeVideo } from './fotograma'
+import { fotogramaDeVideo } from '../fotograma'
 
 /** Quantas vezes se insiste antes de desistir e mostrar o botão de repetir. */
 const TENTATIVAS_MAX = 5
@@ -34,7 +34,7 @@ async function miniatura(f: Blob, tipo: string): Promise<ArrayBuffer | null> {
     const endereco = URL.createObjectURL(f)
     try {
       const r = await fotogramaDeVideo(endereco, { lado: MINIATURA, tempoMax: 8000 })
-      return r.ok ? await bytesDe(r.jpeg) : null
+      return r.ok ? await bytesDe(r.imagem) : null
     } finally {
       URL.revokeObjectURL(endereco)
     }

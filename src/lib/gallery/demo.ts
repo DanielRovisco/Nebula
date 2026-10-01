@@ -234,6 +234,12 @@ export const demoApi = {
     save(s)
   },
 
+  /* Na demonstração não há vídeos nem R2: não há fotograma para tirar. */
+  async gerarMiniaturaDeVideo(): Promise<'feita' | 'sem_video' | 'sem_fotograma' | 'falhou'> {
+    await wait(80)
+    return 'sem_video'
+  },
+
   async deletePhoto(photoId: string) {
     await wait(120)
     const s = load()
