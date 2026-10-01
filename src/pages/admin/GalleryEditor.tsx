@@ -224,6 +224,22 @@ export default function GalleryEditor() {
     (p) => isVideo(p) && !p.previewPath && (debito(p) ?? 0) > TECTO_MBPS,
   )
 
+  /*
+    Cópias leves em VP8 ou VP9.
+
+    O formato que sai depende do browser que converteu. Um iPhone lê WebM a
+    partir do iOS 17.4, mas descodifica VP9 por software — e 720p por software
+    num telemóvel trava na mesma, por mais leve que o ficheiro esteja. O H.264
+    tem descodificador próprio em todos eles.
+
+    Não se pode corrigir daqui: quem decide é o browser que faz a conversão. O
+    que se pode é dizê-lo, para quem está a ver saber que vale a pena tentar
+    noutro browser em vez de andar a reduzir o débito sem resultado.
+  */
+  const emVp = photos.filter(
+    (p) => p.previewPath && /vp0?8|vp0?9|webm/i.test(p.previewType ?? ''),
+  )
+
   async function fazerMiniaturas() {
     if (!semMiniatura.length) return
     setMiniaturas({ feitas: 0, total: semMiniatura.length })
@@ -641,6 +657,16 @@ export default function GalleryEditor() {
           </p>
         )}
 
+        {emVp.length > 0 && (
+          <p className="text-[13px] leading-relaxed text-amber-300/80 mb-5 max-w-2xl">
+            {emVp.length === 1 ? 'A cópia leve de um vídeo saiu' : `As cópias leves de ${emVp.length} vídeos saíram`}
+            {' '}em WebM (VP8/VP9). Um iPhone lê esse formato mas descodifica-o por software, e pode
+            travar à mesma por mais leve que o ficheiro esteja. Quem escolhe o formato é o browser
+            que faz a conversão: experimenta preparar outra vez num Chrome ou Edge actualizados,
+            que fazem H.264 — esse tem descodificador próprio em todos os telemóveis.
+          </p>
+        )}
+
         {recado && (
           <p className="text-[13px] leading-relaxed text-amber-300/80 mb-5 max-w-xl">{recado}</p>
         )}
@@ -705,13 +731,16 @@ export default function GalleryEditor() {
                   {isVideo(photo) && debito(photo) !== null && (
                     <span
                       className={`absolute bottom-1 left-1 right-1 px-1.5 py-0.5 rounded text-[9px] text-center pointer-events-none ${
-                        !photo.previewPath && debito(photo)! > TECTO_MBPS
+                        (!photo.previewPath && debito(photo)! > TECTO_MBPS)
+                        || /vp0?8|vp0?9|webm/i.test(photo.previewType ?? '')
                           ? 'bg-amber-300/90 text-eerie'
                           : 'bg-eerie/70 text-titanium/70'
                       }`}
                     >
                       {photo.previewPath
-                        ? 'leve pronta'
+                        ? `leve · ${/vp0?9/i.test(photo.previewType ?? '') ? 'VP9'
+                          : /vp0?8/i.test(photo.previewType ?? '') ? 'VP8'
+                            : /avc1|mp4/i.test(photo.previewType ?? '') ? 'H.264' : 'pronta'}`
                         : `${debito(photo)!.toFixed(1)} Mbps${photo.height ? ` · ${photo.height}p` : ''}`}
                     </span>
                   )}

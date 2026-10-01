@@ -23,24 +23,30 @@
  * O lado mais curto da cópia leve.
  *
  * É o lado curto e não o comprido porque é isso que "1080p" quer dizer: um
- * vídeo deitado de 3840x2160 fica 1920x1080, e um de pé de 2160x3840 fica
- * 1080x1920. Limitar o lado comprido dava 1080x608 a um vídeo que já estava em
- * 1080p — menos de metade da altura, e pior do que o original.
+ * vídeo deitado de 3840x2160 fica 1280x720, e um de pé de 2160x3840 fica
+ * 720x1280. Limitar o lado comprido dava 720x405 a um vídeo que já estava em
+ * 720p — menos de metade da altura, e pior do que o original.
+ *
+ * Setecentos e vinte e não mil e oitenta: isto é para se ver num telemóvel, e
+ * um telemóvel tem trezentos e noventa pontos de largura. A diferença não se vê
+ * e o ficheiro fica para menos de metade. Quem quiser o vídeo como ele é
+ * descarrega o original, que continua lá intacto.
  */
-export const LADO_CURTO_LEVE = 1080
+export const LADO_CURTO_LEVE = 720
 
 /**
- * Cinco megabits por segundo.
+ * Dois megabits e meio por segundo.
  *
- * O painel avisa acima de oito, que é onde um telemóvel começa a encravar. O
- * alvo fica abaixo disso de propósito, com folga: a 1080p, cinco megabits dão
- * uma imagem que ninguém distingue da original num ecrã de telemóvel, e correm
- * numa ligação de casa ou numa rede móvel sem ir ao limite.
+ * O painel avisa acima de oito, que é onde um telemóvel começa a encravar, e
+ * este alvo fica muito abaixo disso de propósito. A 720p, dois megabits e meio
+ * dão uma imagem limpa num ecrã de telemóvel e correm numa rede móvel sem ir ao
+ * limite — e deixam folga para o telemóvel ter um bocado de rede má sem a
+ * reprodução parar.
  */
-export const DEBITO_LEVE = 5_000_000
+export const DEBITO_LEVE = 2_500_000
 
 /** Abaixo disto não vale a pena converter: o ficheiro já corre em qualquer lado. */
-export const DEBITO_QUE_JA_CHEGA = 6_000_000
+export const DEBITO_QUE_JA_CHEGA = 3_500_000
 
 export interface VersaoLeve {
   blob: Blob

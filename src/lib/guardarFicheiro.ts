@@ -96,10 +96,22 @@ export async function tentarPartilhar(
   }
 }
 
-/** O caminho completo: tenta o menu, e cai no link quando não dá. */
+/**
+ * O caminho completo: tenta o menu, e cai no ficheiro quando não dá.
+ *
+ * Em ecrã de toque a queda não é um `<a>` sintético. Um iOS ignora um clique
+ * que o código inventa a seguir a uma espera — não veio de um gesto — e o
+ * resultado é carregar em descarregar e não acontecer absolutamente nada. Uma
+ * navegação para o endereço acontece sempre: o ficheiro abre, e a partir daí o
+ * próprio sistema oferece guardá-lo.
+ */
 export async function guardarFicheiro(
   url: string, nome?: string, tipo?: string | null, bytes?: number,
 ): Promise<void> {
   if (await tentarPartilhar(url, nome, tipo, bytes)) return
+  if (ecraDeToque()) {
+    window.location.href = url
+    return
+  }
   abrirDownload(url)
 }
