@@ -8,29 +8,43 @@
  * Quem vê a galeria vê quase sempre no telemóvel.
  *
  * Converter acontece aqui, no browser de quem carrega, porque não há servidor
- * nenhum deste lado: o site é um conjunto de ficheiros estáticos. É lento — o
- * vídeo é lido ao ritmo a que toca, por isso três minutos de vídeo são três
- * minutos de espera — e é por isso que quem chama isto mostra o andamento e
- * deixa seguir sem ele quando falha.
+ * nenhum deste lado: o site é um conjunto de ficheiros estáticos.
  *
- * O formato que sai depende do browser: o Chrome dá WebM e os Safari recentes
- * dão MP4. Como nem todos os telemóveis lêem WebM, a galeria oferece as duas
- * fontes ao `<video>` e deixa o browser do cliente escolher — a leve primeiro,
- * o original a seguir. Assim esta cópia só acrescenta, nunca tira.
+ * Isto já foi feito de outra maneira, e vale a pena dizer qual, porque a de
+ * agora nasceu de a primeira não chegar. Antes: pôr o vídeo a tocar, copiar
+ * cada fotograma para um canvas e gravar o canvas com o `MediaRecorder`. Três
+ * problemas, todos sérios.
+ *
+ *   1. O formato era o que o `MediaRecorder` quisesse dar, e na maior parte dos
+ *      browsers dá WebM com VP9. Um iPhone abre esse ficheiro — e descodifica-o
+ *      por software, porque não tem VP9 no hardware. O vídeo engasga-se mesmo
+ *      estando leve, que foi exactamente a queixa que deu origem a isto.
+ *   2. Era em tempo real. Três minutos de vídeo, três minutos de espera, e um
+ *      ficheiro de meio gigabyte punha o portátil a trabalhar um quarto de hora.
+ *   3. Gravar enquanto se toca deixa cair fotogramas quando o encoder não
+ *      acompanha, e esses saltos ficam gravados no ficheiro. Parte da travagem
+ *      não vinha da rede: vinha de dentro da cópia.
+ *
+ * Agora é o `WebCodecs` que faz o trabalho, através da mediabunny, que lê o
+ * ficheiro, desmonta-o, descodifica à velocidade a que a máquina der (não à
+ * velocidade a que o vídeo toca), reduz, volta a codificar em H.264 e monta um
+ * MP4. H.264 porque é o único formato que todos os telemóveis descodificam no
+ * hardware — é por isso que isto existe. O WebM com VP9 fica só para o caso de
+ * um browser não saber fazer H.264, e nesse caso o painel avisa.
  */
 
 /**
  * O lado mais curto da cópia leve.
  *
- * É o lado curto e não o comprido porque é isso que "1080p" quer dizer: um
- * vídeo deitado de 3840x2160 fica 1280x720, e um de pé de 2160x3840 fica
- * 720x1280. Limitar o lado comprido dava 720x405 a um vídeo que já estava em
- * 720p — menos de metade da altura, e pior do que o original.
+ * É o lado curto e não o comprido porque é isso que "720p" quer dizer: um vídeo
+ * deitado de 3840x2160 fica 1280x720, e um de pé de 2160x3840 fica 720x1280.
+ * Limitar o lado comprido dava 720x405 a um vídeo que já estava em 720p — menos
+ * de metade da altura, e pior do que o original.
  *
- * Setecentos e vinte e não mil e oitenta: isto é para se ver num telemóvel, e
- * um telemóvel tem trezentos e noventa pontos de largura. A diferença não se vê
- * e o ficheiro fica para menos de metade. Quem quiser o vídeo como ele é
- * descarrega o original, que continua lá intacto.
+ * Setecentos e vinte e não mil e oitenta: isto é para se ver num telemóvel, e um
+ * telemóvel tem trezentos e noventa pontos de largura. A diferença não se vê e o
+ * ficheiro fica para menos de metade. Quem quiser o vídeo como ele é descarrega
+ * o original, que continua lá intacto.
  */
 export const LADO_CURTO_LEVE = 720
 
@@ -40,13 +54,22 @@ export const LADO_CURTO_LEVE = 720
  * O painel avisa acima de oito, que é onde um telemóvel começa a encravar, e
  * este alvo fica muito abaixo disso de propósito. A 720p, dois megabits e meio
  * dão uma imagem limpa num ecrã de telemóvel e correm numa rede móvel sem ir ao
- * limite — e deixam folga para o telemóvel ter um bocado de rede má sem a
- * reprodução parar.
+ * limite — e deixam folga para a rede ter um bocado mau sem a reprodução parar.
  */
 export const DEBITO_LEVE = 2_500_000
 
 /** Abaixo disto não vale a pena converter: o ficheiro já corre em qualquer lado. */
 export const DEBITO_QUE_JA_CHEGA = 3_500_000
+
+/**
+ * Uma imagem nova a cada dois segundos.
+ *
+ * Imagens completas são as únicas por onde se pode começar a ler, e portanto as
+ * únicas para onde se pode saltar. De cinco em cinco segundos (o que vem por
+ * omissão) arrastar a barra dá um salto notório; de dois em dois a barra responde
+ * e o ficheiro cresce pouco.
+ */
+const INTERVALO_IMAGEM_COMPLETA = 2
 
 export interface VersaoLeve {
   blob: Blob
@@ -54,177 +77,157 @@ export interface VersaoLeve {
   largura: number
   altura: number
   segundos: number
+  /** `true` quando saiu H.264 num MP4, que é o caso bom. */
+  temHardware: boolean
 }
 
-/** Os formatos que este browser sabe gravar, do melhor para o pior. */
-function formatoPreferido(): string | null {
-  if (typeof MediaRecorder === 'undefined') return null
-  /*
-    Só pedidos com o codec escrito por extenso.
-
-    Pedir `video/mp4` sem mais nada parece inofensivo e não é: este browser
-    respondeu que sabia e devolveu VP9 dentro de um MP4 — um ficheiro que diz
-    `video/mp4` e que nenhum iPhone abre. Passava despercebido, porque o
-    contentor estava certo e o conteúdo não.
-
-    Com o codec escrito, ou o browser dá mesmo H.264 ou diz que não sabe, e
-    nesse caso faz-se um WebM honesto, que pelo menos se identifica pelo que é.
-  */
-  const tentativas = [
-    'video/mp4;codecs=avc1.4d002a,mp4a.40.2',
-    'video/mp4;codecs=avc1.42e01e,mp4a.40.2',
-    'video/mp4;codecs=avc1,mp4a.40.2',
-    'video/webm;codecs=vp9,opus',
-    'video/webm;codecs=vp8,opus',
-  ]
-  return tentativas.find((t) => MediaRecorder.isTypeSupported(t)) ?? null
-}
-
-/** Se este browser consegue fazer a conversão de todo. */
+/**
+ * Se este browser consegue fazer a conversão de todo.
+ *
+ * Síncrona de propósito: quem chama decide com ela antes de ir buscar o vídeo, e
+ * o `import` da mediabunny só acontece lá dentro, para não ir no pacote de quem
+ * apenas vê uma galeria. Saber quais os formatos que a máquina codifica obriga a
+ * perguntar ao browser e isso é assíncrono, por isso fica para a conversão: aqui
+ * confirma-se só que as peças existem.
+ *
+ * O contexto seguro não é detalhe: fora de HTTPS o `VideoEncoder` nem é definido.
+ */
 export const sabeConverter = (): boolean =>
-  typeof MediaRecorder !== 'undefined' &&
-  typeof HTMLVideoElement !== 'undefined' &&
-  'captureStream' in HTMLVideoElement.prototype &&
-  formatoPreferido() !== null
+  typeof window !== 'undefined' &&
+  window.isSecureContext &&
+  typeof VideoEncoder !== 'undefined' &&
+  typeof VideoDecoder !== 'undefined'
+
+/**
+ * Os formatos de saída, do melhor para o pior.
+ *
+ * A ordem é toda sobre o telemóvel de quem vai ver, e não sobre a qualidade:
+ * H.264 tem descodificador em hardware em tudo o que se vende há quinze anos, e
+ * é isso que faz um vídeo correr sem aquecer o aparelho nem engasgar. VP9 e VP8
+ * são o que resta quando o browser de quem carrega não sabe fazer H.264.
+ */
+const ALVOS = [
+  { codec: 'avc', contentor: 'mp4', tipo: 'video/mp4', temHardware: true },
+  { codec: 'vp9', contentor: 'webm', tipo: 'video/webm', temHardware: false },
+  { codec: 'vp8', contentor: 'webm', tipo: 'video/webm', temHardware: false },
+] as const
 
 /**
  * Converte, e vai dizendo em que parte vai (de 0 a 1).
  *
- * Devolve nulo quando não dá: um browser sem as peças, um formato que ele não
- * abre, ou um vídeo que não chega ao fim. Nunca atira — quem chama está a meio
- * de um upload e o original já subiu.
+ * Devolve nulo quando não dá: um browser sem as peças, um vídeo que ele não
+ * saiba abrir, um formato que não saiba escrever. Nunca atira — quem chama está
+ * a meio de um upload e o original já subiu.
  */
 export async function versaoLeveDeVideo(
   ficheiro: Blob,
   aoAvancar?: (fraccao: number) => void,
 ): Promise<VersaoLeve | null> {
-  const tipo = formatoPreferido()
-  if (!tipo || !sabeConverter()) return null
-
-  const endereco = URL.createObjectURL(ficheiro)
-  const v = document.createElement('video')
-  let parar: (() => void) | null = null
+  if (!sabeConverter()) return null
 
   try {
-    v.src = endereco
-    v.muted = true
-    v.playsInline = true
-    v.preload = 'auto'
+    const mb = await import('mediabunny')
 
-    const abriu = await new Promise<boolean>((resolve) => {
-      const limite = setTimeout(() => resolve(false), 30000)
-      v.onerror = () => { clearTimeout(limite); resolve(false) }
-      v.onloadedmetadata = () => { clearTimeout(limite); resolve(true) }
-    })
-    if (!abriu || !v.videoWidth || !Number.isFinite(v.duration)) return null
-
-    const escala = Math.min(1, LADO_CURTO_LEVE / Math.min(v.videoWidth, v.videoHeight))
-    const largura = Math.round(v.videoWidth * escala / 2) * 2
-    const altura = Math.round(v.videoHeight * escala / 2) * 2
-
-    /*
-      A imagem passa por um canvas porque é a única maneira de a encolher: o
-      fluxo que sai do `<video>` vem no tamanho do original, e gravar 4K a oito
-      megabits dá uma imagem pior do que 1080p aos mesmos oito.
-
-      O som não passa pelo canvas — vem do fluxo do vídeo e junta-se ao lado.
-      Sem isto a cópia leve ficava muda, que é pior do que não existir.
-    */
-    const canvas = document.createElement('canvas')
-    canvas.width = largura
-    canvas.height = altura
-    const ctx = canvas.getContext('2d', { alpha: false })
-    if (!ctx) return null
-
-    const fluxoCanvas = canvas.captureStream(30)
-    const fluxoVideo = (v as HTMLVideoElement & { captureStream(): MediaStream }).captureStream()
-    for (const faixa of fluxoVideo.getAudioTracks()) fluxoCanvas.addTrack(faixa)
-
-    const gravador = new MediaRecorder(fluxoCanvas, {
-      mimeType: tipo,
-      videoBitsPerSecond: DEBITO_LEVE,
-      audioBitsPerSecond: 128_000,
-    })
-    const pedacos: BlobPart[] = []
-    gravador.ondataavailable = (e) => { if (e.data.size) pedacos.push(e.data) }
-
-    const terminou = new Promise<void>((resolve) => { gravador.onstop = () => resolve() })
-
-    /*
-      Desenhar a cada fotograma que o vídeo entrega, e não a cada fotograma do
-      ecrã. Com `requestAnimationFrame` um vídeo a 24 imagens por segundo num
-      ecrã a 60 era desenhado duas vezes e meia por imagem, e o gravador ficava
-      com trabalho a dobrar para o mesmo resultado.
-    */
-    const temCallback = 'requestVideoFrameCallback' in v
-    let aCorrer = true
-    const desenhar = () => {
-      if (!aCorrer) return
-      ctx.drawImage(v, 0, 0, largura, altura)
-      aoAvancar?.(v.duration ? Math.min(1, v.currentTime / v.duration) : 0)
-      if (temCallback) {
-        (v as HTMLVideoElement & {
-          requestVideoFrameCallback(cb: () => void): number
-        }).requestVideoFrameCallback(desenhar)
-      } else {
-        requestAnimationFrame(desenhar)
-      }
+    let alvo: (typeof ALVOS)[number] | null = null
+    for (const a of ALVOS) {
+      if (await mb.canEncodeVideo(a.codec)) { alvo = a; break }
     }
-
-    parar = () => { aCorrer = false; try { gravador.stop() } catch { /* já parado */ } }
-    v.onended = () => parar?.()
-
-    gravador.start(1000)
-    desenhar()
-    await v.play()
+    if (!alvo) return null
 
     /*
-      Um tecto de tempo com folga: o dobro da duração mais um minuto. Serve para
-      um vídeo que encrave a meio não deixar a página à espera para sempre.
+      O som é à parte, e tem o mesmo problema do formato.
+
+      Num MP4, o que todos os aparelhos lêem é AAC. A mediabunny também escreve
+      Opus dentro de um MP4, e é um ficheiro válido, mas um iPhone abre-o sem
+      som — o que é pior do que não ter cópia leve, porque passa despercebido a
+      quem carrega e não a quem vê. Daí a ordem.
     */
-    const tecto = setTimeout(() => parar?.(), (v.duration * 2 + 60) * 1000)
-    await terminou
-    clearTimeout(tecto)
+    const codecSom = alvo.contentor === 'mp4'
+      ? ((await mb.canEncodeAudio('aac')) ? 'aac' : 'opus')
+      : ((await mb.canEncodeAudio('opus')) ? 'opus' : 'aac')
+
+    const input = new mb.Input({
+      source: new mb.BlobSource(ficheiro),
+      formats: mb.ALL_FORMATS,
+    })
+    const faixa = await input.getPrimaryVideoTrack()
+    if (!faixa) return null
+
+    /*
+      As dimensões que contam são as de apresentação, não as que estão
+      guardadas. Um telemóvel grava de pé escrevendo 1920x1080 no ficheiro mais
+      uma nota a dizer "roda isto": `displayWidth` já traz a rotação aplicada, e
+      é por isso que um vídeo vertical não sai daqui deitado.
+    */
+    const largura = faixa.displayWidth
+    const altura = faixa.displayHeight
+    if (!largura || !altura) return null
+    const deitado = largura >= altura
+    const curto = Math.min(largura, altura)
+
+    /*
+      Pede-se um lado só e deixa-se a outra medida ser deduzida, para a proporção
+      ficar exacta. E não se amplia nada: um vídeo que já esteja abaixo de 720
+      mantém o tamanho e só perde débito.
+    */
+    const reduzir = curto > LADO_CURTO_LEVE
+    const medida = !reduzir ? {} : deitado
+      ? { height: LADO_CURTO_LEVE }
+      : { width: LADO_CURTO_LEVE }
+
+    const output = new mb.Output({
+      format: alvo.contentor === 'mp4'
+        /*
+          `fastStart` põe o índice do ficheiro no início em vez do fim. Sem isto
+          o leitor tem de ir buscar o fim do ficheiro antes de poder começar, o
+          que num telemóvel são mais uns segundos de ecrã preto à espera.
+        */
+        ? new mb.Mp4OutputFormat({ fastStart: 'in-memory' })
+        : new mb.WebMOutputFormat(),
+      target: new mb.BufferTarget(),
+    })
+
+    const conversao = await mb.Conversion.init({
+      input,
+      output,
+      video: {
+        ...medida,
+        codec: alvo.codec,
+        quality: new mb.Quality({ bitrate: DEBITO_LEVE, bitrateMode: 'variable' }),
+        keyFrameInterval: INTERVALO_IMAGEM_COMPLETA,
+        /*
+          Sem isto a mediabunny pode copiar o vídeo tal e qual quando o formato
+          já serve, o que é esperto na generalidade e aqui é o contrário do que
+          se quer: o ponto é precisamente deixá-lo mais leve.
+        */
+        forceTranscode: true,
+      },
+      audio: { codec: codecSom, bitrate: 128_000 },
+    })
+    if (!conversao.isValid) return null
+    if (aoAvancar) conversao.onProgress = (fraccao) => aoAvancar(fraccao)
+
+    await conversao.execute()
     aoAvancar?.(1)
 
-    if (!pedacos.length) return null
-    /*
-      O tipo que se guarda é o que o gravador diz ter feito, e não o que lhe foi
-      pedido. É ele que vai no `<source type=...>` da galeria, e um tipo errado
-      ali faz o browser do cliente descartar a cópia leve sem a experimentar.
-    */
-    const tipoReal = gravador.mimeType || tipo
-    const blob = new Blob(pedacos, { type: tipoReal })
+    const buffer = output.target.buffer
+    if (!buffer || !buffer.byteLength) return null
+    const blob = new Blob([buffer], { type: alvo.tipo })
 
-    /*
-      Nota sobre o WebM, para quem vier a seguir.
-
-      Um WebM gravado assim não traz a duração escrita no cabeçalho: o gravador
-      não sabe quando vai parar e deixa o campo por preencher. O vídeo abre e
-      salta para onde se quiser — medido — mas `duration` fica em `Infinity` até
-      o ficheiro acabar de chegar, e nesse intervalo a barra de progresso não
-      mostra o fim.
-
-      Tentou-se corrigir com a biblioteca que serve para isso (webm-duration-fix)
-      e nestes ficheiros não corrigia nada: corria sem erro e a duração continuava
-      infinita. Ficou de fora em vez de ficar a dar a ideia de que estava tratado.
-
-      Por isso é que a lista de formatos tem MP4 à frente: um MP4 fecha-se com os
-      números todos lá dentro e não tem este problema. O WebM é o que resta para
-      browsers que não saibam fazer MP4, e vale mais do que não haver cópia leve
-      nenhuma.
-    */
     // Uma cópia que não ficou mais leve não serve de nada: deita-se fora e
     // guarda-se só o original.
     if (blob.size >= ficheiro.size) return null
 
-    return { blob, tipo: tipoReal, largura, altura, segundos: v.duration }
+    const escala = reduzir ? LADO_CURTO_LEVE / curto : 1
+    return {
+      blob,
+      tipo: alvo.tipo,
+      largura: Math.round(largura * escala),
+      altura: Math.round(altura * escala),
+      segundos: await input.computeDuration(),
+      temHardware: alvo.temHardware,
+    }
   } catch {
     return null
-  } finally {
-    parar?.()
-    v.removeAttribute('src')
-    v.load()
-    URL.revokeObjectURL(endereco)
   }
 }

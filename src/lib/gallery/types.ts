@@ -40,6 +40,7 @@ export interface Photo {
   /** A cópia leve, que é a que se vê. Nula quando não há. */
   previewPath: string | null
   previewType: string | null
+  previewBytes: number | null
   sortOrder: number
 }
 
@@ -63,6 +64,16 @@ export interface SignedPhoto {
   /** A cópia leve, para o leitor experimentar antes do original. */
   previewUrl?: string | null
   previewType?: string | null
+  /**
+   * A cópia leve, mas para descarregar: já com o cabeçalho de anexo.
+   *
+   * Existe para o cliente poder escolher. Um vídeo de casamento tem meio
+   * gigabyte e, numa rede de telemóvel, isso são muitos minutos; a cópia leve
+   * tem uma fracção disso e é a que serve para ver no telefone ou mandar a
+   * alguém. O original continua a um toque de distância para quem o quiser.
+   */
+  previewDownloadUrl?: string | null
+  previewBytes?: number | null
 }
 
 /** Um item é vídeo se o content type o disser, ou pela extensão em dados antigos. */

@@ -95,17 +95,28 @@ alter table photos
 
     O original de uma câmara anda nos quinze ou vinte megabits por segundo e não
     corre num telemóvel — medido: a 25 Mbps de rede corre, a dez nem arranca. A
-    cópia leve é feita no browser de quem carrega, a 1080p e cinco megabits, e é
-    ela que a galeria mostra. O original fica intacto e é o que se descarrega.
+    cópia leve é feita no browser de quem carrega, a 720p e dois megabits e meio,
+    e é ela que a galeria mostra. O original fica intacto e o cliente escolhe qual
+    deles descarrega.
 
-    O tipo guarda-se porque não é sempre o mesmo: conforme o browser que a fez,
-    sai MP4 ou WebM. A galeria dá as duas fontes ao leitor — a leve primeiro, o
-    original a seguir — e quem não souber ler a leve cai no original sozinho.
+    O tipo guarda-se porque não é sempre o mesmo: sai MP4 com H.264, que é o que
+    todos os telemóveis descodificam no hardware, ou WebM quando o browser de
+    quem carrega não souber fazer H.264. A galeria dá as duas fontes ao leitor —
+    a leve primeiro, o original a seguir — e quem não souber ler a leve cai no
+    original sozinho.
 
     Nulo nos vídeos antigos e em todas as fotografias.
   */
   add column if not exists preview_path text,
-  add column if not exists preview_type text;
+  add column if not exists preview_type text,
+  /*
+    O tamanho da cópia leve, para a galeria o poder dizer antes de descarregar.
+
+    Num vídeo de casamento o original pode ter meio gigabyte e a cópia leve
+    vinte megabytes. Quem está ao telemóvel merece saber qual é qual antes de
+    escolher, em vez de ficar meia hora à espera sem saber porquê.
+  */
+  add column if not exists preview_bytes bigint;
 
 create index if not exists photos_gallery_idx on photos (gallery_id, sort_order);
 create index if not exists galleries_slug_idx on galleries (slug);

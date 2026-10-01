@@ -152,6 +152,7 @@ const rowToPhoto = (r: Record<string, unknown>): Photo => ({
     : Number(r.duration_seconds),
   previewPath: (r.preview_path as string) ?? null,
   previewType: (r.preview_type as string) ?? null,
+  previewBytes: (r.preview_bytes as number) ?? null,
   sortOrder: (r.sort_order as number) ?? 0,
 })
 
@@ -392,7 +393,7 @@ const realApi = {
         abaixo do que um telemóvel aguenta não ganha nada em ser convertido, e
         converter é lento — o vídeo é lido ao ritmo a que toca.
       */
-      let preview: { key: string; tipo: string } | null = null
+      let preview: { key: string; tipo: string; bytes: number } | null = null
       let storedThumb: string | null = null
       let segundos: number | null = null
       try {
@@ -432,7 +433,7 @@ const realApi = {
               kind: 'full',
             })
             await putToR2(alvo.url, leve.blob, leve.tipo)
-            preview = { key: alvo.key, tipo: leve.tipo }
+            preview = { key: alvo.key, tipo: leve.tipo, bytes: leve.blob.size }
             if (segundos === null) segundos = leve.segundos
           }
         } catch {
@@ -446,6 +447,7 @@ const realApi = {
         thumb_path: storedThumb,
         preview_path: preview?.key ?? null,
         preview_type: preview?.tipo ?? null,
+        preview_bytes: preview?.bytes ?? null,
         file_name: file.name,
         content_type: contentType,
         width,
@@ -520,7 +522,7 @@ const realApi = {
         deixava o vídeo sem cópia leve enquanto o botão dizia que tinha
         corrido bem. Quem carregasse ficava convencido de que estava tratado.
       */
-      let preview: { key: string; tipo: string } | null = null
+      let preview: { key: string; tipo: string; bytes: number } | null = null
       let leve: EstadoLeve = 'falhou'
       const debito = photo.sizeBytes && r.segundos
         ? (photo.sizeBytes * 8) / r.segundos
@@ -548,7 +550,7 @@ const realApi = {
                 kind: 'full',
               })
               await putToR2(alvo.url, feita.blob, feita.tipo)
-              preview = { key: alvo.key, tipo: feita.tipo }
+              preview = { key: alvo.key, tipo: feita.tipo, bytes: feita.blob.size }
               leve = 'feita'
             }
           }
@@ -564,7 +566,13 @@ const realApi = {
         .update({
           thumb_path: t.key,
           duration_seconds: r.segundos,
-          ...(preview ? { preview_path: preview.key, preview_type: preview.tipo } : {}),
+          ...(preview
+            ? {
+                preview_path: preview.key,
+                preview_type: preview.tipo,
+                preview_bytes: preview.bytes,
+              }
+            : {}),
         })
         .eq('id', photo.id)
       if (error) return { imagem: 'falhou', leve }

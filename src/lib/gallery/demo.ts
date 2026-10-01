@@ -78,6 +78,7 @@ function seed(): DemoState {
     durationSeconds: null,
     previewPath: null,
     previewType: null,
+    previewBytes: null,
     sortOrder: i,
   }))
 
@@ -92,7 +93,9 @@ function seed(): DemoState {
       storagePath: '', thumbPath: asset('/brand/portfolio/forest-bride-480.webp'),
       fileName: 'Primeiro beijo.mp4', contentType: 'video/mp4',
       width: 1920, height: 1080, sizeBytes: 24_000_000, durationSeconds: 180,
-      previewPath: null, previewType: null,
+      // Com cópia leve, para a demonstração mostrar a etiqueta do formato e a
+      // escolha entre leve e original na hora de descarregar.
+      previewPath: 'demo/leve.mp4', previewType: 'video/mp4', previewBytes: 5_600_000,
       takenAt: null, sortOrder: photos.length,
     },
     {
@@ -100,7 +103,7 @@ function seed(): DemoState {
       storagePath: '', thumbPath: asset('/brand/portfolio/forest-bride-480.webp'),
       fileName: 'Primeira danca.mp4', contentType: 'video/mp4',
       width: 3840, height: 2160, sizeBytes: 43_428_000, durationSeconds: 20,
-      previewPath: null, previewType: null,
+      previewPath: null, previewType: null, previewBytes: null,
       takenAt: null, sortOrder: photos.length + 1,
     },
   )
@@ -259,6 +262,7 @@ export const demoApi = {
         durationSeconds: null,
         previewPath: null,
         previewType: null,
+        previewBytes: null,
         sortOrder: s.photos.filter((p) => p.galleryId === galleryId).length,
       })
       onProgress(++done)
@@ -400,6 +404,10 @@ export const demoApi = {
           sizeBytes: p.sizeBytes,
           url: p.storagePath,
           thumbUrl: p.thumbPath,
+          previewUrl: p.previewPath,
+          previewType: p.previewType,
+          previewBytes: p.previewBytes,
+          previewDownloadUrl: p.previewPath,
         })),
       favorites: s.favorites?.[g.id] ?? [],
     }

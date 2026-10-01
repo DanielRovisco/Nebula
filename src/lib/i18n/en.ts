@@ -540,6 +540,11 @@ export const en: Dict = {
     welcome: 'Welcome',
     welcomeNamed: (nome: string) => `Welcome, ${nome}`,
     tapToContinue: 'Tap to continue',
+    chooseVersion: 'Which version would you like to save?',
+    lightVersion: 'Light version',
+    lightVersionHint: "This is the one you are watching. It looks good on a phone and it is the one to send to someone.",
+    originalVersion: 'Original',
+    originalVersionHint: 'Straight from the camera, full quality. On a mobile connection this can take many minutes.',
   },
 
   footer: {

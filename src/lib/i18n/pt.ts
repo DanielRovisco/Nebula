@@ -613,6 +613,11 @@ export const pt = {
     welcome: 'Bem-vindos',
     welcomeNamed: (nome: string) => `Bem-vindos, ${nome}`,
     tapToContinue: 'Toquem para avançar',
+    chooseVersion: 'Que versão querem guardar?',
+    lightVersion: 'Versão leve',
+    lightVersionHint: 'É esta que estão a ver. Fica boa num telemóvel e é a que se manda a alguém.',
+    originalVersion: 'Original',
+    originalVersionHint: 'Como saiu da câmara, em qualidade máxima. Numa rede de telemóvel pode levar muitos minutos.',
   },
 
   footer: {

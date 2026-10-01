@@ -14,6 +14,18 @@ import { signAccessToken } from '../_shared/token.ts'
 
 const SIGNED_URL_TTL = 60 * 60 * 2 // 2 horas
 
+/**
+ * O nome com que a cópia leve chega ao computador de quem a descarrega.
+ *
+ * A extensão vem do formato da cópia e não do original: a cópia de um
+ * `casamento.mov` pode ser um MP4 ou um WebM, e um ficheiro com a extensão
+ * errada é um ficheiro que o sistema não sabe abrir com dois cliques.
+ */
+function nomeDaLeve(nome: string, tipo: string | null): string {
+  const base = nome.replace(/\.[^.]+$/, '')
+  return `leve-${base}.${/webm/i.test(tipo ?? '') ? 'webm' : 'mp4'}`
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
@@ -53,7 +65,7 @@ Deno.serve(async (req) => {
 
   const { data: photos, error: photosError } = await admin
     .from('photos')
-    .select('id, storage_path, thumb_path, preview_path, preview_type, file_name, content_type, width, height, size_bytes, sort_order')
+    .select('id, storage_path, thumb_path, preview_path, preview_type, preview_bytes, file_name, content_type, width, height, size_bytes, sort_order')
     .eq('gallery_id', gallery.id)
     .order('sort_order', { ascending: true })
   if (photosError) {
@@ -81,6 +93,15 @@ Deno.serve(async (req) => {
       */
       previewUrl: p.preview_path ? await presign(p.preview_path, 'GET', SIGNED_URL_TTL) : null,
       previewType: p.preview_type ?? null,
+      previewBytes: p.preview_bytes ?? null,
+      /*
+        E a cópia leve também como anexo, para o cliente poder escolher entre
+        levar a leve ou o original. O nome leva "leve" à frente para não ficarem
+        dois ficheiros com o mesmo nome na pasta das transferências.
+      */
+      previewDownloadUrl: p.preview_path
+        ? await presignDownload(p.preview_path, nomeDaLeve(p.file_name, p.preview_type), SIGNED_URL_TTL)
+        : null,
       thumbUrl: p.thumb_path ? await presign(p.thumb_path, 'GET', SIGNED_URL_TTL) : null,
       // Segundo URL, do mesmo ficheiro, que o R2 devolve como anexo. Serve o
       // download de uma foto sozinha sem passar por `fetch`, ou seja sem

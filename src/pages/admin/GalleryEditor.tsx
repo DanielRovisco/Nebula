@@ -651,8 +651,8 @@ export default function GalleryEditor() {
             {pesados.length === 1
               ? `Um vídeo está acima dos ${TECTO_MBPS} Mbps e vai encravar num telemóvel.`
               : `${pesados.length} vídeos estão acima dos ${TECTO_MBPS} Mbps e vão encravar num telemóvel.`}
-            {' '}Carrega em "Preparar os vídeos" aqui em cima: faz-se uma cópia a 1080p que
-            corre em qualquer lado, e o original fica guardado para o download. No computador
+            {' '}Carrega em "Preparar os vídeos" aqui em cima: faz-se uma cópia a 720p em H.264
+            que corre em qualquer lado, e o original fica guardado para o download. No computador
             corre à mesma, por isso é fácil não dar por isto.
           </p>
         )}
@@ -660,10 +660,10 @@ export default function GalleryEditor() {
         {emVp.length > 0 && (
           <p className="text-[13px] leading-relaxed text-amber-300/80 mb-5 max-w-2xl">
             {emVp.length === 1 ? 'A cópia leve de um vídeo saiu' : `As cópias leves de ${emVp.length} vídeos saíram`}
-            {' '}em WebM (VP8/VP9). Um iPhone lê esse formato mas descodifica-o por software, e pode
-            travar à mesma por mais leve que o ficheiro esteja. Quem escolhe o formato é o browser
-            que faz a conversão: experimenta preparar outra vez num Chrome ou Edge actualizados,
-            que fazem H.264 — esse tem descodificador próprio em todos os telemóveis.
+            {' '}em WebM e não em H.264. Um iPhone lê WebM mas descodifica-o por software, e pode
+            travar à mesma por mais leve que o ficheiro esteja. Ou a cópia é antiga, de quando isto
+            saía sempre em WebM, ou este browser não sabe fazer H.264: prepara outra vez, e se
+            continuar a sair WebM faz num Chrome ou Edge actualizados.
           </p>
         )}
 
@@ -738,9 +738,10 @@ export default function GalleryEditor() {
                       }`}
                     >
                       {photo.previewPath
-                        ? `leve · ${/vp0?9/i.test(photo.previewType ?? '') ? 'VP9'
-                          : /vp0?8/i.test(photo.previewType ?? '') ? 'VP8'
-                            : /avc1|mp4/i.test(photo.previewType ?? '') ? 'H.264' : 'pronta'}`
+                        ? [
+                            /webm/i.test(photo.previewType ?? '') ? 'WebM' : 'H.264',
+                            photo.previewBytes ? `${Math.round(photo.previewBytes / 1024 ** 2)} MB` : null,
+                          ].filter(Boolean).join(' · ')
                         : `${debito(photo)!.toFixed(1)} Mbps${photo.height ? ` · ${photo.height}p` : ''}`}
                     </span>
                   )}

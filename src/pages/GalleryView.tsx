@@ -6,7 +6,9 @@ import Seo from '../lib/Seo'
 import { linhasJustificadas } from '../lib/linhasJustificadas'
 import { loadSession, clearSession } from '../lib/gallery/session'
 import { ROUTES } from '../lib/i18n/routes'
-import { downloadAll, downloadOne, ZIP_WARN_BYTES, type ZipProgress } from '../lib/gallery/download'
+import {
+  downloadAll, downloadLeve, downloadOne, ZIP_WARN_BYTES, type ZipProgress,
+} from '../lib/gallery/download'
 import { DEMO } from '../lib/gallery/config'
 import { api } from '../lib/gallery/api'
 import { isVideo, type GalleryAccess } from '../lib/gallery/types'
@@ -19,6 +21,20 @@ import GalleryCover from './gallery/GalleryCover'
 const introKey = (slug: string) => `nebula-intro-${slug}`
 
 const DIA = 864e5
+
+/**
+ * O tamanho de um ficheiro como se diz em voz alta.
+ *
+ * Serve para o cliente escolher entre a cópia leve e o original sabendo o que
+ * está a pedir. Megabytes até ao giga, e daí para cima gigabytes com uma casa:
+ * "530 MB" e "1,4 GB" dizem-lhe mais do que o número de bytes.
+ */
+function tamanho(bytes: number, locale: string) {
+  const mb = bytes / 1024 ** 2
+  return mb >= 1024
+    ? `${(mb / 1024).toLocaleString(locale, { maximumFractionDigits: 1 })} GB`
+    : `${Math.round(mb).toLocaleString(locale)} MB`
+}
 
 /**
  * Aviso de que a galeria tem prazo.
@@ -252,10 +268,38 @@ export default function GalleryView() {
     }
   }
 
-  async function handleDownloadOne(index: number) {
+  /*
+    Qual o vídeo que está à espera de o cliente escolher a versão.
+
+    Guarda-se o índice e não um booleano porque a escolha é daquele ficheiro: o
+    tamanho que aparece nos botões é o dele, e fechar a janela não pode deixar
+    para trás um estado que se aplique ao seguinte.
+  */
+  const [versaoDe, setVersaoDe] = useState<number | null>(null)
+
+  /**
+   * Um toque em descarregar.
+   *
+   * Num vídeo que tenha cópia leve pergunta-se primeiro, porque a diferença
+   * entre as duas não é de detalhe: meio gigabyte contra uns megabytes, e numa
+   * rede de telemóvel isso é a diferença entre meia hora e meio minuto. Em tudo
+   * o resto descarrega logo, que é o que se espera de um botão de descarregar.
+   */
+  function pedirDownload(index: number) {
+    const p = photos[index]
+    if (isVideo(p) && p.previewDownloadUrl && p.previewBytes && p.sizeBytes) {
+      setVersaoDe(index)
+      return
+    }
+    void handleDownloadOne(index)
+  }
+
+  async function handleDownloadOne(index: number, leve = false) {
     setError(null)
+    setVersaoDe(null)
     try {
-      await downloadOne(photos[index], false)
+      if (leve) await downloadLeve(photos[index])
+      else await downloadOne(photos[index], false)
       if (access?.logToken) {
         api.logEvent(access.logToken, {
           kind: 'download_one',
@@ -272,7 +316,8 @@ export default function GalleryView() {
 
   const { gallery } = access
   const current = open !== null ? photos[open] : null
-  const aviso = avisoDeValidade(gallery.expiresAt, t, lang === 'pt' ? 'pt-PT' : 'en-GB')
+  const locale = lang === 'pt' ? 'pt-PT' : 'en-GB'
+  const aviso = avisoDeValidade(gallery.expiresAt, t, locale)
 
   return (
     <div className="min-h-screen">
@@ -462,7 +507,7 @@ export default function GalleryView() {
                   */}
                   {gallery.downloadEnabled && (
                     <button
-                      onClick={() => handleDownloadOne(i)}
+                      onClick={() => pedirDownload(i)}
                       aria-label={`${t.gallery.download} ${photo.fileName}`}
                       className="absolute bottom-1.5 right-1.5 p-2.5 rounded-full bg-eerie/70 text-titanium/85 hover:text-titanium hover:bg-eerie/90 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
                     >
@@ -547,7 +592,7 @@ export default function GalleryView() {
                 </button>
                 {gallery.downloadEnabled && (
                   <button
-                    onClick={() => handleDownloadOne(open!)}
+                    onClick={() => pedirDownload(open!)}
                     className="p-3 text-titanium/60 hover:text-titanium transition-colors"
                     aria-label={t.gallery.download}
                   >
@@ -570,8 +615,8 @@ export default function GalleryView() {
                   Duas fontes, a leve primeiro.
 
                   O leitor fica com a primeira que souber ler. A cópia leve é
-                  1080p a cinco megabits e corre num telemóvel; o original vem
-                  da câmara a quinze ou vinte e só corre com rede a sério. Pondo
+                  720p a dois megabits e meio e corre num telemóvel; o original
+                  vem da câmara a quinze ou vinte e só corre com rede a sério. Pondo
                   as duas, quem não souber ler o formato da leve — um iPhone
                   antigo com um WebM, por exemplo — cai no original sozinho, em
                   vez de ficar com um ecrã preto.
@@ -616,6 +661,71 @@ export default function GalleryView() {
                 </button>
               </>
             )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/*
+        A escolha entre a cópia leve e o original.
+
+        Uma janela e não um `confirm` do browser: um `confirm` só tem sim e não,
+        e aqui há três respostas possíveis. Fica por cima da fotografia em grande
+        (z-index acima dela) porque é de lá que se chega aqui na maior parte das
+        vezes.
+      */}
+      <AnimatePresence>
+        {versaoDe !== null && photos[versaoDe] && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[110] bg-eerie/90 flex items-center justify-center p-6"
+            onClick={() => setVersaoDe(null)}
+          >
+            <div
+              className="w-full max-w-sm bg-eerie border border-titanium/15 rounded-xl p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="text-titanium/90 mb-5">{t.gallery.chooseVersion}</p>
+
+              <button
+                onClick={() => handleDownloadOne(versaoDe, true)}
+                className="w-full text-left px-4 py-3 rounded-lg border border-titanium/20 hover:border-titanium/50 transition-colors"
+              >
+                <span className="flex items-baseline justify-between gap-3">
+                  <span className="text-titanium">{t.gallery.lightVersion}</span>
+                  <span className="text-xs text-titanium/50">
+                    {tamanho(photos[versaoDe].previewBytes!, locale)}
+                  </span>
+                </span>
+                <span className="block text-[13px] leading-relaxed text-titanium/50 mt-1">
+                  {t.gallery.lightVersionHint}
+                </span>
+              </button>
+
+              <button
+                onClick={() => handleDownloadOne(versaoDe)}
+                className="w-full text-left px-4 py-3 mt-3 rounded-lg border border-titanium/20 hover:border-titanium/50 transition-colors"
+              >
+                <span className="flex items-baseline justify-between gap-3">
+                  <span className="text-titanium">{t.gallery.originalVersion}</span>
+                  <span className="text-xs text-titanium/50">
+                    {tamanho(photos[versaoDe].sizeBytes!, locale)}
+                  </span>
+                </span>
+                <span className="block text-[13px] leading-relaxed text-titanium/50 mt-1">
+                  {t.gallery.originalVersionHint}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setVersaoDe(null)}
+                className="w-full mt-4 py-2 label-sm text-titanium/50 hover:text-titanium/80 transition-colors"
+              >
+                {t.gallery.cancel}
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

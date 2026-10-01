@@ -110,6 +110,30 @@ export async function downloadOne(photo: SignedPhoto, web = false) {
 }
 
 /**
+ * Guarda a cópia leve de um vídeo em vez do original.
+ *
+ * O original de uma câmara tem centenas de megabytes e numa rede de telemóvel
+ * isso são muitos minutos de espera. A cópia leve é a que o cliente acabou de
+ * ver, cabe no telefone e é a que serve para mandar a alguém. Quem quiser o
+ * ficheiro como ele é continua a poder levá-lo.
+ *
+ * O nome leva "leve" à frente e a extensão do formato da cópia, não a do
+ * original: a cópia de um `.mov` é um MP4 ou um WebM, e uma extensão errada é um
+ * ficheiro que o sistema não sabe abrir.
+ */
+export async function downloadLeve(photo: SignedPhoto) {
+  if (!photo.previewDownloadUrl) throw new Error('Sem cópia leve.')
+  const base = photo.fileName.replace(/\.[^.]+$/, '')
+  const extensao = /webm/i.test(photo.previewType ?? '') ? 'webm' : 'mp4'
+  await guardarFicheiro(
+    photo.previewDownloadUrl,
+    `leve-${base}.${extensao}`,
+    photo.previewType,
+    photo.previewBytes ?? undefined,
+  )
+}
+
+/**
  * O que já foi transferido nesta visita, por URL.
  *
  * Se o download falhar a meio e a pessoa tentar outra vez, os ficheiros já

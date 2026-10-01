@@ -50,6 +50,15 @@ export default defineConfig({
         // que regressam.
         manualChunks(id) {
           if (!id.includes('node_modules')) return
+          /*
+            A mediabunny num ficheiro só dela.
+
+            São umas centenas de kilobytes e só servem para converter um vídeo no
+            painel, mas sem isto vinham no mesmo ficheiro que o resto do código da
+            galeria, e passava a ser o cliente a descarregá-las para ver as
+            fotografias do casamento. Com a regra, só desce a quem converte.
+          */
+          if (id.includes('mediabunny')) return 'mediabunny'
           if (id.includes('framer-motion') || id.includes('motion-dom') || id.includes('motion-utils')) {
             return 'motion'
           }
