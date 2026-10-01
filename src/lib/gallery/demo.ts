@@ -74,8 +74,32 @@ function seed(): DemoState {
     sizeBytes: 420_000,
     // Uma hora entre cada, para a ordenação por data ter o que ordenar.
     takenAt: new Date(Date.now() - 864e5 * 3 + i * 36e5).toISOString(),
+    durationSeconds: null,
     sortOrder: i,
   }))
+
+  /*
+    Dois vídeos, um leve e um pesado, para o painel de demonstração mostrar o
+    aviso do débito a quem o estiver a ver. Sem eles, a única maneira de ver
+    esse aviso era carregar um vídeo a sério.
+  */
+  photos.push(
+    {
+      id: 'p-video-leve', galleryId: 'demo-1',
+      storagePath: '', thumbPath: asset('/brand/portfolio/forest-bride-480.webp'),
+      fileName: 'Primeiro beijo.mp4', contentType: 'video/mp4',
+      width: 1920, height: 1080, sizeBytes: 24_000_000, durationSeconds: 180,
+      takenAt: null, sortOrder: photos.length,
+    },
+    {
+      id: 'p-video-pesado', galleryId: 'demo-1',
+      storagePath: '', thumbPath: asset('/brand/portfolio/forest-bride-480.webp'),
+      fileName: 'Primeira danca.mp4', contentType: 'video/mp4',
+      width: 3840, height: 2160, sizeBytes: 43_428_000, durationSeconds: 20,
+      takenAt: null, sortOrder: photos.length + 1,
+    },
+  )
+
   const agora = Date.now()
   const events: (GalleryEvent & { galleryId: string })[] = [
     { id: 3, galleryId: 'demo-1', kind: 'download_all', fileName: null, at: new Date(agora - 36e5 * 2).toISOString() },
@@ -227,6 +251,7 @@ export const demoApi = {
         width: null,
         height: null,
         sizeBytes: file.size,
+        durationSeconds: null,
         sortOrder: s.photos.filter((p) => p.galleryId === galleryId).length,
       })
       onProgress(++done)

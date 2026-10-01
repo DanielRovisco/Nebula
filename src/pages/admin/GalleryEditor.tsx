@@ -183,6 +183,23 @@ export default function GalleryEditor() {
    */
   const semMiniatura = photos.filter((p) => isVideo(p) && !p.thumbPath)
 
+  /*
+    O que um vídeo pede à rede, em megabits por segundo.
+
+    É o número que decide se ele corre num telemóvel. Medido com um ficheiro de
+    dezassete megabits: numa ligação sem limite e a vinte e cinco corre;
+    a dez e a quatro nem arranca. Um telemóvel numa casa ou na rua raramente
+    tem mais do que uns poucos megabits para dar a um vídeo.
+
+    Oito é o tecto que se põe aqui. Acima disso avisa-se, porque quem carregou
+    o ficheiro é a única pessoa que o pode voltar a exportar mais leve.
+  */
+  const TECTO_MBPS = 8
+  const debito = (p: Photo): number | null =>
+    p.sizeBytes && p.durationSeconds ? (p.sizeBytes * 8) / p.durationSeconds / 1_000_000 : null
+
+  const pesados = photos.filter((p) => isVideo(p) && (debito(p) ?? 0) > TECTO_MBPS)
+
   async function fazerMiniaturas() {
     if (!semMiniatura.length) return
     setMiniaturas({ feitas: 0, total: semMiniatura.length })
@@ -540,6 +557,17 @@ export default function GalleryEditor() {
           </div>
         )}
 
+        {pesados.length > 0 && (
+          <p className="text-[13px] leading-relaxed text-amber-300/80 mb-5 max-w-2xl">
+            {pesados.length === 1
+              ? `Um vídeo está acima dos ${TECTO_MBPS} Mbps e vai encravar num telemóvel.`
+              : `${pesados.length} vídeos estão acima dos ${TECTO_MBPS} Mbps e vão encravar num telemóvel.`}
+            {' '}O ficheiro sobe tal como foi carregado, e o site não o pode tornar mais leve:
+            exporta outra vez a 1080p e uns {TECTO_MBPS} Mbps, apaga o que está aqui e carrega o
+            novo. No computador corre à mesma, por isso é fácil não dar por isto.
+          </p>
+        )}
+
         {recado && (
           <p className="text-[13px] leading-relaxed text-amber-300/80 mb-5 max-w-xl">{recado}</p>
         )}
@@ -594,6 +622,23 @@ export default function GalleryEditor() {
                       <span className="w-8 h-8 rounded-full bg-eerie/60 flex items-center justify-center">
                         <Play size={12} className="text-titanium ml-0.5" fill="currentColor" />
                       </span>
+                    </span>
+                  )}
+                  {/*
+                    O débito do vídeo, por baixo. Sem este número, "não corre no
+                    telemóvel" é um mistério; com ele é uma conta que se resolve
+                    exportando o ficheiro outra vez.
+                  */}
+                  {isVideo(photo) && debito(photo) !== null && (
+                    <span
+                      className={`absolute bottom-1 left-1 right-1 px-1.5 py-0.5 rounded text-[9px] text-center pointer-events-none ${
+                        debito(photo)! > TECTO_MBPS
+                          ? 'bg-amber-300/90 text-eerie'
+                          : 'bg-eerie/70 text-titanium/70'
+                      }`}
+                    >
+                      {debito(photo)!.toFixed(1)} Mbps
+                      {photo.height ? ` · ${photo.height}p` : ''}
                     </span>
                   )}
 

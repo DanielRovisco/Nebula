@@ -75,7 +75,21 @@ alter table photos
   -- Quando a fotografia foi tirada, lido do EXIF durante o upload. Permite
   -- ordenar a galeria pela ordem em que o dia aconteceu, em vez de por nomes de
   -- ficheiro que, com duas máquinas, não têm relação nenhuma entre si.
-  add column if not exists taken_at timestamptz;
+  add column if not exists taken_at timestamptz,
+  /*
+    Quantos segundos dura, nos vídeos.
+
+    Guarda-se porque sem ela não se sabe o que um vídeo pede à rede: quarenta
+    megabytes podem ser vinte segundos a dezassete megabits — que nenhum
+    telemóvel aguenta — ou dez minutos a meio megabit, que corre em qualquer
+    lado. É o tamanho a dividir pela duração que diz se o vídeo vai encravar, e
+    é esse número que o painel mostra a quem o carregou.
+
+    Lida no browser quando se tira o fotograma, que é o momento em que o vídeo
+    já está aberto. Fica nula nas fotografias e nos vídeos antigos, até alguém
+    lhes mandar fazer a imagem.
+  */
+  add column if not exists duration_seconds numeric;
 
 create index if not exists photos_gallery_idx on photos (gallery_id, sort_order);
 create index if not exists galleries_slug_idx on galleries (slug);

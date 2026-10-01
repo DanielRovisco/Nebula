@@ -18,6 +18,8 @@ interface Resized {
   /** Dimensões do ficheiro original, antes de qualquer redução. */
   originalWidth: number
   originalHeight: number
+  /** Só nos vídeos: quanto tempo dura. Nas fotografias fica por preencher. */
+  segundos?: number | null
 }
 
 /**
@@ -108,6 +110,7 @@ async function videoThumb(file: File): Promise<Resized> {
       height: r.altura,
       originalWidth: r.larguraOriginal,
       originalHeight: r.alturaOriginal,
+      segundos: r.segundos,
     }
   } finally {
     URL.revokeObjectURL(endereco)
@@ -143,6 +146,9 @@ const rowToPhoto = (r: Record<string, unknown>): Photo => ({
   width: (r.width as number) ?? null,
   height: (r.height as number) ?? null,
   sizeBytes: (r.size_bytes as number) ?? null,
+  durationSeconds: r.duration_seconds === null || r.duration_seconds === undefined
+    ? null
+    : Number(r.duration_seconds),
   sortOrder: (r.sort_order as number) ?? 0,
 })
 
@@ -344,10 +350,12 @@ const realApi = {
       await putToR2(full.url, payload, contentType)
 
       let storedThumb: string | null = null
+      let segundos: number | null = null
       try {
         const thumb = video
           ? await videoThumb(file)
           : await resize(file, THUMB_EDGE, 'image/webp', THUMB_QUALITY)
+        segundos = thumb.segundos ?? null
         if (width === null) {
           width = thumb.originalWidth
           height = thumb.originalHeight
@@ -375,6 +383,7 @@ const realApi = {
         width,
         height,
         size_bytes: payload.size,
+        duration_seconds: segundos,
         taken_at: takenAt,
         sort_order: order++,
       })
@@ -428,7 +437,7 @@ const realApi = {
 
       const { error } = await supabase()
         .from('photos')
-        .update({ thumb_path: t.key })
+        .update({ thumb_path: t.key, duration_seconds: r.segundos })
         .eq('id', photo.id)
       if (error) return 'falhou'
       return 'feita'

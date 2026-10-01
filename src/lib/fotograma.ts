@@ -20,6 +20,8 @@ export type Fotograma =
       /** Medidas do vídeo, que não são as mesmas. */
       larguraOriginal: number
       alturaOriginal: number
+      /** Duração, em segundos. É ela que diz o débito do ficheiro. */
+      segundos: number | null
     }
   /** O browser não conseguiu abrir o vídeo. Formato que não lê, ou CORS. */
   | { ok: false; porque: 'sem_video' }
@@ -130,6 +132,7 @@ export async function fotogramaDeVideo(
           altura: c.height,
           larguraOriginal: v.videoWidth,
           alturaOriginal: v.videoHeight,
+          segundos: Number.isFinite(v.duration) && v.duration > 0 ? v.duration : null,
         }
       : { ok: false, porque: 'falhou' }
   } catch {

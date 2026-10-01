@@ -35,6 +35,8 @@ export interface Photo {
   sizeBytes: number | null
   /** Quando foi tirada, lido do EXIF no upload. Null quando não há EXIF. */
   takenAt: string | null
+  /** Duração em segundos, nos vídeos. Com o tamanho, dá o débito do ficheiro. */
+  durationSeconds: number | null
   sortOrder: number
 }
 
