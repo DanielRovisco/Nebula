@@ -615,9 +615,9 @@ export const pt = {
     tapToContinue: 'Toquem para avançar',
     chooseVersion: 'Que versão querem guardar?',
     lightVersion: 'Versão leve',
-    lightVersionHint: 'É esta que estão a ver. Fica boa num telemóvel e é a que se manda a alguém.',
+    lightVersionHint: 'Qualidade reduzida, boa para visualização em telemóvel',
     originalVersion: 'Original',
-    originalVersionHint: 'Como saiu da câmara, em qualidade máxima. Numa rede de telemóvel pode levar muitos minutos.',
+    originalVersionHint: 'Qualidade original, mais pesado',
   },
 
   footer: {

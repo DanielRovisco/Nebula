@@ -542,9 +542,9 @@ export const en: Dict = {
     tapToContinue: 'Tap to continue',
     chooseVersion: 'Which version would you like to save?',
     lightVersion: 'Light version',
-    lightVersionHint: "This is the one you are watching. It looks good on a phone and it is the one to send to someone.",
+    lightVersionHint: 'Reduced quality, good for viewing on a phone',
     originalVersion: 'Original',
-    originalVersionHint: 'Straight from the camera, full quality. On a mobile connection this can take many minutes.',
+    originalVersionHint: 'Original quality, heavier',
   },
 
   footer: {
