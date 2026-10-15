@@ -1,39 +1,91 @@
-name: Keep Supabase awake
+name: Vigia
 
-# O plano gratuito do Supabase adormece um projeto ao fim de 7 dias sem
-# tráfego, e acordar demora ~30s. Num link de galeria entregue a um cliente
-# isso é inaceitável, por isso este workflow toca no projeto a cada 3 dias.
+# Olha para o site uma vez por dia e faz barulho quando alguma coisa está em
+# baixo. Faz também o que o ficheiro antigo fazia: toca no Supabase, porque no
+# plano gratuito um projeto sem tráfego adormece ao fim de 7 dias e acordá-lo
+# demora meio minuto — meio minuto à frente de um cliente que abriu o link da
+# galeria dele.
 #
-# Deixa de ser preciso se passares ao plano pago.
+# Porque é que deixou de ser só isso: durante 21 corridas este workflow saiu
+# sempre com sucesso sem fazer nada. Procurava os secrets SUPABASE_URL e
+# SUPABASE_ANON_KEY, que nunca existiram neste repositório — os nomes certos
+# levam VITE_ à frente — e, não os encontrando, escrevia "nada a fazer" e saía
+# com zero. Verde no painel, zero verificações feitas.
 #
-# Requer o secret SUPABASE_URL (o mesmo do site). Enquanto não existir, o
-# workflow sai em silêncio em vez de falhar todas as semanas.
+# Daí as duas regras deste ficheiro:
+#   1. faltar configuração é erro, nunca um sucesso silencioso;
+#   2. verifica-se o que o cliente usa, e não só se o servidor está vivo.
+#
+# Quando isto falha, o GitHub manda email a quem é dono do repositório. É esse o
+# alarme.
 
 on:
   schedule:
-    - cron: '0 6 */3 * *'
+    - cron: '17 6 * * *'
   workflow_dispatch:
 
 jobs:
-  ping:
+  vigiar:
     runs-on: ubuntu-latest
     steps:
-      - name: Tocar no projeto Supabase
+      - name: O site responde
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SITE: https://proj3ctnebula.pt
         run: |
-          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
-            echo "Secrets do Supabase por definir — nada a fazer."
-            exit 0
+          codigo="$(curl -sS -o pagina.html -w '%{http_code}' --max-time 30 "$SITE")"
+          echo "Site: $codigo"
+          [ "$codigo" = "200" ] || { echo "::error::O site respondeu $codigo."; exit 1; }
+          # Não basta o 200: o GitHub Pages devolve 200 à página de erro dele.
+          # Procura-se qualquer coisa que só está lá quando o site foi mesmo
+          # publicado.
+          grep -qi 'nebula' pagina.html || {
+            echo "::error::O site respondeu 200 mas a página não parece a do NEBULA."
+            exit 1
+          }
+
+      - name: O Supabase está acordado
+        env:
+          URL: ${{ secrets.VITE_SUPABASE_URL }}
+          ANON: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          # Os nomes antigos, para quem ainda os tiver definidos.
+          URL_ANTIGO: ${{ secrets.SUPABASE_URL }}
+          ANON_ANTIGO: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          URL="$(printf '%s' "${URL:-$URL_ANTIGO}" | tr -d '[:space:]')"
+          ANON="${ANON:-$ANON_ANTIGO}"
+          if [ -z "$URL" ] || [ -z "$ANON" ]; then
+            echo "::error::Faltam VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY nos secrets do repositório. Sem eles esta vigia não vigia nada, e foi exactamente assim que ela passou meses a dar verde sem fazer nada."
+            exit 1
           fi
-          # Uma consulta trivial conta como atividade e mantém o projeto acordado.
-          code=$(curl -s -o /dev/null -w '%{http_code}' \
-            -H "apikey: $SUPABASE_ANON_KEY" \
-            "$SUPABASE_URL/rest/v1/")
-          echo "Resposta do Supabase: $code"
-          # 200 e 401 servem: ambos provam que o projeto está de pé.
-          case "$code" in
-            200|401|404) exit 0 ;;
-            *) echo "Projeto pode estar em baixo."; exit 1 ;;
+          URL="${URL%/}"
+          echo "URL=$URL" >> "$GITHUB_ENV"
+
+          codigo="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 \
+            -H "apikey: $ANON" "$URL/rest/v1/")"
+          echo "Supabase: $codigo"
+          # 200, 401 e 404 servem todos: qualquer um prova que o projeto está de
+          # pé e não adormecido.
+          case "$codigo" in
+            200|401|404) : ;;
+            *) echo "::error::O Supabase respondeu $codigo."; exit 1 ;;
+          esac
+
+      - name: A galeria dos convidados responde
+        run: |
+          # Um casamento que não existe. A resposta certa é 404 com
+          # "nao_encontrado" lá dentro, e é isso que se confirma: prova que a
+          # função está publicada, que fala com a base de dados e que responde
+          # o que o site espera.
+          #
+          # Um 404 sozinho não chegava. Uma função que não esteja publicada
+          # também devolve 404, só que com outro corpo, e era exactamente esse o
+          # caso que valia a pena apanhar.
+          corpo="$(curl -sS --max-time 30 -X POST \
+            -H 'content-type: application/json' \
+            -d '{"slug":"__vigia__"}' \
+            "$URL/functions/v1/event-gallery" || true)"
+          echo "Resposta: $corpo"
+          case "$corpo" in
+            *nao_encontrado*) echo "A função está publicada e a responder." ;;
+            *) echo "::error::A event-gallery não respondeu o que devia. Ou não está publicada, ou não está a chegar à base de dados."; exit 1 ;;
           esac

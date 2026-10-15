@@ -9,6 +9,7 @@
     "build": "node scripts/gen-public.mjs && tsc -b && vite build && node scripts/prerender.mjs",
     "build:demo": "node scripts/gen-public.mjs && tsc -b && vite build --mode demo && node scripts/prerender.mjs",
     "lint": "eslint .",
+    "test:sql": "scripts/testar-sql.sh",
     "preview": "vite preview",
     "images": "node scripts/optimize-images.mjs",
     "setup:check": "node scripts/check-setup.mjs",

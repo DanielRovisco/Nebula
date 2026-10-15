@@ -13,6 +13,93 @@ permissions:
 
 jobs:
   # ───────────────────────────────────────────────────────────────────────────
+  # O que se verifica antes de se publicar seja o que for
+  # ───────────────────────────────────────────────────────────────────────────
+  #
+  # Três coisas, e nenhuma delas falava com produção: o código compila e passa
+  # no linter, o esquema aplica-se de raiz a uma base de dados vazia e as regras
+  # que protegem as galerias fazem o que dizem.
+  #
+  # Até aqui o linter só corria na máquina de quem estava a escrever, e os testes
+  # de SQL existiam no repositório sem nada os correr. Um deles tinha deixado de
+  # passar há meses e ninguém sabia.
+  #
+  # A base de dados é um contentor que nasce e morre com este trabalho. Nunca a
+  # de produção: o scripts/testar-sql.sh recusa-se a correr contra um endereço
+  # que não seja local, para um dia ninguém lhe passar a connection string boa.
+  verificar:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - name: Linter
+        run: npm run lint
+      - name: Tipos
+        run: npx tsc -b
+      # Avisa e segue, de propósito. Um aviso novo numa dependência aparece
+      # sozinho, sem nada ter mudado aqui, e o dia em que isso acontece é sempre
+      # o dia em que é preciso corrigir uma frase a correr antes de um casamento.
+      # Fica à vista de quem olhar para a corrida, sem travar a publicação.
+      - name: Avisos de segurança nas dependências
+        run: |
+          npm audit --omit=dev --audit-level=high \
+            || echo "::warning::Há dependências com avisos de segurança. Corre 'npm audit' para ver, e 'npm audit fix' quando houver tempo."
+
+      - name: Testes de SQL
+        run: |
+          # A imagem do runner costuma trazer o cliente do Postgres. Quando não
+          # trouxer, instala-se: sem ele não há testes, e sem testes não se
+          # publica.
+          command -v psql >/dev/null || sudo apt-get install -y --no-install-recommends postgresql-client
+          scripts/testar-sql.sh
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Segredos no repositório
+  # ───────────────────────────────────────────────────────────────────────────
+  #
+  # Este repositório é público. Uma chave que entre num commit fica legível para
+  # toda a gente e, mais importante, fica lá para sempre: apagá-la num commit a
+  # seguir não a tira do histórico. Por isso a varredura é ao histórico todo e
+  # não só ao que mudou.
+  #
+  # Falhar aqui não desfaz a fuga — essa já aconteceu no push. O que faz é não
+  # deixar o assunto passar em silêncio, que é como estas coisas ficam meses sem
+  # ninguém reparar. Se acontecer: revogar a chave primeiro, limpar o histórico
+  # depois.
+  segredos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Procurar segredos no histórico
+        env:
+          VERSAO: 8.29.0
+        run: |
+          curl -sSfL -o gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${VERSAO}/gitleaks_${VERSAO}_linux_x64.tar.gz"
+          tar -xzf gitleaks.tar.gz gitleaks
+          # `--redact` para o próprio registo do Action não passar a ser o
+          # segundo sítio onde a chave fica escrita.
+          ./gitleaks detect --source . --no-banner --redact --exit-code 1
+
+  # ───────────────────────────────────────────────────────────────────────────
   # A base de dados e as Edge Functions, antes do site
   # ───────────────────────────────────────────────────────────────────────────
   #
@@ -27,6 +114,7 @@ jobs:
   # esquema por aplicar dá um painel a escrever para tabelas que não existem.
   # O segundo é pior do que não publicar.
   base-de-dados:
+    needs: [verificar, segredos]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

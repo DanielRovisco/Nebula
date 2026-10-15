@@ -23,11 +23,86 @@ npm run setup:check  # diagnostica a configuração das galerias privadas
 npm run build    # tsc + build de produção para dist/
 npm run preview  # servir o build de produção localmente
 npm run lint
+npm run test:sql # testes do esquema e das regras de acesso (precisa de um Postgres local)
 npm run images   # regenerar derivados responsivos das fotografias (AVIF + WebP)
 npm run icons    # regenerar os ícones do site a partir do símbolo da marca
 npm run gen      # sitemap, robots, manifest e CNAME a partir do site.config.json
 npm run setup    # ligar o site ao Supabase e ao R2 (ver ARRANQUE.md)
 ```
+
+## O que é verificado antes de publicar
+
+Cada push para `main` passa por três trabalhos antes de o site sair, e só sai se
+os três passarem (`.github/workflows/deploy.yml`):
+
+| Trabalho | O que faz |
+| --- | --- |
+| `verificar` | `npm run lint`, `tsc -b`, e os testes de SQL contra um Postgres descartável |
+| `segredos` | varre o **histórico todo** à procura de chaves, com o gitleaks |
+| `base-de-dados` | aplica o `supabase/schema.sql` e publica as Edge Functions |
+
+Os testes de SQL correm o `supabase/tests/`: cinquenta e um casos sobre as
+regras que protegem as galerias, os eventos e a estação de impressão. Localmente
+basta um Postgres e `npm run test:sql`.
+
+O `scripts/testar-sql.sh` recusa-se a correr contra qualquer endereço que não
+seja local. Os ficheiros de teste criam e apagam galerias à vontade, e a
+distância entre fazer isso numa base de dados descartável e fazê-lo na de
+produção é uma variável de ambiente mal passada.
+
+Vale a pena saber porque é que isto existe: os testes estavam no repositório sem
+nada os correr, e um deles tinha deixado de passar há meses sem ninguém dar por
+isso. O linter só corria na máquina de quem estava a escrever.
+
+### A vigia
+
+O `.github/workflows/keepalive.yml` corre uma vez por dia e verifica três
+coisas: o site responde e é mesmo o site, o Supabase está acordado, e a Edge
+Function dos convidados responde o que o site espera. Quando falha, o GitHub
+manda email a quem é dono do repositório — é esse o alarme.
+
+Também serve o propósito antigo: no plano gratuito, um projeto Supabase sem
+tráfego adormece ao fim de 7 dias e acordar demora meio minuto, meio minuto à
+frente de um cliente que abriu o link da galeria.
+
+## Cópias de segurança e ambientes
+
+Duas coisas por decidir, escritas aqui para não serem esquecidas em vez de
+parecerem tratadas.
+
+**Não há cópias de segurança automáticas.** O que existe:
+
+- As fotografias e os vídeos vivem no Cloudflare R2. Apagar ali não tem volta.
+  O R2 tem *object versioning*, que guarda a versão anterior de cada ficheiro
+  durante o tempo que se definir, e é a única rede por baixo de um apagar por
+  engano. Liga-se no painel do bucket.
+- A base de dados é um projeto Supabase no plano gratuito, que não traz cópias
+  diárias; vêm no plano pago. O que ela guarda são os dados que acompanham os
+  ficheiros: títulos, nomes de clientes, hashes de passwords, números da
+  impressão. Perder isto sem perder o R2 significa ter os ficheiros sem saber de
+  quem são.
+- Os originais do trabalho estão também nos discos e cartões de quem filma, que
+  na prática é hoje a cópia que existe.
+
+Uma cópia automática da base de dados para dentro deste repositório **não** é
+boa ideia: ele é público, e ali estão nomes de clientes e hashes. Se vier a ser
+feita, tem de ser para um sítio privado e cifrado.
+
+**Não há separação entre desenvolvimento e produção.** Há um Supabase e um R2, e
+são os do casamento que vai acontecer. O que reduz o risco hoje:
+
+- `npm run demo` corre o site inteiro com galerias falsas em memória, sem tocar
+  no Supabase. Serve para desenho e para passear pela interface.
+- O `supabase/schema.sql` é escrito para poder ser aplicado por cima de si
+  próprio: tudo `if not exists` e `create or replace`, sem um único `drop table`,
+  `delete` ou `truncate`. Foi verificado a aplicá-lo três vezes seguidas a uma
+  base de dados com dados lá dentro, a contar linhas antes e depois.
+- Os testes de SQL correm num Postgres descartável e recusam-se a apontar para
+  outro sítio.
+
+Separar a sério quer dizer um segundo projeto Supabase e um segundo bucket, com
+os seus próprios secrets. É mais dinheiro e mais uma coisa para manter; fica
+aqui para quando o volume o justificar.
 
 ## Imagens
 

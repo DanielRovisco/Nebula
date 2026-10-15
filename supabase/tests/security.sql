@@ -6,6 +6,20 @@
 \pset format unaligned
 \pset tuples_only on
 
+-- ── Uma conta nossa, com direitos de administrador ───────────────────────────
+--
+-- Isto faltava, e os testes deixaram de correr sem ninguém dar por isso: o
+-- `set_gallery_password` passou a exigir que quem o chama seja administrador, e
+-- a partir daí o ficheiro rebentava na primeira linha. Ficou assim meses, porque
+-- nada no CI os corria. A lição está no runner (scripts/testar-sql.sh), que
+-- agora falha quando um teste diz NAO ou quando nenhum diz nada.
+insert into auth.users (id, email)
+values ('11111111-1111-1111-1111-111111111111','nos@teste.pt')
+  on conflict (id) do nothing;
+insert into admins (user_id) values ('11111111-1111-1111-1111-111111111111')
+  on conflict do nothing;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+
 -- Repetível: limpa o que uma corrida anterior tenha deixado.
 delete from galleries where slug in ('teste','teste2');
 delete from access_attempts where slug in ('teste','teste2');
