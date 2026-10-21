@@ -128,6 +128,73 @@ select '19. RLS ligado em galleries e photos: ' ||
   case when (select bool_and(relrowsecurity) from pg_class
              where relname in ('galleries','photos')) then 'SIM' else 'NAO' end;
 
+-- ═══ Arrumar a galeria: ordenar pela data e numerar ══════════════════════════
+
+delete from galleries where slug = 'arrumar';
+insert into galleries (slug, title, password_hash, published)
+values ('arrumar', 'Arrumar', 'x', false);
+
+-- Três fotografias fora de ordem, com nomes de máquina e extensões diferentes.
+-- A do meio é a mais antiga, para a ordenação ter de fazer alguma coisa.
+insert into photos (gallery_id, storage_path, file_name, taken_at, sort_order)
+select g.id, 'p/' || n.nome, n.nome, n.quando, n.ordem
+  from galleries g,
+       (values ('DSC_4821.JPG', '2026-06-01 15:00+00'::timestamptz, 0),
+               ('IMG_0032.HEIC','2026-06-01 09:00+00'::timestamptz, 1),
+               ('MVI_7.mp4',    '2026-06-01 18:00+00'::timestamptz, 2)
+       ) as n(nome, quando, ordem)
+ where g.slug = 'arrumar';
+
+select '20. arrumar mexe nas tres fotografias: ' ||
+  case when arrumar_galeria((select id from galleries where slug='arrumar')) = 3
+       then 'SIM' else 'NAO' end;
+
+select '21. ordena pela hora em que foi tirada: ' ||
+  case when (select string_agg(storage_path, ' ' order by sort_order)
+               from photos where gallery_id = (select id from galleries where slug='arrumar'))
+            = 'p/IMG_0032.HEIC p/DSC_4821.JPG p/MVI_7.mp4'
+       then 'SIM' else 'NAO' end;
+
+select '22. numera de um a tres e guarda a extensao: ' ||
+  case when (select string_agg(file_name, ' ' order by sort_order)
+               from photos where gallery_id = (select id from galleries where slug='arrumar'))
+            = 'Nebula1.heic Nebula2.jpg Nebula3.mp4'
+       then 'SIM' else 'NAO (' || (select string_agg(file_name, ' ' order by sort_order)
+               from photos where gallery_id = (select id from galleries where slug='arrumar')) || ')' end;
+
+select '23. correr outra vez da o mesmo: ' ||
+  case when (select arrumar_galeria((select id from galleries where slug='arrumar'))) = 3
+        and (select string_agg(file_name, ' ' order by sort_order)
+               from photos where gallery_id = (select id from galleries where slug='arrumar'))
+            = 'Nebula1.heic Nebula2.jpg Nebula3.mp4'
+       then 'SIM' else 'NAO' end;
+
+select '24. o caminho no armazenamento nao muda: ' ||
+  case when (select count(*) from photos
+              where gallery_id = (select id from galleries where slug='arrumar')
+                and storage_path like 'p/%') = 3
+       then 'SIM' else 'NAO' end;
+
+-- Sem datas: mantém-se a ordem que já lá estava e só se numera.
+delete from photos where gallery_id = (select id from galleries where slug='arrumar');
+insert into photos (gallery_id, storage_path, file_name, taken_at, sort_order)
+select g.id, 'q/' || n.nome, n.nome, null, n.ordem
+  from galleries g,
+       (values ('zz.jpg', 0), ('aa.jpg', 1)) as n(nome, ordem)
+ where g.slug = 'arrumar';
+
+select '25. sem datas mantem a ordem escolhida a mao: ' ||
+  case when (select arrumar_galeria((select id from galleries where slug='arrumar'))) = 2
+        and (select string_agg(storage_path, ' ' order by sort_order)
+               from photos where gallery_id = (select id from galleries where slug='arrumar'))
+            = 'q/zz.jpg q/aa.jpg'
+       then 'SIM' else 'NAO' end;
+
+select '26. anon nao pode arrumar: ' ||
+  case when has_function_privilege('anon', 'arrumar_galeria(uuid, text)', 'EXECUTE')
+       then 'NAO' else 'SIM' end;
+
 -- Não deixar lixo para trás.
+delete from galleries where slug = 'arrumar';
 delete from galleries where slug in ('teste','teste2');
 delete from access_attempts where slug in ('teste','teste2');

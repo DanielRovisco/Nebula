@@ -283,17 +283,6 @@ export const demoApi = {
     save(s)
   },
 
-  async sortByTakenAt(galleryId: string, photos: Photo[]) {
-    const ordenadas = [...photos].sort((a, b) => {
-      if (a.takenAt && b.takenAt) return a.takenAt.localeCompare(b.takenAt)
-      if (a.takenAt) return -1
-      if (b.takenAt) return 1
-      return a.sortOrder - b.sortOrder
-    })
-    await this.reorderPhotos(galleryId, ordenadas.map((p) => p.id))
-    return ordenadas
-  },
-
   async reorderPhotos(galleryId: string, orderedIds: string[]) {
     const s = load()
     orderedIds.forEach((id, i) => {
@@ -337,6 +326,29 @@ export const demoApi = {
     // Na demonstração os "caminhos" já são URLs locais.
     await wait(80)
     return keys
+  },
+
+  /* Na demonstração arruma-se a lista em memória, com as mesmas regras. */
+  async arrumarGaleria(galleryId: string): Promise<number> {
+    await wait(200)
+    const s = load()
+    const minhas = s.photos.filter((p) => p.galleryId === galleryId)
+    const comData = minhas.filter((p) => p.takenAt).length
+    const ordenadas = [...minhas].sort((a, b) => {
+      if (comData >= 2) {
+        if (a.takenAt && b.takenAt) return a.takenAt.localeCompare(b.takenAt)
+        if (a.takenAt) return -1
+        if (b.takenAt) return 1
+      }
+      return a.sortOrder - b.sortOrder
+    })
+    ordenadas.forEach((p, i) => {
+      const extensao = /\.([A-Za-z0-9]{1,8})$/.exec(p.fileName)
+      p.sortOrder = i
+      p.fileName = `Nebula${i + 1}${extensao ? `.${extensao[1].toLowerCase()}` : ''}`
+    })
+    save(s)
+    return ordenadas.length
   },
 
   async listFavorites(galleryId: string): Promise<string[]> {

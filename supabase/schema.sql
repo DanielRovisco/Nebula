@@ -270,6 +270,90 @@ end $$;
 revoke all on function set_gallery_password(uuid, text) from public, anon;
 grant execute on function set_gallery_password(uuid, text) to authenticated;
 
+-- ─── Arrumar a galeria antes de a entregar ─────────────────────────────────
+--
+-- Põe as fotografias pela hora a que foram tiradas e dá-lhes nomes seguidos:
+-- Nebula1, Nebula2, Nebula3. Corre no momento de publicar e no de copiar o link
+-- para o cliente, que é o mesmo momento.
+--
+-- Porquê renomear: o que sai de uma máquina chama-se DSC_4821.JPG ou
+-- IMG_0032.HEIC, e é esse nome que o cliente vê e que vai parar à pasta das
+-- transferências dele, misturado com o resto da vida. Um nome nosso e seguido
+-- diz de onde veio aquilo e mantém a ordem certa quando ele abre a pasta,
+-- porque a ordem alfabética passa a ser a ordem da entrega.
+--
+-- O nome não é o ficheiro: `storage_path` fica como está. Isto só mexe no nome
+-- com que a fotografia é mostrada e descarregada, e por isso pode ser corrido
+-- vezes sem conta sem mexer em nada no R2. Corrê-lo outra vez sem nada ter
+-- mudado dá exactamente o mesmo resultado.
+--
+-- A data vem do EXIF, lido no browser durante o upload. Quando ela falta, não
+-- se inventa: mantém-se a ordem que a galeria já tinha e só se numera. Com
+-- menos de duas fotografias datadas não há ordenação nenhuma a fazer — uma data
+-- isolada no meio de quarenta ficheiros sem data não ordena coisa nenhuma e só
+-- baralhava uma ordem escolhida à mão.
+--
+-- Sem `security definer`, de propósito. Esta função não precisa de poderes que
+-- quem a chama não tenha: a política da tabela já deixa o administrador mexer
+-- nas fotografias e nega a toda a gente o resto. O `is_admin()` aqui em baixo é
+-- para dar uma resposta franca a quem não pode, em vez de o deixar mexer em
+-- zero linhas e sair convencido de que correu bem.
+create or replace function arrumar_galeria(p_gallery uuid, p_prefixo text default 'Nebula')
+returns integer
+language plpgsql
+set search_path = public, extensions
+as $$
+declare
+  com_data integer;
+  mexidas integer;
+begin
+  if not is_admin() then
+    raise exception 'sem permissão para arrumar esta galeria';
+  end if;
+
+  select count(*) filter (where taken_at is not null)
+    into com_data
+    from photos where gallery_id = p_gallery;
+
+  with ordenadas as (
+    select id,
+           row_number() over (
+             order by
+               -- Sem data vai para o fim, e não para o princípio do dia.
+               case when com_data >= 2 then (taken_at is null) else false end,
+               case when com_data >= 2 then taken_at else null end,
+               -- Critérios de desempate, por esta ordem: a ordem que já tinha,
+               -- quando entrou, e o nome. Sem eles, duas fotografias com a
+               -- mesma data ao segundo podiam trocar de lugar entre corridas, e
+               -- a numeração deixava de ser estável.
+               sort_order,
+               created_at,
+               file_name
+           ) as posicao
+      from photos
+     where gallery_id = p_gallery
+  )
+  update photos p
+     set sort_order = o.posicao - 1,
+         -- A extensão vem do nome actual: é ela que diz ao sistema do cliente
+         -- com que programa abrir o ficheiro, e um JPG chamado "Nebula3" sem
+         -- mais nada é um ficheiro que não abre com dois cliques.
+         --
+         -- Em minúsculas, porque metade das máquinas escreve .JPG e a outra
+         -- metade .jpg, e uma pasta com as duas coisas é exactamente o que isto
+         -- vem arrumar. Nenhum sistema se importa com a diferença.
+         file_name = p_prefixo || o.posicao
+           || coalesce('.' || lower(nullif(substring(p.file_name from '\.([A-Za-z0-9]{1,8})$'), '')), '')
+    from ordenadas o
+   where o.id = p.id;
+
+  get diagnostics mexidas = row_count;
+  return mexidas;
+end $$;
+
+revoke all on function arrumar_galeria(uuid, text) from public, anon;
+grant execute on function arrumar_galeria(uuid, text) to authenticated;
+
 -- `security_invoker = true` e não o comportamento por omissão do Postgres.
 --
 -- Sem isto, a view corre com as permissões de quem a criou e não com as de quem

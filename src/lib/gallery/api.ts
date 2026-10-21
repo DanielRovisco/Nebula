@@ -599,21 +599,22 @@ const realApi = {
   },
 
   /**
-   * Reordena pela hora a que cada fotografia foi tirada.
+   * Arruma a galeria: ordena pela hora a que cada fotografia foi tirada e
+   * renomeia tudo para Nebula1, Nebula2, Nebula3.
    *
-   * As que não trazem data ficam no fim, pela ordem que já tinham: um vídeo ou
-   * um ficheiro exportado sem EXIF não deve ir parar ao princípio do dia só
-   * porque não sabemos quando foi.
+   * Corre no momento de publicar e no de copiar o link, que são o mesmo
+   * momento, e também no botão do painel para quem quiser ver o resultado antes
+   * de entregar. Devolve quantas fotografias foram arrumadas.
+   *
+   * O trabalho é todo feito numa chamada só à base de dados, e não aqui a
+   * correr a lista: numa galeria de trezentas fotografias isto eram trezentos
+   * pedidos, e um separador fechado a meio deixava metade da galeria renomeada
+   * e a outra metade não.
    */
-  async sortByTakenAt(galleryId: string, photos: Photo[]) {
-    const ordenadas = [...photos].sort((a, b) => {
-      if (a.takenAt && b.takenAt) return a.takenAt.localeCompare(b.takenAt)
-      if (a.takenAt) return -1
-      if (b.takenAt) return 1
-      return a.sortOrder - b.sortOrder
-    })
-    await this.reorderPhotos(galleryId, ordenadas.map((p) => p.id))
-    return ordenadas
+  async arrumarGaleria(galleryId: string): Promise<number> {
+    const { data, error } = await supabase().rpc('arrumar_galeria', { p_gallery: galleryId })
+    if (error) throw new Error(error.message)
+    return (data as number) ?? 0
   },
 
   async reorderPhotos(_galleryId: string, orderedIds: string[]) {

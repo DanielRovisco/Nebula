@@ -307,16 +307,59 @@ export default function GalleryEditor() {
     setMiniaturas(null)
   }
 
-  async function ordenarPorData() {
+  /**
+   * Ordena pela hora a que foram tiradas e renomeia tudo para Nebula1, Nebula2.
+   *
+   * Devolve o que aconteceu em vez de o mostrar: quem chama isto a publicar
+   * precisa de juntar o recado ao seu, e quem chama pelo botão só quer a frase.
+   */
+  async function arrumar(): Promise<string | null> {
+    if (!gallery) return null
+    try {
+      const quantas = await api.arrumarGaleria(gallery.id)
+      if (!quantas) return null
+      return `${quantas} ${quantas === 1 ? 'ficheiro arrumado' : 'ficheiros arrumados'} por data, de Nebula1 a Nebula${quantas}.`
+    } catch (e) {
+      /*
+        Arrumar não é a razão de ninguém ter carregado no botão: quem publica
+        quer publicar. Uma falha aqui fica dita e não trava o resto, senão uma
+        galeria pronta ficava por entregar por causa dos nomes dos ficheiros.
+      */
+      setError(`Não consegui ordenar e renomear: ${(e as Error).message}`)
+      return null
+    }
+  }
+
+  async function arrumarPeloBotao() {
     if (!gallery) return
     setSaving(true)
     setError(null)
+    const recado = await arrumar()
+    await load()
+    if (recado) flash(recado)
+    setSaving(false)
+  }
+
+  /**
+   * Publicar arruma primeiro.
+   *
+   * Publicar é o momento em que a galeria deixa de ser nossa e passa a ser do
+   * cliente, e é esse o momento certo para ela ficar apresentável: por ordem do
+   * dia e com nomes nossos. A seguir já é tarde — o cliente pode estar a
+   * descarregar enquanto se mexe nos nomes.
+   */
+  async function publicar() {
+    if (!gallery) return
+    setSaving(true)
+    setError(null)
+    const recado = await arrumar()
     try {
-      setPhotos(await api.sortByTakenAt(gallery.id, photos))
-      flash('Ordenadas pela hora em que foram tiradas.')
+      const updated = await api.updateGallery(gallery.id, { published: true })
+      setGallery(updated)
+      await load()
+      flash(recado ? `Publicada. ${recado}` : 'Publicada.')
     } catch (e) {
       setError((e as Error).message)
-      load()
     } finally {
       setSaving(false)
     }
@@ -462,11 +505,19 @@ export default function GalleryEditor() {
         galeria não fica aberta ao mundo por causa de uma mensagem que nunca
         chegou a ser copiada.
       */
+      /*
+        Copiar o link é entregar, e entrega-se arrumado: por ordem do dia e com
+        os ficheiros numerados. Mesmo com a galeria já publicada, porque podem
+        ter entrado fotografias desde a última vez.
+      */
+      const arrumadas = await arrumar()
+      await load()
+
       if (!gallery!.published) {
         try {
           const atualizada = await api.updateGallery(gallery!.id, { published: true })
           setGallery(atualizada)
-          setCopiado('Copiado e galeria publicada.')
+          setCopiado(`Copiado e galeria publicada.${arrumadas ? ` ${arrumadas}` : ''}`)
         } catch {
           // A cópia funcionou; só a publicação falhou. Dizer exactamente isso,
           // senão fica-se a pensar que está tudo pronto quando não está.
@@ -475,9 +526,9 @@ export default function GalleryEditor() {
           return
         }
       } else {
-        setCopiado('Copiado.')
+        setCopiado(`Copiado.${arrumadas ? ` ${arrumadas}` : ''}`)
       }
-      setTimeout(() => setCopiado(null), 3500)
+      setTimeout(() => setCopiado(null), 6000)
     } catch {
       setError('O browser não deixou copiar. Copia à mão o link e a password.')
     }
@@ -514,7 +565,7 @@ export default function GalleryEditor() {
             {preparando ? 'A preparar…' : 'Ver como o cliente'}
           </button>
           <button
-            onClick={() => patch({ published: !gallery.published })}
+            onClick={() => (gallery.published ? patch({ published: false }) : publicar())}
             disabled={saving}
             className={`px-6 py-3 rounded-full text-[11px] uppercase tracking-[0.18em] font-semibold transition-all min-h-[44px] active:scale-95 ${
               gallery.published
@@ -623,11 +674,11 @@ export default function GalleryEditor() {
           */}
           {photos.some((p) => p.takenAt) && (
             <button
-              onClick={ordenarPorData}
+              onClick={arrumarPeloBotao}
               disabled={saving}
               className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-titanium/45 hover:text-titanium/80 transition-colors px-3 py-2 disabled:opacity-40"
             >
-              <Clock size={12} /> Ordenar por data da fotografia
+              <Clock size={12} /> Ordenar por data e numerar
             </button>
           )}
           <button
