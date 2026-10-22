@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ChevronLeft, ChevronRight, Clock, Copy, Film, Play, Star, Trash2, Upload } from 'lucide-react'
+import {
+  ArrowLeft, Check, CheckSquare, ChevronLeft, ChevronRight, Clock, Copy, Film, Play, Star, Trash2,
+  Upload,
+} from 'lucide-react'
 import { useArrastar } from './useArrastar'
 import { api } from '../../lib/gallery/api'
 import type { Gallery, Photo } from '../../lib/gallery/types'
@@ -73,6 +76,16 @@ export default function GalleryEditor() {
   const [recado, setRecado] = useState<string | null>(null)
   /** O vídeo que está a ser posto à prova, quando há um. */
   const [prova, setProva] = useState<Photo | null>(null)
+  /**
+   * As fotografias escolhidas, ou nulo quando não se está a escolher.
+   *
+   * Nulo e não um conjunto vazio: é o que separa "não estou a escolher" de
+   * "estou a escolher e ainda não escolhi nada". Sem essa diferença, a grelha
+   * não sabia se um toque numa fotografia era para a escolher ou para abrir o
+   * vídeo.
+   */
+  const [escolhidas, setEscolhidas] = useState<Set<string> | null>(null)
+  const [aApagar, setAApagar] = useState(false)
   useEffect(() => {
     if (!photos.length) return
     let vivo = true
@@ -161,6 +174,47 @@ export default function GalleryEditor() {
     } catch (e) {
       setError((e as Error).message)
       load()
+    }
+  }
+
+  const aEscolher = escolhidas !== null
+
+  function alternar(id: string) {
+    setEscolhidas((antes) => {
+      const novo = new Set(antes ?? [])
+      if (novo.has(id)) novo.delete(id)
+      else novo.add(id)
+      return novo
+    })
+  }
+
+  async function apagarEscolhidas() {
+    if (!escolhidas?.size) return
+    const quantas = escolhidas.size
+    if (!window.confirm(
+      `Apagar ${quantas} ${quantas === 1 ? 'ficheiro' : 'ficheiros'}? Não há como recuperar.`,
+    )) return
+
+    const ids = [...escolhidas]
+    setAApagar(true)
+    setError(null)
+    // Optimista: a grelha responde já, e um erro repõe o estado real.
+    setPhotos((p) => p.filter((x) => !escolhidas.has(x.id)))
+    setEscolhidas(null)
+    try {
+      await api.apagarFotos(ids)
+      /*
+        Recarrega-se mesmo tendo corrido bem: entre as fotografias apagadas pode
+        ir a capa, e aí é a galeria que muda e não só a grelha. Sem isto, o
+        painel continuava a mostrar como capa uma fotografia que já não existe.
+      */
+      await load()
+      flash(`${quantas} ${quantas === 1 ? 'apagado' : 'apagados'}.`)
+    } catch (e) {
+      setError((e as Error).message)
+      load()
+    } finally {
+      setAApagar(false)
     }
   }
 
@@ -681,6 +735,15 @@ export default function GalleryEditor() {
               <Clock size={12} /> Ordenar por data e numerar
             </button>
           )}
+          {photos.length > 0 && (
+            <button
+              onClick={() => setEscolhidas(aEscolher ? null : new Set())}
+              disabled={saving}
+              className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-titanium/45 hover:text-titanium/80 transition-colors px-3 py-2 disabled:opacity-40"
+            >
+              <CheckSquare size={13} /> {aEscolher ? 'Sair da selecção' : 'Selecionar'}
+            </button>
+          )}
           <button
             onClick={() => fileInput.current?.click()}
             disabled={Boolean(upload)}
@@ -775,18 +838,73 @@ export default function GalleryEditor() {
           </div>
         ) : (
           <>
-            <p className="text-xs text-titanium/30 mb-4">
-              Arrasta para reordenar, ou usa as setas em cada foto. O arrasto
-              não funciona ao toque. É esta a ordem que o cliente vê.
-            </p>
+            {aEscolher ? (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
+                <span className="text-xs text-titanium/60">
+                  {escolhidas.size === 0
+                    ? 'Toca nas fotografias que queres apagar.'
+                    : `${escolhidas.size} de ${photos.length} ${escolhidas.size === 1 ? 'escolhida' : 'escolhidas'}.`}
+                </span>
+                <button
+                  onClick={() => setEscolhidas(new Set(photos.map((p) => p.id)))}
+                  className="text-[10px] uppercase tracking-[0.15em] text-titanium/45 hover:text-titanium/80 transition-colors"
+                >
+                  Todas
+                </button>
+                {escolhidas.size > 0 && (
+                  <button
+                    onClick={() => setEscolhidas(new Set())}
+                    className="text-[10px] uppercase tracking-[0.15em] text-titanium/45 hover:text-titanium/80 transition-colors"
+                  >
+                    Limpar
+                  </button>
+                )}
+                <button
+                  onClick={apagarEscolhidas}
+                  disabled={escolhidas.size === 0 || aApagar}
+                  className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-red-300/80 hover:text-red-300 transition-colors disabled:opacity-30"
+                >
+                  <Trash2 size={13} />
+                  {aApagar
+                    ? 'A apagar…'
+                    : `Apagar${escolhidas.size ? ` ${escolhidas.size}` : ''}`}
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs text-titanium/30 mb-4">
+                Arrasta para reordenar, ou usa as setas em cada foto. O arrasto
+                não funciona ao toque. É esta a ordem que o cliente vê.
+              </p>
+            )}
             <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
               {photos.map((photo, i) => (
                 <div
                   key={photo.id}
-                  {...propsDe(i)}
-                  className={`relative group rounded-lg overflow-hidden aspect-square bg-white/[0.04] cursor-grab active:cursor-grabbing ${
-                    aArrastar === i ? 'opacity-40' : ''
-                  }`}
+                  /*
+                    A escolher, o cartão deixa de se arrastar e passa a ser um
+                    interruptor. As duas coisas ao mesmo tempo não funcionam:
+                    arrastar começa com o dedo em cima da fotografia, que é
+                    exactamente o gesto de a escolher.
+                  */
+                  {...(aEscolher
+                    ? {
+                        role: 'checkbox',
+                        'aria-checked': escolhidas.has(photo.id),
+                        tabIndex: 0,
+                        onClick: () => alternar(photo.id),
+                        onKeyDown: (e: React.KeyboardEvent) => {
+                          if (e.key === ' ' || e.key === 'Enter') {
+                            e.preventDefault()
+                            alternar(photo.id)
+                          }
+                        },
+                      }
+                    : propsDe(i))}
+                  className={`relative group rounded-lg overflow-hidden aspect-square bg-white/[0.04] ${
+                    aEscolher
+                      ? `cursor-pointer ${escolhidas.has(photo.id) ? 'ring-2 ring-titanium' : 'opacity-70 hover:opacity-100'}`
+                      : 'cursor-grab active:cursor-grabbing'
+                  } ${aArrastar === i ? 'opacity-40' : ''}`}
                 >
                   {/*
                     Um vídeo sem miniatura não entra numa `<img>`: o browser não
@@ -810,7 +928,7 @@ export default function GalleryEditor() {
                     telemóvel, se um vídeo que trava está a parar por falta de
                     rede ou a deixar cair imagens por falta de descodificador.
                   */}
-                  {isVideo(photo) && (
+                  {isVideo(photo) && !aEscolher && (
                     <button
                       onClick={() => setProva(photo)}
                       aria-label={`Testar ${photo.fileName}`}
@@ -845,32 +963,45 @@ export default function GalleryEditor() {
                     </span>
                   )}
 
-                  <button
-                    onClick={() => patch({ coverPhotoId: photo.id })}
-                    aria-label={`Usar ${photo.fileName} como capa`}
-                    title="Usar como capa"
-                    className={`absolute top-1 left-1 p-2 transition-colors ${
-                      gallery.coverPhotoId === photo.id
-                        ? 'text-amber-300'
-                        : 'text-titanium/70 sm:text-titanium/0 sm:group-hover:text-titanium/70 hover:!text-amber-300'
-                    }`}
-                  >
-                    <Star size={15} fill={gallery.coverPhotoId === photo.id ? 'currentColor' : 'none'} />
-                  </button>
+                  {aEscolher && escolhidas.has(photo.id) && (
+                    <span className="absolute inset-0 flex items-center justify-center bg-eerie/40">
+                      <span className="w-7 h-7 rounded-full bg-titanium flex items-center justify-center">
+                        <Check size={16} className="text-eerie" strokeWidth={3} />
+                      </span>
+                    </span>
+                  )}
 
-                  <button
-                    onClick={() => removePhoto(photo)}
-                    aria-label={`Apagar ${photo.fileName}`}
-                    className="absolute top-1 right-1 p-2 text-titanium/70 sm:text-titanium/0 sm:group-hover:text-titanium/70 hover:!text-red-300 transition-colors"
-                  >
-                    <Trash2 size={15} />
-                  </button>
+                  {!aEscolher && (
+                    <>
+                      <button
+                        onClick={() => patch({ coverPhotoId: photo.id })}
+                        aria-label={`Usar ${photo.fileName} como capa`}
+                        title="Usar como capa"
+                        className={`absolute top-1 left-1 p-2 transition-colors ${
+                          gallery.coverPhotoId === photo.id
+                            ? 'text-amber-300'
+                            : 'text-titanium/70 sm:text-titanium/0 sm:group-hover:text-titanium/70 hover:!text-amber-300'
+                        }`}
+                      >
+                        <Star size={15} fill={gallery.coverPhotoId === photo.id ? 'currentColor' : 'none'} />
+                      </button>
+
+                      <button
+                        onClick={() => removePhoto(photo)}
+                        aria-label={`Apagar ${photo.fileName}`}
+                        className="absolute top-1 right-1 p-2 text-titanium/70 sm:text-titanium/0 sm:group-hover:text-titanium/70 hover:!text-red-300 transition-colors"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </>
+                  )}
 
                   {/*
                     O arrasto HTML5 não existe em ecrãs de toque, por isso a
                     ordenação ficaria impossível no telemóvel. As setas são
                     sempre visíveis ao toque e aparecem com o rato no desktop.
                   */}
+                  {!aEscolher && (
                   <div className="absolute bottom-1 inset-x-1 flex justify-between sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => move(i, i - 1)}
@@ -889,6 +1020,7 @@ export default function GalleryEditor() {
                       <ChevronRight size={14} />
                     </button>
                   </div>
+                  )}
                   <span className="absolute top-7 inset-x-0 px-1.5 text-[9px] text-titanium/0 group-hover:text-titanium/60 truncate transition-colors">
                     {photo.fileName}
                   </span>

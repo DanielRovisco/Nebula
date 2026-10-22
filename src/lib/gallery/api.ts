@@ -582,6 +582,37 @@ const realApi = {
     }
   },
 
+  /**
+   * Apaga várias fotografias de uma vez.
+   *
+   * Em grupos de 150, e não tudo num pedido só: cada fotografia pode ter três
+   * ficheiros no armazenamento (o original, a miniatura e a cópia leve), e um
+   * pedido com os de uma galeria inteira era um corpo enorme entregue a uma
+   * função que tem de os apagar um a um.
+   *
+   * O armazenamento primeiro e a base de dados depois. Se o armazenamento
+   * falhar, as linhas ficam e vê-se o que aconteceu; ao contrário, ficavam
+   * ficheiros no R2 sem nada que diga que existem, a ocupar espaço para sempre.
+   */
+  async apagarFotos(ids: string[]) {
+    if (!ids.length) return
+    const sb = supabase()
+    const GRUPO = 150
+    for (let i = 0; i < ids.length; i += GRUPO) {
+      const grupo = ids.slice(i, i + GRUPO)
+      const { data } = await sb
+        .from('photos')
+        .select('storage_path, thumb_path, preview_path')
+        .in('id', grupo)
+      const keys = (data ?? [])
+        .flatMap((r) => [r.storage_path, r.thumb_path, r.preview_path])
+        .filter(Boolean) as string[]
+      if (keys.length) await callAdmin({ action: 'delete', keys })
+      const { error } = await sb.from('photos').delete().in('id', grupo)
+      if (error) throw new Error(error.message)
+    }
+  },
+
   async deletePhoto(photoId: string) {
     const sb = supabase()
     const { data } = await sb

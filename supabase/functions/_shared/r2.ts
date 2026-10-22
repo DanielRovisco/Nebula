@@ -102,19 +102,31 @@ export function presignDownload(
 }
 
 /** Apaga objetos. Erros por objeto não travam os restantes. */
+/**
+ * Apaga objetos, cinquenta de cada vez.
+ *
+ * Em vagas e não tudo ao mesmo tempo: apagar uma selecção de duzentas
+ * fotografias são seiscentos ficheiros a contar com miniaturas e cópias leves, e
+ * seiscentos pedidos lançados ao mesmo tempo de dentro de uma Edge Function é
+ * pedir para esgotar ligações e ficar sem saber o que chegou a ser apagado.
+ * Cinquenta de cada vez é rápido na mesma e aguenta-se de pé.
+ */
 export async function deleteObjects(keys: string[], kind: BucketKind = 'private'): Promise<string[]> {
   const failed: string[] = []
-  await Promise.all(
-    keys.map(async (key) => {
-      try {
-        const res = await client.fetch(objectUrl(key, kind), { method: 'DELETE' })
-        // 404 conta como sucesso: o objetivo era não existir.
-        if (!res.ok && res.status !== 404) failed.push(key)
-      } catch {
-        failed.push(key)
-      }
-    }),
-  )
+  const VAGA = 50
+  for (let i = 0; i < keys.length; i += VAGA) {
+    await Promise.all(
+      keys.slice(i, i + VAGA).map(async (key) => {
+        try {
+          const res = await client.fetch(objectUrl(key, kind), { method: 'DELETE' })
+          // 404 conta como sucesso: o objetivo era não existir.
+          if (!res.ok && res.status !== 404) failed.push(key)
+        } catch {
+          failed.push(key)
+        }
+      }),
+    )
+  }
   return failed
 }
 

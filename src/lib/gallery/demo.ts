@@ -276,6 +276,13 @@ export const demoApi = {
     return { imagem: 'sem_video', leve: 'sem_imagem' }
   },
 
+  async apagarFotos(ids: string[]) {
+    await wait(120)
+    const s = load()
+    s.photos = s.photos.filter((p) => !ids.includes(p.id))
+    save(s)
+  },
+
   async deletePhoto(photoId: string) {
     await wait(120)
     const s = load()
