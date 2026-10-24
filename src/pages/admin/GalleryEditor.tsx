@@ -9,7 +9,7 @@ import { api } from '../../lib/gallery/api'
 import type { Gallery, Photo } from '../../lib/gallery/types'
 import { SITE_URL } from '../../lib/site'
 import { saveSession } from '../../lib/gallery/session'
-import { suggestPassword } from '../../lib/gallery/helpers'
+import { nomeLivre, suggestPassword } from '../../lib/gallery/helpers'
 import { DELIVERY_EDGE } from '../../lib/gallery/api'
 import { COVER_FONTS, LOGO_VARIANTS } from '../../lib/gallery/cover'
 import { isVideo, type CoverFont, type LogoVariant } from '../../lib/gallery/types'
@@ -85,6 +85,16 @@ export default function GalleryEditor() {
    * vídeo.
    */
   const [escolhidas, setEscolhidas] = useState<Set<string> | null>(null)
+  /**
+   * Ficheiros à espera de resposta por terem nome repetido.
+   *
+   * Guarda-se a lista inteira do que se tentou carregar, e não só os repetidos:
+   * a resposta aplica-se a todos de uma vez, e os que não chocam com nada têm
+   * de subir na mesma.
+   */
+  const [repetidos, setRepetidos] = useState<
+    { ficheiros: File[]; nomes: string[]; ids: string[] } | null
+  >(null)
   const [aApagar, setAApagar] = useState(false)
   useEffect(() => {
     if (!photos.length) return
@@ -136,6 +146,41 @@ export default function GalleryEditor() {
       (f) => f.type.startsWith('image/') || f.type.startsWith('video/'),
     )
     if (!files.length) return
+
+    /*
+      Nomes repetidos: pergunta-se antes de carregar seja o que for.
+      
+      Sem isto ficavam duas fotografias diferentes com o mesmo nome na galeria,
+      e quem as descarregasse recebia uma pergunta do próprio sistema a
+      perguntar qual delas fica — uma pergunta que é nossa e não do cliente. A
+      comparação é em minúsculas, como no Windows e no macOS.
+    */
+    const porNome = new Map(photos.map((p) => [p.fileName.toLowerCase(), p.id]))
+    const chocam = files.filter((f) => porNome.has(f.name.toLowerCase()))
+    if (chocam.length) {
+      setRepetidos({
+        ficheiros: files,
+        nomes: chocam.map((f) => f.name),
+        ids: chocam.map((f) => porNome.get(f.name.toLowerCase())!),
+      })
+      // Limpa já o input: sem isto, escolher os mesmos ficheiros a seguir não
+      // dispara nada, porque o valor não mudou.
+      if (fileInput.current) fileInput.current.value = ''
+      return
+    }
+
+    await enviar(files)
+  }
+
+  /**
+   * Carrega os ficheiros e, quando é uma substituição, apaga os antigos.
+   *
+   * Pela ordem certa: primeiro sobe o novo, só depois se apaga o velho. Ao
+   * contrário, um upload que falhasse a meio deixava a galeria sem a
+   * fotografia antiga e sem a nova.
+   */
+  async function enviar(files: File[], aSubstituir: string[] = []) {
+    if (!gallery) return
     setError(null)
     setUpload({ done: 0, total: files.length })
     try {
@@ -154,8 +199,14 @@ export default function GalleryEditor() {
         },
       )
       setConversao(null)
+      if (aSubstituir.length) await api.apagarFotos(aSubstituir)
       load()
-      flash(`${files.length} ${files.length === 1 ? 'foto adicionada' : 'fotos adicionadas'}.`)
+      flash(
+        `${files.length} ${files.length === 1 ? 'foto adicionada' : 'fotos adicionadas'}.`
+        + (aSubstituir.length
+          ? ` ${aSubstituir.length} ${aSubstituir.length === 1 ? 'substituída' : 'substituídas'}.`
+          : ''),
+      )
     } catch (e) {
       setError((e as Error).message)
       load()
@@ -216,6 +267,32 @@ export default function GalleryEditor() {
     } finally {
       setAApagar(false)
     }
+  }
+
+  function substituirRepetidos() {
+    if (!repetidos) return
+    const { ficheiros, ids } = repetidos
+    setRepetidos(null)
+    void enviar(ficheiros, ids)
+  }
+
+  function renomearRepetidos() {
+    if (!repetidos) return
+    /*
+      O conjunto vai crescendo à medida que se renomeia. Sem isso, dois
+      ficheiros repetidos na mesma leva recebiam os dois a letra "a" e ficavam
+      outra vez com o mesmo nome um do outro.
+    */
+    const ocupados = new Set(photos.map((p) => p.fileName.toLowerCase()))
+    const renomeados = repetidos.ficheiros.map((f) => {
+      const novo = nomeLivre(f.name, ocupados)
+      ocupados.add(novo.toLowerCase())
+      return novo === f.name
+        ? f
+        : new File([f], novo, { type: f.type, lastModified: f.lastModified })
+    })
+    setRepetidos(null)
+    void enviar(renomeados)
   }
 
   async function removeGallery() {
@@ -1279,6 +1356,67 @@ export default function GalleryEditor() {
       </section>
 
       {prova && <ProvaDeVideo photo={prova} aoFechar={() => setProva(null)} />}
+
+      {/*
+        Nomes repetidos: a pergunta antes de carregar.
+
+        Uma janela e não um `confirm` do browser, porque há três respostas e não
+        duas, e porque a do meio precisa de mostrar o nome que vai sair.
+      */}
+      {repetidos && (
+        <div
+          className="fixed inset-0 z-[120] bg-eerie/90 flex items-center justify-center p-6"
+          onClick={() => setRepetidos(null)}
+        >
+          <div
+            className="w-full max-w-md bg-eerie border border-titanium/15 rounded-xl p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-titanium/90 mb-2">
+              {repetidos.nomes.length === 1
+                ? 'Já existe um ficheiro com este nome:'
+                : `Já existem ${repetidos.nomes.length} ficheiros com estes nomes:`}
+            </p>
+            <ul className="text-[13px] text-titanium/55 mb-5 space-y-0.5">
+              {repetidos.nomes.slice(0, 4).map((n) => (
+                <li key={n} className="truncate">{n}</li>
+              ))}
+              {repetidos.nomes.length > 4 && (
+                <li className="text-titanium/35">e mais {repetidos.nomes.length - 4}.</li>
+              )}
+            </ul>
+
+            <button
+              onClick={renomearRepetidos}
+              className="w-full text-left px-4 py-3 rounded-lg border border-titanium/20 hover:border-titanium/50 transition-colors"
+            >
+              <span className="text-titanium">Guardar os dois</span>
+              <span className="block text-[13px] leading-relaxed text-titanium/50 mt-1">
+                O novo entra com uma letra no nome:{' '}
+                {nomeLivre(repetidos.nomes[0], new Set(photos.map((p) => p.fileName.toLowerCase())))}
+              </span>
+            </button>
+
+            <button
+              onClick={substituirRepetidos}
+              className="w-full text-left px-4 py-3 mt-3 rounded-lg border border-titanium/20 hover:border-titanium/50 transition-colors"
+            >
+              <span className="text-titanium">Substituir</span>
+              <span className="block text-[13px] leading-relaxed text-titanium/50 mt-1">
+                {repetidos.nomes.length === 1 ? 'A fotografia antiga é apagada' : 'As fotografias antigas são apagadas'}
+                {' '}e fica a nova. Não há como recuperar.
+              </span>
+            </button>
+
+            <button
+              onClick={() => setRepetidos(null)}
+              className="w-full mt-4 py-2 label-sm text-titanium/50 hover:text-titanium/80 transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
