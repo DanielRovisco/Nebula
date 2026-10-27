@@ -162,9 +162,13 @@ select '22. numera de um a tres e guarda a extensao: ' ||
        then 'SIM' else 'NAO (' || (select string_agg(file_name, ' ' order by sort_order)
                from photos where gallery_id = (select id from galleries where slug='arrumar')) || ')' end;
 
+-- Chamar a função e ler o resultado têm de ser comandos separados: dentro do
+-- mesmo comando, o `select` ao lado da chamada lê a fotografia do instante em
+-- que o comando começou e não vê o que a função acabou de escrever. Com os dois
+-- juntos, este teste passava sem verificar nada.
+select arrumar_galeria((select id from galleries where slug='arrumar'));
 select '23. correr outra vez da o mesmo: ' ||
-  case when (select arrumar_galeria((select id from galleries where slug='arrumar'))) = 3
-        and (select string_agg(file_name, ' ' order by sort_order)
+  case when (select string_agg(file_name, ' ' order by sort_order)
                from photos where gallery_id = (select id from galleries where slug='arrumar'))
             = 'Nebula1.heic Nebula2.jpg Nebula3.mp4'
        then 'SIM' else 'NAO' end;
@@ -189,6 +193,69 @@ select '25. sem datas mantem a ordem escolhida a mao: ' ||
                from photos where gallery_id = (select id from galleries where slug='arrumar'))
             = 'q/zz.jpg q/aa.jpg'
        then 'SIM' else 'NAO' end;
+
+-- ═══ E o caminho de volta ════════════════════════════════════════════════════
+
+-- Repete-se o cenário das datas, para se poder desfazer o que ele fez.
+delete from photos where gallery_id = (select id from galleries where slug='arrumar');
+insert into photos (gallery_id, storage_path, file_name, taken_at, sort_order, created_at)
+select g.id, 'p/' || n.nome, n.nome, n.quando, n.ordem, n.entrou
+  from galleries g,
+       (values ('DSC_4821.JPG', '2026-06-01 15:00+00'::timestamptz, 0, '2026-06-02 10:00+00'::timestamptz),
+               ('IMG_0032.HEIC','2026-06-01 09:00+00'::timestamptz, 1, '2026-06-02 10:01+00'::timestamptz),
+               ('MVI_7.mp4',    '2026-06-01 18:00+00'::timestamptz, 2, '2026-06-02 10:02+00'::timestamptz)
+       ) as n(nome, quando, ordem, entrou)
+ where g.slug = 'arrumar';
+
+select arrumar_galeria((select id from galleries where slug='arrumar'));
+
+select '27. arrumar guarda o nome de origem: ' ||
+  case when (select string_agg(original_name, ' ' order by sort_order)
+               from photos where gallery_id = (select id from galleries where slug='arrumar'))
+            = 'IMG_0032.HEIC DSC_4821.JPG MVI_7.mp4'
+       then 'SIM' else 'NAO' end;
+
+select '28. arrumar marca a galeria como por data: ' ||
+  case when (select ordem from galleries where slug='arrumar') = 'data'
+       then 'SIM' else 'NAO' end;
+
+select repor_galeria((select id from galleries where slug='arrumar'));
+select '29. repor devolve os nomes de origem e a ordem do upload: ' ||
+  case when (select string_agg(file_name, ' ' order by sort_order)
+               from photos where gallery_id = (select id from galleries where slug='arrumar'))
+            = 'DSC_4821.JPG IMG_0032.HEIC MVI_7.mp4'
+       then 'SIM' else 'NAO (' || (select string_agg(file_name, ' ' order by sort_order)
+               from photos where gallery_id = (select id from galleries where slug='arrumar')) || ')' end;
+
+select '30. repor marca a galeria como de origem: ' ||
+  case when (select ordem from galleries where slug='arrumar') = 'origem'
+       then 'SIM' else 'NAO' end;
+
+select arrumar_galeria((select id from galleries where slug='arrumar'));
+select '31. arrumar outra vez volta a numerar: ' ||
+  case when (select string_agg(file_name, ' ' order by sort_order)
+               from photos where gallery_id = (select id from galleries where slug='arrumar'))
+            = 'Nebula1.heic Nebula2.jpg Nebula3.mp4'
+       then 'SIM' else 'NAO' end;
+
+-- Sem nome de origem guardado (fotografias anteriores a isto existir), o nome
+-- resgata-se do caminho no armazenamento.
+update photos set original_name = null, file_name = 'Nebula9.jpg',
+       storage_path = (select id::text from galleries where slug='arrumar')
+                      || '/1750000000000-ab12cd34-Primeiro_beijo.mp4'
+ where gallery_id = (select id from galleries where slug='arrumar')
+   and sort_order = 0;
+
+select repor_galeria((select id from galleries where slug='arrumar'));
+select '32. sem nome guardado, resgata-o do caminho: ' ||
+  case when (select count(*) from photos
+              where gallery_id = (select id from galleries where slug='arrumar')
+                and file_name = 'Primeiro_beijo.mp4') = 1
+       then 'SIM' else 'NAO' end;
+
+select '33. anon nao pode repor: ' ||
+  case when has_function_privilege('anon', 'repor_galeria(uuid)', 'EXECUTE')
+       then 'NAO' else 'SIM' end;
 
 select '26. anon nao pode arrumar: ' ||
   case when has_function_privilege('anon', 'arrumar_galeria(uuid, text)', 'EXECUTE')

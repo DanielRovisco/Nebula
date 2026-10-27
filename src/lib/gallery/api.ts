@@ -133,6 +133,7 @@ const rowToGallery = (r: Record<string, unknown>): Gallery => ({
   downloadEnabled: Boolean(r.download_enabled),
   lockAttempts: r.lock_attempts === undefined ? true : Boolean(r.lock_attempts),
   expiresAt: (r.expires_at as string) ?? null,
+  ordem: ((r.ordem as string) ?? 'data') as Gallery['ordem'],
   createdAt: r.created_at as string,
 })
 
@@ -153,6 +154,7 @@ const rowToPhoto = (r: Record<string, unknown>): Photo => ({
   previewPath: (r.preview_path as string) ?? null,
   previewType: (r.preview_type as string) ?? null,
   previewBytes: (r.preview_bytes as number) ?? null,
+  originalName: (r.original_name as string) ?? null,
   sortOrder: (r.sort_order as number) ?? 0,
 })
 
@@ -448,6 +450,8 @@ const realApi = {
         preview_path: preview?.key ?? null,
         preview_type: preview?.tipo ?? null,
         preview_bytes: preview?.bytes ?? null,
+        // O nome tal como ele chega, para o "repor" ter por onde voltar.
+        original_name: file.name,
         file_name: file.name,
         content_type: contentType,
         width,
@@ -644,6 +648,19 @@ const realApi = {
    */
   async arrumarGaleria(galleryId: string): Promise<number> {
     const { data, error } = await supabase().rpc('arrumar_galeria', { p_gallery: galleryId })
+    if (error) throw new Error(error.message)
+    return (data as number) ?? 0
+  },
+
+  /**
+   * O caminho de volta: ordem do upload e os nomes que vieram da máquina.
+   *
+   * Arrumar não pode ser uma porta de sentido único. Ninguém se lembra de que a
+   * Nebula7 era a DSC_4821.JPG, e uma decisão que não se desfaz é uma decisão
+   * que se toma com medo.
+   */
+  async reporGaleria(galleryId: string): Promise<number> {
+    const { data, error } = await supabase().rpc('repor_galeria', { p_gallery: galleryId })
     if (error) throw new Error(error.message)
     return (data as number) ?? 0
   },

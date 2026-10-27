@@ -67,7 +67,21 @@ alter table galleries
   -- 'serif' | 'sans' | 'label'. Ver COVER_FONTS no frontend.
   add column if not exists cover_font text not null default 'serif',
   -- 'white' | 'black' | 'none': qual dos logos aparece na capa.
-  add column if not exists logo_variant text not null default 'white';
+  add column if not exists logo_variant text not null default 'white',
+  /*
+    Como é que esta galeria se apresenta ao cliente.
+
+    'data'   — por ordem da hora a que foram tiradas, com os nomes Nebula1,
+               Nebula2. É o que vale para quem recebe: a ordem alfabética na
+               pasta passa a ser a ordem do dia.
+    'origem' — pela ordem em que foram carregadas, com os nomes que vieram da
+               máquina.
+
+    Fica guardado na galeria e não só no botão do painel porque é ele que manda
+    no momento de publicar: sem isto, escolher "origem" e carregar em publicar
+    a seguir voltava a arrumar tudo, e o botão parecia não servir para nada.
+  */
+  add column if not exists ordem text not null default 'data';
 
 alter table photos
   -- Distingue foto de vídeo sem depender da extensão do nome do ficheiro.
@@ -116,7 +130,46 @@ alter table photos
     vinte megabytes. Quem está ao telemóvel merece saber qual é qual antes de
     escolher, em vez de ficar meia hora à espera sem saber porquê.
   */
-  add column if not exists preview_bytes bigint;
+  add column if not exists preview_bytes bigint,
+  /*
+    O nome com que o ficheiro saiu da máquina.
+
+    Existe para se poder voltar atrás. O "ordenar por data e numerar" escreve
+    por cima do `file_name` — Nebula1, Nebula2 — e sem guardar o nome de origem
+    isso era uma porta de sentido único: ninguém se lembra de que a Nebula7 era
+    a DSC_4821.JPG.
+
+    Nulo nas fotografias antigas, e o preenchimento delas está logo a seguir.
+  */
+  add column if not exists original_name text;
+
+/*
+  O nome de origem das fotografias que já cá estavam.
+
+  Duas situações diferentes, e distinguem-se pelo nome actual. Se ele é
+  "Nebula<número>", a galeria já foi arrumada e o nome verdadeiro perdeu-se do
+  `file_name`; resgata-se do caminho no armazenamento, que é montado como
+  `<galeria>/<momento>-<8 letras>-<nome>` e guarda o nome com que o ficheiro
+  subiu. Caso contrário, o `file_name` ainda é o original e basta copiá-lo.
+
+  O resgate do caminho não devolve o nome exacto: espaços e acentos foram
+  trocados por "_" quando a chave foi montada, para não se poder escapar da
+  pasta da galeria. "Primeiro beijo.mp4" volta como "Primeiro_beijo.mp4". É
+  menos do que o original e muito mais do que "Nebula7".
+
+  O `where original_name is null` faz disto uma coisa que corre uma vez: este
+  ficheiro é aplicado inteiro a cada publicação e não pode ir escrevendo por
+  cima do que já lá está.
+*/
+update photos
+   set original_name = case
+         when file_name ~ '^Nebula[0-9]+(\.[A-Za-z0-9]+)?$'
+           then coalesce(
+                  nullif(substring(storage_path from '^[^/]+/[0-9]+-[0-9a-f]{8}-(.+)$'), ''),
+                  file_name)
+         else file_name
+       end
+ where original_name is null;
 
 create index if not exists photos_gallery_idx on photos (gallery_id, sort_order);
 create index if not exists galleries_slug_idx on galleries (slug);
@@ -335,6 +388,11 @@ begin
   )
   update photos p
      set sort_order = o.posicao - 1,
+         -- Guarda-se o nome de origem antes de escrever por cima dele, para o
+         -- `repor_galeria` ter por onde voltar. Só da primeira vez: à segunda
+         -- passagem o `file_name` já é "Nebula7" e guardá-lo seria apagar o
+         -- original com uma cópia de si mesmo errada.
+         original_name = coalesce(p.original_name, p.file_name),
          -- A extensão vem do nome actual: é ela que diz ao sistema do cliente
          -- com que programa abrir o ficheiro, e um JPG chamado "Nebula3" sem
          -- mais nada é um ficheiro que não abre com dois cliques.
@@ -348,11 +406,64 @@ begin
    where o.id = p.id;
 
   get diagnostics mexidas = row_count;
+
+  update galleries set ordem = 'data' where id = p_gallery;
   return mexidas;
 end $$;
 
 revoke all on function arrumar_galeria(uuid, text) from public, anon;
 grant execute on function arrumar_galeria(uuid, text) to authenticated;
+
+-- ─── E o caminho de volta ──────────────────────────────────────────────────
+--
+-- Repõe a galeria como ela estava antes de ser arrumada: pela ordem em que os
+-- ficheiros foram carregados e com os nomes que vieram da máquina.
+--
+-- Existe porque arrumar não pode ser uma porta de sentido único. Ninguém se
+-- lembra de que a Nebula7 era a DSC_4821.JPG, e uma decisão que não se pode
+-- desfazer é uma decisão que se toma com medo.
+--
+-- A ordem vem do `created_at`, que é o momento em que cada linha entrou, ou
+-- seja a ordem do upload. O nome vem do `original_name`; quando ele falta,
+-- resgata-se do caminho no armazenamento, que guarda o nome com que o ficheiro
+-- subiu (com espaços e acentos trocados por "_").
+create or replace function repor_galeria(p_gallery uuid)
+returns integer
+language plpgsql
+set search_path = public, extensions
+as $$
+declare
+  mexidas integer;
+begin
+  if not is_admin() then
+    raise exception 'sem permissão para repor esta galeria';
+  end if;
+
+  with ordenadas as (
+    select id,
+           -- O caminho desempata: começa pelo momento em milissegundos em que
+           -- a chave foi pedida, por isso ordena na mesma direcção do tempo.
+           row_number() over (order by created_at, storage_path) as posicao
+      from photos
+     where gallery_id = p_gallery
+  )
+  update photos p
+     set sort_order = o.posicao - 1,
+         file_name = coalesce(
+           p.original_name,
+           nullif(substring(p.storage_path from '^[^/]+/[0-9]+-[0-9a-f]{8}-(.+)$'), ''),
+           p.file_name)
+    from ordenadas o
+   where o.id = p.id;
+
+  get diagnostics mexidas = row_count;
+
+  update galleries set ordem = 'origem' where id = p_gallery;
+  return mexidas;
+end $$;
+
+revoke all on function repor_galeria(uuid) from public, anon;
+grant execute on function repor_galeria(uuid) to authenticated;
 
 -- `security_invoker = true` e não o comportamento por omissão do Postgres.
 --
@@ -372,7 +483,7 @@ drop view if exists galleries_admin;
 create view galleries_admin with (security_invoker = true) as
   select id, slug, title, client_name, message, cover_path, cover_photo_id,
          cover_title, cover_font, logo_variant, published, download_enabled,
-         lock_attempts, expires_at, created_at, updated_at
+         lock_attempts, expires_at, ordem, created_at, updated_at
   from galleries;
 
 revoke all on galleries_admin from anon;

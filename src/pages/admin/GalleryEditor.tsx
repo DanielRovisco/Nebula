@@ -12,7 +12,9 @@ import { saveSession } from '../../lib/gallery/session'
 import { nomeLivre, suggestPassword } from '../../lib/gallery/helpers'
 import { DELIVERY_EDGE } from '../../lib/gallery/api'
 import { COVER_FONTS, LOGO_VARIANTS } from '../../lib/gallery/cover'
-import { isVideo, type CoverFont, type LogoVariant } from '../../lib/gallery/types'
+import {
+  isVideo, type CoverFont, type LogoVariant, type OrdemDaGaleria,
+} from '../../lib/gallery/types'
 import { slugify } from '../../lib/gallery/helpers'
 import { guardarPassword, lerPassword, mensagemDePartilha } from '../../lib/gallery/partilha'
 import { nomeDaCopiaLeve } from '../../lib/gallery/download'
@@ -439,14 +441,19 @@ export default function GalleryEditor() {
   }
 
   /**
-   * Ordena pela hora a que foram tiradas e renomeia tudo para Nebula1, Nebula2.
+   * Põe a galeria no modo que ela diz ter, seja ele qual for.
    *
    * Devolve o que aconteceu em vez de o mostrar: quem chama isto a publicar
    * precisa de juntar o recado ao seu, e quem chama pelo botão só quer a frase.
    */
-  async function arrumar(): Promise<string | null> {
+  async function aplicarOrdem(modo: OrdemDaGaleria): Promise<string | null> {
     if (!gallery) return null
     try {
+      if (modo === 'origem') {
+        const quantas = await api.reporGaleria(gallery.id)
+        if (!quantas) return null
+        return `${quantas} ${quantas === 1 ? 'ficheiro reposto' : 'ficheiros repostos'} com o nome de origem, pela ordem em que foram carregados.`
+      }
       const quantas = await api.arrumarGaleria(gallery.id)
       if (!quantas) return null
       return `${quantas} ${quantas === 1 ? 'ficheiro arrumado' : 'ficheiros arrumados'} por data, de Nebula1 a Nebula${quantas}.`
@@ -456,16 +463,22 @@ export default function GalleryEditor() {
         quer publicar. Uma falha aqui fica dita e não trava o resto, senão uma
         galeria pronta ficava por entregar por causa dos nomes dos ficheiros.
       */
-      setError(`Não consegui ordenar e renomear: ${(e as Error).message}`)
+      setError(`Não consegui mudar a ordem: ${(e as Error).message}`)
       return null
     }
   }
 
-  async function arrumarPeloBotao() {
+  /**
+   * O botão que alterna entre os dois modos.
+   *
+   * Um só botão e não dois: são dois estados de uma coisa e não duas acções
+   * diferentes, e o que o botão diz é sempre o que acontece se lhe carregares.
+   */
+  async function alternarOrdem() {
     if (!gallery) return
     setSaving(true)
     setError(null)
-    const recado = await arrumar()
+    const recado = await aplicarOrdem(gallery.ordem === 'data' ? 'origem' : 'data')
     await load()
     if (recado) flash(recado)
     setSaving(false)
@@ -483,7 +496,7 @@ export default function GalleryEditor() {
     if (!gallery) return
     setSaving(true)
     setError(null)
-    const recado = await arrumar()
+    const recado = await aplicarOrdem(gallery.ordem)
     try {
       const updated = await api.updateGallery(gallery.id, { published: true })
       setGallery(updated)
@@ -641,7 +654,7 @@ export default function GalleryEditor() {
         os ficheiros numerados. Mesmo com a galeria já publicada, porque podem
         ter entrado fotografias desde a última vez.
       */
-      const arrumadas = await arrumar()
+      const arrumadas = await aplicarOrdem(gallery!.ordem)
       await load()
 
       if (!gallery!.published) {
@@ -800,16 +813,19 @@ export default function GalleryEditor() {
             </button>
           )}
           {/*
-            Só faz sentido oferecer se houver datas para ordenar: fotografias
-            exportadas sem EXIF e vídeos não trazem nenhuma.
+            O que o botão diz é o que acontece se lhe carregares, e não o estado
+            em que a galeria está. O estado está escrito por cima da grelha.
           */}
-          {photos.some((p) => p.takenAt) && (
+          {photos.length > 0 && (
             <button
-              onClick={arrumarPeloBotao}
+              onClick={alternarOrdem}
               disabled={saving}
               className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-titanium/45 hover:text-titanium/80 transition-colors px-3 py-2 disabled:opacity-40"
             >
-              <Clock size={12} /> Ordenar por data e numerar
+              <Clock size={12} />
+              {gallery.ordem === 'data'
+                ? 'Repor nomes e ordem de origem'
+                : 'Ordenar por data e numerar'}
             </button>
           )}
           {photos.length > 0 && (
@@ -949,8 +965,11 @@ export default function GalleryEditor() {
               </div>
             ) : (
               <p className="text-xs text-titanium/30 mb-4">
-                Arrasta para reordenar, ou usa as setas em cada foto. O arrasto
-                não funciona ao toque. É esta a ordem que o cliente vê.
+                {gallery.ordem === 'data'
+                  ? 'Por data, com os nomes Nebula1, Nebula2. '
+                  : 'Pela ordem em que foram carregadas, com os nomes de origem. '}
+                Publicar volta a aplicar isto. Arrasta para reordenar, ou usa as
+                setas em cada foto. O arrasto não funciona ao toque.
               </p>
             )}
             <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">

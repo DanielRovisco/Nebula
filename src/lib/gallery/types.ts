@@ -19,9 +19,19 @@ export interface Gallery {
   /** Fecha o acesso ao fim de dez tentativas falhadas numa hora. */
   lockAttempts: boolean
   expiresAt: string | null
+  /**
+   * Como a galeria se apresenta ao cliente.
+   *
+   * 'data' é por ordem da hora em que foram tiradas, com os nomes Nebula1,
+   * Nebula2; 'origem' é pela ordem em que foram carregadas, com os nomes que
+   * vieram da máquina. É isto que manda no momento de publicar.
+   */
+  ordem: OrdemDaGaleria
   createdAt: string
   photoCount?: number
 }
+
+export type OrdemDaGaleria = 'data' | 'origem'
 
 export interface Photo {
   id: string
@@ -41,6 +51,8 @@ export interface Photo {
   previewPath: string | null
   previewType: string | null
   previewBytes: number | null
+  /** O nome com que o ficheiro saiu da máquina, para se poder voltar atrás. */
+  originalName: string | null
   sortOrder: number
 }
 

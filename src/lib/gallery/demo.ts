@@ -40,7 +40,7 @@ function seed(): DemoState {
       published: true,
       downloadEnabled: true,
       lockAttempts: true,
-      expiresAt: null,
+      expiresAt: null, ordem: 'data',
       createdAt: new Date(Date.now() - 864e5 * 3).toISOString(),
       password: 'demo',
     },
@@ -58,7 +58,7 @@ function seed(): DemoState {
       published: false,
       downloadEnabled: true,
       lockAttempts: true,
-      expiresAt: null,
+      expiresAt: null, ordem: 'data',
       createdAt: new Date(Date.now() - 864e5 * 12).toISOString(),
       password: 'demo',
     },
@@ -79,6 +79,7 @@ function seed(): DemoState {
     previewPath: null,
     previewType: null,
     previewBytes: null,
+    originalName: null,
     sortOrder: i,
   }))
 
@@ -96,6 +97,7 @@ function seed(): DemoState {
       // Com cópia leve, para a demonstração mostrar a etiqueta do formato e a
       // escolha entre leve e original na hora de descarregar.
       previewPath: 'demo/leve.mp4', previewType: 'video/mp4', previewBytes: 5_600_000,
+      originalName: 'Primeiro beijo.mp4',
       takenAt: null, sortOrder: photos.length,
     },
     {
@@ -103,7 +105,7 @@ function seed(): DemoState {
       storagePath: '', thumbPath: asset('/brand/portfolio/forest-bride-480.webp'),
       fileName: 'Primeira danca.mp4', contentType: 'video/mp4',
       width: 3840, height: 2160, sizeBytes: 43_428_000, durationSeconds: 20,
-      previewPath: null, previewType: null, previewBytes: null,
+      previewPath: null, previewType: null, previewBytes: null, originalName: null,
       takenAt: null, sortOrder: photos.length + 1,
     },
   )
@@ -196,6 +198,7 @@ export const demoApi = {
       downloadEnabled: input.downloadEnabled ?? true,
       lockAttempts: input.lockAttempts ?? true,
       expiresAt: input.expiresAt ?? null,
+      ordem: 'data' as const,
       createdAt: new Date().toISOString(),
       password: input.password,
     }
@@ -254,6 +257,7 @@ export const demoApi = {
         storagePath: url,
         thumbPath: url,
         fileName: file.name,
+        originalName: file.name,
         contentType: file.type || null,
         takenAt: null,
         width: null,
@@ -335,6 +339,22 @@ export const demoApi = {
     return keys
   },
 
+  /* O caminho de volta: a ordem em que entraram e os nomes de origem. */
+  async reporGaleria(galleryId: string): Promise<number> {
+    await wait(200)
+    const s = load()
+    // Em memória não há `created_at`: a ordem do upload é a ordem da lista.
+    const minhas = s.photos.filter((p) => p.galleryId === galleryId)
+    minhas.forEach((p, i) => {
+      p.sortOrder = i
+      p.fileName = p.originalName ?? p.fileName
+    })
+    const g = s.galleries.find((x) => x.id === galleryId)
+    if (g) g.ordem = 'origem'
+    save(s)
+    return minhas.length
+  },
+
   /* Na demonstração arruma-se a lista em memória, com as mesmas regras. */
   async arrumarGaleria(galleryId: string): Promise<number> {
     await wait(200)
@@ -351,9 +371,12 @@ export const demoApi = {
     })
     ordenadas.forEach((p, i) => {
       const extensao = /\.([A-Za-z0-9]{1,8})$/.exec(p.fileName)
+      p.originalName = p.originalName ?? p.fileName
       p.sortOrder = i
       p.fileName = `Nebula${i + 1}${extensao ? `.${extensao[1].toLowerCase()}` : ''}`
     })
+    const g = s.galleries.find((x) => x.id === galleryId)
+    if (g) g.ordem = 'data'
     save(s)
     return ordenadas.length
   },

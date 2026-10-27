@@ -461,6 +461,35 @@ entrega, e é o que faz os 10 GB gratuitos chegarem para uma temporada.
 Desliga-o quando quiseres entregar em resolução máxima. O valor está em
 `DELIVERY_EDGE`, em `src/lib/gallery/api.ts`.
 
+**Nomes repetidos:** se algum ficheiro que estás a carregar já existir na
+galeria com o mesmo nome, aparece uma janela antes de se carregar o que quer que
+seja: guardar os dois (o novo entra com uma letra antes da extensão,
+`casamento-a.jpg`), substituir (carrega o novo e só depois apaga o antigo), ou
+cancelar. A comparação é em minúsculas, como no Windows e no macOS.
+
+**Apagar várias:** o botão "Selecionar" põe a grelha em modo de escolha, com
+"Todas", "Limpar" e "Apagar N". Enquanto escolhes, o cartão não se arrasta e os
+botões dele saem do ecrã: arrastar começa com o dedo em cima da fotografia, que
+é o mesmo gesto de a escolher.
+
+**Dois modos de apresentação.** A galeria guarda em qual deles está, e publicar
+(ou copiar o link, que publica) volta a aplicá-lo:
+
+| Modo | Ordem | Nomes |
+| --- | --- | --- |
+| `data` (por omissão) | hora a que foram tiradas, lida do EXIF | `Nebula1`, `Nebula2`, … |
+| `origem` | ordem em que foram carregadas | os que vieram da máquina |
+
+O botão por cima da grelha alterna entre os dois e diz sempre o que acontece se
+lhe carregares; a linha por cima da grelha diz em qual deles a galeria está.
+
+Numerar serve para a ordem alfabética na pasta do cliente ser a ordem da
+entrega, em vez de `DSC_4821.JPG` misturado com o resto da vida dele. Dá para
+voltar atrás porque o nome de origem fica guardado em `photos.original_name`
+antes de ser escrito por cima. Nas fotografias anteriores a essa coluna existir,
+o nome é resgatado do caminho no armazenamento, que o guarda com espaços e
+acentos trocados por `_`: `Primeiro beijo.mp4` volta como `Primeiro_beijo.mp4`.
+
 **Password esquecida:** não há como a recuperar — está guardada cifrada com
 bcrypt. Define uma nova no editor da galeria.
 
