@@ -212,8 +212,31 @@ jobs:
           # razão para não publicar nada.
           command -v psql >/dev/null || sudo apt-get install -y --no-install-recommends postgresql-client
 
-          psql "$DB_URL" -v ON_ERROR_STOP=1 --single-transaction -f supabase/schema.sql
-          echo "Esquema aplicado."
+          # ── Até três tentativas ────────────────────────────────────────
+          #
+          # A base de dados a que isto se aplica está a servir o site enquanto
+          # isto corre. Já aconteceu: a transação do esquema e um convidado a
+          # abrir uma galeria pegaram-se às mesmas tabelas e o Postgres matou a
+          # nossa com "deadlock detected", a meio de um ficheiro que não tinha
+          # mudado uma linha. A publicação do site ficou por fazer por causa de
+          # alguém que estava a usá-lo.
+          #
+          # Repetir é seguro por causa do `--single-transaction`: uma tentativa
+          # falhada não deixa nada aplicado. O `lock_timeout` serve para falhar
+          # depressa em vez de ficar pendurado à espera de um lock que não vem.
+          export PGOPTIONS='-c lock_timeout=20s -c deadlock_timeout=1s'
+          tentativa=1
+          until psql "$DB_URL" -v ON_ERROR_STOP=1 --single-transaction -f supabase/schema.sql; do
+            if [ "$tentativa" -ge 3 ]; then
+              echo "::error::O esquema não foi aplicado ao fim de três tentativas."
+              exit 1
+            fi
+            espera=$((tentativa * 15))
+            echo "::warning::Tentativa $tentativa falhou, provavelmente por conflito com tráfego do site. A repetir daqui a ${espera}s."
+            sleep "$espera"
+            tentativa=$((tentativa + 1))
+          done
+          echo "Esquema aplicado à tentativa $tentativa."
 
       # ── As Edge Functions ───────────────────────────────────────────────────
       #
