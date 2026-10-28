@@ -20,6 +20,8 @@ import { grupoDeRota } from './lib/i18n'
 const About = lazyComRecarga(() => import('./pages/About'))
 const Services = lazyComRecarga(() => import('./pages/Services'))
 const Portfolio = lazyComRecarga(() => import('./pages/Portfolio'))
+const Historias = lazyComRecarga(() => import('./pages/Historias'))
+const Historia = lazyComRecarga(() => import('./pages/Historia'))
 const Contact = lazyComRecarga(() => import('./pages/Contact'))
 const GalleryAccess = lazyComRecarga(() => import('./pages/GalleryAccess'))
 const GalleryView = lazyComRecarga(() => import('./pages/GalleryView'))
@@ -46,6 +48,8 @@ const AdminShell = lazyComRecarga(() => import('./pages/admin/AdminShell'))
 const GalleryList = lazyComRecarga(() => import('./pages/admin/GalleryList'))
 const GalleryEditor = lazyComRecarga(() => import('./pages/admin/GalleryEditor'))
 const SiteAdmin = lazyComRecarga(() => import('./pages/admin/SiteAdmin'))
+const HistoriaList = lazyComRecarga(() => import('./pages/admin/HistoriaList'))
+const HistoriaEditor = lazyComRecarga(() => import('./pages/admin/HistoriaEditor'))
 const EventList = lazyComRecarga(() => import('./pages/admin/EventList'))
 const EventEditor = lazyComRecarga(() => import('./pages/admin/EventEditor'))
 const PrintList = lazyComRecarga(() => import('./pages/admin/PrintList'))
@@ -66,6 +70,8 @@ export default function App() {
           <Routes>
             <Route path="/admin" element={<GalleryList />} />
             <Route path="/admin/site" element={<SiteAdmin />} />
+            <Route path="/admin/historias" element={<HistoriaList />} />
+            <Route path="/admin/historias/:id" element={<HistoriaEditor />} />
             <Route path="/admin/eventos" element={<EventList />} />
             <Route path="/admin/eventos/:id" element={<EventEditor />} />
             <Route path="/admin/impressao" element={<PrintList />} />
@@ -157,6 +163,10 @@ export default function App() {
                 <Route path="/en/services/:servico" element={<Services />} />
                 <Route path="/portfolio" element={<Portfolio />} />
                 <Route path="/en/portfolio" element={<Portfolio />} />
+                <Route path="/historias" element={<Historias />} />
+                <Route path="/en/stories" element={<Historias />} />
+                <Route path="/historias/:slug" element={<Historia />} />
+                <Route path="/en/stories/:slug" element={<Historia />} />
                 <Route path="/contacto" element={<Contact />} />
                 <Route path="/en/contact" element={<Contact />} />
                 <Route path="/galeria" element={<GalleryAccess />} />

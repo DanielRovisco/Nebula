@@ -15,6 +15,7 @@ export const en: Dict = {
     about: 'About',
     services: 'Services',
     portfolio: 'Portfolio',
+    stories: 'Stories',
     gallery: 'Client gallery',
     contact: 'Contact',
     cta: 'Book a session',
@@ -545,6 +546,22 @@ export const en: Dict = {
     lightVersionHint: 'Reduced quality, good for viewing on a phone',
     originalVersion: 'Original',
     originalVersionHint: 'Original quality, heavier',
+  },
+
+  stories: {
+    seoTitle: 'Wedding stories | NEBULA Photography & Film',
+    seoDescription:
+      'Weddings told from beginning to end: the whole day, in the order it happened.',
+    title: 'Stories',
+    intro:
+      'A wedding is not one beautiful photograph. It is twelve hours, and what stays is the order they happened in. Here are a few whole days, told from beginning to end.',
+    empty: 'The first stories are being written.',
+    back: 'All stories',
+    notFound: 'We could not find this story.',
+    read: 'Read the story',
+    ctaTitle: 'Your day, told like this',
+    ctaBody: 'Talk to us while the date is still free.',
+    cta: 'Talk to us',
   },
 
   footer: {

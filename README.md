@@ -65,6 +65,38 @@ Também serve o propósito antigo: no plano gratuito, um projeto Supabase sem
 tráfego adormece ao fim de 7 dias e acordar demora meio minuto, meio minuto à
 frente de um cliente que abriu o link da galeria.
 
+## Histórias
+
+Um casamento contado do princípio ao fim, em `/historias`. O portfólio mostra
+que sabemos fotografar; uma história mostra como é estar connosco um dia
+inteiro, e é isso que faz alguém escrever.
+
+Escrevem-se no painel, no separador **Histórias**, e nada disto passa por
+código: título, endereço, sítio e altura, abertura, as fotografias pela ordem em
+que se conta o dia, e a frase dos noivos a fechar. Enquanto não carregares em
+Publicar, a história existe só para ti — nem o endereço dela responde.
+
+Cada fotografia tem uma largura, e é a única decisão de desenho que fica do lado
+de quem escreve:
+
+| Largura | O que faz |
+| --- | --- |
+| Cheia | ocupa o ecrã de lado a lado |
+| Grande | centrada, com margem à volta |
+| Lado a lado | duas seguidas ficam em par; uma sozinha fica como "grande" |
+
+Entre fotografias podem entrar blocos de texto, que é o que separa um artigo de
+uma grelha.
+
+A última história publicada aparece sozinha na página inicial, e a secção
+desaparece quando não há nenhuma — como a dos testemunhos. Nada de "em breve".
+
+**No Google:** a lista está no sitemap, e cada história é pré-renderizada com
+título, descrição e imagem de partilha próprios. Os endereços das histórias não
+estão escritos em lado nenhum: o `scripts/prerender.mjs` abre a lista num
+browser e segue os links que lá encontra, por isso publicar uma história basta
+para ela entrar na publicação seguinte.
+
 ## Cópias de segurança e ambientes
 
 Duas coisas por decidir, escritas aqui para não serem esquecidas em vez de

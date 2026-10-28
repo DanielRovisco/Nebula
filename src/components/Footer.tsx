@@ -13,6 +13,7 @@ export default function Footer() {
     { to: link('about'), label: t.nav.about },
     { to: link('services'), label: t.nav.services },
     { to: link('portfolio'), label: t.nav.portfolio },
+    { to: link('stories'), label: t.nav.stories },
     { to: link('contact'), label: t.nav.contact },
     { to: link('gallery'), label: t.nav.gallery },
   ]

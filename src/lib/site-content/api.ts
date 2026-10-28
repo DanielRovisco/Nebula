@@ -1,9 +1,46 @@
 import { DEMO, supabase } from '../gallery/config'
 import { THUMB_EDGE, THUMB_QUALITY, callAdmin, putToR2, resize } from '../gallery/api'
 import { DEMO_TESTIMONIAL } from './types'
-import type { ServiceCover, SiteCategory, SitePhoto, Testimonial } from './types'
+import type {
+  BlocoHistoria, Historia, LarguraBloco, ServiceCover, SiteCategory, SitePhoto, Testimonial,
+} from './types'
 
 export { publicUrl } from './public'
+
+const rowToHistoria = (r: Record<string, unknown>): Historia => ({
+  id: r.id as string,
+  slug: r.slug as string,
+  title: r.title as string,
+  subtitle: (r.subtitle as string) ?? null,
+  eventDate: (r.event_date as string) ?? null,
+  intro: (r.intro as string) ?? null,
+  quote: (r.quote as string) ?? null,
+  quoteAuthor: (r.quote_author as string) ?? null,
+  coverKey: (r.cover_key as string) ?? null,
+  coverMediumKey: (r.cover_medium_key as string) ?? null,
+  coverWidth: (r.cover_width as number) ?? null,
+  coverHeight: (r.cover_height as number) ?? null,
+  coverPos: (r.cover_pos as string) || '50% 50%',
+  published: Boolean(r.published),
+  sortOrder: (r.sort_order as number) ?? 0,
+})
+
+const rowToBloco = (r: Record<string, unknown>): BlocoHistoria => ({
+  id: r.id as string,
+  storyId: r.story_id as string,
+  kind: (r.kind as string) === 'texto' ? 'texto' : 'foto',
+  storageKey: (r.storage_key as string) ?? null,
+  mediumKey: (r.medium_key as string) ?? null,
+  thumbKey: (r.thumb_key as string) ?? null,
+  width: (r.width as number) ?? null,
+  height: (r.height as number) ?? null,
+  contentType: (r.content_type as string) ?? null,
+  pos: (r.pos as string) || '50% 50%',
+  alt: (r.alt as string) ?? '',
+  texto: (r.texto as string) ?? null,
+  largura: ((r.largura as string) || 'grande') as LarguraBloco,
+  sortOrder: (r.sort_order as number) ?? 0,
+})
 
 const rowToCategory = (r: Record<string, unknown>): SiteCategory => ({
   id: r.id as string,
@@ -139,6 +176,29 @@ const demoSiteAdmin = {
   },
   async setServiceCover() {},
   async clearServiceCover() {},
+
+  /*
+    As histórias não existem na demonstração.
+
+    Podiam existir, inventadas. Mas uma história é um casamento de pessoas com
+    nome, e a demonstração está publicada: inventar uma seria pôr no ar um
+    casamento que nunca aconteceu, com ar de verdadeiro.
+  */
+  async listHistorias(): Promise<Historia[]> {
+    return []
+  },
+  async lerHistoria(): Promise<{ historia: Historia; blocos: BlocoHistoria[] } | null> {
+    return null
+  },
+  async criarHistoria(): Promise<Historia> {
+    throw new Error('As histórias precisam do Supabase configurado.')
+  },
+  async guardarHistoria() {},
+  async apagarHistoria() {},
+  async addBloco() {},
+  async guardarBloco() {},
+  async apagarBloco() {},
+  async ordenarBlocos() {},
 }
 
 const realSiteAdmin = {
@@ -268,6 +328,107 @@ const realSiteAdmin = {
     const sb = supabase()
     await Promise.all(
       orderedIds.map((id, i) => sb.from('site_photos').update({ sort_order: i }).eq('id', id)),
+    )
+  },
+
+  // ── Histórias ─────────────────────────────────────────────────────────────
+
+  async listHistorias(): Promise<Historia[]> {
+    const { data, error } = await supabase().from('site_stories').select('*').order('sort_order')
+    if (error) throw new Error(error.message)
+    return (data ?? []).map(rowToHistoria)
+  },
+
+  /** Uma história com os blocos dela, numa ida só à base de dados. */
+  async lerHistoria(id: string): Promise<{ historia: Historia; blocos: BlocoHistoria[] } | null> {
+    const { data, error } = await supabase()
+      .from('site_stories')
+      .select('*,site_story_blocks(*)')
+      .eq('id', id)
+      .maybeSingle()
+    if (error) throw new Error(error.message)
+    if (!data) return null
+    const linhas = (data.site_story_blocks as Record<string, unknown>[]) ?? []
+    return {
+      historia: rowToHistoria(data),
+      blocos: linhas.map(rowToBloco).sort((a, b) => a.sortOrder - b.sortOrder),
+    }
+  },
+
+  async criarHistoria(title: string, slug: string): Promise<Historia> {
+    const { data, error } = await supabase()
+      .from('site_stories')
+      .insert({ title, slug })
+      .select()
+      .single()
+    if (error) throw new Error(error.message)
+    return rowToHistoria(data)
+  },
+
+  async guardarHistoria(id: string, patch: Partial<Historia>) {
+    const u: Record<string, unknown> = {}
+    if (patch.slug !== undefined) u.slug = patch.slug
+    if (patch.title !== undefined) u.title = patch.title
+    if (patch.subtitle !== undefined) u.subtitle = patch.subtitle
+    if (patch.eventDate !== undefined) u.event_date = patch.eventDate || null
+    if (patch.intro !== undefined) u.intro = patch.intro
+    if (patch.quote !== undefined) u.quote = patch.quote
+    if (patch.quoteAuthor !== undefined) u.quote_author = patch.quoteAuthor
+    if (patch.coverKey !== undefined) u.cover_key = patch.coverKey
+    if (patch.coverMediumKey !== undefined) u.cover_medium_key = patch.coverMediumKey
+    if (patch.coverWidth !== undefined) u.cover_width = patch.coverWidth
+    if (patch.coverHeight !== undefined) u.cover_height = patch.coverHeight
+    if (patch.coverPos !== undefined) u.cover_pos = patch.coverPos
+    if (patch.published !== undefined) u.published = patch.published
+    if (patch.sortOrder !== undefined) u.sort_order = patch.sortOrder
+    const { error } = await supabase().from('site_stories').update(u).eq('id', id)
+    if (error) throw new Error(error.message)
+  },
+
+  async apagarHistoria(id: string) {
+    const { error } = await supabase().from('site_stories').delete().eq('id', id)
+    if (error) throw new Error(error.message)
+  },
+
+  async addBloco(bloco: Omit<BlocoHistoria, 'id'>) {
+    const { error } = await supabase().from('site_story_blocks').insert({
+      story_id: bloco.storyId,
+      kind: bloco.kind,
+      storage_key: bloco.storageKey,
+      medium_key: bloco.mediumKey,
+      thumb_key: bloco.thumbKey,
+      width: bloco.width,
+      height: bloco.height,
+      content_type: bloco.contentType,
+      pos: bloco.pos,
+      alt: bloco.alt,
+      texto: bloco.texto,
+      largura: bloco.largura,
+      sort_order: bloco.sortOrder,
+    })
+    if (error) throw new Error(error.message)
+  },
+
+  async guardarBloco(id: string, patch: Partial<BlocoHistoria>) {
+    const u: Record<string, unknown> = {}
+    if (patch.texto !== undefined) u.texto = patch.texto
+    if (patch.alt !== undefined) u.alt = patch.alt
+    if (patch.pos !== undefined) u.pos = patch.pos
+    if (patch.largura !== undefined) u.largura = patch.largura
+    if (patch.sortOrder !== undefined) u.sort_order = patch.sortOrder
+    const { error } = await supabase().from('site_story_blocks').update(u).eq('id', id)
+    if (error) throw new Error(error.message)
+  },
+
+  async apagarBloco(id: string) {
+    const { error } = await supabase().from('site_story_blocks').delete().eq('id', id)
+    if (error) throw new Error(error.message)
+  },
+
+  async ordenarBlocos(orderedIds: string[]) {
+    const sb = supabase()
+    await Promise.all(
+      orderedIds.map((id, i) => sb.from('site_story_blocks').update({ sort_order: i }).eq('id', id)),
     )
   },
 

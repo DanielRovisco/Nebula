@@ -261,6 +261,53 @@ select '26. anon nao pode arrumar: ' ||
   case when has_function_privilege('anon', 'arrumar_galeria(uuid, text)', 'EXECUTE')
        then 'NAO' else 'SIM' end;
 
+-- ═══ Histórias: o que é público e o que não é ════════════════════════════════
+--
+-- A regra que interessa é a dos blocos. Uma história por publicar não se lê, e
+-- os blocos dela também não: sem isso, bastava pedir a tabela dos blocos para
+-- ler uma história que ainda estamos a escrever.
+--
+-- Testa-se com o papel trocado e não só com as permissões da tabela, porque o
+-- que está em causa é a política e não o `grant`: a política é que distingue a
+-- história publicada da que não está.
+
+delete from site_stories where slug in ('publicada','escondida');
+insert into site_stories (slug, title, published) values
+  ('publicada', 'Publicada', true),
+  ('escondida', 'Escondida', false);
+insert into site_story_blocks (story_id, kind, texto, sort_order)
+select id, 'texto', 'olá', 0 from site_stories where slug in ('publicada','escondida');
+
+grant select on site_stories, site_story_blocks to anon;
+
+set role anon;
+select '34. anon le a historia publicada: ' ||
+  case when (select count(*) from site_stories where slug='publicada') = 1
+       then 'SIM' else 'NAO' end;
+
+select '35. anon nao le a historia por publicar: ' ||
+  case when (select count(*) from site_stories where slug='escondida') = 0
+       then 'SIM' else 'NAO' end;
+
+select '36. anon le os blocos da publicada: ' ||
+  case when (select count(*) from site_story_blocks) = 1
+       then 'SIM' else 'NAO' end;
+
+select '37. anon nao escreve historias: ' ||
+  case when (select has_table_privilege('anon','site_stories','insert')) = false
+       then 'SIM' else 'NAO' end;
+reset role;
+
+-- Apagar a história leva os blocos atrás, senão ficavam linhas órfãs a apontar
+-- para nada e fotografias no bucket sem ninguém que as reclame.
+delete from site_stories where slug='publicada';
+select '38. apagar a historia apaga os blocos: ' ||
+  case when (select count(*) from site_story_blocks b
+             where not exists (select 1 from site_stories h where h.id=b.story_id)) = 0
+       then 'SIM' else 'NAO' end;
+
+delete from site_stories where slug in ('publicada','escondida');
+
 -- Não deixar lixo para trás.
 delete from galleries where slug = 'arrumar';
 delete from galleries where slug in ('teste','teste2');

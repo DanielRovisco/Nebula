@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { fetchPortfolio, fetchServiceCovers, fetchTestimonials, publicUrl } from './public'
+import {
+  fetchHistoria, fetchHistorias, fetchPortfolio, fetchServiceCovers, fetchTestimonials, publicUrl,
+} from './public'
 import { ehVideo } from './types'
-import type { ServiceCover, Testimonial } from './types'
+import type { BlocoHistoria, Historia, ServiceCover, Testimonial } from './types'
 
 export interface PortfolioItem {
   id: string
@@ -107,4 +109,53 @@ export function useServiceCovers(): Record<string, ServiceCover> {
   }, [])
 
   return capas
+}
+
+/**
+ * As histórias publicadas.
+ *
+ * `null` enquanto não se sabe, lista vazia quando não há nenhuma. A diferença
+ * importa: com uma só, a página mostraria "ainda não há histórias" durante o
+ * tempo que a rede demora, e quem visse isso ia-se embora antes de elas
+ * chegarem.
+ */
+export function useHistorias(): Historia[] | null {
+  const [lista, setLista] = useState<Historia[] | null>(null)
+
+  useEffect(() => {
+    let vivo = true
+    fetchHistorias().then((h) => vivo && setLista(h))
+    return () => {
+      vivo = false
+    }
+  }, [])
+
+  return lista
+}
+
+/** Uma história com os blocos dela. `null` enquanto carrega, `false` se não existe. */
+export function useHistoria(
+  slug: string,
+): { historia: Historia; blocos: BlocoHistoria[] } | null | false {
+  /*
+    O que está guardado traz o endereço a que pertence.
+
+    Assim, mudar de história volta a "ainda não sei" sozinho, sem um efeito a
+    limpar o estado logo a seguir ao desenho — que faria a página desenhar-se
+    duas vezes e, no intervalo, mostrar a história anterior com o endereço novo.
+  */
+  const [dados, setDados] = useState<{
+    slug: string
+    valor: { historia: Historia; blocos: BlocoHistoria[] } | false
+  } | null>(null)
+
+  useEffect(() => {
+    let vivo = true
+    fetchHistoria(slug).then((d) => vivo && setDados({ slug, valor: d ?? false }))
+    return () => {
+      vivo = false
+    }
+  }, [slug])
+
+  return dados?.slug === slug ? dados.valor : null
 }

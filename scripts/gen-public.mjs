@@ -49,6 +49,15 @@ const ROTAS = [
   ['/', 'monthly', '1.0'],
   ['/portfolio', 'monthly', '0.9'],
   /*
+    A lista das histórias, não as histórias em si.
+
+    Cada história tem endereço próprio e vale a pena ser encontrada, mas os
+    endereços delas vivem na base de dados e este ficheiro corre sem rede. Quem
+    as apanha é o `scripts/prerender.mjs`, que abre a lista num browser a sério
+    e segue os links que lá encontra.
+  */
+  ['/historias', 'weekly', '0.9'],
+  /*
     Cada serviço tem endereço próprio, e é aqui que eles valem alguma coisa:
     são as páginas que respondem a "fotógrafo de casamentos" e a "fotografia de
     maternidade".
@@ -68,6 +77,7 @@ const ROTAS = [
   ['/privacidade', 'yearly', '0.2'],
   ['/en', 'monthly', '0.9'],
   ['/en/portfolio', 'monthly', '0.8'],
+  ['/en/stories', 'weekly', '0.8'],
   ['/en/services/weddings', 'monthly', '0.8'],
   ['/en/services/maternity', 'monthly', '0.8'],
   ['/en/services/portraits', 'monthly', '0.7'],

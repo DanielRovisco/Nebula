@@ -15,6 +15,7 @@ export const ROUTES = {
   about: { pt: '/sobre', en: '/en/about' },
   services: { pt: '/servicos', en: '/en/services' },
   portfolio: { pt: '/portfolio', en: '/en/portfolio' },
+  stories: { pt: '/historias', en: '/en/stories' },
   contact: { pt: '/contacto', en: '/en/contact' },
   gallery: { pt: '/galeria', en: '/en/gallery' },
   privacy: { pt: '/privacidade', en: '/en/privacy' },

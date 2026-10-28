@@ -170,6 +170,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
           { to: '/admin', label: 'Galerias', end: true },
           { to: '/admin/eventos', label: 'Galeria convidados', end: false },
           { to: '/admin/impressao', label: 'Impressão', end: false },
+          { to: '/admin/historias', label: 'Histórias', end: false },
           { to: '/admin/site', label: 'Site', end: false },
         ].map((t) => (
           <NavLink

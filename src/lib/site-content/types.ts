@@ -81,3 +81,58 @@ export interface ServiceCover {
   /** Recorte, como `object-position` do CSS. */
   pos: string
 }
+
+/**
+ * Uma história: um casamento contado do princípio ao fim.
+ *
+ * O portfólio mostra que sabemos fotografar. Uma história mostra como é estar
+ * connosco um dia inteiro, que é o que faz alguém escrever-nos.
+ */
+export interface Historia {
+  id: string
+  /** O que vai no endereço: /historias/ana-e-tiago. */
+  slug: string
+  title: string
+  /** Por baixo do título, na capa. Normalmente o sítio e o mês. */
+  subtitle: string | null
+  eventDate: string | null
+  intro: string | null
+  /** A frase dos noivos. Vazia esconde o bloco: não se inventam elogios. */
+  quote: string | null
+  quoteAuthor: string | null
+  coverKey: string | null
+  coverMediumKey: string | null
+  coverWidth: number | null
+  coverHeight: number | null
+  /** Recorte da capa, como `object-position` do CSS. */
+  coverPos: string
+  published: boolean
+  sortOrder: number
+}
+
+/**
+ * A largura com que uma fotografia entra na história.
+ *
+ * Três e não mais: é a única decisão de desenho que fica do lado de quem
+ * escreve, e três valores que se percebem sem explicação valem mais do que uma
+ * folha de estilos aberta ao engano. Dois blocos "par" seguidos ficam lado a
+ * lado; um sozinho fica como um "grande".
+ */
+export type LarguraBloco = 'cheia' | 'grande' | 'par'
+
+export interface BlocoHistoria {
+  id: string
+  storyId: string
+  kind: 'foto' | 'texto'
+  storageKey: string | null
+  mediumKey: string | null
+  thumbKey: string | null
+  width: number | null
+  height: number | null
+  contentType: string | null
+  pos: string
+  alt: string
+  texto: string | null
+  largura: LarguraBloco
+  sortOrder: number
+}

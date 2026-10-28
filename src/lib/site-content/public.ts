@@ -1,4 +1,6 @@
-import type { ServiceCover, SiteCategory, SitePhoto, Testimonial } from './types'
+import type {
+  BlocoHistoria, Historia, LarguraBloco, ServiceCover, SiteCategory, SitePhoto, Testimonial,
+} from './types'
 
 /**
  * Leitura do conteúdo público do site.
@@ -124,4 +126,79 @@ export async function fetchServiceCovers(): Promise<Record<string, ServiceCover>
     }
   }
   return mapa
+}
+
+/** Uma linha da tabela das histórias, como ela chega do PostgREST. */
+const linhaParaHistoria = (r: Record<string, unknown>): Historia => ({
+  id: r.id as string,
+  slug: r.slug as string,
+  title: r.title as string,
+  subtitle: (r.subtitle as string) ?? null,
+  eventDate: (r.event_date as string) ?? null,
+  intro: (r.intro as string) ?? null,
+  quote: (r.quote as string) ?? null,
+  quoteAuthor: (r.quote_author as string) ?? null,
+  coverKey: (r.cover_key as string) ?? null,
+  coverMediumKey: (r.cover_medium_key as string) ?? null,
+  coverWidth: (r.cover_width as number) ?? null,
+  coverHeight: (r.cover_height as number) ?? null,
+  coverPos: (r.cover_pos as string) || '50% 50%',
+  published: Boolean(r.published),
+  sortOrder: (r.sort_order as number) ?? 0,
+})
+
+const linhaParaBloco = (r: Record<string, unknown>): BlocoHistoria => ({
+  id: r.id as string,
+  storyId: r.story_id as string,
+  kind: (r.kind as string) === 'texto' ? 'texto' : 'foto',
+  storageKey: (r.storage_key as string) ?? null,
+  mediumKey: (r.medium_key as string) ?? null,
+  thumbKey: (r.thumb_key as string) ?? null,
+  width: (r.width as number) ?? null,
+  height: (r.height as number) ?? null,
+  contentType: (r.content_type as string) ?? null,
+  pos: (r.pos as string) || '50% 50%',
+  alt: (r.alt as string) ?? '',
+  texto: (r.texto as string) ?? null,
+  largura: ((r.largura as string) || 'grande') as LarguraBloco,
+  sortOrder: (r.sort_order as number) ?? 0,
+})
+
+/**
+ * As histórias publicadas, para a página que as lista.
+ *
+ * Sem capa não entra: uma história sem capa na lista é um retângulo vazio com
+ * um nome em cima, e isso estraga a página inteira. No painel ela continua lá,
+ * à espera de uma.
+ */
+export async function fetchHistorias(): Promise<Historia[]> {
+  if (DEMO || !PUBLIC_BASE) return []
+  const linhas = await rest<Record<string, unknown>[]>(
+    'site_stories?select=*&published=eq.true&order=sort_order',
+  )
+  if (!linhas) return []
+  return linhas.map(linhaParaHistoria).filter((h) => h.coverKey)
+}
+
+/**
+ * Uma história e os blocos dela, numa ida só.
+ *
+ * Devolve nulo quando não existe, quando ainda não está publicada ou quando a
+ * leitura falha — e a página mostra "não encontrámos", que é verdade nos três
+ * casos para quem está do outro lado.
+ */
+export async function fetchHistoria(
+  slug: string,
+): Promise<{ historia: Historia; blocos: BlocoHistoria[] } | null> {
+  if (DEMO || !PUBLIC_BASE) return null
+  const linhas = await rest<Record<string, unknown>[]>(
+    `site_stories?select=*,site_story_blocks(*)&slug=eq.${encodeURIComponent(slug)}`
+      + '&published=eq.true&limit=1',
+  )
+  if (!linhas?.length) return null
+  const bruta = linhas[0]
+  const blocos = ((bruta.site_story_blocks as Record<string, unknown>[]) ?? [])
+    .map(linhaParaBloco)
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+  return { historia: linhaParaHistoria(bruta), blocos }
 }

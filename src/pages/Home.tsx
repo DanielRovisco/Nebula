@@ -14,6 +14,7 @@ import SiteIntro from '../components/SiteIntro'
 import { useLink, useLinkServico, useT } from '../lib/i18n'
 import { track } from '../lib/track'
 import Testimonials from '../components/Testimonials'
+import UltimaHistoria from '../components/UltimaHistoria'
 import { asset } from '../lib/asset'
 import { CONTACT, absoluteUrl } from '../lib/site'
 import { businessJsonLd } from '../lib/businessJsonLd'
@@ -507,6 +508,10 @@ export default function Home() {
       </section>
 
       <div className="container-px"><div className="hairline" /></div>
+
+      {/* ── A ÚLTIMA HISTÓRIA ───────────────────────────── */}
+      {/* Só se desenha se houver alguma publicada no painel. */}
+      <UltimaHistoria />
 
       {/* ── PROCESSO ────────────────────────────────────── */}
       <section className="py-16 sm:py-28">

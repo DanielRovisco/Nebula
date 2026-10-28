@@ -822,6 +822,126 @@ drop policy if exists "admin escreve testemunhos" on site_testimonials;
 create policy "admin escreve testemunhos" on site_testimonials
   for all to authenticated using ((select is_admin())) with check ((select is_admin()));
 
+-- ─── Histórias ──────────────────────────────────────────────────────────────
+--
+-- Um casamento contado do princípio ao fim, em vez de fotografias soltas numa
+-- grelha. O portfólio mostra que sabemos fotografar; uma história mostra como é
+-- estar connosco um dia inteiro, e é isso que faz alguém escrever.
+--
+-- Vive no painel como tudo o resto do site: escreve-se, carregam-se as
+-- fotografias, publica-se. Não se mexe em código para contar mais uma.
+create table if not exists site_stories (
+  id uuid primary key default gen_random_uuid(),
+  -- O que vai no endereço: /historias/ana-e-tiago.
+  slug text not null unique,
+  title text not null,
+  -- O que aparece por baixo do título na capa. Normalmente o sítio e o mês.
+  subtitle text,
+  event_date date,
+  -- Parágrafo de abertura, escrito por nós.
+  intro text,
+  -- A frase dos noivos e quem a assina. Vazio esconde o bloco inteiro: vale
+  -- mais não haver citação nenhuma do que uma inventada por nós.
+  quote text,
+  quote_author text,
+  -- A capa, no bucket público, com os mesmos três tamanhos das outras imagens
+  -- do site. O `pos` é o recorte, porque numa capa que ocupa o ecrã todo o que
+  -- interessa quase nunca está no meio.
+  cover_key text,
+  cover_medium_key text,
+  cover_width int,
+  cover_height int,
+  cover_pos text not null default '50% 50%',
+  -- Enquanto false, a história existe só para nós. É assim que se escreve uma
+  -- ao longo de uma semana sem a mostrar a meio.
+  published boolean not null default false,
+  sort_order int not null default 0,
+  created_at timestamptz not null default now()
+);
+
+/*
+  Os blocos: a história pela ordem em que se lê.
+
+  Dois tipos, e chegam. Uma fotografia, com a largura que ela merece, ou um
+  parágrafo. A alternância entre os dois é o que separa um artigo de uma grelha.
+
+  A largura é a única decisão de desenho que fica do lado de quem escreve, e é
+  de propósito: três valores que se percebem sem explicação ("cheia", "grande",
+  "lado a lado") em vez de uma folha de estilos aberta ao engano. Dois blocos
+  "lado a lado" seguidos ficam lado a lado; um sozinho fica centrado.
+*/
+create table if not exists site_story_blocks (
+  id uuid primary key default gen_random_uuid(),
+  story_id uuid not null references site_stories(id) on delete cascade,
+  kind text not null default 'foto',
+  storage_key text,
+  medium_key text,
+  thumb_key text,
+  width int,
+  height int,
+  content_type text,
+  pos text not null default '50% 50%',
+  alt text not null default '',
+  texto text,
+  largura text not null default 'grande',
+  sort_order int not null default 0
+);
+
+create index if not exists site_stories_idx on site_stories (sort_order);
+create index if not exists site_story_blocks_idx on site_story_blocks (story_id, sort_order);
+
+alter table site_stories enable row level security;
+alter table site_story_blocks enable row level security;
+
+/*
+  Duas políticas e não uma, separadas por papel.
+
+  A tentação era uma só, com `published or is_admin()`. Não serve: o `is_admin()`
+  não está ao alcance do anónimo, e bastava a ordem de avaliação mudar para um
+  visitante receber "permissão negada" numa página pública por causa de uma
+  história que nem lhe diz respeito. Separadas, o anónimo nunca lá chega.
+*/
+drop policy if exists "todos leem historias publicadas" on site_stories;
+drop policy if exists "anon le historias publicadas" on site_stories;
+create policy "anon le historias publicadas" on site_stories
+  for select to anon using (published);
+
+drop policy if exists "admin le todas as historias" on site_stories;
+create policy "admin le todas as historias" on site_stories
+  for select to authenticated using (published or (select is_admin()));
+
+/*
+  Um bloco só é público se a história dele o for.
+
+  Sem este `exists`, bastava pedir a tabela dos blocos ao PostgREST para ler
+  uma história por publicar: o texto, as fotografias e tudo. As fotografias
+  estão num bucket público e quem souber a chave chega lá, mas saber a chave é
+  precisamente o que isto não entrega.
+*/
+drop policy if exists "todos leem blocos publicados" on site_story_blocks;
+drop policy if exists "anon le blocos publicados" on site_story_blocks;
+create policy "anon le blocos publicados" on site_story_blocks
+  for select to anon using (
+    exists (select 1 from site_stories h where h.id = story_id and h.published)
+  );
+
+drop policy if exists "admin le todos os blocos" on site_story_blocks;
+create policy "admin le todos os blocos" on site_story_blocks
+  for select to authenticated using (
+    exists (
+      select 1 from site_stories h
+       where h.id = story_id and (h.published or (select is_admin()))
+    )
+  );
+
+drop policy if exists "admin escreve historias" on site_stories;
+create policy "admin escreve historias" on site_stories
+  for all to authenticated using ((select is_admin())) with check ((select is_admin()));
+
+drop policy if exists "admin escreve blocos" on site_story_blocks;
+create policy "admin escreve blocos" on site_story_blocks
+  for all to authenticated using ((select is_admin())) with check ((select is_admin()));
+
 -- Categorias de arranque, iguais às que o site já mostra.
 insert into site_categories (slug, label, sort_order) values
   ('casamentos', 'Casamentos', 1),

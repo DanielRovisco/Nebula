@@ -9,6 +9,7 @@ export const pt = {
     about: 'Sobre',
     services: 'Serviços',
     portfolio: 'Portfólio',
+    stories: 'Histórias',
     gallery: 'Galeria privada',
     contact: 'Contacto',
     cta: 'Marcar sessão',
@@ -618,6 +619,22 @@ export const pt = {
     lightVersionHint: 'Qualidade reduzida, boa para visualização em telemóvel',
     originalVersion: 'Original',
     originalVersionHint: 'Qualidade original, mais pesado',
+  },
+
+  stories: {
+    seoTitle: 'Histórias de casamento | NEBULA Fotografia & Vídeo',
+    seoDescription:
+      'Casamentos contados do princípio ao fim: o dia inteiro, pela ordem em que aconteceu.',
+    title: 'Histórias',
+    intro:
+      'Um casamento não é uma fotografia bonita. São doze horas, e o que fica é a ordem por que elas aconteceram. Aqui ficam alguns dias inteiros, contados do princípio ao fim.',
+    empty: 'As primeiras histórias estão a ser escritas.',
+    back: 'Todas as histórias',
+    notFound: 'Não encontrámos esta história.',
+    read: 'Ver a história',
+    ctaTitle: 'O vosso dia, contado assim',
+    ctaBody: 'Falem connosco enquanto a data ainda está livre.',
+    cta: 'Falar connosco',
   },
 
   footer: {

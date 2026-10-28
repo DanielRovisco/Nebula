@@ -19,6 +19,14 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://proj3ctnebula.pt/historias/</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/historias/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/historias/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/historias/" />
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://proj3ctnebula.pt/servicos/casamentos/</loc>
     <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/servicos/casamentos/" />
     <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/services/weddings/" />
@@ -88,6 +96,14 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/portfolio/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/portfolio/" />
     <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://proj3ctnebula.pt/en/stories/</loc>
+    <xhtml:link rel="alternate" hreflang="pt-PT" href="https://proj3ctnebula.pt/en/stories/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://proj3ctnebula.pt/en/stories/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://proj3ctnebula.pt/en/stories/" />
+    <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>

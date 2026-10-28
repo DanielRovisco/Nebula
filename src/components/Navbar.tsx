@@ -21,6 +21,7 @@ export default function Navbar() {
     { to: link('about'), label: t.nav.about },
     { to: link('services'), label: t.nav.services },
     { to: link('portfolio'), label: t.nav.portfolio },
+    { to: link('stories'), label: t.nav.stories },
     { to: link('gallery'), label: t.nav.gallery },
   ]
   const homePath = link('home')

@@ -51,6 +51,7 @@ const ROTAS = [
   '/servicos/retratos',
   '/servicos/eventos',
   '/portfolio',
+  '/historias',
   '/contacto',
   '/privacidade',
   '/en',
@@ -61,6 +62,7 @@ const ROTAS = [
   '/en/services/portraits',
   '/en/services/events',
   '/en/portfolio',
+  '/en/stories',
   '/en/contact',
   '/en/privacy',
 ]
@@ -157,6 +159,32 @@ try {
     }
     if (!html.includes('<div id="root">') || html.length < 2000) {
       throw new Error(`${rota}: HTML suspeito (${html.length} bytes)`)
+    }
+
+    /*
+      As histórias descobrem-se aqui, e não numa lista escrita à mão.
+
+      Cada história tem endereço próprio e é uma página que vale a pena ser
+      encontrada, mas os endereços delas vivem na base de dados e este ficheiro
+      não lhe fala. O que ele tem é um browser com a lista aberta à frente: os
+      links que lá estão são, por definição, as histórias publicadas.
+
+      Empurram-se para a mesma lista que estamos a percorrer, e o `for...of`
+      apanha-as a seguir. Publicar uma história nova passa a bastar para ela ser
+      pré-renderizada na publicação seguinte.
+    */
+    if (rota === '/historias' || rota === '/en/stories') {
+      const encontrados = await page.evaluate((prefixo) => {
+        const base = document.baseURI
+        return [...document.querySelectorAll('a[href]')]
+          .map((a) => new URL(a.getAttribute('href'), base).pathname)
+          .filter((p) => p.startsWith(prefixo) && p.length > prefixo.length)
+      }, `${BASE}${rota.replace(/^\//, '')}/`)
+
+      for (const caminho of new Set(encontrados)) {
+        const limpo = `/${caminho.slice(BASE.length)}`.replace(/\/$/, '')
+        if (!ROTAS.includes(limpo)) ROTAS.push(limpo)
+      }
     }
 
     const destino = rota === '/' ? join(DIST, 'index.html') : join(DIST, rota.slice(1), 'index.html')
