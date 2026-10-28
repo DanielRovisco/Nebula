@@ -12,8 +12,17 @@ dist
 dist-ssr
 *.local
 
-# Claude Code local files
-.claude
+# Ficheiros locais do Claude Code.
+#
+# Ignora-se tudo menos as skills do projeto. Elas têm de viajar com o código:
+# uma sessão na nuvem arranca num contentor vazio, clona o repositório e não vê
+# nada do disco de quem trabalha, por isso uma skill que viva só no computador
+# funciona em casa e não funciona lá.
+#
+# `.claude/*` e não `.claude`: com a pasta inteira ignorada o git nem lá entra,
+# e a excepção abaixo não chegava a ser lida.
+.claude/*
+!.claude/skills/
 
 # Editor directories and files
 .vscode/*
