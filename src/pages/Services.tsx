@@ -501,8 +501,13 @@ export default function Services() {
                 // Só a aba escolhida recebe tabulação: é o que faz a barra
                 // contar como uma paragem e não como quatro.
                 tabIndex={activa ? 0 : -1}
+                /*
+                  As abas por escolher a 0.55 e não a 0.4: com o rótulo a
+                  menos de 10px no telemóvel, 0.4 dava 3.8:1, a mesma conta
+                  que fez subir o `.label-sm`.
+                */
                 className={`relative z-10 min-w-0 shrink-0 sm:shrink sm:flex-1 px-2 sm:px-5 py-4 min-h-[48px] text-center sm:text-left transition-colors duration-500 ${
-                  activa ? 'text-titanium' : 'text-titanium/40 hover:text-titanium/80'
+                  activa ? 'text-titanium' : 'text-titanium/55 hover:text-titanium/80'
                 }`}
               >
                 <span
@@ -703,7 +708,7 @@ export default function Services() {
                 <div className="h-full border border-white/10 rounded-2xl p-6 sm:p-7 flex flex-col transition-[transform,border-color,background-color] duration-500 hover:border-white/25 hover:bg-white/[0.02] hover:-translate-y-1.5">
                   <h3 className="text-xl mb-4">{t.services.packs[pack.name]}</h3>
                   {'herda' in pack && (
-                    <p className="text-sm text-titanium/45 mb-3 leading-snug">
+                    <p className="text-sm text-titanium/55 mb-3 leading-snug">
                       {t.services.inheritsFrom(t.services.packs[pack.herda])}
                     </p>
                   )}

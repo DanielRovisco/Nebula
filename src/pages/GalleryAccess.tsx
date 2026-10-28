@@ -73,23 +73,28 @@ export default function GalleryAccess() {
           <p className="text-sm text-titanium/50 leading-relaxed mt-5">
             {t.galleryAccess.intro}
           </p>
+
+          {/*
+            Os avisos vivem dentro da coluna do texto. Soltos na grelha, eram
+            uma terceira célula: a partir de lg ocupavam o lugar do formulário
+            e empurravam-no para uma linha de baixo, sozinho à esquerda.
+          */}
+          {DEMO && (
+            <div className="mt-8 border border-amber-400/30 bg-amber-400/[0.07] rounded-xl p-4 text-xs leading-relaxed text-amber-100/80">
+              <strong className="block mb-1">Modo de demonstração</strong>
+              Os dados são falsos e nada aqui está protegido a sério. Experimenta
+              com o código <code className="text-amber-100">ana-e-tiago</code> e a
+              password <code className="text-amber-100">demo</code>.
+            </div>
+          )}
+
+          {!DEMO && !CONFIGURED && (
+            <div className="mt-8 border border-red-400/30 bg-red-400/[0.07] rounded-xl p-4 text-xs leading-relaxed text-red-100/80">
+              <strong className="block mb-1">{t.galleryAccess.notConfiguredTitle}</strong>
+              {t.galleryAccess.notConfigured}
+            </div>
+          )}
         </Reveal>
-
-        {DEMO && (
-          <div className="mt-8 border border-amber-400/30 bg-amber-400/[0.07] rounded-xl p-4 text-xs leading-relaxed text-amber-100/80">
-            <strong className="block mb-1">Modo de demonstração</strong>
-            Os dados são falsos e nada aqui está protegido a sério. Experimenta
-            com o código <code className="text-amber-100">ana-e-tiago</code> e a
-            password <code className="text-amber-100">demo</code>.
-          </div>
-        )}
-
-        {!DEMO && !CONFIGURED && (
-          <div className="mt-8 border border-red-400/30 bg-red-400/[0.07] rounded-xl p-4 text-xs leading-relaxed text-red-100/80">
-            <strong className="block mb-1">{t.galleryAccess.notConfiguredTitle}</strong>
-            {t.galleryAccess.notConfigured}
-          </div>
-        )}
 
         <Reveal delay={0.12} className="lg:border lg:border-white/10 lg:rounded-2xl lg:p-10">
           <form onSubmit={submit} className="mt-10 lg:mt-0 space-y-7">

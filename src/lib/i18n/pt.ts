@@ -144,7 +144,9 @@ export const pt = {
     */
     inheritsFrom: (pack: string) => `Tudo o que o pack ${pack} tem, e ainda`,
     addonLabel: 'À medida',
-    addonTitle: 'Monta o teu pack',
+    // No plural, como o texto logo por baixo ("Se quiserem… digam-nos") e o
+    // resto da página ("Escolham por onde começar.").
+    addonTitle: 'Montem o vosso pack',
     /*
       Deixou de convidar a juntar vídeo e drone.
 

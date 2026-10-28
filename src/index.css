@@ -68,6 +68,37 @@
     font-family: "Montserrat Variable", Montserrat, system-ui, sans-serif;
   }
 
+  /*
+    Um span dentro de um título herda o tipo de letra do título.
+
+    A regra de cima dá Montserrat a qualquer `span`, e um título animado tem o
+    texto dentro de spans (a <Mascara>, as linhas do hero). A regra atinge o
+    span directamente e ganha à Poppins herdada do h1, por isso nove títulos
+    do site estavam em Montserrat e os outros em Poppins: na página de um
+    serviço, "Escolham por onde começar." e "Monta o teu pack" eram dois
+    tipos de letra a três centímetros um do outro. Medido título a título com
+    o getComputedStyle, não a olho.
+
+    Duas classes ganham à mesma a esta: o `.label-sm` (rótulos do rodapé) e o
+    `font-serif`, que vivem em layers acima deste.
+  */
+  :is(h1, h2, h3, h4) span {
+    font-family: inherit;
+  }
+
+  /*
+    Títulos equilibrados: sem isto, "Simples, do início ao fim" deixava o
+    "fim" sozinho numa linha no telemóvel. Em texto corrido, `pretty` só
+    mexe na última linha, para não acabar um parágrafo numa palavra só.
+  */
+  h1, h2, h3, h4 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
   a {
     color: inherit;
     text-decoration: none;
@@ -304,6 +335,21 @@ body::after {
 
   .campo:focus {
     border-bottom-color: rgba(252, 255, 240, 0.65);
+  }
+
+  /*
+    O <select> sem a caixa do sistema. O nativo trazia um recuo interno de
+    uns 4px, e "Casamentos" ficava fora do alinhamento de "Nome", "Email" e da
+    própria etiqueta por cima; a seta do sistema também não era a do resto do
+    site. Sem `appearance`, o texto encosta à margem e a seta passa a ser um
+    traço fino da mesma cor das etiquetas.
+  */
+  select.campo {
+    appearance: none;
+    padding-right: 1.75rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23fcfff0' stroke-opacity='0.55' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.15rem bottom 0.95rem;
   }
 
   .campo[aria-invalid='true'] {
