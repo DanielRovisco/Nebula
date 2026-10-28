@@ -1,18 +1,22 @@
 /**
  * Entregar um ficheiro a quem está a ver, da melhor maneira que o aparelho der.
  *
- * Dois caminhos, e o primeiro existe por causa do iPhone.
+ * Dois caminhos, e o primeiro existe só por causa do iPhone.
  *
  * Um link para um endereço que o R2 entrega como anexo descarrega — mas no iOS
  * descarrega para os Ficheiros, não para as Fotos, e num vídeo o Safari muitas
  * vezes nem descarrega: abre o leitor. Quem acabou de ver uma fotografia do
  * casamento quer que ela apareça na galeria do telemóvel.
  *
- * O menu de partilha do sistema resolve as duas coisas: leva lá dentro
- * "Guardar imagem" e "Guardar vídeo", que escrevem mesmo na galeria. Só que
- * obriga a trazer o ficheiro para memória, o que precisa de CORS no bucket e
- * de o ficheiro não ser enorme. Quando qualquer uma dessas condições falha,
- * cai-se no link, que funciona sempre — mal, mas sempre.
+ * O menu de partilha do iOS resolve as duas coisas: leva lá dentro "Guardar
+ * imagem" e "Guardar vídeo", que escrevem mesmo na galeria. Só que obriga a
+ * trazer o ficheiro para memória, o que precisa de CORS no bucket e de o
+ * ficheiro não ser enorme. Quando qualquer uma dessas condições falha, cai-se
+ * no link, que funciona sempre — mal, mas sempre.
+ *
+ * Em Android o mesmo menu abre uma lista de aplicações sem opção nenhuma de
+ * guardar, por isso lá não se usa: vai-se directo ao download, que escreve nas
+ * transferências e aparece no Fotos, na pasta do aparelho.
  */
 
 /*
@@ -58,12 +62,38 @@ const ecraDeToque = () =>
   typeof window !== 'undefined' &&
   (navigator.maxTouchPoints > 0 || window.matchMedia?.('(pointer: coarse)').matches)
 
+/**
+ * Se o aparelho é um iPhone ou um iPad.
+ *
+ * Um iPad recente diz que é um Mac no `userAgent`, e a única coisa que o
+ * denuncia é ter ecrã de toque: um Mac verdadeiro tem `maxTouchPoints` a zero.
+ */
+const ehIOS = () =>
+  typeof navigator !== 'undefined' &&
+  (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
+
 /** Verdadeiro se o ficheiro chegou a ir para o menu de partilha do sistema. */
 export async function tentarPartilhar(
   url: string, nome?: string, tipo?: string | null, bytes?: number,
 ): Promise<boolean> {
   if (typeof navigator === 'undefined' || !navigator.canShare || !navigator.share) return false
-  if (!ecraDeToque()) return false
+  /*
+    Só em iOS, e isto custou uma queixa de um cliente para se perceber.
+
+    O menu que o `navigator.share` abre não é o mesmo nos dois sistemas. Em iOS
+    é o menu de partilha do próprio sistema e traz lá dentro "Guardar imagem" e
+    "Guardar vídeo", que escrevem mesmo na galeria do telefone, que é o ponto
+    todo disto. Em Android traz uma lista de aplicações — WhatsApp, Gmail,
+    Snapseed — e nenhuma opção de guardar: quem quisesse ficar com a fotografia
+    não tinha ali maneira de o fazer.
+
+    Em Android o caminho normal é melhor: o ficheiro desce para as
+    transferências, aparece a notificação do costume e o Fotos mostra-o na pasta
+    do aparelho. Nenhuma página web consegue escrever directamente na galeria do
+    Android, e fingir que sim era o que estávamos a fazer.
+  */
+  if (!ehIOS()) return false
   if (bytes && bytes > CABE_NA_PARTILHA) return false
 
   try {
@@ -98,6 +128,9 @@ export async function tentarPartilhar(
 
 /**
  * O caminho completo: tenta o menu, e cai no ficheiro quando não dá.
+ *
+ * Em Android e em tudo o que não seja iOS, este é o caminho único: o menu de
+ * partilha de lá não sabe guardar na galeria, e o download normal sabe.
  *
  * Em ecrã de toque a queda não é um `<a>` sintético. Um iOS ignora um clique
  * que o código inventa a seguir a uma espera — não veio de um gesto — e o
