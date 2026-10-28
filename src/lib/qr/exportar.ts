@@ -1,5 +1,6 @@
 import { desenharQr } from './desenhar'
 import { simbolo } from './simbolo'
+import { guardarBlob } from '../guardarFicheiro'
 
 export type CorDoQr = 'preto' | 'branco'
 
@@ -36,14 +37,23 @@ export async function canvasDoQr(
   return canvas
 }
 
-/** Guarda o código como PNG transparente. */
+/**
+ * Guarda o código como PNG transparente.
+ *
+ * Pelo mesmo caminho das fotografias, e não por um `<a>` com um `data:` à
+ * frente. Quem carrega aqui é sobretudo o casal, no telemóvel, para mandar o
+ * código a alguém ou levá-lo a imprimir: em iOS o menu do sistema tem "Guardar
+ * imagem" e põe-no nas Fotos, enquanto um `data:` grande ou não descarrega ou
+ * vai parar aos Ficheiros.
+ */
 export async function guardarQr(url: string, cor: CorDoQr, nome: string) {
   const canvas = await canvasDoQr(url, cor)
-  const a = document.createElement('a')
-  a.href = canvas.toDataURL('image/png')
   // Um nome de ficheiro com barras ou dois pontos é recusado por alguns
   // sistemas, e "Joana & Miguel" tem tudo para dar problemas.
   const limpo = nome.replace(/[^\p{L}\p{N}\s-]/gu, '').trim().replace(/\s+/g, '-').toLowerCase()
-  a.download = `codigo-${limpo || 'nebula'}-${cor}.png`
-  a.click()
+  const ficheiro = `codigo-${limpo || 'nebula'}-${cor}.png`
+
+  const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/png'))
+  if (!blob) return
+  await guardarBlob(blob, ficheiro, 'image/png')
 }

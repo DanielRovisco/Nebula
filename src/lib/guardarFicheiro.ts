@@ -138,6 +138,44 @@ export async function tentarPartilhar(
  * navegação para o endereço acontece sempre: o ficheiro abre, e a partir daí o
  * próprio sistema oferece guardá-lo.
  */
+/**
+ * O mesmo, para um ficheiro que já está em memória.
+ *
+ * Serve o caminho em que o ficheiro teve de ser trazido pelo `fetch` em vez de
+ * ser entregue por um endereço de anexo. Sem isto, esse caminho era um `<a>`
+ * sintético, ou seja o defeito que já custou duas rondas a corrigir no outro
+ * caminho: em iOS um clique que o código inventa a seguir a uma espera é
+ * ignorado, e não acontece nada.
+ */
+export async function guardarBlob(blob: Blob, nome: string, tipo?: string | null) {
+  if (ehIOS() && navigator.canShare && navigator.share && blob.size <= CABE_NA_PARTILHA) {
+    try {
+      const ficheiro = new File([blob], nome, { type: tipo || blob.type || 'application/octet-stream' })
+      if (navigator.canShare({ files: [ficheiro] })) {
+        await navigator.share({ files: [ficheiro] })
+        return
+      }
+    } catch (e) {
+      // Fechar o menu é uma resposta, e a resposta foi não.
+      if ((e as Error)?.name === 'AbortError') return
+    }
+  }
+  descarregarBlob(blob, nome)
+}
+
+/** Um ficheiro em memória, entregue pelo caminho normal do browser. */
+export function descarregarBlob(blob: Blob, nome: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = nome
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  // Revogar de imediato cancela downloads em curso nalguns browsers.
+  setTimeout(() => URL.revokeObjectURL(url), 60_000)
+}
+
 export async function guardarFicheiro(
   url: string, nome?: string, tipo?: string | null, bytes?: number,
 ): Promise<void> {

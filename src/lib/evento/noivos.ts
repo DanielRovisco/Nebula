@@ -26,6 +26,8 @@ export interface MediaNoivos {
   createdAt: string
   thumbUrl: string | null
   url: string
+  /** O mesmo ficheiro, mas que o R2 devolve como anexo: é com este que se guarda. */
+  downloadUrl?: string
 }
 
 export interface Painel {

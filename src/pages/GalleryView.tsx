@@ -229,7 +229,6 @@ export default function GalleryView() {
         setZipping,
         abortRef.current.signal,
         t.gallery.chosenSuffix,
-        false,
       )
       if (access.logToken) api.logEvent(access.logToken, { kind: 'download_favorites' })
     } catch (err) {
@@ -254,8 +253,6 @@ export default function GalleryView() {
         access.gallery.title,
         setZipping,
         abortRef.current.signal,
-        undefined,
-        false,
       )
       if (access.logToken) api.logEvent(access.logToken, { kind: 'download_all' })
     } catch (err) {
@@ -299,7 +296,7 @@ export default function GalleryView() {
     setVersaoDe(null)
     try {
       if (leve) await downloadLeve(photos[index])
-      else await downloadOne(photos[index], false)
+      else await downloadOne(photos[index])
       if (access?.logToken) {
         api.logEvent(access.logToken, {
           kind: 'download_one',

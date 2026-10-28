@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronLeft, ChevronRight, Download, EyeOff, Trash2, Undo2, X } from 'lucide-react'
 import type { MediaNoivos } from '../../../lib/evento/noivos'
+import { guardarFicheiro } from '../../../lib/guardarFicheiro'
 
 /**
  * Uma fotografia em grande, com o que se pode fazer com ela à mão.
@@ -42,6 +43,34 @@ export default function Foto({
     }
   }, [aoFechar, aoAnterior, aoSeguinte])
 
+  /*
+    O guardar fica preso à fotografia a que pertence, para mudar de fotografia
+    limpar o estado sozinho: sem isso, um erro de uma ficava no ecrã por cima da
+    seguinte.
+  */
+  const [levantar, setLevantar] = useState<{ id: string; estado: 'espera' | 'erro' } | null>(null)
+  const meu = levantar?.id === item.id ? levantar.estado : null
+
+  /**
+   * Guardar, pelo mesmo caminho dos convidados e dos clientes.
+   *
+   * Isto era um link para o endereço normal do ficheiro, com um ícone de
+   * descarregar à frente. Um endereço sem cabeçalho de anexo não guarda nada:
+   * abre a fotografia num separador, e o casal ficava a olhar para ela sem
+   * perceber porque é que não tinha ido para lado nenhum. O ícone prometia uma
+   * coisa e fazia outra.
+   */
+  const guardar = async () => {
+    if (!item.downloadUrl) return
+    setLevantar({ id: item.id, estado: 'espera' })
+    try {
+      await guardarFicheiro(item.downloadUrl, item.nome ?? undefined, item.contentType, item.bytes)
+      setLevantar(null)
+    } catch {
+      setLevantar({ id: item.id, estado: 'erro' })
+    }
+  }
+
   const quando = item.takenAt ?? item.createdAt
 
   return createPortal(
@@ -58,16 +87,28 @@ export default function Foto({
             {indice + 1} de {total}
           </p>
         </div>
-        <a
-          href={item.url}
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Abrir o ficheiro original"
-          className={ICONE}
-        >
-          <Download size={19} />
-        </a>
+        {/*
+          Sem `downloadUrl` o painel foi aberto antes de a função o devolver.
+          Aí vale mais não mostrar botão nenhum do que mostrar um que não guarda:
+          era exactamente esse o defeito que isto corrigiu.
+        */}
+        {item.downloadUrl && (
+          <button
+            onClick={guardar}
+            disabled={meu === 'espera'}
+            aria-label={item.kind === 'video' ? 'Guardar o vídeo' : 'Guardar a fotografia'}
+            className={`${ICONE} disabled:opacity-40`}
+          >
+            <Download size={19} />
+          </button>
+        )}
       </header>
+
+      {meu === 'erro' && (
+        <p className="text-center text-[13px] text-amber-300/80 px-4 pb-2">
+          Não consegui guardar. Tenta outra vez.
+        </p>
+      )}
 
       <div className="flex-1 min-h-0 relative flex items-center justify-center px-2">
         {total > 1 && (

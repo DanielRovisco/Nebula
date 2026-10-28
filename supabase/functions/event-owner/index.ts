@@ -23,7 +23,7 @@
 // A chave nunca aparece do lado dos convidados. O link deles leva só o slug.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { cors, deleteObjects, json, presign } from '../_shared/r2.ts'
+import { cors, deleteObjects, json, presign, presignDownload } from '../_shared/r2.ts'
 
 const VER_TTL = 60 * 60 * 4 // 4h: o casal fica a olhar para isto muito tempo
 
@@ -123,6 +123,20 @@ Deno.serve(async (req) => {
         */
         thumbUrl: m.thumb_key ? await presign(m.thumb_key as string, 'GET', VER_TTL) : null,
         url: await presign(m.storage_key as string, 'GET', VER_TTL),
+        /*
+          Um terceiro endereço do mesmo ficheiro, que o R2 devolve como anexo.
+
+          O botão de guardar do painel era um link para o `url` normal, e um
+          link para um endereço sem cabeçalho de anexo não guarda nada: abre a
+          fotografia num separador. O ícone prometia uma coisa e fazia outra.
+          Com este, o casal guarda como guardam os convidados e os clientes,
+          pelo mesmo caminho e com o mesmo nome.
+        */
+        downloadUrl: await presignDownload(
+          m.storage_key as string,
+          (m.original_name as string) || `nebula-${m.id}`,
+          VER_TTL,
+        ),
       })),
     )
 
