@@ -27,7 +27,7 @@ export default function Breadcrumbs({ items }: { items: Migalha[] }) {
     <nav aria-label="Migalhas" className="mb-6">
       <ol className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-titanium/55">
         <li>
-          <Link to={link('home')} className="hover:text-titanium/70 transition-colors">
+          <Link to={link('home')} className="alvo-toque hover:text-titanium transition-colors">
             {t.nav.home}
           </Link>
         </li>
@@ -37,12 +37,12 @@ export default function Breadcrumbs({ items }: { items: Migalha[] }) {
               /
             </span>
             {m.to ? (
-              <Link to={link(m.to)} className="hover:text-titanium/70 transition-colors">
+              <Link to={link(m.to)} className="alvo-toque hover:text-titanium transition-colors">
                 {m.label}
               </Link>
             ) : (
               // A página atual não é um link para si própria.
-              <span aria-current="page" className="text-titanium/60">
+              <span aria-current="page" className="text-titanium/85">
                 {m.label}
               </span>
             )}

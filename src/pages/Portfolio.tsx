@@ -299,7 +299,7 @@ export default function Portfolio() {
           </p>
           <Link
             to={link('contact')}
-            className="mt-7 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all min-h-[44px]"
+            className="mt-7 link-sublinhado"
           >
             {t.common.talkToUs} <ArrowRight size={13} />
           </Link>

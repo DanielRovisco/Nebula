@@ -201,7 +201,7 @@ export default function Historia() {
                 “{h.quote}”
               </p>
               {h.quoteAuthor && (
-                <footer className="label-sm text-titanium/40 mt-8">{h.quoteAuthor}</footer>
+                <footer className="label-sm mt-8">{h.quoteAuthor}</footer>
               )}
             </blockquote>
           </Reveal>
@@ -217,7 +217,7 @@ export default function Historia() {
             </h2>
           </Reveal>
           <Reveal delay={0.1}>
-            <p className="text-titanium/45 mb-10">{t.stories.ctaBody}</p>
+            <p className="text-titanium/60 mb-10">{t.stories.ctaBody}</p>
           </Reveal>
           <Reveal delay={0.2}>
             <Link
@@ -230,7 +230,7 @@ export default function Historia() {
           <div className="mt-12">
             <Link
               to={link('stories')}
-              className="label-sm text-titanium/40 hover:text-titanium/70 transition-colors"
+              className="label-sm alvo-toque hover:text-titanium/85 transition-colors"
             >
               ← {t.stories.back}
             </Link>

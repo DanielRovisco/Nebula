@@ -49,14 +49,14 @@ export default function Thanks() {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
-            <a href={`mailto:${CONTACT.email}`} className="text-titanium/60 hover:text-titanium transition-colors break-all">
+            <a href={`mailto:${CONTACT.email}`} className="alvo-toque text-titanium/60 hover:text-titanium transition-colors break-all">
               {CONTACT.email}
             </a>
             <a
               href={CONTACT.instagramDm}
               target="_blank"
               rel="noreferrer"
-              className="text-titanium/60 hover:text-titanium transition-colors"
+              className="alvo-toque text-titanium/60 hover:text-titanium transition-colors"
             >
               {t.contact.instagramDm}
             </a>

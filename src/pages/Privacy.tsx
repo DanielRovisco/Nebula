@@ -82,7 +82,7 @@ export default function Privacy() {
         ))}
 
         <div className="border-t border-white/10 pt-10">
-          <Link to={link('contact')} className="label-sm hover:text-titanium/70 transition-colors">
+          <Link to={link('contact')} className="label-sm alvo-toque hover:text-titanium/85 transition-colors">
             ← {t.common.talkToUs}
           </Link>
         </div>
