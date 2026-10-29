@@ -51,14 +51,20 @@
     margin: 0;
     background: transparent;
     color: var(--titanium);
-    font-family: "Poppins", system-ui, sans-serif;
+    font-family: "Montserrat Variable", Montserrat, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
   }
 
+  /*
+    Títulos em Montserrat, a mesma família do texto, e a diferença faz-se no
+    peso e no tamanho. Estiveram em Poppins, mas um título com um <span> lá
+    dentro herdava a Montserrat da regra de baixo: o hero e os Serviços saíam
+    numa fonte, o Sobre noutra, e ninguém o tinha escolhido.
+  */
   h1, h2, h3, h4 {
-    font-family: "Poppins", system-ui, sans-serif;
+    font-family: "Montserrat Variable", Montserrat, system-ui, sans-serif;
     font-weight: 600;
     margin: 0;
     letter-spacing: -0.02em;

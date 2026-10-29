@@ -4,11 +4,11 @@ import { BrowserRouter } from 'react-router-dom'
 
 // Fontes servidas do próprio domínio em vez do Google Fonts: elimina a
 // ligação a terceiros do caminho crítico e o CSS bloqueante que ela implicava.
-// Só os pesos realmente usados — antes carregavam-se 7 de Poppins.
-// Subset latino apenas — cobre todos os acentos do português e evita declarar
-// cirílico, devanágari e vietnamita que nunca serão usados.
-import '@fontsource/poppins/latin-400.css'
-import '@fontsource/poppins/latin-600.css'
+// Só os pesos realmente usados. A Montserrat faz títulos e texto; a Poppins
+// saiu, porque metade dos títulos já saía em Montserrat por acidente e era
+// essa a que se via no hero.
+// Subset latino apenas nas estáticas — cobre todos os acentos do português e
+// evita declarar cirílico, devanágari e vietnamita que nunca serão usados.
 import '@fontsource-variable/montserrat/wght.css'
 import '@fontsource/cormorant-garamond/latin-300-italic.css'
 import '@fontsource/cormorant-garamond/latin-400-italic.css'
