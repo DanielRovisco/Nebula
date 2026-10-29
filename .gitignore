@@ -23,6 +23,8 @@ dist-ssr
 # e a excepção abaixo não chegava a ser lida.
 .claude/*
 !.claude/skills/
+!.claude/agents/
+!.claude/settings.json
 
 # Editor directories and files
 .vscode/*
