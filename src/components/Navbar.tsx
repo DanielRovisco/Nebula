@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import { asset } from '../lib/asset'
 import { CONTACT } from '../lib/site'
@@ -11,6 +11,12 @@ import { switchLang } from '../lib/i18n/routes'
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+  /*
+    O menu abria num círculo a crescer e com os links a subir um a um, mesmo a
+    quem pediu menos movimento no sistema. O CSS não chega aqui: estas
+    animações são do framer-motion, e ele só as desliga se lhe perguntarem.
+  */
+  const reduzido = useReducedMotion()
   const t = useT()
   const link = useLink()
   const lang = useLang()
@@ -56,8 +62,14 @@ export default function Navbar() {
             />
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-8">
+          {/*
+            Desktop nav. Só a partir do xl, porque é aí que cabe: são seis
+            links, o botão e a língua, perto de 900px de largura. Abria no md
+            (768px) e aos 768 o logótipo era empurrado para fora do ecrã, dois
+            links partiam em duas linhas e o EN ficava do lado de lá da margem.
+            Até lá, o menu de ecrã inteiro, que já tem tudo.
+          */}
+          <nav className="hidden xl:flex items-center gap-6 2xl:gap-8">
             {LINKS.map((link) => (
               <NavLink
                 key={link.to}
@@ -109,17 +121,17 @@ export default function Navbar() {
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden relative z-50 text-titanium -mr-2 p-3 active:scale-90 transition-transform"
+            className="xl:hidden relative z-50 text-titanium -mr-2 p-3 active:scale-90 transition-transform"
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? t.nav.closeMenu : t.nav.openMenu}
           >
             <AnimatePresence mode="wait">
               {open ? (
-                <motion.span key="x" initial={{ opacity: 0, rotate: -90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                <motion.span key="x" initial={reduzido ? false : { opacity: 0, rotate: -90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                   <X size={24} />
                 </motion.span>
               ) : (
-                <motion.span key="menu" initial={{ opacity: 0, rotate: 90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                <motion.span key="menu" initial={reduzido ? false : { opacity: 0, rotate: 90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                   <Menu size={24} />
                 </motion.span>
               )}
@@ -138,16 +150,16 @@ export default function Navbar() {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ clipPath: 'circle(0% at calc(100% - 2rem) 2.5rem)' }}
+            initial={reduzido ? false : { clipPath: 'circle(0% at calc(100% - 2rem) 2.5rem)' }}
             animate={{ clipPath: 'circle(160% at calc(100% - 2rem) 2.5rem)' }}
-            exit={{ clipPath: 'circle(0% at calc(100% - 2rem) 2.5rem)' }}
-            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-            className="md:hidden fixed inset-0 z-40 bg-eerie flex flex-col items-center justify-center gap-2"
+            exit={reduzido ? undefined : { clipPath: 'circle(0% at calc(100% - 2rem) 2.5rem)' }}
+            transition={{ duration: reduzido ? 0 : 0.65, ease: [0.16, 1, 0.3, 1] }}
+            className="xl:hidden fixed inset-0 z-40 bg-eerie flex flex-col items-center justify-center gap-2"
           >
             {[...LINKS, { to: link('contact'), label: t.nav.contact }].map((link, i) => (
               <motion.div
                 key={link.to}
-                initial={{ opacity: 0, y: 24 }}
+                initial={reduzido ? false : { opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.18 + i * 0.07, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               >
@@ -167,7 +179,7 @@ export default function Navbar() {
             ))}
 
             <motion.div
-              initial={{ opacity: 0 }}
+              initial={reduzido ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
               className="mt-8 flex flex-col items-center gap-4"
@@ -175,7 +187,7 @@ export default function Navbar() {
               <Link
                 to={switchLang(pathname, lang === 'pt' ? 'en' : 'pt')}
                 onClick={() => setOpen(false)}
-                className="text-[11px] uppercase tracking-[0.2em] text-titanium/60"
+                className="text-[11px] uppercase tracking-[0.2em] text-titanium/60 hover:text-titanium transition-colors min-h-[44px] px-4 flex items-center"
               >
                 {lang === 'pt' ? 'English' : 'Português'}
               </Link>

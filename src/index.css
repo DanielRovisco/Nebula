@@ -281,6 +281,54 @@ body::after {
   }
 
   /*
+    O link sublinhado: a ação secundária por omissão, ao lado ou por baixo de
+    um botão, no fim de um cartão, no cabeçalho de uma secção.
+
+    Estava escrito à mão em sete sítios, com sete pequenas diferenças: a
+    opacidade andava entre 50% e 60%, o espaçamento entre letras entre dois
+    valores, e quatro deles tinham `min-h-[44px]`, o que empurrava o risco
+    para doze pixels abaixo do texto. O mesmo link parecia dois.
+
+    Os 44px de alvo continuam lá, mas vêm do `::after`, que alarga a zona de
+    toque sem mexer no desenho: o risco fica colado ao texto em todo o lado.
+  */
+  .link-sublinhado {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: fit-content;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(252, 255, 240, 0.6);
+    border-bottom: 1px solid rgba(252, 255, 240, 0.25);
+    padding-bottom: 0.25rem;
+    transition: color 0.3s ease, border-color 0.3s ease;
+  }
+
+  .link-sublinhado:hover {
+    color: rgba(252, 255, 240, 0.9);
+    border-bottom-color: rgba(252, 255, 240, 0.6);
+  }
+
+  /*
+    Alvo de toque maior do que o desenho, para links pequenos que não podem
+    crescer sem estragar a linha onde estão (migalhas, rodapé). Só serve a
+    links que não tenham outro alvo encostado a menos de 12px na vertical.
+  */
+  .link-sublinhado::after,
+  .alvo-toque::after {
+    content: '';
+    position: absolute;
+    inset: -14px -6px -12px;
+  }
+
+  .alvo-toque {
+    position: relative;
+  }
+
+  /*
     Campos do formulário de contacto: sem caixa, só um risco por baixo.
 
     A etiqueta começa pousada na linha, onde estaria um placeholder, e sobe

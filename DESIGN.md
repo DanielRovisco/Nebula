@@ -275,8 +275,11 @@ Discretos e precisos: falam baixo, em maiúsculas espaçadas.
 - **Ghost:** transparente com contorno branco a 20% que sobe para 45% em hover.
 - **Nav ("Marcar sessão"):** contorno titanium a 25%, texto a 75%; em hover
   enche de titanium e o texto passa a eerie.
-- **Link sublinhado:** texto 11px em maiúsculas a 50% com risco de 1px a 25%
-  por baixo; ambos clareiam em hover. É a ação secundária por omissão.
+- **Link sublinhado** (classe `link-sublinhado`): texto 11px em maiúsculas,
+  tracking 0.2em, a 60%, com risco de 1px a 25% colado por baixo; texto a 90%
+  e risco a 60% em hover. É a ação secundária por omissão e vive numa classe
+  só: não se reescreve com utilities. O alvo de 44px vem de um `::after`
+  invisível, para o risco nunca se afastar do texto.
 
 ### Cards / Containers
 - **Corner Style:** 16px.
@@ -298,11 +301,13 @@ Discretos e precisos: falam baixo, em maiúsculas espaçadas.
 
 ### Navigation
 - Barra fixa, transparente sobre o hero e eerie a 88% com desfoque depois de
-  rolar. Logótipo à esquerda (respira em hover: 75% e escala 1.03).
+  rolar. Os links completos só aparecem a partir de 1280px (`xl`), que é onde
+  cabem; abaixo disso fica o ícone de menu, também em tablets. Logótipo à esquerda (respira em hover: 75% e escala 1.03).
 - Links 11px em maiúsculas, tracking 0.18em, a 60%; o ativo a 100% com um fio
   de 1px por baixo que, nos outros, cresce da esquerda em hover.
-- Telemóvel: ícone de menu que abre um painel eerie de ecrã inteiro com os
-  links centrados, Instagram e a troca de língua.
+- Abaixo do `xl`: ícone de menu que abre um painel eerie de ecrã inteiro
+  (círculo a crescer a partir do ícone) com os links centrados, Instagram e a
+  troca de língua. Com movimento reduzido abre já aberto.
 
 ### Label de secção
 Rótulo em maiúsculas (`label-sm`) por cima do título de secção. É o padrão
@@ -330,7 +335,11 @@ com movimento reduzido. É o "material" do site e não se replica noutra forma.
 - **Do** separar secções com 96/144px e um fio de 1px a 10%.
 - **Do** usar a curva `cubic-bezier(0.16, 1, 0.3, 1)` para entradas e
   transições, e desligá-las com `prefers-reduced-motion`.
-- **Do** manter alvos de toque com pelo menos 44px.
+- **Do** manter alvos de toque com pelo menos 44px. Num link pequeno que não
+  pode crescer, usar `alvo-toque` (alarga a zona por um `::after`) em vez de
+  mudar o desenho.
+- **Do** desligar no framer-motion, com `useReducedMotion`, tudo o que o CSS
+  global não apanha.
 
 ### Don't:
 - **Don't** introduzir uma cor de destaque: o site é preto e marfim.

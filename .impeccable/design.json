@@ -189,9 +189,9 @@
       "name": "Underline Link",
       "kind": "button",
       "refersTo": "button-ghost",
-      "description": "Ação secundária por omissão: maiúsculas com um risco por baixo.",
+      "description": "Ação secundária por omissão (classe link-sublinhado): maiúsculas com o risco colado ao texto; alvo de 44px por ::after.",
       "html": "<a class=\"ds-link\" href=\"#\">Ver trabalhos desta categoria</a>",
-      "css": ".ds-link{display:inline-flex;align-items:center;min-height:44px;color:rgba(252,255,240,0.5);border-bottom:1px solid rgba(252,255,240,0.25);padding-bottom:4px;font-family:'Montserrat Variable', Montserrat, system-ui, sans-serif;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;text-decoration:none;transition:color .3s,border-color .3s;}.ds-link:hover{color:rgba(252,255,240,0.8);border-color:rgba(252,255,240,0.6);}.ds-link:focus-visible{outline: 2px solid rgba(252,255,240,0.85); outline-offset: 3px;}"
+      "css": ".ds-link{display:inline-flex;align-items:center;position:relative;color:rgba(252,255,240,0.6);border-bottom:1px solid rgba(252,255,240,0.25);padding-bottom:4px;font-family:'Montserrat Variable', Montserrat, system-ui, sans-serif;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;transition:color .3s,border-color .3s;}.ds-link:hover{color:rgba(252,255,240,0.9);border-color:rgba(252,255,240,0.6);}.ds-link:focus-visible{outline: 2px solid rgba(252,255,240,0.85); outline-offset: 3px;}.ds-link::after{content:'';position:absolute;inset:-14px -6px -12px;}"
     },
     {
       "name": "Navigation",
@@ -299,7 +299,8 @@
       "Do usar cápsulas em maiúsculas espaçadas para ações, com a seta que avança em hover.",
       "Do separar secções com 96/144px e um fio de 1px a 10%.",
       "Do usar a curva `cubic-bezier(0.16, 1, 0.3, 1)` para entradas e transições, e desligá-las com `prefers-reduced-motion`.",
-      "Do manter alvos de toque com pelo menos 44px."
+      "Do manter alvos de toque com pelo menos 44px. Num link pequeno que não pode crescer, usar `alvo-toque` (alarga a zona por um `::after`) em vez de mudar o desenho.",
+      "Do desligar no framer-motion, com `useReducedMotion`, tudo o que o CSS global não apanha."
     ],
     "donts": [
       "Don't introduzir uma cor de destaque: o site é preto e marfim.",

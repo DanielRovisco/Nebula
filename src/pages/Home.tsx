@@ -384,7 +384,7 @@ export default function Home() {
           <Reveal delay={0.25} className="mt-10 sm:mt-12">
             <Link
               to={link('services')}
-              className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-titanium/60 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/90 transition-all"
+              className="link-sublinhado"
             >
               {t.home.servicesLink}
               <ArrowRight size={12} />
@@ -440,7 +440,7 @@ export default function Home() {
           <Reveal delay={0.15}>
             <Link
               to={link('portfolio')}
-              className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-titanium/55 border-b border-titanium/25 pb-1 hover:border-titanium/55 hover:text-titanium/85 transition-all"
+              className="link-sublinhado"
             >
               {t.home.galleryLink} <ArrowRight size={12} />
             </Link>
