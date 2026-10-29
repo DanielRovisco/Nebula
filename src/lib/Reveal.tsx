@@ -17,7 +17,14 @@ interface RevealProps {
 export default function Reveal({
   children,
   delay = 0,
-  y = 40,
+  /*
+    18px e não 40: esta entrada aparece em quase todas as secções do site, e a
+    40px cada bloco entrava a subir como se fosse o acontecimento da página.
+    Mais curta e mais rápida, chega sem se fazer notar, e deixa o único
+    movimento com autor do site (o foco do manifesto, na página inicial) ser
+    o que se nota.
+  */
+  y = 18,
   className,
   'aria-hidden': ariaHidden,
 }: RevealProps) {
@@ -33,7 +40,7 @@ export default function Reveal({
       initial={{ opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-80px' }}
-      transition={{ duration: 0.9, delay, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] }}
     >
       {children}
     </motion.div>

@@ -121,8 +121,9 @@ toda a hierarquia. Os componentes são discretos e precisos: cápsulas
 finas, contornos de um pixel, campos que são só um risco.
 
 O movimento é o da poeira: lento, contínuo, quase abaixo do que se nota. As
-entradas usam uma única curva exponencial e desligam-se por completo com
-`prefers-reduced-motion`.
+entradas usam uma única curva exponencial, são curtas (18px, 0.7s) e
+desligam-se por completo com `prefers-reduced-motion`. Há um só momento com
+autor: a mudança de foco do manifesto, ligada ao scroll.
 
 **Key Characteristics:**
 - Fundo escuro único (eerie) com grão SVG e poeira em canvas, sempre **atrás**
@@ -314,9 +315,21 @@ Rótulo em maiúsculas (`label-sm`) por cima do título de secção. É o padrã
 incumbente em todo o site. Ver a nota em Do's and Don'ts.
 
 ### Manifesto serifado
-Duas linhas em Cormorant Itálico 300, muito grandes, a segunda a 60%, com uma
-nota curta em Montserrat por baixo. É a assinatura da home e o modelo para
-qualquer frase de voz.
+Duas linhas em Cormorant Itálico 300, muito grandes, com uma nota curta em
+Montserrat por baixo. É a assinatura da home e o modelo para qualquer frase de
+voz.
+
+Anima como uma **mudança de foco** de câmara, ligada ao scroll (o scroll é o
+tempo): "O tempo passa." começa nítida a 92% e sai para `blur(5px)` a 40%;
+"As imagens ficam" começa em `blur(9px)` a 28% e assenta nítida a 92%. O
+valor passa por uma mola (stiffness 90, damping 26, mass 0.6). Com movimento
+reduzido, fica estático: primeira linha a 92%, segunda a 60%.
+
+### Named Rules
+**The One Authored Moment Rule.** O site tem um só movimento de autor, a
+mudança de foco do manifesto. Tudo o resto (entradas, hovers, transições) é
+apoio e fica discreto; não se acrescenta um segundo momento que lhe dispute a
+atenção.
 
 ### Céu (grão + poeira)
 Grão SVG `feTurbulence` a 20% de opacidade, 200px de mosaico, a derivar em

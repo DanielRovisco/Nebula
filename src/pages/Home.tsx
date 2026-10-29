@@ -11,6 +11,7 @@ import VideoDoSite from '../lib/VideoDoSite'
 import ImagemCapa from '../lib/ImagemCapa'
 import Seo from '../lib/Seo'
 import SiteIntro from '../components/SiteIntro'
+import Manifesto from '../components/Manifesto'
 import { useLink, useLinkServico, useT } from '../lib/i18n'
 import { track } from '../lib/track'
 import Testimonials from '../components/Testimonials'
@@ -290,29 +291,7 @@ export default function Home() {
       </section>
 
       {/* ── MANIFESTO ──────────────────────────────────── */}
-      <section className="py-20 sm:py-36 md:py-44">
-        <div className="container-px">
-          <Reveal>
-            <p
-              className="font-serif italic leading-[1.12] text-titanium/92"
-              style={{ fontSize: 'clamp(2rem, 5.5vw, 5rem)' }}
-            >
-              {t.home.manifesto[0]}
-            </p>
-            <p
-              className="font-serif italic leading-[1.12] text-titanium/60 mt-1 sm:mt-2"
-              style={{ fontSize: 'clamp(2rem, 5.5vw, 5rem)' }}
-            >
-              {t.home.manifesto[1]}
-            </p>
-          </Reveal>
-          <Reveal delay={0.22} className="mt-10 sm:mt-14">
-            <p className="text-sm text-titanium/50 max-w-sm leading-relaxed">
-              {t.home.manifestoNota}
-            </p>
-          </Reveal>
-        </div>
-      </section>
+      <Manifesto linhas={t.home.manifesto} nota={t.home.manifestoNota} />
 
       <div className="container-px"><div className="hairline" /></div>
 

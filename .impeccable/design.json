@@ -130,8 +130,8 @@
       },
       {
         "name": "reveal",
-        "value": "0.8s–1.2s",
-        "purpose": "Entradas de secção (framer-motion), desligadas com movimento reduzido."
+        "value": "0.7s, 18px",
+        "purpose": "Entrada de apoio das secções (framer-motion); discreta para não disputar o momento focal; desligada com movimento reduzido."
       },
       {
         "name": "state",
@@ -147,6 +147,11 @@
         "name": "grao-deriva",
         "value": "20s ease-in-out infinite",
         "purpose": "Deriva do grão de fundo; para com movimento reduzido."
+      },
+      {
+        "name": "rack-focus-manifesto",
+        "value": "scroll-linked; blur 0→5px / 9→0px; spring 90/26/0.6",
+        "purpose": "Momento focal único: a mudança de foco entre as duas linhas do manifesto da home."
       }
     ],
     "breakpoints": [
@@ -242,7 +247,7 @@
   ],
   "narrative": {
     "northStar": "A Nebulosa",
-    "overview": "**Creative North Star: \"A Nebulosa\"**\n\nUm céu escuro onde algo novo nasce. O fundo é quase preto e não é plano: tem um grão de filme fino a derivar devagar e uma poeira de pontos de luz a flutuar, alguns azulados, atrás de tudo. Por cima desse céu, o texto é cor de marfim e as fotografias aparecem como se fossem a única fonte de luz da sala. A interface existe para desaparecer à volta delas.\n\nA densidade é baixa e o ritmo é lento: secções muito espaçadas, títulos grandes e firmes em Montserrat, e uma frase em Cormorant Itálico de vez em quando para dar a voz humana (o manifesto, as citações). A cor da marca é a ausência de cor: preto e marfim, com o marfim em várias opacidades a fazer toda a hierarquia. Os componentes são discretos e precisos: cápsulas finas, contornos de um pixel, campos que são só um risco.\n\nO movimento é o da poeira: lento, contínuo, quase abaixo do que se nota. As entradas usam uma única curva exponencial e desligam-se por completo com `prefers-reduced-motion`.",
+    "overview": "Um céu escuro onde algo novo nasce. O fundo é quase preto e não é plano: tem um grão de filme fino a derivar devagar e uma poeira de pontos de luz a flutuar, alguns azulados, atrás de tudo. Por cima desse céu, o texto é cor de marfim e as fotografias aparecem como se fossem a única fonte de luz da sala. A interface existe para desaparecer à volta delas.\n\nA densidade é baixa e o ritmo é lento: secções muito espaçadas, títulos grandes e firmes em Montserrat, e uma frase em Cormorant Itálico de vez em quando para dar a voz humana (o manifesto, as citações). A cor da marca é a ausência de cor: preto e marfim, com o marfim em várias opacidades a fazer toda a hierarquia. Os componentes são discretos e precisos: cápsulas finas, contornos de um pixel, campos que são só um risco.\n\nO movimento é o da poeira: lento, contínuo, quase abaixo do que se nota. As entradas usam uma única curva exponencial, são curtas (18px, 0.7s) e desligam-se por completo com `prefers-reduced-motion`. Há um só momento com autor: a mudança de foco do manifesto, ligada ao scroll.",
     "keyCharacteristics": [
       "Fundo escuro único (eerie) com grão SVG e poeira em canvas, sempre **atrás** do conteúdo.",
       "Hierarquia feita com opacidades de marfim, não com cores.",
@@ -290,6 +295,11 @@
         "name": "The Lift Not Shadow Rule",
         "body": "Um elemento interativo responde subindo e clareando o contorno, nunca ganhando sombra.",
         "section": "elevation"
+      },
+      {
+        "name": "The One Authored Moment Rule",
+        "body": "O site tem um só movimento de autor, a mudança de foco do manifesto. Tudo o resto (entradas, hovers, transições) é apoio e fica discreto; não se acrescenta um segundo momento que lhe dispute a atenção.",
+        "section": "components"
       }
     ],
     "dos": [
