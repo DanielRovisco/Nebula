@@ -23,6 +23,15 @@ dist-ssr
 # e a excepção abaixo não chegava a ser lida.
 .claude/*
 !.claude/skills/
+!.claude/agents/
+
+# O motor compilado da skill impeccable: 21 MB, e só serve para linux-x64.
+#
+# Fica de fora de propósito. É um binário por sistema operativo, inútil no
+# Windows de quem escreve isto, e o lançador que está ao lado sabe ir buscá-lo
+# na primeira vez que precisa dele. Vinte e um megabytes num repositório público
+# ficam lá para sempre e são pagos por quem clonar, para nada.
+.claude/skills/impeccable/scripts/bin/
 
 # Editor directories and files
 .vscode/*
