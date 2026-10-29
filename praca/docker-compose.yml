@@ -1,0 +1,28 @@
+# Local development stack: PostgreSQL + PostGIS, Meilisearch (optional autocomplete), Mailpit (SMTP sink).
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: praca
+      POSTGRES_PASSWORD: praca
+      POSTGRES_DB: praca
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U praca"]
+      interval: 5s
+      retries: 10
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    profiles: ["search"]
+    environment:
+      MEILI_MASTER_KEY: dev-master-key
+      MEILI_ENV: development
+    ports: ["7700:7700"]
+    volumes: ["meili:/meili_data"]
+  mailpit:
+    image: axllent/mailpit:latest
+    ports: ["8025:8025", "1025:1025"]
+volumes:
+  pgdata:
+  meili:

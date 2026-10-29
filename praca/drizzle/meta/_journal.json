@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1793308212943,
+      "tag": "0000_unusual_umar",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793308213760,
+      "tag": "0001_postgis_columns",
+      "breakpoints": true
+    }
+  ]
+}

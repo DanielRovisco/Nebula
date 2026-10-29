@@ -1,0 +1,210 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter/index.css";
+@import "@fontsource-variable/fraunces/opsz.css";
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+/* ───────── Design tokens ─────────
+   Praça: warm-grey stone base, one strong "azulejo" cobalt for actions, Okabe–Ito categorical data palette
+   (safe for the common colour-vision deficiencies), green/red reserved for price variation. */
+:root {
+  --bg: #f5f4f1;
+  --surface: #ffffff;
+  --surface-2: #edebe6;
+  --border: #dfdcd5;
+  --border-strong: #c9c5bc;
+  --fg: #1a1917;
+  --muted: #625e57;
+  --brand: #1d3fb5;
+  --brand-hover: #17328f;
+  --brand-fg: #ffffff;
+  --brand-soft: #e5eafa;
+  --focus: #1d3fb5;
+  --up: #146c43;
+  --down: #b42318;
+  --warn: #8a5300;
+  --warn-soft: #fff1d6;
+  --d1: #0072b2;
+  --d2: #e69f00;
+  --d3: #009e73;
+  --d4: #cc79a7;
+  --d5: #56b4e9;
+  --shadow-sm: 0 1px 2px rgb(26 25 23 / 0.06), 0 1px 1px rgb(26 25 23 / 0.04);
+  --shadow-md: 0 4px 16px -4px rgb(26 25 23 / 0.12), 0 2px 4px rgb(26 25 23 / 0.05);
+  --shadow-lg: 0 18px 48px -12px rgb(26 25 23 / 0.22);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #131211;
+  --surface: #1c1b19;
+  --surface-2: #26241f;
+  --border: #35322d;
+  --border-strong: #4a463f;
+  --fg: #f1efea;
+  --muted: #a8a399;
+  --brand: #8da4f7;
+  --brand-hover: #a8baf9;
+  --brand-fg: #0c1330;
+  --brand-soft: #1c2548;
+  --focus: #a8baf9;
+  --up: #53c28b;
+  --down: #f08a80;
+  --warn: #f0b95c;
+  --warn-soft: #3a2b0e;
+  --d1: #56b4e9;
+  --d2: #f0b429;
+  --d3: #2fc99a;
+  --d4: #e39ac2;
+  --d5: #8fd0f5;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 16px -4px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 18px 48px -12px rgb(0 0 0 / 0.7);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-fg: var(--brand-fg);
+  --color-brand-soft: var(--brand-soft);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-d1: var(--d1);
+  --color-d2: var(--d2);
+  --color-d3: var(--d3);
+  --color-d4: var(--d4);
+  --color-d5: var(--d5);
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Fraunces Variable", ui-serif, Georgia, serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01", "tnum" 0;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  /* Numbers in tables/prices line up. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  .font-display {
+    font-family: var(--font-serif);
+    font-variation-settings: "opsz" 96;
+    letter-spacing: -0.02em;
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::selection {
+    background: var(--brand-soft);
+  }
+  button,
+  [role="button"],
+  a,
+  select,
+  summary {
+    touch-action: manipulation;
+  }
+}
+
+/* Calçada-style mosaic used once, on the hero search plate. */
+.calcada {
+  background-color: var(--surface-2);
+  background-image:
+    linear-gradient(45deg, var(--border) 25%, transparent 25%, transparent 75%, var(--border) 75%),
+    linear-gradient(45deg, var(--border) 25%, transparent 25%, transparent 75%, var(--border) 75%);
+  background-size: 22px 22px;
+  background-position: 0 0, 11px 11px;
+  opacity: 0.55;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 37%, var(--surface-2) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+@keyframes shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* MapLibre controls follow the theme. */
+.maplibregl-ctrl-group {
+  border-radius: 12px !important;
+  background: var(--surface) !important;
+  box-shadow: var(--shadow-md) !important;
+  border: 1px solid var(--border);
+}
+.maplibregl-ctrl-group button {
+  width: 40px !important;
+  height: 40px !important;
+}
+.dark .maplibregl-ctrl-icon {
+  filter: invert(1);
+}
+.maplibregl-ctrl-attrib {
+  font-size: 10px !important;
+}
+
+@media print {
+  header,
+  footer,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}

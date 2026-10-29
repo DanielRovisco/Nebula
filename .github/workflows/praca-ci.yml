@@ -1,0 +1,43 @@
+name: Praça CI
+
+on:
+  push:
+    paths: ["praca/**", ".github/workflows/praca-ci.yml"]
+  pull_request:
+    paths: ["praca/**", ".github/workflows/praca-ci.yml"]
+
+defaults:
+  run:
+    working-directory: praca
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgis/postgis:16-3.4
+        env: { POSTGRES_USER: praca, POSTGRES_PASSWORD: praca, POSTGRES_DB: praca }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U praca" --health-interval 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://praca:praca@localhost:5432/praca
+      AUTH_SECRET: ci-secret-not-for-production-0123456789
+      NEXT_PUBLIC_SITE_URL: http://localhost:3100
+      NEXT_PUBLIC_APP_ENV: development
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm, cache-dependency-path: praca/pnpm-lock.yaml }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      # Migrations dry-run: drizzle-kit must find no schema drift versus the committed SQL.
+      - run: pnpm drizzle-kit generate --name=ci_drift && test -z "$(git status --porcelain drizzle)" || (echo "Schema drift: run pnpm db:generate and commit" && exit 1)
+      - run: pnpm db:migrate && pnpm db:seed
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
