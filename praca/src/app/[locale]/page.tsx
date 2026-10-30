@@ -3,6 +3,7 @@ import { getFormatter, getTranslations, setRequestLocale } from "next-intl/serve
 import { unstable_cache } from "next/cache";
 import { Sparkline } from "@/components/charts/sparkline";
 import { HeroSearch } from "@/components/home/hero-search";
+import { NaturalSearch } from "@/components/home/natural-search";
 import { JsonLd } from "@/components/json-ld";
 import { PropertyCard } from "@/components/property-card";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +70,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <p className="mt-5 max-w-xl text-lg text-muted">{t("heroSub")}</p>
             <div className="mt-8 max-w-2xl">
               <HeroSearch />
+              <NaturalSearch />
             </div>
           </div>
 

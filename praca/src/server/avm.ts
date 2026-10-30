@@ -51,7 +51,7 @@ const toPublic = (c: Comparable): PublicComparable => ({
 
 type Row = { id: string; reference: string; title: string; status: string; price: number; ppm: number; area: number; typology: number | null; year_built: number | null; condition: Condition | null; floor: number | null; elevator: boolean; dist: number; months: number };
 
-async function fetchCandidates(input: ValuationInput, business: "sale" | "rent", radiusM: number): Promise<Candidate[]> {
+async function fetchCandidates(input: ValuationInput, business: "sale" | "rent", radiusM: number, excludeListingId?: string): Promise<Candidate[]> {
   const ended = business === "sale" ? "sold" : "rented";
   const rows = await sql<Row[]>`
     SELECT l.id, p.reference, l.title, l.status, l.price::float8 AS price, l.price_per_m2::float8 AS ppm, p.usable_area::float8 AS area, p.typology, p.year_built,
@@ -60,6 +60,7 @@ async function fetchCandidates(input: ValuationInput, business: "sale" | "rent",
            CASE WHEN l.status = 'active' THEN 0 ELSE GREATEST(EXTRACT(epoch FROM now() - l.ended_at) / 2629800, 0) END AS months
     FROM listings l JOIN properties p ON p.id = l.property_id
     WHERE p.type = ${input.type}::property_type AND l.business = ${business} AND p.deleted_at IS NULL AND l.deleted_at IS NULL
+      AND (${excludeListingId ?? null}::uuid IS NULL OR l.id <> ${excludeListingId ?? null}::uuid)
       AND p.usable_area BETWEEN ${input.area * 0.6} AND ${input.area * 1.6} AND l.price_per_m2 IS NOT NULL
       AND ((l.status = 'active' AND l.is_primary) OR (l.status = ${ended} AND l.ended_at > now() - make_interval(months => ${PARAMS.maxMonths})))
       AND ST_DWithin(p.location, ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography, ${radiusM})
@@ -72,10 +73,10 @@ async function fetchCandidates(input: ValuationInput, business: "sale" | "rent",
 }
 
 /** Widens the search radius until there are enough comparables, then values the subject. */
-async function valueFor(subject: Subject, input: ValuationInput, business: "sale" | "rent") {
+async function valueFor(subject: Subject, input: ValuationInput, business: "sale" | "rent", excludeListingId?: string) {
   let last: { res: ModelResult | null; radius: number } = { res: null, radius: PARAMS.radiiM[PARAMS.radiiM.length - 1]! };
   for (const radius of PARAMS.radiiM) {
-    const cands = await fetchCandidates(input, business, radius);
+    const cands = await fetchCandidates(input, business, radius, excludeListingId);
     const res = valuate(subject, cands, radius);
     last = { res, radius };
     if (cands.length >= PARAMS.targetComparables && res) break;
@@ -83,9 +84,20 @@ async function valueFor(subject: Subject, input: ValuationInput, business: "sale
   return last;
 }
 
-export async function runValuation(input: ValuationInput): Promise<ValuationOutcome> {
+export interface ValuationOptions {
+  /** Leave this listing out of the comparables (valuing an existing advert against its neighbours). */
+  excludeListingId?: string;
+  /** Skip the other business: the rent run when valuing a sale advert, and vice versa. */
+  only?: "sale" | "rent";
+}
+
+export async function runValuation(input: ValuationInput, opts: ValuationOptions = {}): Promise<ValuationOutcome> {
   const subject: Subject = { lat: input.lat, lng: input.lng, type: input.type, typology: input.typology ?? null, area: input.area, yearBuilt: input.yearBuilt ?? null, condition: input.condition ?? null, floor: input.floor ?? null, elevator: input.elevator };
-  const [saleRun, rentRun] = await Promise.all([valueFor(subject, input, "sale"), valueFor(subject, input, "rent")]);
+  const skipped = { res: null, radius: PARAMS.radiiM[0]! };
+  const [saleRun, rentRun] = await Promise.all([
+    opts.only === "rent" ? skipped : valueFor(subject, input, "sale", opts.excludeListingId),
+    opts.only === "sale" ? skipped : valueFor(subject, input, "rent", opts.excludeListingId),
+  ]);
   const slim = (r: ModelResult | null) => (r ? { ...r, comparables: r.comparables.slice(0, 12).map(toPublic) } : null);
   const sale = slim(saleRun.res);
   const rent = slim(rentRun.res);

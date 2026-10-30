@@ -4,6 +4,7 @@ import { uuidv7 } from "../src/lib/ids";
 import { AGENCIES } from "./seed/catalog";
 import { generate } from "./seed/generate";
 import { loadParishRefs, seedGeo } from "./seed/geo";
+import { seedRisk } from "./seed/risk";
 import { hashString } from "../src/lib/rng";
 import { loadEnv } from "./_env";
 
@@ -224,6 +225,8 @@ async function main() {
     const res = await computeIndicators(sql); // second pass picks up yoy/qoq from the synthetic history
     console.log("  ", { history: hist, current: res.rows });
 
+    console.log("→ camadas de risco (demonstração)…");
+    await seedRisk(sql);
     console.log("→ projetos (pipeline)…");
     await sql`DELETE FROM new_developments WHERE is_seed`;
     for (const [name, developer, mun, phase, total, available, delivery, from] of DEVELOPMENTS) {

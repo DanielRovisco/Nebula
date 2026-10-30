@@ -29,6 +29,27 @@
       "when": 1793383011989,
       "tag": "0003_reference_seq",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793390187645,
+      "tag": "0004_phase3",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793390188804,
+      "tag": "0005_fiscal_phase3",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793390464499,
+      "tag": "0006_isochrone_cache",
+      "breakpoints": true
     }
   ]
 }

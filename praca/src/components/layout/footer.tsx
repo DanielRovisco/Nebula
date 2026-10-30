@@ -22,6 +22,7 @@ export async function Footer() {
             <li><Link className={a} href="/comprar">{nav("buy")}</Link></li>
             <li><Link className={a} href="/arrendar">{nav("rent")}</Link></li>
             <li><Link className={a} href="/mercado">{nav("market")}</Link></li>
+            <li><Link className={a} href="/calculadoras">{nav("calculators")}</Link></li>
             <li><Link className={a} href="/metodologia">{t("methodology")}</Link></li>
           </ul>
         </div>

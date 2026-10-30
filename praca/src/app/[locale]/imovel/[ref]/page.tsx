@@ -6,11 +6,15 @@ import { JsonLd } from "@/components/json-ld";
 import { PropertyCard } from "@/components/property-card";
 import { Calculators } from "@/components/property/calculators";
 import { ContactForm } from "@/components/property/contact-form";
+import { FairPriceBadge } from "@/components/property/fair-price-badge";
 import { Gallery } from "@/components/property/gallery";
 import { LocationMap } from "@/components/property/location-map";
+import { RiskSection } from "@/components/property/risk-section";
 import { PriceChart } from "@/components/property/price-chart";
 import { PrintButton, ShareButton } from "@/components/property/share-buttons";
 import { CompareToggle, FavoriteButton } from "@/components/user-state";
+import { getFairPrice } from "@/server/fair-price";
+import { listRiskLayers, riskAt } from "@/server/risk";
 import { currentUser } from "@/server/session";
 import { sql } from "@/db";
 import { Badge } from "@/components/ui/badge";
@@ -61,13 +65,16 @@ export default async function PropertyPage({ params }: Props) {
   const l = p.primary;
   const rent = l.business === "rent";
   const active = l.status === "active";
-  const [comps, zone, euribor, imtHpp, imtOther, stamp] = await Promise.all([
+  const [comps, zone, euribor, imtHpp, imtOther, stamp, fair, risks, riskLayers] = await Promise.all([
     getComparables(p, 12).catch(() => []),
     getZoneStats(p).catch(() => null),
     getRate("euribor_6m").catch(() => null),
     getFiscalTable("imt", "hpp_mainland").catch(() => null),
     getFiscalTable("imt", "other_urban").catch(() => null),
     getFiscalTable("stamp_duty_purchase", "all").catch(() => null),
+    getFairPrice(p).catch(() => null),
+    riskAt(p.lat, p.lng).catch(() => []),
+    listRiskLayers().catch(() => []),
   ]);
   const viewer = await currentUser();
   if (viewer) {
@@ -199,6 +206,7 @@ export default async function PropertyPage({ params }: Props) {
                   </Badge>
                 )}
               </div>
+              {fair && <FairPriceBadge fair={fair} rent={rent} />}
               <p className="flex items-center gap-2 text-sm text-muted">
                 <Calendar className="size-4" aria-hidden />
                 {t("publishedOn", { date: formatDate(l.publishedAt) })} · {t("onMarket", { n: daysOnMarket })}
@@ -288,9 +296,11 @@ export default async function PropertyPage({ params }: Props) {
 
             <section aria-labelledby="loc">
               <h2 id="loc" className="mb-3 text-xl font-semibold">{t("location")}</h2>
-              <LocationMap lat={p.lat} lng={p.lng} approximate={p.isSeed} />
+              <LocationMap lat={p.lat} lng={p.lng} approximate={p.isSeed} layers={riskLayers} />
               <p className="mt-2 text-xs text-muted">{t("locationNote")}</p>
             </section>
+
+            <RiskSection risks={risks} />
 
             {zone && (
               <section aria-labelledby="zone">

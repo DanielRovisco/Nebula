@@ -54,7 +54,8 @@
     "themeDark": "Dark",
     "themeSystem": "Automatic",
     "mainNavigation": "Main navigation",
-    "mobileNavigation": "Mobile navigation"
+    "mobileNavigation": "Mobile navigation",
+    "calculators": "Calculators"
   },
   "footer": {
     "about": "About",
@@ -163,7 +164,16 @@
     "ctaTitle": "Save your search and get new properties by email",
     "ctaSub": "Create a free account, save a search and pick the frequency: instant, daily or weekly.",
     "ctaButton": "Create free account",
-    "ctaSecondary": "Browse properties"
+    "ctaSecondary": "Browse properties",
+    "nlLabel": "Or describe what you are looking for",
+    "nlPlaceholder": "2-bed flat in Lisbon under 350k with a balcony",
+    "nlInterpret": "Interpret",
+    "nlError": "Could not interpret that. Please try again.",
+    "nlNothing": "No filters found in that sentence. Mention a type, an area or a price.",
+    "nlUnderstood": "What I understood",
+    "nlPlaceNotFound": "I could not find the area \"{place}\". Results open without an area.",
+    "nlIgnored": "Not filterable yet: {items}.",
+    "nlOpen": "View results"
   },
   "search": {
     "titleBuy": "Properties for sale in {place}",
@@ -1381,5 +1391,128 @@
     "copied": "Copied",
     "mcpTitle": "MCP server",
     "mcpText": "The MCP server (search_properties, get_property, valuation, market_stats) for Claude, ChatGPT and Cursor arrives in the next phase and reuses the same keys and quotas."
+  },
+  "calculators": {
+    "title": "Calculators",
+    "sub": "Transfer tax, stamp duty, mortgage payment, capital gains, rental return and borrowing capacity, with the tables in force and the source of each value.",
+    "tab": {
+      "buy": "Purchase and mortgage",
+      "gains": "Capital gains",
+      "rent": "Rental",
+      "afford": "Borrowing capacity"
+    },
+    "buy": {
+      "title": "Purchase costs and payment"
+    },
+    "gains": {
+      "title": "Capital gains on sale"
+    },
+    "rent": {
+      "title": "Rental return"
+    },
+    "afford": {
+      "title": "How much can I borrow"
+    },
+    "price": "Price (€)",
+    "down": "Down payment (€)",
+    "kind": "Purchase type",
+    "kindHpp": "Own permanent home",
+    "kindSecondary": "Second home",
+    "kindOther": "Other urban property",
+    "jovem": "IMT Jovem (under 35)",
+    "years": "Term (years)",
+    "spread": "Spread (%)",
+    "income": "Net monthly income (€)",
+    "otherDebt": "Other monthly debt payments (€)",
+    "imt": "IMT (transfer tax)",
+    "stamp": "Stamp duty",
+    "taxesTotal": "Total taxes",
+    "cashNeeded": "Cash needed (down payment + taxes)",
+    "loan": "Loan amount",
+    "euribor": "12-month Euribor",
+    "monthly": "Monthly payment",
+    "totalInterest": "Total interest",
+    "effort": "Effort rate",
+    "effortHigh": "Above 50 % of income, banks are unlikely to approve the payment.",
+    "jovemApplied": "IMT Jovem applied. Stamp duty is still due.",
+    "registryNote": "Excludes registration, deed, bank valuation and loan fees.",
+    "source": "Source: {tax}, table in force since {date}.",
+    "unverified": "Value pending confirmation against the official source.",
+    "noTable": "{tax} table unavailable.",
+    "salePrice": "Sale price (€)",
+    "purchasePrice": "Purchase price (€)",
+    "coefficient": "Updating coefficient",
+    "coefficientHint": "From the ordinance of the purchase year. Use 1 if unknown.",
+    "expenses": "Documented expenses (€)",
+    "expensesHint": "IMT and stamp duty paid, works in the last 12 years, agency commission.",
+    "marginal": "Marginal income tax rate (%)",
+    "marginalHint": "The household's rate on your return.",
+    "resident": "I am a tax resident in Portugal",
+    "hppSale": "It was my own permanent home",
+    "reinvested": "Amount reinvested (%)",
+    "reinvestedHint": "Reinvestment in another own permanent home within the legal window.",
+    "gain": "Capital gain",
+    "exemptShare": "Excluded share",
+    "taxableGain": "Share subject to tax",
+    "gainsTax": "Estimated tax",
+    "netProceeds": "Net sale proceeds",
+    "gainsNote": "Residents: 50 % of the gain is added to income. Non-residents: 100 %. Reinvestment rules change often. Check the Portal das Finanças or an accountant.",
+    "monthlyRent": "Monthly rent (€)",
+    "vacancy": "Vacant months per year",
+    "lease": "Lease length (years)",
+    "imiRate": "IMI rate (%)",
+    "imiHint": "Set by each municipality.",
+    "vpt": "VPT as % of price",
+    "vptHint": "Tax asset value. See the property tax record.",
+    "condo": "Service charge per year (€)",
+    "insurance": "Insurance per year (€)",
+    "maintenance": "Maintenance (% of rent)",
+    "grossYearly": "Gross yearly rent",
+    "imiYearly": "IMI",
+    "costsYearly": "Service charge, insurance and maintenance",
+    "irsYearly": "Income tax on rent",
+    "netYearly": "Net yearly income",
+    "grossYield": "Gross yield",
+    "netYield": "Net yield",
+    "rentNote": "Uses the autonomous income tax rate by lease length. You may opt to aggregate. No financing.",
+    "maxRatio": "Maximum payment-to-income ratio (%)",
+    "maxRatioHint": "Banks typically use 35 % to 40 %.",
+    "maxMonthly": "Maximum payment",
+    "maxLoan": "Maximum loan",
+    "maxPrice": "Maximum purchase price",
+    "affordNote": "Estimate. The bank decides from your profile, the property valuation and Banco de Portugal limits.",
+    "disclaimer": "Informational estimates, not tax or financial advice. Tax values come from database tables, each with a start date and source. Tables not yet confirmed against the official source are flagged."
+  },
+  "fair": {
+    "below": "Below market price",
+    "fair": "Fairly priced",
+    "above": "Above market price",
+    "insideRange": "Estimated range {low} to {high}",
+    "deviation": "{pct} % {dir} the estimated value",
+    "basis": "{n} similar comparables",
+    "dirAbove": "above",
+    "dirBelow": "below"
+  },
+  "mapTools": {
+    "riskLayer": "Risk layer",
+    "none": "None",
+    "demo": "demo",
+    "reach": "Reach",
+    "minutes": "Time",
+    "mode": {
+      "foot-walking": "On foot",
+      "cycling-regular": "By bike",
+      "driving-car": "By car"
+    },
+    "isoApprox": "Straight-line approximation. Without a routing service connected, the circle overstates real reach.",
+    "isoOrs": "Reach computed on the road network (openrouteservice).",
+    "isoError": "Could not compute reach right now.",
+    "demoNotice": "demo data, not official"
+  },
+  "risk": {
+    "title": "Natural hazards",
+    "demo": "demo, not official",
+    "outside": "Outside mapped zones",
+    "note": "\"Outside mapped zones\" means the layer has no polygon at this point. It does not guarantee the absence of risk. Always check municipal plans and the authorities."
   }
 }
