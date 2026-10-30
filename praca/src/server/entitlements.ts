@@ -15,15 +15,16 @@ export interface Entitlement {
 export const monthStart = (d = new Date()) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)).toISOString().slice(0, 10);
 
 /** Highest plan among the user's own active subscription and the plans of the organisations they belong to. */
-export async function effectivePlan(userId: string): Promise<{ plan: Plan; trialEndsAt: Date | null; source: "user" | "org" | "free" }> {
+export async function effectivePlan(userId: string): Promise<{ plan: Plan; trialEndsAt: Date | null; source: "user" | "org" | "free"; orgId: string | null }> {
   const own = await sql<{ plan: Plan; status: string; trial_ends_at: Date | null }[]>`
     SELECT plan, status, trial_ends_at FROM subscriptions
     WHERE user_id = ${userId} AND status IN ('trialing', 'active', 'past_due') ORDER BY created_at DESC`;
-  const orgs = await sql<{ plan: Plan }[]>`
-    SELECT o.plan FROM memberships m JOIN organizations o ON o.id = m.organization_id WHERE m.user_id = ${userId} AND o.deleted_at IS NULL`;
+  const orgs = await sql<{ id: string; plan: Plan }[]>`
+    SELECT o.id, o.plan FROM memberships m JOIN organizations o ON o.id = m.organization_id WHERE m.user_id = ${userId} AND o.deleted_at IS NULL`;
   let plan: Plan = "free";
   let source: "user" | "org" | "free" = "free";
   let trial: Date | null = null;
+  let orgId: string | null = null;
   for (const s of own) {
     if (PLAN_RANK[s.plan] > PLAN_RANK[plan]) {
       plan = s.plan;
@@ -36,9 +37,10 @@ export async function effectivePlan(userId: string): Promise<{ plan: Plan; trial
     if (next !== plan) {
       plan = next;
       source = "org";
+      orgId = o.id;
     }
   }
-  return { plan, trialEndsAt: trial, source };
+  return { plan, trialEndsAt: trial, source, orgId };
 }
 
 export async function getEntitlement(plan: Plan, feature: Feature): Promise<Entitlement> {

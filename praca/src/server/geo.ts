@@ -52,6 +52,9 @@ export interface Suggestion {
   kind: SuggestKind;
   /** DTMN code for geo kinds, used by the analytics zone picker. */
   code?: string;
+  /** Centroid, for centring maps on the chosen place. */
+  lat?: number;
+  lng?: number;
   label: string;
   sublabel?: string;
   /** Path slugs [district, municipality, parish] for geo kinds; full href for others. */
@@ -80,8 +83,8 @@ export async function suggest(raw: string, limit = 8): Promise<Suggestion[]> {
   }
 
   if (/^\d{4}(-\d{0,3})?$/.test(q)) {
-    const rows = await sql<{ code: string; parish: string | null; mun: string | null; dslug: string | null; mslug: string | null; pslug: string | null }[]>`
-      SELECT pc.code, pa.name AS parish, m.name AS mun, d.slug AS dslug, m.slug AS mslug, pa.slug AS pslug
+    const rows = await sql<{ code: string; lat: number | null; lng: number | null; parish: string | null; mun: string | null; dslug: string | null; mslug: string | null; pslug: string | null }[]>`
+      SELECT pc.code, pc.lat, pc.lng, pa.name AS parish, m.name AS mun, d.slug AS dslug, m.slug AS mslug, pa.slug AS pslug
       FROM geo_postcodes pc
       LEFT JOIN geo_parishes pa ON pa.code = pc.parish_code
       LEFT JOIN geo_municipalities m ON m.code = pa.municipality_code
@@ -90,32 +93,34 @@ export async function suggest(raw: string, limit = 8): Promise<Suggestion[]> {
     for (const r of rows)
       out.push({
         kind: "postcode",
+        lat: r.lat ?? undefined,
+        lng: r.lng ?? undefined,
         label: r.code,
         sublabel: [r.parish, r.mun].filter(Boolean).join(", "),
         path: [r.dslug, r.mslug, r.pslug].filter((x): x is string => !!x),
       });
   }
 
-  const munis = await sql<{ code: string; name: string; slug: string; dname: string; dslug: string; sim: number }[]>`
-    SELECT m.code, m.name, m.slug, d.name AS dname, d.slug AS dslug,
+  const munis = await sql<{ lat: number; lng: number; code: string; name: string; slug: string; dname: string; dslug: string; sim: number }[]>`
+    SELECT m.lat, m.lng, m.code, m.name, m.slug, d.name AS dname, d.slug AS dslug,
            GREATEST(similarity(m.name_search, ${nq}), CASE WHEN m.name_search LIKE ${like} THEN 1 ELSE 0 END) AS sim
     FROM geo_municipalities m JOIN geo_districts d ON d.code = m.district_code
     WHERE m.name_search LIKE ${like} OR m.name_search % ${nq}
     ORDER BY sim DESC, m.name LIMIT 5`;
-  for (const m of munis) out.push({ kind: "municipality", code: m.code, label: m.name, sublabel: `Concelho · ${m.dname}`, path: [m.dslug, m.slug] });
+  for (const m of munis) out.push({ kind: "municipality", code: m.code, lat: m.lat, lng: m.lng, label: m.name, sublabel: `Concelho · ${m.dname}`, path: [m.dslug, m.slug] });
 
-  const dists = await sql<{ code: string; name: string; slug: string }[]>`
-    SELECT code, name, slug FROM geo_districts WHERE lower(immutable_unaccent(name)) LIKE ${like} ORDER BY name LIMIT 2`;
-  for (const d of dists) out.push({ kind: "district", code: d.code, label: d.name, sublabel: "Distrito", path: [d.slug] });
+  const dists = await sql<{ lat: number; lng: number; code: string; name: string; slug: string }[]>`
+    SELECT lat, lng, code, name, slug FROM geo_districts WHERE lower(immutable_unaccent(name)) LIKE ${like} ORDER BY name LIMIT 2`;
+  for (const d of dists) out.push({ kind: "district", code: d.code, lat: d.lat, lng: d.lng, label: d.name, sublabel: "Distrito", path: [d.slug] });
 
   if (nq.length >= 3) {
-    const parishes = await sql<{ code: string; name: string; slug: string; mname: string; mslug: string; dslug: string; sim: number }[]>`
-      SELECT pa.code, pa.name, pa.slug, m.name AS mname, m.slug AS mslug, d.slug AS dslug,
+    const parishes = await sql<{ lat: number; lng: number; code: string; name: string; slug: string; mname: string; mslug: string; dslug: string; sim: number }[]>`
+      SELECT pa.lat, pa.lng, pa.code, pa.name, pa.slug, m.name AS mname, m.slug AS mslug, d.slug AS dslug,
              GREATEST(similarity(pa.name_search, ${nq}), CASE WHEN pa.name_search LIKE ${like} THEN 1 ELSE 0 END) AS sim
       FROM geo_parishes pa JOIN geo_municipalities m ON m.code = pa.municipality_code JOIN geo_districts d ON d.code = m.district_code
       WHERE pa.name_search LIKE ${like} OR pa.name_search % ${nq}
       ORDER BY sim DESC, pa.name LIMIT 6`;
-    for (const p of parishes) out.push({ kind: "parish", code: p.code, label: p.name, sublabel: `Freguesia · ${p.mname}`, path: [p.dslug, p.mslug, p.slug] });
+    for (const p of parishes) out.push({ kind: "parish", code: p.code, lat: p.lat, lng: p.lng, label: p.name, sublabel: `Freguesia · ${p.mname}`, path: [p.dslug, p.mslug, p.slug] });
   }
 
   // Municipalities and districts first, then parishes: the usual intent for a short query.
