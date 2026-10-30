@@ -11,6 +11,8 @@ const config = [
     rules: {
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
       "@typescript-eslint/consistent-type-imports": "warn",
+      // Download links to API routes (CSV/PDF) are plain <a href>; page navigation uses next-intl's Link.
+      "@next/next/no-html-link-for-pages": "off",
     },
   },
   // Playwright fixtures name their callback `use`, which the hooks rule mistakes for React.use.

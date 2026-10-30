@@ -14,6 +14,7 @@ import { CompareToggle, FavoriteButton } from "@/components/user-state";
 import { currentUser } from "@/server/session";
 import { sql } from "@/db";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { siteUrl } from "@/lib/env";
 import { formatChange, formatDate, formatEur, formatPricePerM2 } from "@/lib/format";
@@ -178,6 +179,7 @@ export default async function PropertyPage({ params }: Props) {
             <CompareToggle reference={p.reference} className="border border-border-strong" />
             <ShareButton title={l.title} copiedLabel={cm("copied")} label={cm("share")} />
             <PrintButton label={cm("print")} />
+            <Button asChild variant="secondary" size="sm"><Link href={`/avaliar?ref=${p.reference}`}>{t("valueThis")}</Link></Button>
           </div>
         </div>
 
