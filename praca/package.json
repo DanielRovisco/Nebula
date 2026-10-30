@@ -56,6 +56,7 @@
     "sonner": "^2.0.7",
     "stripe": "^23.1.0",
     "tailwind-merge": "^3.3.1",
+    "web-push": "^3.6.7",
     "zod": "^4.1.12"
   },
   "devDependencies": {
@@ -68,6 +69,7 @@
     "@types/pdfkit": "^0.17.7",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "@types/web-push": "^3.6.4",
     "drizzle-kit": "^0.31.11",
     "eslint": "^9.39.1",
     "eslint-config-next": "^15.5.28",

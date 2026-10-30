@@ -50,6 +50,20 @@
       "when": 1793390464499,
       "tag": "0006_isochrone_cache",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793390699192,
+      "tag": "0007_newsletter_issues",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793390849729,
+      "tag": "0008_whatsapp_optins",
+      "breakpoints": true
     }
   ]
 }

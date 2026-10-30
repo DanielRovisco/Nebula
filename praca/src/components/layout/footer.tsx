@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Logo } from "@/components/logo";
+import { NewsletterForm } from "@/components/newsletter-form";
 import { Link } from "@/i18n/navigation";
 import { entity } from "@/lib/env";
 import { CookieSettingsButton } from "./cookie-consent";
@@ -7,14 +8,19 @@ import { CookieSettingsButton } from "./cookie-consent";
 export async function Footer() {
   const t = await getTranslations("footer");
   const nav = await getTranslations("nav");
+  const nl = await getTranslations("newsletter");
   const col = "flex flex-col gap-2.5 text-sm";
   const a = "text-muted hover:text-fg";
   return (
     <footer className="mt-24 border-t border-border bg-surface-2/50 pb-24 md:pb-0">
       <div className="mx-auto grid max-w-[1400px] gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
-        <div className="max-w-xs space-y-4">
+        <div className="max-w-sm space-y-4">
           <Logo />
           <p className="text-sm text-muted">{t("dataNote")}</p>
+          <div className="pt-2">
+            <h2 className="mb-2 text-sm font-semibold">{nl("title")}</h2>
+            <NewsletterForm />
+          </div>
         </div>
         <div>
           <h2 className="mb-3 text-sm font-semibold">{t("explore")}</h2>
@@ -23,6 +29,8 @@ export async function Footer() {
             <li><Link className={a} href="/arrendar">{nav("rent")}</Link></li>
             <li><Link className={a} href="/mercado">{nav("market")}</Link></li>
             <li><Link className={a} href="/calculadoras">{nav("calculators")}</Link></li>
+            <li><Link className={a} href="/projetos">{nav("projects")}</Link></li>
+            <li><Link className={a} href="/blog">{nav("blog")}</Link></li>
             <li><Link className={a} href="/metodologia">{t("methodology")}</Link></li>
           </ul>
         </div>

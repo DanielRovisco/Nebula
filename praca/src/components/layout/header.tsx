@@ -55,6 +55,9 @@ export async function Header() {
           <Link href="/calculadoras" className={link}>
             {t("calculators")}
           </Link>
+          <Link href="/projetos" className={link}>
+            {t("projects")}
+          </Link>
         </nav>
         <div className="ml-auto flex items-center gap-1.5">
           <Suspense fallback={null}>

@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { Toaster } from "sonner";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { CookieConsent } from "@/components/layout/cookie-consent";
+import { PwaRegister } from "@/components/layout/pwa-register";
 import { DemoBanner } from "@/components/layout/demo-banner";
 import { CompareTray, UserStateProvider } from "@/components/user-state";
 import { Footer } from "@/components/layout/footer";
@@ -26,6 +27,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: { default: `${t("siteName")} — ${t("tagline")}`, template: `%s · ${t("siteName")}` },
     description: t("description"),
     applicationName: t("siteName"),
+    icons: { apple: "/icons/apple-touch-icon.png" },
+    appleWebApp: { capable: true, title: t("siteName"), statusBarStyle: "default" },
     openGraph: { type: "website", siteName: t("siteName"), locale: locale === "pt" ? "pt_PT" : "en_GB" },
   };
 }
@@ -67,6 +70,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
             <CompareTray />
             </UserStateProvider>
             <CookieConsent />
+            <PwaRegister />
             <Toaster position="top-center" richColors closeButton />
           </ThemeProvider>
         </NextIntlClientProvider>

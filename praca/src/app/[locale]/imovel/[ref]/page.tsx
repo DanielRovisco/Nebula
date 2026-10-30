@@ -187,6 +187,11 @@ export default async function PropertyPage({ params }: Props) {
             <ShareButton title={l.title} copiedLabel={cm("copied")} label={cm("share")} />
             <PrintButton label={cm("print")} />
             <Button asChild variant="secondary" size="sm"><Link href={`/avaliar?ref=${p.reference}`}>{t("valueThis")}</Link></Button>
+            {viewer && (
+              <Button asChild variant="secondary" size="sm">
+                <a href={`/api/imovel/${p.reference.toLowerCase()}/dossie`}>{t("dossier")}</a>
+              </Button>
+            )}
           </div>
         </div>
 

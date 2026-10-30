@@ -55,7 +55,9 @@
     "themeSystem": "Automático",
     "mainNavigation": "Navegação principal",
     "mobileNavigation": "Navegação móvel",
-    "calculators": "Calculadoras"
+    "calculators": "Calculadoras",
+    "projects": "Projetos",
+    "blog": "Blog"
   },
   "footer": {
     "about": "Sobre",
@@ -433,7 +435,8 @@
     "breadcrumb": "Caminho",
     "costsRegistryNote": "Não inclui registos, escritura nem avaliação bancária, que variam.",
     "costsUnverified": "Valor a confirmar no Portal das Finanças.",
-    "valueThis": "Avaliar"
+    "valueThis": "Avaliar",
+    "dossier": "Dossiê PDF"
   },
   "auth": {
     "signInTitle": "Entrar na Praça",
@@ -1514,5 +1517,104 @@
     "demo": "demonstração, não oficial",
     "outside": "Fora das zonas mapeadas",
     "note": "\"Fora das zonas mapeadas\" significa que a camada não tem polígono neste ponto. Não garante ausência de risco. Confirme sempre nos planos municipais e junto das autoridades."
+  },
+  "blog": {
+    "title": "Blog",
+    "sub": "Guias e análises sobre o mercado imobiliário, com a metodologia à vista.",
+    "ptOnly": "Os artigos estão disponíveis apenas em português.",
+    "empty": "Ainda não há artigos publicados.",
+    "back": "Todos os artigos",
+    "newsletterTitle": "Newsletter",
+    "newsletterText": "Os novos artigos na sua caixa de correio. Sem spam, cancela quando quiser."
+  },
+  "newsletter": {
+    "title": "Subscrever a newsletter",
+    "email": "Email",
+    "subscribe": "Subscrever",
+    "consent": "Aceito receber a newsletter da Praça por email e tratar o meu email para esse fim.",
+    "privacy": "Política de privacidade",
+    "done": "Enviámos-lhe um email. Clique na ligação para confirmar a subscrição.",
+    "invalid": "Este email não parece válido.",
+    "error": "Não foi possível subscrever agora. Tente mais tarde.",
+    "confirmedTitle": "Subscrição confirmada",
+    "confirmedText": "Obrigado. Vai receber os novos artigos da Praça.",
+    "invalidTitle": "Ligação inválida",
+    "invalidText": "Esta ligação não é válida ou já foi substituída por outra mais recente.",
+    "toBlog": "Ir para o blog",
+    "unsubTitle": "Cancelar a newsletter",
+    "unsubText": "Deixa de receber a newsletter da Praça neste email.",
+    "unsubConfirm": "Confirmar cancelamento",
+    "unsubDoneTitle": "Subscrição cancelada",
+    "unsubDoneText": "Não vai receber mais newsletters. Pode voltar a subscrever quando quiser."
+  },
+  "projects": {
+    "title": "Projetos novos",
+    "sub": "Empreendimentos em construção e em venda, por fase do projeto.",
+    "demo": "Os empreendimentos apresentados são de demonstração. Os dados são sintéticos.",
+    "demoBadge": "Demonstração",
+    "none": "Sem projetos nesta fase.",
+    "from": "Desde",
+    "units": "Disponíveis",
+    "delivery": "Entrega",
+    "phaseLabel": "Fase",
+    "phase": {
+      "planning": "Em projeto",
+      "licensing": "Licenciamento",
+      "construction": "Em construção",
+      "selling": "Em venda",
+      "delivered": "Concluído"
+    },
+    "back": "Todos os projetos",
+    "unitsTitle": "Frações",
+    "area": "Área",
+    "floor": "Piso",
+    "price": "Preço",
+    "status": "Estado",
+    "unit": {
+      "available": "Disponível",
+      "reserved": "Reservada",
+      "sold": "Vendida"
+    },
+    "where": "Localização",
+    "website": "Site do promotor"
+  },
+  "pwa": {
+    "offlineTitle": "Sem ligação",
+    "offlineText": "Não conseguimos chegar à Praça. Os favoritos e as pesquisas guardadas que já abriu continuam disponíveis. O resto volta quando a ligação voltar."
+  },
+  "notifications": {
+    "title": "Notificações dos alertas",
+    "sub": "Os alertas chegam sempre por email. Pode receber também no telemóvel.",
+    "push": "Notificações no dispositivo",
+    "pushUnavailable": "As notificações push não estão configuradas neste servidor.",
+    "pushUnsupported": "Este navegador não suporta notificações push.",
+    "pushEnable": "Ativar neste dispositivo",
+    "pushDisable": "Desativar neste dispositivo",
+    "pushActive": "Ativas neste dispositivo.",
+    "pushInactive": "Desativadas neste dispositivo.",
+    "pushOn": "Notificações ativadas",
+    "pushOff": "Notificações desativadas",
+    "pushDenied": "O navegador bloqueou as notificações. Permita-as nas definições do site.",
+    "pushError": "Não foi possível alterar as notificações.",
+    "waUnavailable": "O WhatsApp não está configurado neste servidor.",
+    "waPhone": "Número de telemóvel",
+    "waSend": "Enviar código",
+    "waConsent": "Ao continuar, aceita receber alertas por WhatsApp neste número. Pode remover quando quiser. Só enviamos depois de confirmar o código.",
+    "waCode": "Código de 6 dígitos",
+    "waVerify": "Confirmar",
+    "waCancel": "Cancelar",
+    "waActive": "Alertas ativos em {phone}",
+    "waRemove": "Remover",
+    "waCodeSent": "Enviámos um código por WhatsApp.",
+    "waVerified": "WhatsApp confirmado",
+    "waRemoved": "WhatsApp removido",
+    "waErr": {
+      "invalid_phone": "Número inválido. Use o formato 912 345 678 ou +351912345678.",
+      "too_soon": "Aguarde um minuto antes de pedir outro código.",
+      "unavailable": "Não foi possível enviar o código agora.",
+      "wrong": "Código errado.",
+      "expired": "O código expirou. Peça um novo.",
+      "locked": "Demasiadas tentativas. Peça um novo código."
+    }
   }
 }

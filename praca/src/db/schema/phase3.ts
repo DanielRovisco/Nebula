@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { boolean, date, index, integer, jsonb, pgTable, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { createdAt, multiPolygon, pk, ts } from "./_helpers";
 import { users } from "./auth";
+import { articles } from "./market";
 import { listings } from "./property";
 
 /** Web Push endpoints (one per browser/device). */
@@ -84,5 +85,24 @@ export const isochroneCache = pgTable("isochrone_cache", {
   key: text("key").primaryKey(),
   provider: text("provider").notNull(),
   geojson: jsonb("geojson").$type<Record<string, unknown>>().notNull(),
+  createdAt: createdAt(),
+});
+
+/** One row per article already sent in the newsletter, so a digest never repeats and re-runs are harmless. */
+export const newsletterIssues = pgTable("newsletter_issues", {
+  articleId: uuid("article_id").primaryKey().references(() => articles.id, { onDelete: "cascade" }),
+  sentAt: ts("sent_at").notNull().defaultNow(),
+  recipients: integer("recipients").notNull().default(0),
+});
+
+/** WhatsApp opt-in: the number only receives alerts after the owner proved control of it with a one-time code. */
+export const whatsappOptins = pgTable("whatsapp_optins", {
+  userId: uuid("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
+  phone: text("phone").notNull(), // E.164
+  codeHash: text("code_hash"),
+  codeExpiresAt: ts("code_expires_at"),
+  attempts: integer("attempts").notNull().default(0),
+  verifiedAt: ts("verified_at"),
+  revokedAt: ts("revoked_at"),
   createdAt: createdAt(),
 });

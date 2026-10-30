@@ -55,7 +55,9 @@
     "themeSystem": "Automatic",
     "mainNavigation": "Main navigation",
     "mobileNavigation": "Mobile navigation",
-    "calculators": "Calculators"
+    "calculators": "Calculators",
+    "projects": "New builds",
+    "blog": "Blog"
   },
   "footer": {
     "about": "About",
@@ -433,7 +435,8 @@
     "breadcrumb": "Breadcrumb",
     "costsRegistryNote": "Does not include registration, deed or bank valuation fees, which vary.",
     "costsUnverified": "Confirm the value on the Portal das Finanças.",
-    "valueThis": "Value this"
+    "valueThis": "Value this",
+    "dossier": "PDF dossier"
   },
   "auth": {
     "signInTitle": "Sign in to Praça",
@@ -1514,5 +1517,104 @@
     "demo": "demo, not official",
     "outside": "Outside mapped zones",
     "note": "\"Outside mapped zones\" means the layer has no polygon at this point. It does not guarantee the absence of risk. Always check municipal plans and the authorities."
+  },
+  "blog": {
+    "title": "Blog",
+    "sub": "Guides and analysis on the property market, with the methodology in plain sight.",
+    "ptOnly": "Articles are available in Portuguese only.",
+    "empty": "No articles published yet.",
+    "back": "All articles",
+    "newsletterTitle": "Newsletter",
+    "newsletterText": "New articles in your inbox. No spam, cancel any time."
+  },
+  "newsletter": {
+    "title": "Subscribe to the newsletter",
+    "email": "Email",
+    "subscribe": "Subscribe",
+    "consent": "I agree to receive the Praça newsletter by email and to the processing of my email for that purpose.",
+    "privacy": "Privacy policy",
+    "done": "We sent you an email. Click the link to confirm your subscription.",
+    "invalid": "That email does not look valid.",
+    "error": "Could not subscribe right now. Please try later.",
+    "confirmedTitle": "Subscription confirmed",
+    "confirmedText": "Thank you. You will receive new Praça articles.",
+    "invalidTitle": "Invalid link",
+    "invalidText": "This link is not valid or has been replaced by a newer one.",
+    "toBlog": "Go to the blog",
+    "unsubTitle": "Cancel the newsletter",
+    "unsubText": "You will stop receiving the Praça newsletter at this address.",
+    "unsubConfirm": "Confirm cancellation",
+    "unsubDoneTitle": "Subscription cancelled",
+    "unsubDoneText": "You will receive no more newsletters. You can subscribe again any time."
+  },
+  "projects": {
+    "title": "New builds",
+    "sub": "Developments under construction and on sale, by project phase.",
+    "demo": "The developments shown are demo data. Figures are synthetic.",
+    "demoBadge": "Demo",
+    "none": "No projects in this phase.",
+    "from": "From",
+    "units": "Available",
+    "delivery": "Delivery",
+    "phaseLabel": "Phase",
+    "phase": {
+      "planning": "Planning",
+      "licensing": "Licensing",
+      "construction": "Under construction",
+      "selling": "On sale",
+      "delivered": "Delivered"
+    },
+    "back": "All projects",
+    "unitsTitle": "Units",
+    "area": "Area",
+    "floor": "Floor",
+    "price": "Price",
+    "status": "Status",
+    "unit": {
+      "available": "Available",
+      "reserved": "Reserved",
+      "sold": "Sold"
+    },
+    "where": "Location",
+    "website": "Developer website"
+  },
+  "pwa": {
+    "offlineTitle": "You are offline",
+    "offlineText": "We cannot reach Praça. Favourites and saved searches you already opened are still available. The rest returns when you are back online."
+  },
+  "notifications": {
+    "title": "Alert notifications",
+    "sub": "Alerts always arrive by email. You can also receive them on your phone.",
+    "push": "Device notifications",
+    "pushUnavailable": "Push notifications are not configured on this server.",
+    "pushUnsupported": "This browser does not support push notifications.",
+    "pushEnable": "Enable on this device",
+    "pushDisable": "Disable on this device",
+    "pushActive": "Active on this device.",
+    "pushInactive": "Off on this device.",
+    "pushOn": "Notifications enabled",
+    "pushOff": "Notifications disabled",
+    "pushDenied": "The browser blocked notifications. Allow them in the site settings.",
+    "pushError": "Could not change notifications.",
+    "waUnavailable": "WhatsApp is not configured on this server.",
+    "waPhone": "Mobile number",
+    "waSend": "Send code",
+    "waConsent": "By continuing you agree to receive alerts by WhatsApp on this number. You can remove it any time. We only send after you confirm the code.",
+    "waCode": "6-digit code",
+    "waVerify": "Confirm",
+    "waCancel": "Cancel",
+    "waActive": "Alerts active on {phone}",
+    "waRemove": "Remove",
+    "waCodeSent": "We sent a code by WhatsApp.",
+    "waVerified": "WhatsApp confirmed",
+    "waRemoved": "WhatsApp removed",
+    "waErr": {
+      "invalid_phone": "Invalid number. Use 912 345 678 or +351912345678.",
+      "too_soon": "Wait a minute before asking for another code.",
+      "unavailable": "Could not send the code right now.",
+      "wrong": "Wrong code.",
+      "expired": "The code expired. Ask for a new one.",
+      "locked": "Too many attempts. Ask for a new code."
+    }
   }
 }

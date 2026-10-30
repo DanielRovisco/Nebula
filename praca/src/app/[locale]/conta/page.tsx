@@ -12,6 +12,8 @@ import { openBillingPortal } from "@/server/checkout";
 import { effectivePlan, getEntitlement, getUsage, type Feature } from "@/server/entitlements";
 import { getOrgContext } from "@/server/org";
 import { Link } from "@/i18n/navigation";
+import { NotificationSettings } from "@/components/account/notification-settings";
+import { pushConfigured, whatsappConfigured, whatsappStatus } from "@/server/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -87,6 +89,10 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
           {org && <Button asChild size="sm" variant="secondary"><Link href="/crm">CRM</Link></Button>}
         </div>
       </section>
+
+      <div className="mt-6">
+        <NotificationSettings pushAvailable={pushConfigured()} whatsappAvailable={whatsappConfigured()} whatsapp={await whatsappStatus(u.id)} />
+      </div>
 
       <section className="mt-10 flex flex-wrap gap-3">
         <Button asChild variant="secondary">

@@ -61,8 +61,12 @@ export async function runAlertEngine(): Promise<EngineResult> {
     else byTrigger.set(t, [...(byTrigger.get(t) ?? []), e]);
   }
 
-  const alerts = await sql<{ id: string; triggers: Trigger[]; filters: { business: "sale" | "rent"; qs: string } }[]>`
-    SELECT a.id, a.triggers, s.filters FROM alerts a JOIN saved_searches s ON s.id = a.saved_search_id
+  // Email always; push and WhatsApp only while the user has a registered device / a verified opt-in.
+  const alerts = await sql<{ id: string; triggers: Trigger[]; filters: { business: "sale" | "rent"; qs: string }; has_push: boolean; has_wa: boolean }[]>`
+    SELECT a.id, a.triggers, s.filters,
+           EXISTS (SELECT 1 FROM push_subscriptions ps WHERE ps.user_id = a.user_id) AS has_push,
+           EXISTS (SELECT 1 FROM whatsapp_optins w WHERE w.user_id = a.user_id AND w.verified_at IS NOT NULL AND w.revoked_at IS NULL) AS has_wa
+    FROM alerts a JOIN saved_searches s ON s.id = a.saved_search_id
     WHERE a.active AND s.deleted_at IS NULL`;
 
   let queued = 0;
@@ -77,7 +81,8 @@ export async function runAlertEngine(): Promise<EngineResult> {
         SELECT l.id FROM listings l JOIN properties p ON p.id = l.property_id
         WHERE ${and(conds)} AND l.id = ANY(${sql.array(ids)}::uuid[])`;
       const ok = new Set(matched.map((m) => m.id));
-      const rows = evs.filter((e) => ok.has(e.listing_id)).map((e) => ({ alert_id: a.id, listing_event_id: e.id, listing_id: e.listing_id, channel: "email", status: "queued" }));
+      const channels = ["email", ...(a.has_push ? ["push"] : []), ...(a.has_wa ? ["whatsapp"] : [])];
+      const rows = evs.filter((e) => ok.has(e.listing_id)).flatMap((e) => channels.map((channel) => ({ alert_id: a.id, listing_event_id: e.id, listing_id: e.listing_id, channel, status: "queued" })));
       if (rows.length) {
         const res = await sql`INSERT INTO alert_deliveries ${sql(rows)} ON CONFLICT (alert_id, listing_event_id, channel) DO NOTHING RETURNING id`;
         queued += res.length;
@@ -107,7 +112,7 @@ export async function sendDigests(frequency: "instant" | "daily" | "weekly"): Pr
     SELECT a.id, a.unsubscribe_token, s.name, s.filters, u.email, u.locale
     FROM alerts a JOIN saved_searches s ON s.id = a.saved_search_id JOIN users u ON u.id = a.user_id
     WHERE a.active AND a.frequency = ${frequency} AND u.deleted_at IS NULL
-      AND EXISTS (SELECT 1 FROM alert_deliveries d WHERE d.alert_id = a.id AND d.status = 'queued')`;
+      AND EXISTS (SELECT 1 FROM alert_deliveries d WHERE d.alert_id = a.id AND d.status = 'queued' AND d.channel = 'email')`;
 
   let emails = 0;
   for (const a of alerts) {
@@ -118,7 +123,7 @@ export async function sendDigests(frequency: "instant" | "daily" | "weekly"): Pr
       FROM alert_deliveries d JOIN listing_events e ON e.id = d.listing_event_id JOIN listings l ON l.id = d.listing_id
       JOIN properties p ON p.id = l.property_id
       LEFT JOIN geo_parishes pa ON pa.code = p.parish_code LEFT JOIN geo_municipalities mu ON mu.code = p.municipality_code
-      WHERE d.alert_id = ${a.id} AND d.status = 'queued' ORDER BY e.occurred_at DESC LIMIT 200`;
+      WHERE d.alert_id = ${a.id} AND d.status = 'queued' AND d.channel = 'email' ORDER BY e.occurred_at DESC LIMIT 200`;
     if (!rows.length) continue;
     const locale = a.locale === "en" ? "en" : "pt";
     const L = EVENT_LABEL[locale];
