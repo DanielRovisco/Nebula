@@ -1,0 +1,6 @@
+{
+  "listings": [
+    { "ref": "J-1", "operation": "sale", "category": "Apartamento", "tipologia": "T3", "price": 320000, "area": 98, "baths": 2, "latitude": 40.2033, "longitude": -8.4103, "title": "T3 em Coimbra", "agency": "Mediação Exemplo", "freguesia": "Santo António dos Olivais", "concelho": "Coimbra" },
+    { "ref": "J-2", "operation": "rent", "category": "Escritório", "price": 950, "area": 60, "latitude": 38.7369, "longitude": -9.1427, "agency": "Mediação Exemplo" }
+  ]
+}

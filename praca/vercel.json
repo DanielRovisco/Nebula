@@ -1,8 +1,24 @@
 {
   "crons": [
-    { "path": "/api/cron/alerts?freq=instant", "schedule": "*/15 * * * *" },
-    { "path": "/api/cron/alerts?freq=daily", "schedule": "0 7 * * *" },
-    { "path": "/api/cron/alerts?freq=weekly", "schedule": "0 7 * * 1" },
-    { "path": "/api/cron/indicators", "schedule": "0 3 * * *" }
+    {
+      "path": "/api/cron/alerts?freq=instant",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/alerts?freq=daily",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/alerts?freq=weekly",
+      "schedule": "0 7 * * 1"
+    },
+    {
+      "path": "/api/cron/indicators",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/ingest",
+      "schedule": "*/15 * * * *"
+    }
   ]
 }

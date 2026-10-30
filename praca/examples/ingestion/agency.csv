@@ -1,0 +1,6 @@
+id;negocio;tipo;tipologia;preco;area_util;quartos;casas_de_banho;ano;estado;certificado_energetico;morada;codigo_postal;freguesia;concelho;latitude;longitude;titulo;descricao;anunciante_tipo;anunciante;elevador;varanda
+ACME-001;venda;Apartamento;T2;"285.000";78;2;1;2008;usado;B;Rua das Flores 12;1200-195;Santa Maria Maior;Lisboa;38.7107;-9.1394;Apartamento T2 no Chiado;Apartamento luminoso com varanda;profissional;Casas Exemplo;sim;sim
+ACME-002;arrendamento;Apartamento;T1;"1.150";52;1;1;2015;novo;A;Avenida da Liberdade 100;1250-140;Santo António;Lisboa;38.7200;-9.1450;T1 na Liberdade;Totalmente mobilado;profissional;Casas Exemplo;sim;nao
+ACME-003;venda;Moradia;T4;"640.000";210;4;3;1998;usado;C;Rua do Sol 5;2750-100;Cascais e Estoril;Cascais;38.6970;-9.4220;Moradia T4 com jardim;Moradia com piscina;particular;Particular;nao;sim
+ACME-004;venda;Terreno;;"95.000";;;;;;;Estrada Nacional;2710-000;;Sintra;;;Terreno urbano em Sintra;Lote com projeto aprovado;profissional;Casas Exemplo;;
+ACME-BAD;venda;Apartamento;T2;sem preço;70;2;1;2000;usado;B;Rua X;1000-001;;Lisboa;38.72;-9.14;Sem preço válido;;profissional;Casas Exemplo;;
