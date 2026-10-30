@@ -28,3 +28,9 @@ Tiles de mapa: OpenFreeMap tem uso gratuito sem chave mas sem SLA; em produção
 | Preços de transação, registo predial, INE, BdP, OSM | stubs documentados em `src/ingestion/adapters/stubs.ts` e listados no admin |
 
 Regras: cada fonte tem de ter **licença/base legal registada** e estar ativa; em modo *completo* o que desaparece do feed é retirado (evento `withdrawn`). Dados pessoais de anunciantes (telefone/email) só são copiados para o CRM com base legal registada.
+
+## Fase 3
+- **openrouteservice** (isócronas): dados OpenStreetMap, serviço da HeiGIT. Chave em `ORS_API_KEY`. Limites do plano gratuito a confirmar na conta (a página de planos indica 500/dia e 20/min; fontes de terceiros indicam 2 500/dia). Máximo de 5 locais e 10 intervalos por pedido, e 1 h de alcance em carro. Resultados em cache na tabela `isochrone_cache`.
+- **Camadas de risco:** nenhuma fonte oficial vem incluída. Ver [`RISK_LAYERS.md`](RISK_LAYERS.md) para fontes candidatas (APA/dados.gov.pt, ICNF, municípios) e como importar.
+- **OpenFreeMap / MapTiler** continuam a ser os mosaicos do mapa (já na fase 1).
+- **Dossiê, preço justo e sinais antifraude** usam apenas dados já recebidos (anúncios e indicadores calculados). Nada é obtido de terceiros em tempo de pedido, exceto as isócronas.

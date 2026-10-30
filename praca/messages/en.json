@@ -538,7 +538,7 @@
     "customize": "Choose",
     "savePrefs": "Save choice",
     "reopen": "Cookie preferences",
-    "more": "Learn more"
+    "more": "Cookie policy"
   },
   "errors": {
     "title": "Something went wrong",
@@ -1430,7 +1430,7 @@
     "copy": "Copy",
     "copied": "Copied",
     "mcpTitle": "MCP server",
-    "mcpText": "The MCP server (search_properties, get_property, valuation, market_stats) for Claude, ChatGPT and Cursor arrives in the next phase and reuses the same keys and quotas."
+    "mcpText": "Remote MCP server at /api/mcp (Streamable HTTP), with the same prk_… keys and quotas. Read-only tools: interpret_query, search_properties, get_property, market_stats, estimate_value and purchase_costs. In Claude Desktop, Cursor or any MCP client, point to this address with the header Authorization: Bearer prk_…"
   },
   "calculators": {
     "title": "Calculators",

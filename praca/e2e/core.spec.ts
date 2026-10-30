@@ -47,7 +47,7 @@ test("property page: details, history and contact validation", async ({ page }) 
   await expect(page.getByRole("heading", { name: "Ficha técnica" })).toBeVisible();
   await expect(page.locator('script[type="application/ld+json"]').first()).toHaveCount(1);
   await page.getByRole("button", { name: /Enviar mensagem/ }).click();
-  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(page.getByRole("complementary", { name: "Contactar o anunciante" }).getByRole("alert")).toBeVisible();
 });
 
 test("property page: unknown reference is a real 404", async ({ request }) => {
@@ -68,14 +68,14 @@ test("auth: anonymous /conta redirects to /entrar", async ({ page }) => {
 
 test("login form requests a magic link and shows the verify page", async ({ page }) => {
   await page.goto("/entrar");
-  await page.getByLabel("Email").fill(`e2e+${Date.now()}@example.com`);
+  await page.locator("#email").fill(`e2e+${Date.now()}@example.com`);
   await page.getByRole("button", { name: /Enviar ligação/ }).click();
   await expect(page).toHaveURL(/entrar\/verificar/);
 });
 
 test("language switch keeps the page and uses /en", async ({ page }) => {
   await page.goto("/sobre");
-  await page.getByRole("button", { name: /Idioma|Language/ }).click();
+  await page.getByRole("button", { name: /^(EN: English|PT: Português)$/ }).click();
   await expect(page).toHaveURL(/\/en\/sobre/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("About");
 });

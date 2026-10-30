@@ -4,6 +4,7 @@ import type { GeoJSONSource, Map as MlMap, StyleSpecification } from "maplibre-g
 import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
+import { useVisible } from "@/lib/use-visible";
 import { maptilerKey } from "@/lib/env";
 import type { BBox } from "@/lib/filters";
 import type { Ring } from "@/lib/zones";
@@ -62,6 +63,7 @@ export function SearchMap({ points, business, bounds, frameKey, hoveredId, selec
   const { resolvedTheme } = useTheme();
   const dark = resolvedTheme === "dark";
   const el = useRef<HTMLDivElement>(null);
+  const visible = useVisible(el);
   const map = useRef<MlMap | null>(null);
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
@@ -114,6 +116,7 @@ export function SearchMap({ points, business, bounds, frameKey, hoveredId, selec
 
   // Create the map once per theme (style swap re-adds our layers).
   useEffect(() => {
+    if (!visible) return;
     let cancelled = false;
     let instance: MlMap | null = null;
     (async () => {
@@ -287,7 +290,7 @@ export function SearchMap({ points, business, bounds, frameKey, hoveredId, selec
       map.current = null;
     };
      
-  }, [dark]);
+  }, [dark, visible]);
 
   // Frame the geography when it changes.
   useEffect(() => {

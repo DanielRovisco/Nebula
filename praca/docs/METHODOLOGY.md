@@ -31,3 +31,15 @@ IMT: `valor × taxa − parcela a abater` no escalão (ou taxa única). Selo: ta
 
 ## Alertas
 Evento → gatilho (`published`→nova entrada, `price_drop`, `returned`→voltou ao mercado, `sold/rented/withdrawn`→vendido/retirado). Para cada pesquisa ativa avaliam-se as mesmas condições SQL da pesquisa restritas aos anúncios do evento. A chave única (alerta, evento, canal) torna o processo idempotente.
+
+## Preço justo (`src/lib/fair-price.ts`, `src/server/fair-price.ts`)
+É o AVM da fase 2 aplicado ao próprio anúncio, **sem o contar como comparável**. Compara o preço pedido com o intervalo P25–P75 do modelo (nunca inferior a ±4 % do valor): fora do intervalo por baixo é «abaixo do preço de mercado», dentro é «dentro do mercado», por cima é «acima». Mostra-se apenas com **≥ 8 comparáveis** e confiança média ou alta. Com menos, nada. Os valores são preços pedidos, não de escritura. Não é uma avaliação bancária.
+
+## Pesquisa em linguagem natural (`src/lib/nl-search.ts`)
+Interpretador por regras (pt e en) para negócio, tipo, tipologia (T2, T3+, «2 quartos»), preço (até, entre, a partir de, k, mil, milhões), área, casas de banho, estacionamento, varanda, elevador, piscina, jardim, mobilado, animais, preço reduzido, estado, vista, classe energética e particular. O que sobra é tratado como local e resolvido contra a geografia (CAOP). O resultado é sempre apresentado como filtros editáveis. O que não consegue filtrar é dito, não adivinhado.
+
+## Antifraude (`src/lib/fraud.ts`)
+Sinais, não veredictos. Preço por m² inferior a 50 % (gravidade 3) ou 70 % (gravidade 2) da mediana do concelho com n ≥ 10; texto que pede pagamento antes da visita (3) ou refere proprietário ausente (2); particular com ≥ 6 anúncios (2); preços divergentes ≥ 30 % entre 3 ou mais anunciantes do mesmo imóvel (1). Pontuação 8/20/40. Um anúncio com pontuação ≥ 60 e sem verificação vai para moderação. Falsos positivos são esperados e por isso decide uma pessoa. O selo «verificado» só existe com prova registada.
+
+## Calculadoras (`src/lib/calc-pt.ts`)
+IMT por tabelas (escalão × taxa − parcela a abater, ou taxa única para o valor todo), IMT Jovem, selo, prestação (anuidade constante), taxa de esforço, capacidade de crédito (inverso da prestação), mais-valias e rendimento de arrendamento (bruto, IMI sobre o VPT, despesas, IRS à taxa autónoma). Ver [`FISCAL.md`](FISCAL.md) para o estado de cada tabela.

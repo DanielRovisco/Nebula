@@ -17,7 +17,9 @@ export function LocaleSwitcher() {
     <Button
       variant="ghost"
       size="sm"
-      aria-label={`${t("language")}: ${target === "en" ? "English" : "Português"}`}
+      aria-label={`${target.toUpperCase()}: ${target === "en" ? "English" : "Português"}`}
+      title={t("language")}
+      lang={target}
       onClick={() => {
         const qs = search.toString();
         // pathname from next-intl is locale-free; routing re-adds the right prefix.

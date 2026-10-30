@@ -538,7 +538,7 @@
     "customize": "Escolher",
     "savePrefs": "Guardar escolha",
     "reopen": "Preferências de cookies",
-    "more": "Saber mais"
+    "more": "Política de cookies"
   },
   "errors": {
     "title": "Algo correu mal",
@@ -1430,7 +1430,7 @@
     "copy": "Copiar",
     "copied": "Copiado",
     "mcpTitle": "Servidor MCP",
-    "mcpText": "O servidor MCP (search_properties, get_property, valuation, market_stats) para Claude, ChatGPT e Cursor chega na fase seguinte e reutiliza as mesmas chaves e quotas."
+    "mcpText": "Servidor MCP remoto em /api/mcp (Streamable HTTP), com as mesmas chaves prk_… e quotas. Ferramentas só de leitura: interpret_query, search_properties, get_property, market_stats, estimate_value e purchase_costs. Em Claude Desktop, Cursor ou outro cliente MCP, aponte para este endereço com o cabeçalho Authorization: Bearer prk_…"
   },
   "calculators": {
     "title": "Calculadoras",

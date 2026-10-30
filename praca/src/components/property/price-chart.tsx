@@ -24,7 +24,7 @@ export function PriceChart({ data, rent }: { data: Point[]; rent: boolean }) {
     <div>
       <div className="h-56 w-full" aria-hidden>
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+          <AreaChart accessibilityLayer={false} data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
             <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="ts"

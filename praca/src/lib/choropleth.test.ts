@@ -29,3 +29,23 @@ describe("projectFeatures", () => {
     expect(projectFeatures([], 100, 100).paths).toEqual([]);
   });
 });
+
+describe("projectFeatures size", () => {
+  it("drops sub-pixel points but keeps tiny zones clickable", async () => {
+    const { projectFeatures } = await import("./choropleth");
+    const dense = { type: "Polygon" as const, coordinates: [Array.from({ length: 400 }, (_, i) => [-9 + (i / 400) * 0.001, 38 + (i % 2) * 0.0000001]).concat([[-9, 38]])] };
+    const big = { type: "Polygon" as const, coordinates: [[[-8, 37], [-6, 37], [-6, 41], [-8, 41], [-8, 37]]] };
+    const tiny = { type: "Polygon" as const, coordinates: [[[-7, 39], [-6.99999, 39], [-6.99999, 39.00001], [-7, 39]]] };
+    const { paths } = projectFeatures(
+      [
+        { key: "dense", name: "d", value: 1, href: "/", geometry: dense },
+        { key: "big", name: "b", value: 1, href: "/", geometry: big },
+        { key: "tiny", name: "t", value: 1, href: "/", geometry: tiny },
+      ] as never,
+      640,
+      460,
+    );
+    expect(paths.find((p) => p.key === "tiny")!.d).toMatch(/^M[\d.]+ [\d.]+h1\.6v1\.6h-1\.6Z$/);
+    expect(paths.find((p) => p.key === "big")!.d.split("L").length).toBe(4 + 1); // 4 corners kept (the closing point is a duplicate)
+  });
+});

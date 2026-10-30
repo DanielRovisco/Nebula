@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { Label, Select } from "@/components/ui/input";
 import { maptilerKey } from "@/lib/env";
+import { useVisible } from "@/lib/use-visible";
 import { ISO_MINUTES, ISO_MODES, type IsoMode } from "@/lib/isochrone";
 import type { RiskLayerInfo } from "@/server/risk";
 
@@ -18,6 +19,8 @@ export function LocationMap({ lat, lng, approximate, layers = [] }: { lat: numbe
   const dark = resolvedTheme === "dark";
   const el = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
+  const wrap = useRef<HTMLDivElement>(null);
+  const visible = useVisible(wrap);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [layer, setLayer] = useState("");
@@ -26,6 +29,7 @@ export function LocationMap({ lat, lng, approximate, layers = [] }: { lat: numbe
   const [isoNote, setIsoNote] = useState<"openrouteservice" | "approximation" | "error" | null>(null);
 
   useEffect(() => {
+    if (!visible) return;
     let map: MlMap | null = null;
     let cancelled = false;
     setReady(false);
@@ -65,7 +69,7 @@ export function LocationMap({ lat, lng, approximate, layers = [] }: { lat: numbe
       mapRef.current = null;
       map?.remove();
     };
-  }, [lat, lng, dark, approximate]);
+  }, [lat, lng, dark, approximate, visible]);
 
   // Risk overlay: re-fetched for the visible area whenever the layer or the view changes.
   useEffect(() => {
@@ -132,7 +136,7 @@ export function LocationMap({ lat, lng, approximate, layers = [] }: { lat: numbe
   const active = layers.find((l) => l.code === layer);
   return (
     <div>
-      <div className="relative h-72 overflow-hidden rounded-[16px] border border-border sm:h-80">
+      <div ref={wrap} className="relative h-72 overflow-hidden rounded-[16px] border border-border bg-surface-2 sm:h-80">
         <div ref={el} className="size-full" role="region" aria-label={t("location")} />
       </div>
       <div className="mt-3 grid gap-3 sm:grid-cols-3">

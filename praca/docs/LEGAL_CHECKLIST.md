@@ -21,3 +21,13 @@
 - [ ] **Partilha de comissões** entre agências: o acordo comercial é entre as agências; confirmar que a Praça apenas regista a proposta.
 - [ ] **Feeds de agências**: contrato de cedência de anúncios e de fotografias; a licença fica registada em `sources.licence`.
 - [ ] **Auditoria**: período de conservação do `audit_log` e dos `consents`.
+
+## Acrescentos da fase 3
+- [ ] **Newsletter:** texto de consentimento revisto por jurista (`newsletter.consent`); dupla confirmação e cancelamento num clique já implementados; a versão do consentimento fica registada (`CONSENT_VERSION` em `src/server/newsletter.ts`). Mudar o texto exige subir a versão.
+- [ ] **WhatsApp:** só mensagens por template aprovado e só para números verificados por código. Política de privacidade deve citar a Meta como subcontratante. Confirmar a base legal para alertas (consentimento).
+- [ ] **Push:** subscrição só depois de o utilizador carregar no botão e aceitar a permissão do navegador. Mencionar na política de privacidade.
+- [ ] **Antifraude:** os sinais mostrados ao público estão em linguagem neutra e remetem para cautela, não acusam o anunciante. Rever o texto com jurista (risco de difamação) e definir o processo de reclamação e correção por parte do anunciante.
+- [ ] **Selo «verificado»:** definir o procedimento interno (que documentos, quem verifica, quanto tempo vale) antes de o usar comercialmente. A prova fica em `listing_verifications`.
+- [ ] **Preço justo:** é uma estimativa a partir de preços pedidos. O aviso «não substitui avaliação bancária ou pericial» deve manter-se visível. Confirmar que não constitui «avaliação imobiliária» regulada.
+- [ ] **Camadas de risco:** confirmar a licença de cada fonte importada e citar a fonte, a data e a licença (já mostrados na ficha).
+- [ ] **Isócronas:** cumprir os termos do openrouteservice (atribuição OpenStreetMap/HeiGIT).

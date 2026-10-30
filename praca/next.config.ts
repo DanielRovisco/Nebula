@@ -24,6 +24,10 @@ const config: NextConfig = {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [{ protocol: "https", hostname: "**.r2.dev" }, { protocol: "https", hostname: "**.supabase.co" }],
   },
+  // Browsers still ask for /favicon.ico; serve the PNG icon (the SVG icon is linked from the page head).
+  async rewrites() {
+    return [{ source: "/favicon.ico", destination: "/icons/icon-192.png" }];
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

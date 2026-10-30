@@ -28,11 +28,12 @@ Login em desenvolvimento: peça a ligação em `/entrar`; chega ao Mailpit (ou a
 | --- | --- |
 | `pnpm dev` / `build` / `start` | Next.js |
 | `pnpm typecheck` · `lint` · `test` | TypeScript · ESLint · Vitest (unitários + integração com a BD) |
-| `pnpm test:e2e` | Playwright (fluxos da fase 1 e 2: pesquisa, zonas, alertas, favoritos, observatório, avaliação+PDF, planos, CRM, API, admin). `PW_CHROMIUM_PATH=/caminho/chromium` se o browser não for o da versão instalada |
+| `pnpm test:e2e` | Playwright (fluxos das fases 1 a 3: pesquisa, zonas, alertas, favoritos, observatório, avaliação+PDF, planos, CRM, API, admin, calculadoras, pesquisa natural, blog/newsletter, projetos, PWA, MCP, dossiê, selo; mais `a11y.spec.ts` com axe em claro/escuro). `PW_CHROMIUM_PATH=/caminho/chromium` se o browser não for o da versão instalada |
 | `pnpm alerts:run [instant\|daily\|weekly]` | Corre o motor de alertas e envia os resumos (útil em desenvolvimento) |
 | `pnpm db:generate` | Gera migração a partir do esquema Drizzle |
 | `pnpm db:migrate` · `db:seed` · `db:reset` | Migrar (cria extensões) · semear · apagar o esquema |
 | `pnpm geo:fetch` | Regenera `data/geo/*` a partir da origem aberta |
+| `pnpm risk:import --file … --code …` | Importa uma camada de risco oficial em GeoJSON (ver [`docs/RISK_LAYERS.md`](docs/RISK_LAYERS.md)) |
 
 `SEED_PROPERTIES=2000 pnpm db:seed` muda o volume do seed.
 
@@ -46,11 +47,19 @@ Login em desenvolvimento: peça a ligação em `/entrar`; chega ao Mailpit (ou a
 - **Pro/Agência:** avaliação AVM/CMA com comparáveis ajustados, relatório PDF com a marca, SmartLink atualizado; prospeção de particulares (FSBO) com modelo RGPD; CRM (kanban, contactos, tarefas, notas, CSV, webhooks assinados); equipas com papéis, convites e auditoria; partilha de comissões; planos com Stripe (Checkout, Portal, webhook assinado, trial 14 dias) e quotas.
 - **Dados e plataforma:** ingestão CSV/JSON/XML Kyero e feeds com credenciais, normalização, geocoding, deduplicação (fundir/rever), painel de administração (imóveis, utilizadores/AMI, quotas, moderação, duplicados, fontes, execuções), API v1 com chaves, quotas e OpenAPI 3.1, página `/developers`.
 
-**Fase 3 — Diferenciação ⏳** pesquisa em linguagem natural, preço justo, isócronas, camadas de risco, calculadoras completas, WhatsApp/push, pipeline de projetos (UI), dossier PDF, PWA, servidor MCP, blog/newsletter, anti-fraude, auditoria Lighthouse/WCAG.
+**Fase 3 — Diferenciação ✅**
+- **Pesquisa em linguagem natural** (`/` → «Ou descreva o que procura»): interpretador por regras, pt e en, que mostra como entendeu a frase e diz o que ainda não filtra (ex.: «perto do metro»).
+- **Preço justo** na página do imóvel: o AVM contra imóveis semelhantes, sem contar o próprio anúncio; só aparece com ≥ 8 comparáveis e confiança média ou alta.
+- **Mapa do imóvel:** camadas de risco (importador `pnpm risk:import`) e isócronas a pé, de bicicleta e de carro (openrouteservice com `ORS_API_KEY`; sem chave, círculo aproximado e assinalado).
+- **Calculadoras** `/calculadoras`: IMT (HPP, secundária, outros, IMT Jovem), selo, prestação e esforço, mais-valias, rendimento de arrendamento e capacidade de crédito. Tabelas fiscais na base de dados, com fonte e estado «por confirmar».
+- **Alertas por push (Web Push) e WhatsApp (Cloud API, com verificação por código)**, além do email; **PWA** instalável com página offline e favoritos/pesquisas guardadas offline.
+- **Projetos novos** `/projetos` (pipeline por fase + ficha com frações), **blog** `/blog` e **newsletter** com dupla confirmação e envio semanal idempotente, **dossiê PDF** de cada imóvel.
+- **Antifraude** (sinais explicáveis, quarentena para moderação) e **selo «verificado» com prova registada** (quem, como e quando).
+- **Servidor MCP** `/api/mcp` (leitura) e auditoria de acessibilidade/desempenho — ver [`docs/QUALITY.md`](docs/QUALITY.md).
 
 ## Documentação
 
-[`ARCHITECTURE`](docs/ARCHITECTURE.md) · [`DECISIONS`](docs/DECISIONS.md) · [`METHODOLOGY`](docs/METHODOLOGY.md) · [`DATA_SOURCES`](docs/DATA_SOURCES.md) · [`FISCAL`](docs/FISCAL.md) · [`LEGAL_CHECKLIST`](docs/LEGAL_CHECKLIST.md) · [`DEPLOY`](docs/DEPLOY.md) (inclui checklist de go-live)
+[`ARCHITECTURE`](docs/ARCHITECTURE.md) · [`DECISIONS`](docs/DECISIONS.md) · [`METHODOLOGY`](docs/METHODOLOGY.md) · [`DATA_SOURCES`](docs/DATA_SOURCES.md) · [`FISCAL`](docs/FISCAL.md) · [`LEGAL_CHECKLIST`](docs/LEGAL_CHECKLIST.md) · [`RISK_LAYERS`](docs/RISK_LAYERS.md) · [`QUALITY`](docs/QUALITY.md) · [`DEPLOY`](docs/DEPLOY.md) (inclui checklist de go-live)
 
 ## Nota sobre o repositório
 

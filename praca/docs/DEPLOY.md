@@ -60,3 +60,12 @@ Adicionar `o-seu-dominio.pt` e `www` na Vercel, HTTPS automático, redirecionar 
 - **Stripe (passo 3 em detalhe):** criar os produtos Pro e Agência (Agência com preço por unidade), preços mensal/anual em EUR com IVA incluído, copiar os `price_…` para as variáveis, criar o webhook `https://o-seu-dominio.pt/api/stripe/webhook` com `checkout.session.completed` e `customer.subscription.created/updated/deleted`, ativar o Customer Portal. Testar com `stripe listen --forward-to localhost:3000/api/stripe/webhook`.
 - **Após o primeiro deploy:** iniciar sessão com um email de `ADMIN_EMAILS`, abrir `/admin/planos` e confirmar as quotas; `/admin/fontes` para criar a primeira fonte real (com licença).
 - **Produção real:** não correr o seed de imóveis (ver passo 1). Definir `UPSTASH_*` para o rate limit.
+
+## Notas da fase 3
+- **Novas variáveis** (ver `.env.example`): `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (push), `WHATSAPP_*` (4 obrigatórias), `ORS_API_KEY` (isócronas). Todas opcionais: sem elas, o canal ou a função fica desligado e a interface diz porquê.
+- **Novos crons** em `vercel.json`: `/api/cron/newsletter` (segundas, 09:00 UTC). `/api/cron/indicators` passa a recalcular também os sinais antifraude. `/api/cron/alerts` envia também push e WhatsApp.
+- **WhatsApp:** conta Business na Meta, número verificado e **dois templates aprovados**. `WHATSAPP_CODE_TEMPLATE` com 1 variável (código) e `WHATSAPP_ALERT_TEMPLATE` com 3 (nome da pesquisa, n.º de novidades, ligação). A aprovação demora e os preços por conversa mudam: confirmar na Meta.
+- **Push:** gerar as chaves VAPID com `node -e "const w=require('web-push');console.log(w.generateVAPIDKeys())"`. O service worker (`/sw.js`) só se regista em produção e exige HTTPS.
+- **MCP:** `https://o-seu-dominio/api/mcp` com `Authorization: Bearer prk_…`. Exemplo para um cliente que aceite servidores remotos: `{"mcpServers":{"praca":{"url":"https://o-seu-dominio/api/mcp","headers":{"Authorization":"Bearer prk_…"}}}}`.
+- **Camadas de risco:** importar as oficiais com `pnpm risk:import` (ver `RISK_LAYERS.md`) e remover a camada de demonstração (`DELETE FROM risk_layers WHERE is_seed`).
+- **Antes de lançar:** confirmar as tabelas fiscais novas (`verified_at`), medir Lighthouse em produção (SEO só é representativo com `NEXT_PUBLIC_APP_ENV=production`) e rever os textos legais da newsletter, do WhatsApp e do push.

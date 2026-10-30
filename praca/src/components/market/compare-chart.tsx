@@ -24,7 +24,7 @@ export function CompareChart({ series, mode }: { series: CompareSeries[]; mode: 
     <div>
       <div className="h-72 w-full" aria-hidden>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+          <LineChart accessibilityLayer={false} data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
             <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="ts" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={(v: number) => f.dateTime(v, { month: "short", year: "2-digit" })} tick={{ fill: "var(--muted)", fontSize: 12 }} axisLine={false} tickLine={false} minTickGap={36} />
             <YAxis domain={["auto", "auto"]} tickFormatter={(v: number) => String(Math.round(v))} tick={{ fill: "var(--muted)", fontSize: 12 }} axisLine={false} tickLine={false} width={44} />

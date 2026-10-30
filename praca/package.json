@@ -61,6 +61,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@eslint/eslintrc": "^3.3.1",
     "@playwright/test": "^1.56.0",
     "@tailwindcss/postcss": "^4.1.17",
@@ -74,6 +75,7 @@
     "drizzle-kit": "^0.31.11",
     "eslint": "^9.39.1",
     "eslint-config-next": "^15.5.28",
+    "lighthouse": "^13.6.0",
     "tailwindcss": "^4.1.17",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",

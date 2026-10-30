@@ -33,10 +33,27 @@ export function projectFeatures(features: GeoFeature[], width: number, height: n
   const s = Math.min((width - pad * 2) / w, (height - pad * 2) / h);
   const ox = (width - w * s) / 2;
   const oy = (height - h * s) / 2;
-  const P = (x: number, y: number) => `${(ox + (x - minX) * k * s).toFixed(1)} ${(oy + (maxY - y) * s).toFixed(1)}`;
+  const px = (x: number) => ox + (x - minX) * k * s;
+  const py = (y: number) => oy + (maxY - y) * s;
+  /** Drops points closer than ~0.6 px to the previous kept one: invisible at map scale, and it cuts the path size by more than half. */
+  const ringPath = (ring: number[][]) => {
+    const pts: [number, number][] = [];
+    for (const [x, y] of ring) {
+      const X = px(x!);
+      const Y = py(y!);
+      const last = pts[pts.length - 1];
+      if (!last || Math.abs(X - last[0]) + Math.abs(Y - last[1]) >= 0.6) pts.push([X, Y]);
+    }
+    // A zone smaller than a pixel at this scale stays visible and clickable as a tiny square.
+    if (pts.length < 3) {
+      const [X, Y] = pts[0] ?? [0, 0];
+      return pts.length ? `M${(X - 0.8).toFixed(1)} ${(Y - 0.8).toFixed(1)}h1.6v1.6h-1.6Z` : "";
+    }
+    return "M" + pts.map(([X, Y]) => `${X.toFixed(1)} ${Y.toFixed(1)}`).join("L") + "Z";
+  };
   const paths = features.map((f) => {
     const polys = (f.geometry.type === "Polygon" ? [f.geometry.coordinates] : f.geometry.coordinates) as number[][][][];
-    const d = polys.map((poly) => poly.map((ring) => "M" + ring.map(([x, y]) => P(x!, y!)).join("L") + "Z").join("")).join("");
+    const d = polys.map((poly) => poly.map(ringPath).join("")).join("");
     return { key: f.key, d };
   });
   return { paths, viewBox: `0 0 ${width} ${height}` };
