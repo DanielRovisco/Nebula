@@ -96,7 +96,7 @@ export function UserStateProvider({ children }: { children: React.ReactNode }) {
       },
       clear: () => persist([]),
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
     [refs, t],
   );
 

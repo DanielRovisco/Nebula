@@ -139,6 +139,18 @@ async function seedHistory(sql: postgres.Sql) {
   return rows.length;
 }
 
+const DEVELOPMENTS: [string, string, string, string, number, number, string, number][] = [
+  // [name, developer, municipality code, phase, total units, available, delivery, price from]
+  ["Residências do Parque", "Construtora Aurora (demo)", "1106", "selling", 86, 31, "2027-06-30", 420000],
+  ["Quinta das Laranjeiras", "Promotora Tejo (demo)", "1106", "construction", 54, 22, "2027-12-15", 515000],
+  ["Marina Boutique", "Atlântico Desenvolvimento (demo)", "1105", "licensing", 40, 40, "2028-09-30", 610000],
+  ["Foz Garden", "Douro Prime Projetos (demo)", "1312", "selling", 72, 19, "2026-12-01", 465000],
+  ["Matosinhos Mar", "Costa Azul Promoção (demo)", "1308", "construction", 63, 28, "2027-09-30", 390000],
+  ["Largo da Sé", "Serra Verde Reabilitação (demo)", "0303", "planning", 28, 28, "2029-03-31", 280000],
+  ["Vilamoura Hills", "Sul Resorts (demo)", "0808", "selling", 95, 44, "2027-04-30", 560000],
+  ["Aveiro Canal", "Ria Promotora (demo)", "0105", "delivered", 48, 6, "2025-10-31", 330000],
+];
+
 const ARTICLES = [
   {
     slug: "como-ler-o-preco-por-metro-quadrado",
@@ -211,6 +223,21 @@ async function main() {
     const hist = await seedHistory(sql);
     const res = await computeIndicators(sql); // second pass picks up yoy/qoq from the synthetic history
     console.log("  ", { history: hist, current: res.rows });
+
+    console.log("→ projetos (pipeline)…");
+    await sql`DELETE FROM new_developments WHERE is_seed`;
+    for (const [name, developer, mun, phase, total, available, delivery, from] of DEVELOPMENTS) {
+      const [m] = await sql<{ lat: number; lng: number }[]>`SELECT lat, lng FROM geo_municipalities WHERE code = ${mun}`;
+      if (!m) continue;
+      const slug = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-");
+      const [d] = await sql<{ id: string }[]>`
+        INSERT INTO new_developments (slug, name, developer, phase, municipality_code, lat, lng, total_units, available_units, expected_delivery, price_from, description, is_seed)
+        VALUES (${slug}, ${name}, ${developer}, ${phase}, ${mun}, ${m.lat + (hashString(name) % 100) / 5000}, ${m.lng + (hashString(name + "x") % 100) / 5000}, ${total}, ${available}, ${delivery}, ${from},
+                'Empreendimento de demonstração: dados sintéticos.', true) RETURNING id`;
+      for (const [t, area, factor] of [[1, 55, 1], [2, 80, 1.5], [3, 110, 2.1]] as const) {
+        await sql`INSERT INTO development_units (development_id, typology, area, price, status, floor) VALUES (${d!.id}, ${t}, ${area}, ${Math.round((from * factor) / 1000) * 1000}, 'available', ${hashString(name + t) % 6})`;
+      }
+    }
 
     console.log("→ artigos…");
     for (const a of ARTICLES) {

@@ -9,7 +9,8 @@ import { Link } from "@/i18n/navigation";
 import { formatEur } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { moveDeal } from "@/server/crm-actions";
-import type { DealRow, Stage } from "@/server/crm";
+import type { Stage } from "@/lib/crm-constants";
+import type { DealRow } from "@/server/crm";
 
 export function Kanban({ deals, stages, canWrite }: { deals: DealRow[]; stages: readonly Stage[]; canWrite: boolean }) {
   const t = useTranslations("crm");

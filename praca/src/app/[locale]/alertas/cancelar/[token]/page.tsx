@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 import { sql } from "@/db";
 import { Link } from "@/i18n/navigation";
+import { revalidatePath } from "next/cache";
 import { unsubscribeByToken } from "@/server/saved-searches";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,7 @@ export default async function UnsubscribePage({ params }: { params: Promise<{ lo
   async function confirm() {
     "use server";
     await unsubscribeByToken(token);
+    revalidatePath(`/alertas/cancelar/${token}`);
   }
 
   return (

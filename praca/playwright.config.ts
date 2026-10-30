@@ -21,6 +21,8 @@ export default defineConfig({
     command: `pnpm build && pnpm start -p ${port}`,
     url: `http://localhost:${port}/api/health`,
     reuseExistingServer: !process.env.CI,
+    // STRIPE_MOCK simulates the Checkout (14-day trial) without calling Stripe; ADMIN_EMAILS is not needed because roles are set in the fixtures.
+    env: { STRIPE_MOCK: "1", NEXT_PUBLIC_APP_ENV: "development", NEXT_PUBLIC_SITE_URL: `http://localhost:${port}` },
     timeout: 240_000,
   },
 });

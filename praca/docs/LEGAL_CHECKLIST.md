@@ -11,3 +11,13 @@
 - [ ] **Dados de transação e registo predial**: só com licença/acordo escrito.
 - [ ] **Acessibilidade (DL 83/2018)**: auditoria WCAG 2.2 AA e declaração de acessibilidade.
 - [ ] **Consumo**: RAL (arbitragem de consumo), preços com IVA nos planos pagos, direito de livre resolução (14 dias) e trial.
+
+## Acrescentos da fase 2
+
+- [ ] **FSBO/prospeção**: confirmar a base legal (interesse legítimo + teste de ponderação documentado), o direito de oposição e a política de retenção dos contactos criados; mensagens eletrónicas não solicitadas a pessoas singulares exigem consentimento (Lei n.º 41/2004).
+- [ ] **Relatórios de avaliação**: rever o aviso («estimativa indicativa») e se a marca da agência nos PDF/SmartLinks pode induzir a ideia de avaliação certificada.
+- [ ] **Pagamentos**: termos de subscrição, trial de 14 dias, renovação automática, direito de livre resolução, faturação com IVA e NIF (Stripe Tax/portal), RAL.
+- [ ] **API e webhooks**: termos de utilização da API (limites, revenda, atribuição) e DPA com clientes que recebam dados por webhook.
+- [ ] **Partilha de comissões** entre agências: o acordo comercial é entre as agências; confirmar que a Praça apenas regista a proposta.
+- [ ] **Feeds de agências**: contrato de cedência de anúncios e de fotografias; a licença fica registada em `sources.licence`.
+- [ ] **Auditoria**: período de conservação do `audit_log` e dos `consents`.

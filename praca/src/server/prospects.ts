@@ -7,7 +7,7 @@ import { audit } from "./audit";
 import { guardOrg } from "./org-guard";
 import { emitWebhook } from "./webhooks";
 
-export const PROSPECT_STATUS = ["new", "contacted", "replied", "meeting", "signed", "discarded"] as const;
+import { PROSPECT_STATUS } from "@/lib/crm-constants";
 export interface ProspectResult {
   ok: boolean;
   error?: "auth" | "plan" | "permission" | "invalid" | "not_found";

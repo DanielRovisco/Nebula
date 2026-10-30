@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useActionState, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
-import { CONTACT_KINDS } from "@/server/crm";
+import { CONTACT_KINDS } from "@/lib/crm-constants";
 import { addNote, addTask, createContact, createDeal, deleteContact, importContacts, toggleTask, type CrmResult } from "@/server/crm-actions";
 
 const errMsg = (t: ReturnType<typeof useTranslations>, e?: string) => (e === "invalid" ? t("errorInvalid") : e === "not_found" ? t("errorNotFound") : e === "permission" ? t("errorPermission") : e === "plan" ? t("errorPlan") : e ? t("errorInvalid") : null);

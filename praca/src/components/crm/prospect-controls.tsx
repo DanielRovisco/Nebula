@@ -7,7 +7,8 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/input";
-import { PROSPECT_STATUS, addProspect, setProspectStatus } from "@/server/prospects";
+import { PROSPECT_STATUS } from "@/lib/crm-constants";
+import { addProspect, setProspectStatus } from "@/server/prospects";
 
 export function AddProspectButton({ propertyId, added }: { propertyId: string; added: boolean }) {
   const t = useTranslations("crm.prospects");

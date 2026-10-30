@@ -3,8 +3,8 @@ import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { sql } from "@/db";
 
-export const WEBHOOK_EVENTS = ["contact.created", "deal.created", "deal.stage_changed", "prospect.created"] as const;
-export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
+import { WEBHOOK_EVENTS, type WebhookEvent } from "@/lib/crm-constants";
+export { WEBHOOK_EVENTS, type WebhookEvent };
 
 export const newSecret = () => `whsec_${randomBytes(24).toString("base64url")}`;
 

@@ -18,3 +18,16 @@ Comparáveis: mesmo negócio, tipo e tipologia, área ±30 %, até 15 km, ordena
 
 ## Calculadoras (`src/lib/calc.ts`)
 IMT: `valor × taxa − parcela a abater` no escalão (ou taxa única). Selo: taxa única. Crédito: prestação constante com taxa = Euribor + spread. Tabelas e taxas vêm da BD.
+
+## Avaliação (AVM/CMA) — detalhe da fase 2 (`src/lib/avm/model.ts`, `src/server/avm.ts`)
+
+1. **Candidatos.** Mesmo tipo e negócio, área 0,6×–1,6× a do imóvel, anúncios ativos principais e anúncios vendidos/arrendados nos últimos 12 meses, por ordem de proximidade (KNN sobre o índice GiST). O raio cresce (1, 2, 5, 15 km) até haver pelo menos 8 candidatos.
+2. **Semelhança (0–1):** distância 30 %, tipologia 20 % (±1 vale 0,45), área 20 %, idade 10 %, estado 10 %, recência 10 % (vendidos ×0,8, a decair em 12 meses).
+3. **Ajustes ao €/m² do comparável**, multiplicativos e mostrados no relatório: estado (novo 1,18, em construção 1,10, usado 1,00, a recuperar 0,68), andar (+1,2 % por andar até ao 6.º com elevador; r/c −3 %) e dimensão (€/m² ∝ área^−0,08).
+4. **Valor** = quantil ponderado 50 % (peso = semelhança²) × área. **Intervalo** = quantis 25–75 %, nunca inferior a ±4 %.
+5. **Confiança** = 0,4·min(1, n/15) + 0,3·(1 − IQR/0,5) + 0,3·semelhança média: alta ≥ 0,70; média ≥ 0,45.
+6. **Renda e rendimento bruto** usam o mesmo modelo sobre arrendamentos; rendimento = renda×12 ÷ valor.
+7. Limitações: valores de anúncio, não de escritura; sem fotografias, ruído, exposição solar nem estado real; não é avaliação bancária.
+
+## Alertas
+Evento → gatilho (`published`→nova entrada, `price_drop`, `returned`→voltou ao mercado, `sold/rented/withdrawn`→vendido/retirado). Para cada pesquisa ativa avaliam-se as mesmas condições SQL da pesquisa restritas aos anúncios do evento. A chave única (alerta, evento, canal) torna o processo idempotente.

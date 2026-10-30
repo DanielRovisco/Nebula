@@ -36,3 +36,25 @@ Browser ──► Next.js 15 (App Router, RSC) ──► PostgreSQL + PostGIS
 ## Segurança
 
 Headers (HSTS, nosniff, frame, referrer, permissions) em `next.config.ts`; validação em todas as fronteiras; queries parametrizadas; honeypot + rate limit nos formulários; sessões em BD; resposta do login não revela se o email existe; exportação e eliminação de conta (RGPD).
+
+## Fase 2
+
+```
+Pesquisa ─ zonas ─ guardar ─► saved_searches/alerts ─► motor de alertas ─► email (React Email) / cron
+Ingestão (CSV/JSON/Kyero/feeds) ─► normalizar ─► geocoding ─► dedupe ─► properties/listings/eventos ─┘
+properties/listings ─► indicadores mensais ─► /mercado (KPIs, mapa de calor, séries, analítica Pro, CSV)
+properties/listings ─► AVM (comparáveis ajustados) ─► valuations ─► relatório · PDF · SmartLink
+users/organizations/memberships ─► CRM (negócios, contactos, tarefas, partilhas, webhooks, prospeção FSBO)
+subscriptions ─► entitlements/usage_counters ─► quotas (alertas, avaliações, PDF, CSV, API)
+api_keys ─► /api/v1 (properties, valuations, market, alerts, developments) + OpenAPI
+```
+
+| Pasta | Fase 2 |
+| --- | --- |
+| `src/ingestion/` | `adapters/` (csv, json, kyero, stubs), `normalize`, `geocode`, `dedupe-db`, `pipeline`, `feeds`, `crypto` |
+| `src/lib/avm/` | Modelo puro (similaridade, ajustes, quantis ponderados) com testes |
+| `src/server/` | `alerts`, `saved-searches`, `favorites`, `zones`, `observatory`, `avm`, `valuations`, `valuation-data`, `pdf/`, `entitlements`, `billing`, `checkout`, `crm*`, `team`, `shares`, `prospects`, `webhooks`, `admin`, `api/` |
+| `src/app/[locale]/` | `mercado`, `avaliar`, `s/[slug]`, `planos`, `equipa`, `crm/*`, `admin/*`, `comparar`, `conta/*`, `developers`, `alertas/cancelar` |
+| `src/app/api/` | `v1/*`, `cron/{alerts,indicators,ingest}`, `stripe/webhook`, `crm/export`, `market/export`, `valuations/[id]/pdf` |
+
+**Fronteira de segurança.** Server actions e rotas validam com Zod, resolvem o utilizador/organização pela sessão e nunca confiam em ids do cliente. O CRM filtra sempre por `organization_id`; a API por chave; os crons por `CRON_SECRET`; o webhook do Stripe pela assinatura sobre o corpo bruto.

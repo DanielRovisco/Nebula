@@ -7,7 +7,7 @@ import { useActionState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
-import { WEBHOOK_EVENTS } from "@/server/webhooks";
+import { WEBHOOK_EVENTS } from "@/lib/crm-constants";
 import { createWebhook, deleteWebhook, testWebhook, toggleWebhook, type WebhookResult } from "@/server/webhook-actions";
 
 export function WebhookForm() {

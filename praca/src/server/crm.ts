@@ -4,9 +4,8 @@ import { sql } from "@/db";
  * CRM data layer. EVERY function takes the organisation id and filters by it: that is the tenant boundary
  * (there is no RLS because the app connects as one database role). Callers resolve the org from the session.
  */
-export const STAGES = ["new", "contacted", "visit", "proposal", "closing"] as const;
-export type Stage = (typeof STAGES)[number];
-export const CONTACT_KINDS = ["lead", "buyer", "seller", "landlord", "tenant", "investor", "fsbo"] as const;
+import type { Stage } from "@/lib/crm-constants";
+export { STAGES, CONTACT_KINDS, type Stage } from "@/lib/crm-constants";
 
 export interface ContactRow {
   id: string;

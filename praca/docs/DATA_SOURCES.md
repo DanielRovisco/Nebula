@@ -16,3 +16,15 @@ Regra: **sem scraping de portais**. Só fontes licenciadas, feeds oficiais, dado
 | CTT — códigos postais | ⛔ | Base CTT (licença). Em demo, `geo_postcodes` vem do seed |
 
 Tiles de mapa: OpenFreeMap tem uso gratuito sem chave mas sem SLA; em produção usar MapTiler ou Protomaps self-hosted.
+
+## Estado da ingestão (fase 2)
+
+| Fonte | Estado |
+| --- | --- |
+| Upload CSV/JSON/XML Kyero no admin, com mapeamento de colunas | ✅ funcional (`/admin/fontes`) |
+| Feeds por URL com credenciais (Basic/Bearer, cifradas) e cron | ✅ funcional (`/api/cron/ingest`, frequência por fonte) |
+| Exemplos | `examples/ingestion/{agency.csv,feed-kyero.xml,agency.json}` |
+| Geocoding | coordenadas da fonte → código postal conhecido → Nominatim (`GEOCODER=nominatim`, com cache e 1 pedido/s) → centro da freguesia/concelho |
+| Preços de transação, registo predial, INE, BdP, OSM | stubs documentados em `src/ingestion/adapters/stubs.ts` e listados no admin |
+
+Regras: cada fonte tem de ter **licença/base legal registada** e estar ativa; em modo *completo* o que desaparece do feed é retirado (evento `withdrawn`). Dados pessoais de anunciantes (telefone/email) só são copiados para o CRM com base legal registada.

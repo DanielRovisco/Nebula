@@ -52,3 +52,11 @@ Adicionar `o-seu-dominio.pt` e `www` na Vercel, HTTPS automático, redirecionar 
 - [ ] `pnpm test:e2e` verde contra o ambiente de preview
 - [ ] Lighthouse mobile ≥ 90 (desempenho) e ≥ 95 (acessibilidade/boas práticas/SEO) em home, pesquisa, imóvel
 - [ ] **Rollback**: Vercel → *Deployments → Promote previous*; migrações só *forward-compatible* (adicionar antes de remover); backup antes de cada migração destrutiva
+
+## Notas da fase 2
+
+- **Variáveis novas:** `ADMIN_EMAILS` (primeiros administradores), `CRON_SECRET`, `STRIPE_PRICE_{PRO,AGENCY}_{MONTH,YEAR}`, `GEOCODER`/`GEOCODER_USER_AGENT`. `STRIPE_MOCK` só em desenvolvimento.
+- **Crons (`vercel.json`):** alertas (`?freq=instant` de 15 em 15 min, `daily` 07:00, `weekly` 2.ª 07:00), indicadores (03:00) e ingestão (15 min). Na Vercel Hobby os crons só correm 1×/dia: use o plano Pro ou o Inngest/GitHub Actions a chamar estes URLs com `Authorization: Bearer $CRON_SECRET`.
+- **Stripe (passo 3 em detalhe):** criar os produtos Pro e Agência (Agência com preço por unidade), preços mensal/anual em EUR com IVA incluído, copiar os `price_…` para as variáveis, criar o webhook `https://o-seu-dominio.pt/api/stripe/webhook` com `checkout.session.completed` e `customer.subscription.created/updated/deleted`, ativar o Customer Portal. Testar com `stripe listen --forward-to localhost:3000/api/stripe/webhook`.
+- **Após o primeiro deploy:** iniciar sessão com um email de `ADMIN_EMAILS`, abrir `/admin/planos` e confirmar as quotas; `/admin/fontes` para criar a primeira fonte real (com licença).
+- **Produção real:** não correr o seed de imóveis (ver passo 1). Definir `UPSTASH_*` para o rate limit.

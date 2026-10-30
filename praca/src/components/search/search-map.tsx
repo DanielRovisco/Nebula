@@ -312,7 +312,7 @@ export function SearchMap({ points, business, bounds, frameKey, hoveredId, selec
     const m = map.current;
     if (!m || !ready) return;
     (m.getSource("zones") as GeoJSONSource | undefined)?.setData(zonesGeoJSON(zones));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [zones, ready]);
 
   // Draw mode: crosshair, no double-click zoom, keyboard shortcuts.
@@ -336,7 +336,7 @@ export function SearchMap({ points, business, bounds, frameKey, hoveredId, selec
     draft.current = [];
     setDraftCount(0);
     (m.getSource("draft") as GeoJSONSource | undefined)?.setData(draftGeoJSON([]));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [drawing, ready]);
 
   // Hover / selection highlight.
