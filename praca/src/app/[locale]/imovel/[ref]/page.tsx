@@ -14,6 +14,7 @@ import { PriceChart } from "@/components/property/price-chart";
 import { PrintButton, ShareButton } from "@/components/property/share-buttons";
 import { CompareToggle, FavoriteButton } from "@/components/user-state";
 import { getFairPrice } from "@/server/fair-price";
+import { signalsFor } from "@/server/fraud";
 import { listRiskLayers, riskAt } from "@/server/risk";
 import { currentUser } from "@/server/session";
 import { sql } from "@/db";
@@ -65,7 +66,7 @@ export default async function PropertyPage({ params }: Props) {
   const l = p.primary;
   const rent = l.business === "rent";
   const active = l.status === "active";
-  const [comps, zone, euribor, imtHpp, imtOther, stamp, fair, risks, riskLayers] = await Promise.all([
+  const [comps, zone, euribor, imtHpp, imtOther, stamp, fair, risks, riskLayers, flags] = await Promise.all([
     getComparables(p, 12).catch(() => []),
     getZoneStats(p).catch(() => null),
     getRate("euribor_6m").catch(() => null),
@@ -75,6 +76,7 @@ export default async function PropertyPage({ params }: Props) {
     getFairPrice(p).catch(() => null),
     riskAt(p.lat, p.lng).catch(() => []),
     listRiskLayers().catch(() => []),
+    signalsFor(l.id).catch(() => []),
   ]);
   const viewer = await currentUser();
   if (viewer) {
@@ -212,6 +214,13 @@ export default async function PropertyPage({ params }: Props) {
                 )}
               </div>
               {fair && <FairPriceBadge fair={fair} rent={rent} />}
+              {flags.some((x) => x.severity >= 2) && (
+                <aside role="note" aria-label={t("flagsTitle")} className="rounded-[12px] border border-warn/40 bg-warn-soft p-4 text-sm text-warn">
+                  <p className="font-medium">{t("flagsTitle")}</p>
+                  <ul className="mt-1 list-disc space-y-0.5 pl-5">{flags.filter((x) => x.severity >= 2).map((x) => <li key={x.code}>{t(`flags.${x.code}`)}</li>)}</ul>
+                  <p className="mt-2 text-xs">{t("flagsNote")}</p>
+                </aside>
+              )}
               <p className="flex items-center gap-2 text-sm text-muted">
                 <Calendar className="size-4" aria-hidden />
                 {t("publishedOn", { date: formatDate(l.publishedAt) })} · {t("onMarket", { n: daysOnMarket })}

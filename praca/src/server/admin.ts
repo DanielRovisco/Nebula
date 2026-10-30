@@ -8,6 +8,8 @@ import { encryptSecret } from "@/ingestion/crypto";
 import { fetchFeed, type FeedAuth } from "@/ingestion/feeds";
 import { refreshPrimary, runIngestion, type RunResult } from "@/ingestion/pipeline";
 import { audit } from "./audit";
+import { recomputeFraudSignals, type FraudRun } from "./fraud";
+import { revokeVerification, verifyListing, VERIFICATION_METHODS, type VerificationMethod } from "./verification";
 import { currentUser } from "./session";
 
 export interface AdminResult<T = unknown> {
@@ -200,4 +202,35 @@ export async function runFeedSource(id: string, triggeredBy: string | null): Pro
   const adapter = adapterForFormat(s.format) ?? ADAPTERS.csv!;
   const content = await fetchFeed(s.endpoint, { kind: s.config.authKind ?? "none", secret: s.config.secret });
   return runIngestion({ sourceId: id, adapter, content, mode: "full", triggeredBy });
+}
+
+export async function verifyByReference(reference: string, method: string, evidence: string): Promise<AdminResult> {
+  const a = await admin();
+  if (!a) return { ok: false, error: "auth" };
+  if (!/^PR-\d{6}$/i.test(reference.trim()) || !(VERIFICATION_METHODS as readonly string[]).includes(method) || evidence.trim().length < 3 || evidence.length > 200) return { ok: false, error: "invalid" };
+  const [l] = await sql<{ id: string }[]>`SELECT l.id FROM listings l JOIN properties p ON p.id = l.property_id WHERE p.reference = ${reference.trim().toUpperCase()} AND l.is_primary AND l.deleted_at IS NULL LIMIT 1`;
+  if (!l) return { ok: false, error: "not_found" };
+  await verifyListing(l.id, method as VerificationMethod, evidence.trim(), a.id);
+  await audit(a.id, null, "admin.verify_listing", "listing", l.id, { method });
+  revalidatePath("/admin/moderacao");
+  return { ok: true };
+}
+
+export async function revokeListingVerification(verificationId: string): Promise<AdminResult> {
+  const a = await admin();
+  if (!a) return { ok: false, error: "auth" };
+  if (!uuid.safeParse(verificationId).success) return { ok: false, error: "invalid" };
+  await revokeVerification(verificationId);
+  await audit(a.id, null, "admin.revoke_verification", "listing_verification", verificationId, {});
+  revalidatePath("/admin/moderacao");
+  return { ok: true };
+}
+
+export async function runFraudScan(): Promise<AdminResult<FraudRun>> {
+  const a = await admin();
+  if (!a) return { ok: false, error: "auth" };
+  const data = await recomputeFraudSignals();
+  await audit(a.id, null, "admin.fraud_scan", "system", "fraud", { ...data });
+  revalidatePath("/admin/moderacao");
+  return { ok: true, data };
 }

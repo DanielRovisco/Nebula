@@ -8,7 +8,7 @@ import Papa from "papaparse";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/input";
 import { FIELD_ALIASES } from "@/ingestion/normalize";
-import { createSource, resolveDedupe, runSourceNow, setAmiStatus, setListingStatus, setPropertyHidden, setUserRole, toggleSource, updateEntitlement, uploadAndIngest, type AdminResult, type IngestionSummary } from "@/server/admin";
+import { createSource, resolveDedupe, revokeListingVerification, runFraudScan, runSourceNow, verifyByReference, setAmiStatus, setListingStatus, setPropertyHidden, setUserRole, toggleSource, updateEntitlement, uploadAndIngest, type AdminResult, type IngestionSummary } from "@/server/admin";
 
 function useRun() {
   const router = useRouter();
@@ -172,5 +172,58 @@ export function UploadForm({ sources }: { sources: { id: string; name: string; f
       )}
       {!state.ok && state.message && <p role="alert" className="text-sm text-down">{state.message}</p>}
     </form>
+  );
+}
+
+export function VerifyForm() {
+  const t = useTranslations("admin");
+  const router = useRouter();
+  const [ref, setRef] = useState("");
+  const [method, setMethod] = useState("licence_ami");
+  const [evidence, setEvidence] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+  return (
+    <form
+      className="grid gap-3 sm:grid-cols-[1fr_1fr_1.4fr_auto] sm:items-end"
+      onSubmit={(e) => {
+        e.preventDefault();
+        setMsg(null);
+        start(async () => {
+          const r = await verifyByReference(ref, method, evidence);
+          setMsg(r.ok ? t("verifyDone") : t(`verifyErr.${r.error === "not_found" ? "not_found" : "invalid"}`));
+          if (r.ok) {
+            setRef("");
+            setEvidence("");
+            router.refresh();
+          }
+        });
+      }}
+    >
+      <div><Label htmlFor="v-ref">{t("verifyRef")}</Label><Input id="v-ref" value={ref} onChange={(e) => setRef(e.target.value)} placeholder="PR-000123" required /></div>
+      <div><Label htmlFor="v-method">{t("verifyMethod")}</Label><Select id="v-method" value={method} onChange={(e) => setMethod(e.target.value)}>{(["licence_ami", "owner_document", "site_visit"] as const).map((m) => <option key={m} value={m}>{t(`verifyMethods.${m}`)}</option>)}</Select></div>
+      <div><Label htmlFor="v-ev">{t("verifyEvidence")}</Label><Input id="v-ev" value={evidence} onChange={(e) => setEvidence(e.target.value)} maxLength={200} required /></div>
+      <Button type="submit" disabled={pending}>{t("verifyButton")}</Button>
+      {msg && <p role="status" className="text-sm text-muted sm:col-span-4">{msg}</p>}
+    </form>
+  );
+}
+
+export function RevokeVerificationButton({ id }: { id: string }) {
+  const t = useTranslations("admin");
+  const { pending, run } = useRun();
+  return <Button size="sm" variant="ghost" disabled={pending} onClick={() => run(() => revokeListingVerification(id))}>{t("verifyRevoke")}</Button>;
+}
+
+export function FraudScanButton() {
+  const t = useTranslations("admin");
+  const [out, setOut] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+  const router = useRouter();
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <Button variant="secondary" disabled={pending} onClick={() => start(async () => { const r = await runFraudScan(); if (r.data) setOut(t("fraudResult", { ...r.data })); router.refresh(); })}>{pending && <Loader2 className="size-4 animate-spin" aria-hidden />}{t("fraudScan")}</Button>
+      {out && <span role="status" className="text-sm text-muted">{out}</span>}
+    </div>
   );
 }

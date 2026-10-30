@@ -436,7 +436,16 @@
     "costsRegistryNote": "Não inclui registos, escritura nem avaliação bancária, que variam.",
     "costsUnverified": "Valor a confirmar no Portal das Finanças.",
     "valueThis": "Avaliar",
-    "dossier": "Dossiê PDF"
+    "dossier": "Dossiê PDF",
+    "flagsTitle": "Sinais a ter em conta",
+    "flagsNote": "São sinais automáticos, não uma conclusão. Visite o imóvel e nunca pague antes de ver e de ter contrato.",
+    "flags": {
+      "price_far_below_market": "O preço por m² está muito abaixo da mediana da zona.",
+      "price_below_market": "O preço por m² está abaixo da mediana da zona.",
+      "advance_payment_request": "O texto pede pagamento antes da visita.",
+      "absent_owner": "O texto refere um proprietário ausente ou chaves enviadas por correio.",
+      "private_with_many_listings": "O anunciante particular tem muitos anúncios ativos."
+    }
   },
   "auth": {
     "signInTitle": "Entrar na Praça",
@@ -1347,7 +1356,35 @@
     "noErrors": "Sem erros.",
     "stage": "Fase",
     "notAllowed": "Sem permissão",
-    "failed": "Não foi possível concluir a ação."
+    "failed": "Não foi possível concluir a ação.",
+    "fraudScan": "Recalcular sinais antifraude",
+    "fraudResult": "{scanned} anúncios analisados, {flagged} com sinais, {quarantined} enviados para moderação.",
+    "fraudScore": "risco",
+    "fraudCodes": {
+      "price_far_below_market": "Preço muito abaixo do mercado",
+      "price_below_market": "Preço abaixo do mercado",
+      "advance_payment_request": "Pede pagamento antes da visita",
+      "absent_owner": "Proprietário ausente",
+      "private_with_many_listings": "Particular com muitos anúncios",
+      "conflicting_prices": "Preços diferentes do mesmo imóvel"
+    },
+    "verifyTitle": "Selo de verificação",
+    "verifyHelp": "O selo só aparece com prova registada: quem verificou, como e quando. Retire-o quando a prova deixar de valer.",
+    "verifyRef": "Referência",
+    "verifyMethod": "Método",
+    "verifyEvidence": "Prova (n.º de licença, documento, data da visita)",
+    "verifyButton": "Verificar",
+    "verifyRevoke": "Retirar",
+    "verifyDone": "Verificação registada.",
+    "verifyErr": {
+      "invalid": "Preencha a referência (PR-000123), o método e a prova.",
+      "not_found": "Não existe um anúncio com essa referência."
+    },
+    "verifyMethods": {
+      "licence_ami": "Licença AMI",
+      "owner_document": "Documento do proprietário",
+      "site_visit": "Visita ao imóvel"
+    }
   },
   "apiKeys": {
     "title": "API",

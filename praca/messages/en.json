@@ -436,7 +436,16 @@
     "costsRegistryNote": "Does not include registration, deed or bank valuation fees, which vary.",
     "costsUnverified": "Confirm the value on the Portal das Finanças.",
     "valueThis": "Value this",
-    "dossier": "PDF dossier"
+    "dossier": "PDF dossier",
+    "flagsTitle": "Signs to be aware of",
+    "flagsNote": "These are automatic signs, not a conclusion. Visit the property and never pay before seeing it and having a contract.",
+    "flags": {
+      "price_far_below_market": "The price per m² is far below the area median.",
+      "price_below_market": "The price per m² is below the area median.",
+      "advance_payment_request": "The text asks for payment before a viewing.",
+      "absent_owner": "The text mentions an absent owner or keys sent by post.",
+      "private_with_many_listings": "The private advertiser has many active listings."
+    }
   },
   "auth": {
     "signInTitle": "Sign in to Praça",
@@ -1347,7 +1356,35 @@
     "noErrors": "No errors.",
     "stage": "Stage",
     "notAllowed": "No permission",
-    "failed": "Could not complete the action."
+    "failed": "Could not complete the action.",
+    "fraudScan": "Recompute fraud signals",
+    "fraudResult": "{scanned} listings scanned, {flagged} flagged, {quarantined} sent to moderation.",
+    "fraudScore": "risk",
+    "fraudCodes": {
+      "price_far_below_market": "Price far below market",
+      "price_below_market": "Price below market",
+      "advance_payment_request": "Asks for payment before viewing",
+      "absent_owner": "Absent owner",
+      "private_with_many_listings": "Private seller with many listings",
+      "conflicting_prices": "Different prices for the same property"
+    },
+    "verifyTitle": "Verification badge",
+    "verifyHelp": "The badge only appears with recorded evidence: who checked, how and when. Revoke it when the evidence stops holding.",
+    "verifyRef": "Reference",
+    "verifyMethod": "Method",
+    "verifyEvidence": "Evidence (licence no., document, visit date)",
+    "verifyButton": "Verify",
+    "verifyRevoke": "Revoke",
+    "verifyDone": "Verification recorded.",
+    "verifyErr": {
+      "invalid": "Fill in the reference (PR-000123), the method and the evidence.",
+      "not_found": "No listing has that reference."
+    },
+    "verifyMethods": {
+      "licence_ami": "AMI licence",
+      "owner_document": "Owner document",
+      "site_visit": "Site visit"
+    }
   },
   "apiKeys": {
     "title": "API",
