@@ -49,6 +49,9 @@ export async function Header() {
           <Link href="/arrendar" className={link}>
             {t("rent")}
           </Link>
+          <Link href="/mercado" className={link}>
+            {t("market")}
+          </Link>
         </nav>
         <div className="ml-auto flex items-center gap-1.5">
           <Suspense fallback={null}>

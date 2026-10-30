@@ -9,7 +9,7 @@ const alt = (path: string) => ({ languages: { "pt-PT": siteUrl + path, en: `${si
 /** Static pages + every district/municipality search page + every active property. */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
-  const statics = ["", "/comprar", "/arrendar", "/sobre", "/metodologia", "/termos", "/privacidade", "/cookies", "/contactos"];
+  const statics = ["", "/comprar", "/arrendar", "/mercado", "/planos", "/developers", "/sobre", "/metodologia", "/termos", "/privacidade", "/cookies", "/contactos"];
   const out: MetadataRoute.Sitemap = statics.map((p) => ({ url: siteUrl + p, lastModified: now, alternates: alt(p), changeFrequency: "weekly", priority: p === "" ? 1 : 0.6 }));
 
   try {
@@ -17,7 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       SELECT d.slug AS d, NULL AS m FROM geo_districts d
       UNION ALL SELECT d.slug, m.slug FROM geo_municipalities m JOIN geo_districts d ON d.code = m.district_code
       WHERE EXISTS (SELECT 1 FROM properties p WHERE p.municipality_code = m.code)`;
-    for (const base of ["/comprar", "/arrendar"])
+    for (const base of ["/comprar", "/arrendar", "/mercado"])
       for (const z of zones) {
         const p = `${base}/${z.d}${z.m ? "/" + z.m : ""}`;
         out.push({ url: siteUrl + p, lastModified: now, alternates: alt(p), changeFrequency: "daily", priority: 0.5 });

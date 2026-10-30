@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Key, Search, User } from "lucide-react";
+import { BarChart3, Home, Key, Search, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ export function BottomNav() {
     { href: "/", label: t("home"), icon: Home, match: (p: string) => p === "/" },
     { href: "/comprar", label: t("buy"), icon: Search, match: (p: string) => p.startsWith("/comprar") },
     { href: "/arrendar", label: t("rent"), icon: Key, match: (p: string) => p.startsWith("/arrendar") },
+    { href: "/mercado", label: t("market"), icon: BarChart3, match: (p: string) => p.startsWith("/mercado") },
     { href: "/conta", label: t("account"), icon: User, match: (p: string) => p.startsWith("/conta") || p.startsWith("/entrar") },
   ];
   return (
@@ -19,7 +20,7 @@ export function BottomNav() {
       aria-label={t("mobileNavigation")}
       className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
     >
-      <ul className="mx-auto grid max-w-md grid-cols-4">
+      <ul className="mx-auto grid max-w-md grid-cols-5">
         {items.map(({ href, label, icon: Icon, match }) => {
           const active = match(pathname);
           return (

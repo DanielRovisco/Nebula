@@ -21,6 +21,7 @@ export async function Footer() {
           <ul className={col}>
             <li><Link className={a} href="/comprar">{nav("buy")}</Link></li>
             <li><Link className={a} href="/arrendar">{nav("rent")}</Link></li>
+            <li><Link className={a} href="/mercado">{nav("market")}</Link></li>
             <li><Link className={a} href="/metodologia">{t("methodology")}</Link></li>
           </ul>
         </div>
