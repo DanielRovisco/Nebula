@@ -58,6 +58,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         .from(users)
         .where(eq(users.id, user.id))
         .limit(1);
+      // ADMIN_EMAILS bootstraps the first administrators; afterwards roles are managed in /admin.
+      const admins = (process.env.ADMIN_EMAILS ?? "").toLowerCase().split(",").map((x) => x.trim()).filter(Boolean);
+      if (row && row.role !== "admin" && user.email && admins.includes(user.email.toLowerCase())) {
+        await db.update(users).set({ role: "admin" }).where(eq(users.id, user.id));
+        row.role = "admin";
+      }
       session.user.id = user.id;
       session.user.role = row?.role ?? "user";
       session.user.profileType = row?.profileType ?? "private";

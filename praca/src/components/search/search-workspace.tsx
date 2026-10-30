@@ -2,6 +2,7 @@
 
 import { List as ListIcon, Loader2, Map as MapIcon, SlidersHorizontal, X } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PropertyCard } from "@/components/property-card";
@@ -19,6 +20,8 @@ import type { MapPoint, ResultItem, SearchResult } from "@/server/search";
 import type { SearchPageData } from "@/server/search-page";
 import { FiltersPanel } from "./filters-panel";
 import { SearchMap } from "./search-map";
+import { SaveSearchSheet } from "./save-search-sheet";
+import { ZonesMenu } from "./zones-menu";
 
 type Status = "idle" | "loading" | "error";
 interface MapData {
@@ -75,6 +78,7 @@ export function SearchWorkspace({ data }: { data: SearchPageData }) {
   const [searchAsMove, setSearchAsMove] = useState(false);
   const [pendingBox, setPendingBox] = useState<BBox | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [drawing, setDrawing] = useState(false);
   const [retry, setRetry] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -193,6 +197,13 @@ export function SearchWorkspace({ data }: { data: SearchPageData }) {
             </SheetContent>
           </Sheet>
 
+          <SaveSearchSheet
+            business={business}
+            qs={apiQuery({ ...filters, cursor: undefined, bbox: undefined }).toString()}
+            geoSlugs={geoSlugs}
+            defaultName={filters.types.length === 1 ? t(business === "sale" ? "titleBuyType" : "titleRentType", { type: tt(`${filters.types[0]!}_plural`), place }) : t(business === "sale" ? "titleBuy" : "titleRent", { place })}
+          />
+
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <label htmlFor="sort" className="sr-only">
               {t("sortLabel")}
@@ -249,7 +260,7 @@ export function SearchWorkspace({ data }: { data: SearchPageData }) {
                 title={t("emptyTitle")}
                 text={t("emptyText")}
                 action={
-                  <Button onClick={() => commit({ business, types: [], typologies: [], conditions: [], energy: [], views: [], sort: "relevance" })}>
+                  <Button onClick={() => commit({ business, types: [], typologies: [], conditions: [], energy: [], views: [], zones: [], sort: "relevance" })}>
                     {t("emptyClear")}
                   </Button>
                 }
@@ -297,9 +308,18 @@ export function SearchWorkspace({ data }: { data: SearchPageData }) {
             onHover={setHovered}
             onSelect={setSelected}
             onUserMove={onUserMove}
-          />
+            zones={filters.zones}
+            drawing={drawing}
+            onDrawingChange={setDrawing}
+            onZoneAdd={(ring) => {
+              if (filters.zones.length >= 5) return toast.error(t("maxZones"));
+              commit({ ...filters, zones: [...filters.zones, ring], bbox: undefined });
+            }}
+          >
+            <ZonesMenu zones={filters.zones} onUse={(zs) => commit({ ...filters, zones: zs, bbox: undefined })} />
+          </SearchMap>
 
-          <div className="pointer-events-none absolute inset-x-0 top-3 flex flex-col items-center gap-2 px-3">
+          <div className="pointer-events-none absolute inset-x-0 top-14 flex flex-col items-start gap-2 px-3">
             {pendingBox && !searchAsMove && (
               <Button
                 className="pointer-events-auto shadow-[var(--shadow-md)]"
@@ -397,6 +417,7 @@ function describeChips(f: SearchFilters, d: ChipDeps, _typeInPath: boolean) {
   if (f.advertiser) chips.push({ id: "adv", label: f.advertiser === "private" ? tf("advertiserPrivate") : tf("advertiserProfessional"), clear: (x) => ({ ...x, advertiser: undefined }) });
   if (f.agency) chips.push({ id: "agency", label: tf("chips.agency"), clear: (x) => ({ ...x, agency: undefined }) });
   if (f.q) chips.push({ id: "q", label: `“${f.q}”`, clear: (x) => ({ ...x, q: undefined }) });
+  f.zones.forEach((_, i) => chips.push({ id: `zone${i}`, label: tf("chips.zone", { n: i + 1 }), clear: (x) => ({ ...x, zones: x.zones.filter((__, j) => j !== i) }) }));
   if (f.bbox) chips.push({ id: "bbox", label: tf("chips.map"), clear: (x) => ({ ...x, bbox: undefined }) });
   return chips;
 }

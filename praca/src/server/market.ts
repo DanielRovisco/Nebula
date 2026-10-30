@@ -73,6 +73,7 @@ export async function hasSeedData(): Promise<boolean> {
 
 export interface FeaturedItem {
   id: string;
+  propertyId: string;
   reference: string;
   title: string;
   price: number;
@@ -88,9 +89,9 @@ export interface FeaturedItem {
 
 export async function featuredListings(business: "sale" | "rent", limit = 6): Promise<FeaturedItem[]> {
   const rows = await sql<
-    { id: string; reference: string; title: string; price: number; business: "sale" | "rent"; area: number | null; typology: number | null; bedrooms: number | null; parish: string | null; municipality: string | null; image: string | null; verified: boolean }[]
+    { id: string; propertyId: string; reference: string; title: string; price: number; business: "sale" | "rent"; area: number | null; typology: number | null; bedrooms: number | null; parish: string | null; municipality: string | null; image: string | null; verified: boolean }[]
   >`
-    SELECT l.id, p.reference, l.title, l.price::float8 AS price, l.business, p.usable_area::float8 AS area, p.typology, p.bedrooms,
+    SELECT l.id, p.id AS "propertyId", p.reference, l.title, l.price::float8 AS price, l.business, p.usable_area::float8 AS area, p.typology, p.bedrooms,
            pa.name AS parish, mu.name AS municipality, l.verified,
            (SELECT url FROM listing_media m WHERE m.listing_id = l.id ORDER BY position LIMIT 1) AS image
     FROM listings l JOIN properties p ON p.id = l.property_id

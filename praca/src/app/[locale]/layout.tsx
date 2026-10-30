@@ -7,6 +7,7 @@ import { Toaster } from "sonner";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { CookieConsent } from "@/components/layout/cookie-consent";
 import { DemoBanner } from "@/components/layout/demo-banner";
+import { CompareTray, UserStateProvider } from "@/components/user-state";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { routing } from "@/i18n/routing";
@@ -55,6 +56,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
             >
               {t("skipToContent")}
             </a>
+            <UserStateProvider>
             <DemoBanner />
             <Header />
             <main id="conteudo" tabIndex={-1} className="outline-none">
@@ -62,6 +64,8 @@ export default async function LocaleLayout({ children, params }: { children: Rea
             </main>
             <Footer />
             <BottomNav />
+            <CompareTray />
+            </UserStateProvider>
             <CookieConsent />
             <Toaster position="top-center" richColors closeButton />
           </ThemeProvider>

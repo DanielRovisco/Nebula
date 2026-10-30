@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { decodeZones, encodeZones, type Ring } from "./zones";
+
 export const PROPERTY_TYPES = ["apartment", "house", "land", "shop", "office", "warehouse", "garage", "building"] as const;
 export type PropertyType = (typeof PROPERTY_TYPES)[number];
 
@@ -76,6 +78,8 @@ export interface SearchFilters {
   q?: string;
   sort: Sort;
   bbox?: BBox;
+  /** Free-hand zones drawn on the map (search in several areas at once). */
+  zones: Ring[];
   /** Geographic codes resolved from the URL path (not serialised into the query string). */
   districtCode?: string;
   municipalityCode?: string;
@@ -164,6 +168,7 @@ export function parseFilters(business: "sale" | "rent", input: URLSearchParams |
     q: g("q")?.trim().slice(0, 120) || undefined,
     sort,
     bbox: parseBBox(g("bbox")),
+    zones: decodeZones(g("zonas")),
     districtCode: opt(z.string().regex(/^\d{2}$/), g("d")),
     municipalityCode: opt(z.string().regex(/^\d{4}$/), g("m")),
     parishCode: opt(z.string().regex(/^\d{6}$/), g("f")),
@@ -212,6 +217,7 @@ export function filtersToParams(f: SearchFilters, opts: { includeGeo?: boolean; 
   setIf(p, "q", f.q);
   if (f.sort !== "relevance") p.set("ordem", f.sort);
   if (opts.includeBBox !== false && f.bbox) p.set("bbox", [f.bbox.w, f.bbox.s, f.bbox.e, f.bbox.n].map((n) => n.toFixed(5)).join(","));
+  if (f.zones.length) p.set("zonas", encodeZones(f.zones));
   if (opts.includeGeo) {
     setIf(p, "d", f.districtCode);
     setIf(p, "m", f.municipalityCode);

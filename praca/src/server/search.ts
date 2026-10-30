@@ -1,6 +1,7 @@
 import type postgres from "postgres";
 import { sql } from "@/db";
 import { parseFilters, PUBLISHED_DAYS, type SearchFilters } from "@/lib/filters";
+import { zonesToMultiPolygon } from "@/lib/zones";
 
 type Frag = postgres.PendingQuery<postgres.Row[]>;
 
@@ -52,10 +53,9 @@ export const MAP_POINT_LIMIT = 6000;
 const and = (parts: Frag[]): Frag => parts.reduce((a, b) => sql`${a} AND ${b}`);
 
 /** Builds the WHERE conditions shared by list, count and map queries. All values are bound parameters. */
-export function buildConditions(f: SearchFilters): Frag[] {
+export function buildConditions(f: SearchFilters, opts: { anyStatus?: boolean } = {}): Frag[] {
   const c: Frag[] = [
-    sql`l.status = 'active'`,
-    sql`l.is_primary`,
+    ...(opts.anyStatus ? [] : [sql`l.status = 'active'`, sql`l.is_primary`]),
     sql`l.deleted_at IS NULL`,
     sql`p.deleted_at IS NULL`,
     ...(f.id ? [sql`l.id = ${f.id}::uuid`] : [sql`l.business = ${f.business}`]),
@@ -98,6 +98,10 @@ export function buildConditions(f: SearchFilters): Frag[] {
   if (f.bbox) {
     // && uses the GiST expression index properties_geom_gist.
     c.push(sql`ST_SetSRID(ST_MakePoint(p.lng, p.lat), 4326) && ST_MakeEnvelope(${f.bbox.w}, ${f.bbox.s}, ${f.bbox.e}, ${f.bbox.n}, 4326)`);
+  }
+  if (f.zones.length) {
+    // Any of the drawn zones (OR). ST_MakeValid tolerates self-crossing hand-drawn outlines; the && inside ST_Intersects uses the GiST index.
+    c.push(sql`ST_Intersects(ST_SetSRID(ST_MakePoint(p.lng, p.lat), 4326), ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(zonesToMultiPolygon(f.zones))}), 4326)))`);
   }
   if (f.q) {
     c.push(

@@ -1,6 +1,7 @@
 import { Bath, BedDouble, Ruler, TrendingDown } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { PropertyImage } from "@/components/property-image";
+import { CompareToggle, FavoriteButton } from "@/components/user-state";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
 import { formatEur, formatPricePerM2 } from "@/lib/format";
@@ -8,6 +9,7 @@ import { cn } from "@/lib/utils";
 
 export interface CardData {
   id: string;
+  propertyId?: string;
   reference: string;
   title: string;
   business: "sale" | "rent";
@@ -55,6 +57,10 @@ export function PropertyCard({ item, highlighted, priority, onHover, className, 
     >
       <div className={cn("relative overflow-hidden bg-surface-2", compact ? "aspect-[16/10]" : "aspect-[4/3]")}>
         <PropertyImage src={item.image} alt={t("property.illustrative")} priority={priority} className="size-full transition-transform duration-500 ease-out group-hover:scale-[1.03]" />
+        <div className="absolute right-2.5 top-2.5 z-10 flex gap-1.5">
+          <CompareToggle reference={item.reference} />
+          {item.propertyId && <FavoriteButton propertyId={item.propertyId} />}
+        </div>
         <div className="absolute left-2.5 top-2.5 flex flex-wrap gap-1.5">
           {item.advertiserType === "private" && <Badge tone="brand">{t("common.private")}</Badge>}
           {item.verified && <Badge tone="neutral">{t("common.verified")}</Badge>}

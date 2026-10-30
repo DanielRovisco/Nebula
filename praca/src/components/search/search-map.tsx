@@ -6,6 +6,9 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { maptilerKey } from "@/lib/env";
 import type { BBox } from "@/lib/filters";
+import type { Ring } from "@/lib/zones";
+import { Button } from "@/components/ui/button";
+import { Check, PenLine, X } from "lucide-react";
 import { formatPinPrice } from "@/lib/format";
 import type { MapPoint } from "@/server/search";
 
@@ -21,6 +24,14 @@ interface Props {
   onSelect: (id: string | null) => void;
   /** Called after the user (not the code) moved the map. */
   onUserMove: (bbox: BBox) => void;
+  /** Zones already applied to the search, shown as outlines. */
+  zones: Ring[];
+  drawing: boolean;
+  onDrawingChange: (v: boolean) => void;
+  /** A finished free-hand polygon (>= 3 vertices). */
+  onZoneAdd: (ring: Ring) => void;
+  /** Extra controls rendered inside the map (saved zones menu). */
+  children?: React.ReactNode;
   className?: string;
 }
 
@@ -46,7 +57,7 @@ function pillImage(fill: string, stroke: string): ImageData {
   return g.getImageData(0, 0, 40, 40);
 }
 
-export function SearchMap({ points, business, bounds, frameKey, hoveredId, selectedId, onHover, onSelect, onUserMove, className }: Props) {
+export function SearchMap({ points, business, bounds, frameKey, hoveredId, selectedId, onHover, onSelect, onUserMove, zones, drawing, onDrawingChange, onZoneAdd, children, className }: Props) {
   const t = useTranslations("search");
   const { resolvedTheme } = useTheme();
   const dark = resolvedTheme === "dark";
@@ -56,8 +67,10 @@ export function SearchMap({ points, business, bounds, frameKey, hoveredId, selec
   const [ready, setReady] = useState(false);
 
   // Latest props for event handlers registered once.
-  const live = useRef({ points, business, onHover, onSelect, onUserMove });
-  live.current = { points, business, onHover, onSelect, onUserMove };
+  const live = useRef({ points, business, onHover, onSelect, onUserMove, drawing, zones, onZoneAdd, onDrawingChange });
+  live.current = { points, business, onHover, onSelect, onUserMove, drawing, zones, onZoneAdd, onDrawingChange };
+  const draft = useRef<Ring>([]);
+  const [draftCount, setDraftCount] = useState(0);
   const programmatic = useRef(true);
 
   const toGeoJSON = (pts: MapPoint[], biz: "sale" | "rent") => ({
@@ -68,6 +81,36 @@ export function SearchMap({ points, business, bounds, frameKey, hoveredId, selec
       properties: { id: p.id, label: formatPinPrice(p.p, biz) },
     })),
   });
+
+  const zonesGeoJSON = (zs: Ring[]) => ({
+    type: "FeatureCollection" as const,
+    features: zs.map((r, i) => ({ type: "Feature" as const, properties: { i }, geometry: { type: "Polygon" as const, coordinates: [[...r, r[0]!]] } })),
+  });
+  const draftGeoJSON = (r: Ring) => ({
+    type: "FeatureCollection" as const,
+    features: [
+      ...(r.length > 1 ? [{ type: "Feature" as const, properties: {}, geometry: { type: "LineString" as const, coordinates: r } }] : []),
+      ...r.map((c) => ({ type: "Feature" as const, properties: {}, geometry: { type: "Point" as const, coordinates: c } })),
+    ],
+  });
+  const paintDraft = () => (map.current?.getSource("draft") as GeoJSONSource | undefined)?.setData(draftGeoJSON(draft.current));
+  const finishDraft = () => {
+    if (draft.current.length >= 3) live.current.onZoneAdd(draft.current);
+    draft.current = [];
+    setDraftCount(0);
+    paintDraft();
+    live.current.onDrawingChange(false);
+  };
+  const cancelDraft = () => {
+    draft.current = [];
+    setDraftCount(0);
+    paintDraft();
+    live.current.onDrawingChange(false);
+  };
+  const finishRef = useRef(finishDraft);
+  finishRef.current = finishDraft;
+  const cancelRef = useRef(cancelDraft);
+  cancelRef.current = cancelDraft;
 
   // Create the map once per theme (style swap re-adds our layers).
   useEffect(() => {
@@ -157,6 +200,15 @@ export function SearchMap({ points, business, bounds, frameKey, hoveredId, selec
               paint: { "text-color": dark ? "#0c1330" : "#ffffff" },
             });
           }
+          if (!m.getSource("zones")) {
+            m.addSource("zones", { type: "geojson", data: zonesGeoJSON(live.current.zones) });
+            m.addSource("draft", { type: "geojson", data: draftGeoJSON(draft.current) });
+            const brand = dark ? "#8da4f7" : "#1d3fb5";
+            m.addLayer({ id: "zones-fill", type: "fill", source: "zones", paint: { "fill-color": brand, "fill-opacity": 0.12 } }, "clusters");
+            m.addLayer({ id: "zones-line", type: "line", source: "zones", paint: { "line-color": brand, "line-width": 2.5 } }, "clusters");
+            m.addLayer({ id: "draft-line", type: "line", source: "draft", filter: ["==", ["geometry-type"], "LineString"], paint: { "line-color": brand, "line-width": 2.5, "line-dasharray": [2, 1.5] } });
+            m.addLayer({ id: "draft-pts", type: "circle", source: "draft", filter: ["==", ["geometry-type"], "Point"], paint: { "circle-radius": 5, "circle-color": "#ffffff", "circle-stroke-color": brand, "circle-stroke-width": 2.5 } });
+          }
           setReady(true);
         };
 
@@ -167,6 +219,7 @@ export function SearchMap({ points, business, bounds, frameKey, hoveredId, selec
         });
 
         instance.on("click", "clusters", async (e) => {
+          if (live.current.drawing) return;
           const f = instance!.queryRenderedFeatures(e.point, { layers: ["clusters"] })[0];
           if (!f) return;
           const src = instance!.getSource("listings") as GeoJSONSource;
@@ -175,12 +228,32 @@ export function SearchMap({ points, business, bounds, frameKey, hoveredId, selec
           instance!.easeTo({ center: (f.geometry as unknown as { coordinates: [number, number] }).coordinates, zoom: Math.min(zoom + 0.2, 17) });
         });
         instance.on("click", "pins", (e) => {
+          if (live.current.drawing) return;
           const f = e.features?.[0];
           if (f) live.current.onSelect(String(f.properties!.id));
         });
         instance.on("click", (e) => {
+          if (live.current.drawing) {
+            const first = draft.current[0];
+            // Clicking the first vertex (within 12 px) closes the polygon.
+            if (draft.current.length >= 3 && first) {
+              const p0 = instance!.project(first as [number, number]);
+              if (Math.hypot(p0.x - e.point.x, p0.y - e.point.y) < 12) return finishRef.current();
+            }
+            draft.current = [...draft.current, [e.lngLat.lng, e.lngLat.lat]];
+            setDraftCount(draft.current.length);
+            paintDraft();
+            return;
+          }
           const hit = instance!.queryRenderedFeatures(e.point, { layers: ["pins", "clusters"] });
           if (!hit.length) live.current.onSelect(null);
+        });
+        instance.on("dblclick", (e) => {
+          if (!live.current.drawing) return;
+          e.preventDefault();
+          // The two clicks of a double click each added the same vertex: drop the duplicate.
+          draft.current = draft.current.slice(0, -1);
+          finishRef.current();
         });
         instance.on("mousemove", "pins", (e) => {
           instance!.getCanvas().style.cursor = "pointer";
@@ -234,6 +307,38 @@ export function SearchMap({ points, business, bounds, frameKey, hoveredId, selec
      
   }, [points, business, ready]);
 
+  // Zones outline.
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready) return;
+    (m.getSource("zones") as GeoJSONSource | undefined)?.setData(zonesGeoJSON(zones));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zones, ready]);
+
+  // Draw mode: crosshair, no double-click zoom, keyboard shortcuts.
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready) return;
+    if (drawing) {
+      m.doubleClickZoom.disable();
+      m.getCanvas().style.cursor = "crosshair";
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === "Enter") finishRef.current();
+        if (e.key === "Escape") cancelRef.current();
+      };
+      window.addEventListener("keydown", onKey);
+      return () => {
+        window.removeEventListener("keydown", onKey);
+        m.doubleClickZoom.enable();
+        m.getCanvas().style.cursor = "";
+      };
+    }
+    draft.current = [];
+    setDraftCount(0);
+    (m.getSource("draft") as GeoJSONSource | undefined)?.setData(draftGeoJSON([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drawing, ready]);
+
   // Hover / selection highlight.
   useEffect(() => {
     const m = map.current;
@@ -252,6 +357,29 @@ export function SearchMap({ points, business, bounds, frameKey, hoveredId, selec
   return (
     <div className={className}>
       <div ref={el} role="region" aria-label={t("mapLabel")} className="size-full" />
+      <div className="absolute left-3 top-3 z-10 flex flex-wrap items-center gap-2">
+        {drawing ? (
+          <>
+            <Button size="sm" onClick={() => finishRef.current()} disabled={draftCount < 3} className="shadow-[var(--shadow-md)]">
+              <Check aria-hidden />
+              {t("drawFinish")}
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => cancelRef.current()} className="shadow-[var(--shadow-md)]">
+              <X aria-hidden />
+              {t("drawCancel")}
+            </Button>
+            <p role="status" className="rounded-full bg-surface px-3 py-1.5 text-xs shadow-[var(--shadow-md)]">
+              {draftCount < 3 ? t("drawHint", { n: draftCount }) : t("drawHintClose")}
+            </p>
+          </>
+        ) : (
+          <Button size="sm" variant="secondary" onClick={() => onDrawingChange(true)} className="shadow-[var(--shadow-md)]">
+            <PenLine aria-hidden />
+            {t("drawZone")}
+          </Button>
+        )}
+        {!drawing && children}
+      </div>
     </div>
   );
 }

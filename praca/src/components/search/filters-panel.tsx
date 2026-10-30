@@ -135,6 +135,7 @@ export function FiltersPanel({ value, agencies, onApply }: Props) {
       conditions: [],
       energy: [],
       views: [],
+      zones: d.zones,
       sort: d.sort,
       districtCode: d.districtCode,
       municipalityCode: d.municipalityCode,

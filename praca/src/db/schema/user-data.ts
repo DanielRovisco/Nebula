@@ -127,7 +127,10 @@ export const valuations = pgTable(
     high: numeric("high", { precision: 12, scale: 2, mode: "number" }),
     confidence: numeric("confidence", { precision: 4, scale: 3, mode: "number" }),
     method: text("method").notNull().default("weighted_median_v1"),
+    result: jsonb("result").$type<Record<string, unknown>>(),
+    title: text("title"),
     createdAt: createdAt(),
+    updatedAt: updatedAt(),
   },
   (t) => [index("valuations_user_idx").on(t.userId), index("valuations_org_idx").on(t.organizationId)],
 );
@@ -189,6 +192,7 @@ export const crmDeals = pgTable(
     contactId: uuid("contact_id").references(() => crmContacts.id, { onDelete: "set null" }),
     propertyId: uuid("property_id").references(() => properties.id, { onDelete: "set null" }),
     ownerId: uuid("owner_id").references(() => users.id, { onDelete: "set null" }),
+    title: text("title"),
     stage: text("stage").notNull().default("new"), // new | contacted | visit | proposal | closing
     value: numeric("value", { precision: 12, scale: 2, mode: "number" }),
     commissionPct: numeric("commission_pct", { precision: 5, scale: 2, mode: "number" }),

@@ -11,6 +11,7 @@ export interface MailInput {
   to: string;
   subject: string;
   react: ReactElement;
+  headers?: Record<string, string>;
   /** Printed to the log in development when no transport is available. */
   devHint?: string;
 }
@@ -19,13 +20,13 @@ export interface MailInput {
  * Sends through Resend when RESEND_API_KEY is set, else through SMTP (Mailpit in local dev),
  * else logs the message. Never throws on transport absence in development.
  */
-export async function sendMail({ to, subject, react, devHint }: MailInput): Promise<"resend" | "smtp" | "log"> {
+export async function sendMail({ to, subject, react, devHint, headers }: MailInput): Promise<"resend" | "smtp" | "log"> {
   const html = await render(react);
   const text = await render(react, { plainText: true });
 
   if (process.env.RESEND_API_KEY) {
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const { error } = await resend.emails.send({ from, to, subject, html, text });
+    const { error } = await resend.emails.send({ from, to, subject, html, text, headers });
     if (error) throw new Error(`Resend: ${error.message}`);
     return "resend";
   }
@@ -34,7 +35,7 @@ export async function sendMail({ to, subject, react, devHint }: MailInput): Prom
   if (smtp) {
     try {
       const t = nodemailer.createTransport(smtp, { connectionTimeout: 2000, greetingTimeout: 2000, socketTimeout: 4000 });
-      await t.sendMail({ from, to, subject, html, text });
+      await t.sendMail({ from, to, subject, html, text, headers });
       if (devHint) console.info(`[email] ${devHint}`);
       return "smtp";
     } catch (e) {

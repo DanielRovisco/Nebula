@@ -10,6 +10,9 @@ import { Gallery } from "@/components/property/gallery";
 import { LocationMap } from "@/components/property/location-map";
 import { PriceChart } from "@/components/property/price-chart";
 import { PrintButton, ShareButton } from "@/components/property/share-buttons";
+import { CompareToggle, FavoriteButton } from "@/components/user-state";
+import { currentUser } from "@/server/session";
+import { sql } from "@/db";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
 import { siteUrl } from "@/lib/env";
@@ -65,6 +68,11 @@ export default async function PropertyPage({ params }: Props) {
     getFiscalTable("imt", "other_urban").catch(() => null),
     getFiscalTable("stamp_duty_purchase", "all").catch(() => null),
   ]);
+  const viewer = await currentUser();
+  if (viewer) {
+    // Viewing history (signed-in only); failures must never break the page.
+    sql`INSERT INTO property_views (user_id, property_id) VALUES (${viewer.id}, ${p.id}) ON CONFLICT (user_id, property_id) DO UPDATE SET viewed_at = now()`.catch(() => {});
+  }
   const est = estimateFor(p, comps);
   const diff = est ? (l.price - est.value) / est.value : null;
   const daysOnMarket = Math.max(0, Math.round((Date.now() - new Date(l.publishedAt).getTime()) / 86_400_000));
@@ -165,7 +173,9 @@ export default async function PropertyPage({ params }: Props) {
               {[p.address, place].filter(Boolean).join(" · ")}
             </p>
           </div>
-          <div className="no-print flex gap-2">
+          <div className="no-print flex items-center gap-2">
+            <FavoriteButton propertyId={p.id} className="border border-border-strong" />
+            <CompareToggle reference={p.reference} className="border border-border-strong" />
             <ShareButton title={l.title} copiedLabel={cm("copied")} label={cm("share")} />
             <PrintButton label={cm("print")} />
           </div>
@@ -330,7 +340,7 @@ export default async function PropertyPage({ params }: Props) {
                     <li key={c.id}>
                       <PropertyCard
                         compact
-                        item={{ id: c.id, reference: c.reference, title: c.title, business: l.business, price: c.price, pricePerM2: c.pricePerM2, area: c.area, typology: c.typology, type: p.type, parish: c.parish, image: c.image }}
+                        item={{ id: c.id, propertyId: c.propertyId, reference: c.reference, title: c.title, business: l.business, price: c.price, pricePerM2: c.pricePerM2, area: c.area, typology: c.typology, type: p.type, parish: c.parish, image: c.image }}
                       />
                       <p className="mt-1.5 px-1 text-xs text-muted">
                         {t("similarMatch", { pct: Math.round(c.similarity * 100) })} · {t("similarDistance", { distance: c.distance >= 1000 ? `${(c.distance / 1000).toFixed(1).replace(".", ",")} km` : `${c.distance} m` })}

@@ -69,6 +69,7 @@ export interface PropertyDetail {
 
 export interface ComparableItem {
   id: string;
+  propertyId: string;
   reference: string;
   title: string;
   price: number;
@@ -196,9 +197,9 @@ export async function getPropertyByReference(ref: string): Promise<PropertyDetai
 export async function getComparables(prop: PropertyDetail, limit = 12): Promise<ComparableItem[]> {
   const area = prop.usableArea ?? prop.plotArea;
   const rows = await sql<
-    { id: string; reference: string; title: string; price: number; ppm: number | null; area: number | null; typology: number | null; lat: number; lng: number; image: string | null; parish: string | null; dist: number }[]
+    { id: string; property_id: string; reference: string; title: string; price: number; ppm: number | null; area: number | null; typology: number | null; lat: number; lng: number; image: string | null; parish: string | null; dist: number }[]
   >`
-    SELECT l.id, p.reference, l.title, l.price::float8 AS price, l.price_per_m2::float8 AS ppm, p.usable_area::float8 AS area, p.typology,
+    SELECT l.id, p.id AS property_id, p.reference, l.title, l.price::float8 AS price, l.price_per_m2::float8 AS ppm, p.usable_area::float8 AS area, p.typology,
            p.lat, p.lng, pa.name AS parish,
            (SELECT url FROM listing_media m WHERE m.listing_id = l.id ORDER BY position LIMIT 1) AS image,
            ST_Distance(p.location, ST_SetSRID(ST_MakePoint(${prop.lng}, ${prop.lat}), 4326)::geography) AS dist
@@ -220,6 +221,7 @@ export async function getComparables(prop: PropertyDetail, limit = 12): Promise<
     const yScore = 1;
     return {
       id: r.id,
+      propertyId: r.property_id,
       reference: r.reference,
       title: r.title,
       price: r.price,
