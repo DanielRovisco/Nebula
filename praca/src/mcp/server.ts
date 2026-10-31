@@ -9,7 +9,7 @@ import { propertySummary } from "@/server/api/serialize";
 import { getFairPrice } from "@/server/fair-price";
 import { getFiscalTable, getRate } from "@/server/fiscal";
 import { interpretQuery } from "@/server/nl-search";
-import { getKpi, resolveCodes } from "@/server/observatory";
+import { getKpi, getLatestTransaction, resolveCodes } from "@/server/observatory";
 import { getPropertyByReference } from "@/server/properties";
 import { riskAt } from "@/server/risk";
 import { searchListings } from "@/server/search";
@@ -93,8 +93,8 @@ export function createPracaMcpServer(): McpServer {
     async ({ geo_id, business }) => {
       const [zone] = await resolveCodes([geo_id.toUpperCase()]);
       if (!zone) return fail("Território não encontrado.");
-      const k = await getKpi(zone.level, zone.code, business);
-      return text({ geo: { id: zone.code, level: zone.level, name: zone.name }, business, indicators: k && { medianPricePerM2: k.ppm, p25: k.p25, p75: k.p75, sample: k.n, yoyChange: k.yoy, grossYield: k.grossYield, medianDaysOnMarket: k.dom, period: k.period, aggregatedFrom: k.aggregatedFrom, isDemo: k.isSeed }, note: "Preços pedidos em anúncios, não preços de transação." });
+      const [k, tx] = await Promise.all([getKpi(zone.level, zone.code, business), business === "sale" ? getLatestTransaction(zone.level, zone.code) : Promise.resolve(null)]);
+      return text({ geo: { id: zone.code, level: zone.level, name: zone.name }, business, indicators: k && { medianPricePerM2: k.ppm, p25: k.p25, p75: k.p75, sample: k.n, yoyChange: k.yoy, grossYield: k.grossYield, medianDaysOnMarket: k.dom, period: k.period, aggregatedFrom: k.aggregatedFrom, isDemo: k.isSeed }, registeredSales: tx && { medianPricePerM2: tx.ppm, period: tx.period, source: tx.source, isDemo: tx.isSeed }, note: "indicators são preços pedidos em anúncios. registeredSales são preços de vendas registadas (INE), quando existem." });
     },
   );
 

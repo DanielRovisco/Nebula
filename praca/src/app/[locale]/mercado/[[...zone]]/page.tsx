@@ -194,7 +194,12 @@ export default async function MarketPage({ params }: Props) {
           {txSeries.length ? (
             <div className="mt-3">
               <SeriesChart data={txSeries.map((r) => ({ period: r.period, ppm: r.ppm, p25: null, p75: null }))} label={t("txTitle")} unit="sale" height={200} />
-              <p className="mt-2 text-xs text-muted">{t("txSource", { source: [...new Set(txSeries.map((r) => r.source))].join(", ") })}</p>
+              {sale && !sale.isSeed && txSeries.length > 0 && (() => {
+                const last = txSeries[txSeries.length - 1]!;
+                const gap = (sale.ppm - last.ppm) / last.ppm;
+                return <p className="mt-3 text-sm">{t("txCompare", { asking: formatPricePerM2(sale.ppm), sold: formatPricePerM2(last.ppm), gap: `${gap >= 0 ? "+" : "−"}${Math.abs(Math.round(gap * 100))} %` })}</p>;
+              })()}
+              <p className="mt-2 text-xs text-muted">{t("txSource", { source: [...new Set(txSeries.map((r) => r.source))].join(", ") })} {t("txNote")}</p>
             </div>
           ) : (
             <p className="mt-2 max-w-2xl text-muted">{t("txNone")} <Link href="/metodologia" className="text-brand underline underline-offset-2">{t("txLink")}</Link></p>

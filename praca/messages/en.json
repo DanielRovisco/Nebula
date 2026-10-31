@@ -761,8 +761,8 @@
     "typArea": "Median area",
     "typHidden": "{count, plural, one {# typology} other {# typologies}} without enough sample.",
     "typNone": "No typology has enough sample.",
-    "txTitle": "Asking price and transaction price",
-    "txNone": "There is no licensed transaction-price source connected for this territory yet. We only show asking prices and never present them as closing prices.",
+    "txTitle": "Asking price and registered sales price",
+    "txNone": "No registered-sales data for this territory (INE only publishes municipalities and the country). We only show asking prices, and never present them as closing prices.",
     "txSource": "Source: {source}.",
     "txLink": "See data sources",
     "textTitle": "In short",
@@ -807,7 +807,9 @@
       "csvZone": "area"
     },
     "textYoyUp": "Up {value} compared with 12 months ago.",
-    "textYoyDown": "Down {value} compared with 12 months ago."
+    "textYoyDown": "Down {value} compared with 12 months ago.",
+    "txCompare": "Median asking price in listings: {asking}. Median of registered sales (last 12 months): {sold}. Difference: {gap}.",
+    "txNote": "Median of sales over the last 12 months, by publication quarter. Official data, without a transaction count."
   },
   "valuation": {
     "title": "Value a property",

@@ -64,3 +64,9 @@ Registo das decisões tomadas sem consultar o dono do projeto (regra 1). Formato
 ## Fase 4 (fecho)
 
 51. **Confirmação fiscal por referência cruzada, assumida como tal.** IMT de habitação própria, secundária e IMT Jovem passam a `verified_at` preenchido porque uma fonte reproduz o Ofício-Circulado 40129/2026 com as parcelas a abater e uma segunda fonte coincide em taxas e limites. A nota de cada linha diz «via», porque o PDF da AT não foi aberto. A tabela de IRS sobre rendas por duração do contrato foi **retirada** (estava escrita de memória e as fontes conflituam sobre o regime de 2026): fica a taxa-base de 25 % editável pelo utilizador.
+
+## Fontes reais
+
+52. **Só entram fontes abertas ou licenciadas verificadas.** Ligámos o INE (vendas registadas por concelho, CC BY 4.0) e o BCE (Euribor). Os preços do INE vão para `transactions` e **nunca se misturam** com preços pedidos: a página mostra os dois lado a lado, rotulados. A comparação «anúncios vs. vendas» só aparece quando os anúncios não são de demonstração (comparar dados sintéticos com reais seria enganoso).
+53. **A importação recusa dados suspeitos.** Resposta com menos de 100 linhas utilizáveis, outro indicador ou erro HTTP não apagam nada. Valores suprimidos pelo INE ficam sem dado. Cada (fonte, trimestre) é substituída de forma atómica.
+54. **Sem anúncios reais por agora, por regra.** Não há feed aberto em Portugal e o projeto proíbe scraping. A porta de entrada é o contrato `SourceAdapter`: quando houver um feed licenciado de uma agência ou portal, regista-se em `/admin/fontes` com a licença e entra pelo pipeline existente (normalização, geocoding, deduplicação).

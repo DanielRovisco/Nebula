@@ -15,7 +15,7 @@
 - `imt/hpp_mainland` 2026: escalões publicados pela imprensa (+2 % face a 2025). **Por confirmar.**
 - `imt/other_urban` 6,5 %, `stamp_duty_purchase` 0,8 %, `stamp_duty_credit` 0,6 %: valores indicativos. **Por confirmar.**
 - Falta: IMT de habitação secundária, Regiões Autónomas, IMT Jovem, rústicos.
-- `rates`: Euribor médias de julho/2026 (imprensa), `is_seed = true`. Ligar um job ao Banco de Portugal/EMMI.
+- `rates`: Euribor 3, 6 e 12 meses vêm agora do BCE (`pnpm sources:sync`, cron semanal), médias mensais, `is_seed = false`.
 
 ## Como atualizar
 ```sql

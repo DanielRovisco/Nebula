@@ -8,8 +8,11 @@ test.describe("favourites, comparison and saved searches", () => {
     await page.goto(LISBON);
     const first = page.locator("article").first();
     const title = await first.locator("h3 a").innerText();
-    await first.getByRole("button", { name: "Guardar nos favoritos" }).click();
-    await expect(first.getByRole("button", { name: "Remover dos favoritos" })).toBeVisible();
+    // Under load the first click can land before React hydrates and do nothing, so click again until the state flips (never toggling it back).
+    await expect(async () => {
+      if (!(await first.getByRole("button", { name: "Remover dos favoritos" }).isVisible())) await first.getByRole("button", { name: "Guardar nos favoritos" }).click();
+      await expect(first.getByRole("button", { name: "Remover dos favoritos" })).toBeVisible({ timeout: 1500 });
+    }).toPass({ timeout: 15_000 });
     await page.goto("/conta/favoritos");
     await expect(page.getByText(title).first()).toBeVisible();
 

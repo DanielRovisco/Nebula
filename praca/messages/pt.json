@@ -761,8 +761,8 @@
     "typArea": "Área mediana",
     "typHidden": "{count, plural, one {# tipologia} other {# tipologias}} sem amostra suficiente.",
     "typNone": "Nenhuma tipologia tem amostra suficiente.",
-    "txTitle": "Preço pedido e preço de transação",
-    "txNone": "Ainda não há uma fonte licenciada de preços de transação ligada a este território. Mostramos apenas preços pedidos, e nunca os apresentamos como preços de fecho.",
+    "txTitle": "Preço pedido e preço de vendas registadas",
+    "txNone": "Não há dados de vendas registadas para este território (o INE só publica concelhos e o país). Mostramos apenas preços pedidos, e nunca os apresentamos como preços de fecho.",
     "txSource": "Fonte: {source}.",
     "txLink": "Ver fontes de dados",
     "textTitle": "Em resumo",
@@ -807,7 +807,9 @@
       "csvZone": "zona"
     },
     "textYoyUp": "Subiu {value} face a há 12 meses.",
-    "textYoyDown": "Desceu {value} face a há 12 meses."
+    "textYoyDown": "Desceu {value} face a há 12 meses.",
+    "txCompare": "Mediana pedida nos anúncios: {asking}. Mediana das vendas registadas (últimos 12 meses): {sold}. Diferença: {gap}.",
+    "txNote": "Mediana das vendas dos últimos 12 meses, por trimestre de publicação. Dado oficial, sem número de transações."
   },
   "valuation": {
     "title": "Avaliar imóvel",

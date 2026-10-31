@@ -190,6 +190,14 @@ export async function getTransactionSeries(level: Level, code: string): Promise<
     WHERE geo_level = ${level}::geo_level AND geo_code = ${code} AND property_type IS NULL AND typology IS NULL ORDER BY period`;
 }
 
+/** Latest registered-sales median (INE and any other transaction source) for a territory. */
+export async function getLatestTransaction(level: Level, code: string): Promise<{ period: string; ppm: number; source: string; isSeed: boolean } | null> {
+  const [r] = await sql<{ period: string; ppm: number; source: string; isSeed: boolean }[]>`
+    SELECT period::text, median_price_per_m2::float8 AS ppm, source, is_seed AS "isSeed" FROM transactions
+    WHERE geo_level = ${level}::geo_level AND geo_code = ${code} AND property_type IS NULL AND typology IS NULL ORDER BY period DESC LIMIT 1`;
+  return r ?? null;
+}
+
 /** Position of the zone among its siblings by asking €/m² (1 = most expensive) and how many siblings have an own-level value. */
 export async function getRank(zone: ZoneRef): Promise<{ rank: number; total: number } | null> {
   if (zone.level === "country") return null;

@@ -33,6 +33,7 @@ Login em desenvolvimento: peça a ligação em `/entrar`; chega ao Mailpit (ou a
 | `pnpm db:generate` | Gera migração a partir do esquema Drizzle |
 | `pnpm db:migrate` · `db:seed` · `db:reset` | Migrar (cria extensões) · semear · apagar o esquema |
 | `pnpm geo:fetch` | Regenera `data/geo/*` a partir da origem aberta |
+| `pnpm sources:sync` | Descarrega as fontes abertas reais (INE, BCE) para a base de dados |
 | `pnpm risk:import --file … --code …` | Importa uma camada de risco oficial em GeoJSON (ver [`docs/RISK_LAYERS.md`](docs/RISK_LAYERS.md)) |
 
 `SEED_PROPERTIES=2000 pnpm db:seed` muda o volume do seed.
@@ -58,6 +59,8 @@ Login em desenvolvimento: peça a ligação em `/entrar`; chega ao Mailpit (ou a
 - **Servidor MCP** `/api/mcp` (leitura) e auditoria de acessibilidade/desempenho — ver [`docs/QUALITY.md`](docs/QUALITY.md).
 
 **Fase 4 — Fecho ✅** valores fiscais confirmados por referência cruzada (IMT habitação própria, secundária e IMT Jovem 2026) e IRS sobre rendas corrigido, E2E em telemóvel (sem rolagem horizontal, navegação, mapa, calculadoras) e correção do desbordo da ficha do imóvel em ecrãs estreitos. Ver [`docs/FISCAL.md`](docs/FISCAL.md).
+
+**Fontes reais ✅ (parcial)** `pnpm sources:sync` liga o **INE** (mediana de vendas registadas por concelho, CC BY 4.0) e o **BCE** (Euribor mensal). Anúncios reais continuam a exigir feeds licenciados. Ver [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md).
 
 ## Documentação
 
