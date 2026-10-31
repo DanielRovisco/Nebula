@@ -57,6 +57,8 @@ Login em desenvolvimento: peça a ligação em `/entrar`; chega ao Mailpit (ou a
 - **Antifraude** (sinais explicáveis, quarentena para moderação) e **selo «verificado» com prova registada** (quem, como e quando).
 - **Servidor MCP** `/api/mcp` (leitura) e auditoria de acessibilidade/desempenho — ver [`docs/QUALITY.md`](docs/QUALITY.md).
 
+**Fase 4 — Fecho ✅** valores fiscais confirmados por referência cruzada (IMT habitação própria, secundária e IMT Jovem 2026) e IRS sobre rendas corrigido, E2E em telemóvel (sem rolagem horizontal, navegação, mapa, calculadoras) e correção do desbordo da ficha do imóvel em ecrãs estreitos. Ver [`docs/FISCAL.md`](docs/FISCAL.md).
+
 ## Documentação
 
 [`ARCHITECTURE`](docs/ARCHITECTURE.md) · [`DECISIONS`](docs/DECISIONS.md) · [`METHODOLOGY`](docs/METHODOLOGY.md) · [`DATA_SOURCES`](docs/DATA_SOURCES.md) · [`FISCAL`](docs/FISCAL.md) · [`LEGAL_CHECKLIST`](docs/LEGAL_CHECKLIST.md) · [`RISK_LAYERS`](docs/RISK_LAYERS.md) · [`QUALITY`](docs/QUALITY.md) · [`DEPLOY`](docs/DEPLOY.md) (inclui checklist de go-live)

@@ -1514,14 +1514,16 @@
     "netYearly": "Rendimento líquido anual",
     "grossYield": "Rendibilidade bruta",
     "netYield": "Rendibilidade líquida",
-    "rentNote": "Considera a taxa autónoma de IRS por duração do contrato. Pode optar por englobar. Sem financiamento.",
+    "rentNote": "Considera a taxa autónoma de IRS indicada. Pode optar por englobar. Sem financiamento.",
     "maxRatio": "Rácio máximo prestação/rendimento (%)",
     "maxRatioHint": "Os bancos usam tipicamente 35 % a 40 %.",
     "maxMonthly": "Prestação máxima",
     "maxLoan": "Crédito máximo",
     "maxPrice": "Preço máximo de compra",
     "affordNote": "Estimativa. O banco decide com base no seu perfil, na avaliação do imóvel e nos limites do Banco de Portugal.",
-    "disclaimer": "Estimativas informativas, sem valor de aconselhamento fiscal ou financeiro. Os valores fiscais vêm de tabelas na base de dados, cada uma com data de início e fonte. As que ainda não foram confirmadas na fonte oficial estão assinaladas."
+    "disclaimer": "Estimativas informativas, sem valor de aconselhamento fiscal ou financeiro. Os valores fiscais vêm de tabelas na base de dados, cada uma com data de início e fonte. As que ainda não foram confirmadas na fonte oficial estão assinaladas.",
+    "irsRate": "Taxa de IRS sobre rendas (%)",
+    "irsRateHint": "Taxa-base de 25 %. Reduções por duração do contrato e o regime de rendas moderadas podem aplicar-se: confirme no Portal das Finanças."
   },
   "fair": {
     "below": "Abaixo do preço de mercado",

@@ -60,3 +60,7 @@ Registo das decisões tomadas sem consultar o dono do projeto (regra 1). Formato
 48. **Dossiê PDF** conta para a quota «Relatórios PDF» do plano, tal como o relatório de avaliação.
 49. **Acessibilidade:** os gráficos Recharts deixam de ter a camada de acessibilidade própria (focável dentro de `aria-hidden`); a informação está nas tabelas e rótulos. O botão de idioma passa a ter nome acessível que contém o texto visível (WCAG 2.5.3).
 50. **Mapas carregados só quando ficam visíveis** (`IntersectionObserver`): em telemóvel, o mapa escondido da pesquisa e o mapa da ficha do imóvel não pagam o custo do MapLibre no arranque. O mapa de calor do observatório descarta pontos a menos de 0,6 px (HTML 540 → 399 KB).
+
+## Fase 4 (fecho)
+
+51. **Confirmação fiscal por referência cruzada, assumida como tal.** IMT de habitação própria, secundária e IMT Jovem passam a `verified_at` preenchido porque uma fonte reproduz o Ofício-Circulado 40129/2026 com as parcelas a abater e uma segunda fonte coincide em taxas e limites. A nota de cada linha diz «via», porque o PDF da AT não foi aberto. A tabela de IRS sobre rendas por duração do contrato foi **retirada** (estava escrita de memória e as fontes conflituam sobre o regime de 2026): fica a taxa-base de 25 % editável pelo utilizador.

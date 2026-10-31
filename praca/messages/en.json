@@ -1514,14 +1514,16 @@
     "netYearly": "Net yearly income",
     "grossYield": "Gross yield",
     "netYield": "Net yield",
-    "rentNote": "Uses the autonomous income tax rate by lease length. You may opt to aggregate. No financing.",
+    "rentNote": "Uses the autonomous income tax rate shown. You may opt to aggregate. No financing.",
     "maxRatio": "Maximum payment-to-income ratio (%)",
     "maxRatioHint": "Banks typically use 35 % to 40 %.",
     "maxMonthly": "Maximum payment",
     "maxLoan": "Maximum loan",
     "maxPrice": "Maximum purchase price",
     "affordNote": "Estimate. The bank decides from your profile, the property valuation and Banco de Portugal limits.",
-    "disclaimer": "Informational estimates, not tax or financial advice. Tax values come from database tables, each with a start date and source. Tables not yet confirmed against the official source are flagged."
+    "disclaimer": "Informational estimates, not tax or financial advice. Tax values come from database tables, each with a start date and source. Tables not yet confirmed against the official source are flagged.",
+    "irsRate": "Income tax rate on rent (%)",
+    "irsRateHint": "Base rate of 25 %. Reductions for lease length and the moderate-rent regime may apply: check the Portal das Finanças."
   },
   "fair": {
     "below": "Below market price",

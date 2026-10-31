@@ -24,16 +24,17 @@ VALUES ('imt','hpp_mainland','2027-01-01', '[{"upTo":108000,"rate":0,"deduction"
 ```
 Depois de verificar, preencher `verified_at` para a UI deixar de avisar "valor a confirmar".
 
-## Acrescentos da fase 3 (migração `0005_fiscal_phase3`)
-Todas as linhas novas têm `verified_at` nulo: a interface mostra «valor por confirmar» até alguém confirmar na fonte oficial.
+## Acrescentos da fase 3 e confirmação (migrações `0005` e `0009`)
 
-| Tabela | Conteúdo | Fonte consultada | Estado |
-| --- | --- | --- | --- |
-| `imt` / `secondary_mainland` | Tabela III do CIMT (habitação secundária, Continente), 2026: 1 % até 106 346 €; 2 % (parcela 1 063,46); 5 % (5 427,56); 7 % (9 394,50); 8 % até 633 931 € (12 699,89); 6 % até 1 150 853 €; 7,5 % acima | Ofício-Circulado AT n.º 40129/2026, transcrito de fontes secundárias (Santander, imprensa). O PDF oficial não foi aberto | **Por confirmar** |
-| `imt_jovem` / `mainland` | Isenção total até 330 539 €; entre esse valor e 660 982 € paga-se a taxa marginal só sobre o excesso | Imprensa e simuladores; texto legal não consultado | **Por confirmar** (limites e mecânica) |
-| `rent_irs` / `mainland` | Taxa autónoma sobre rendas por duração do contrato: 28 % (< 2 anos), 26 % (2–5), 23 % (5–10), 14 % (10–20), 10 % (≥ 20) | Memória do art. 72.º do CIRS; não verificada nesta sessão | **Por confirmar** |
+| Tabela | Conteúdo | Estado |
+| --- | --- | --- |
+| `imt` / `hpp_mainland` | Tabela I do Ofício-Circulado AT n.º 40129/2026 (6 jan 2026) | **Confirmada** (31 out 2026) em apcmc.pt, que reproduz a tabela com parcelas a abater, e em doutorfinancas.pt (taxas e limites). Os dois coincidem com a base de dados |
+| `imt` / `secondary_mainland` | Tabela III do mesmo ofício: 1 % até 106 346 €; 2 % (parcela 1 063,46); 5 % (5 427,56); 7 % (9 394,50); 8 % até 633 931 € (12 699,89); 6 % até 1 150 853 €; 7,5 % acima | **Confirmada**, mesmas fontes |
+| `imt_jovem` / `mainland` | Tabela II: isenção total até 330 539 €; entre 330 539 € e 660 982 € paga 8 % só sobre o excesso (equivale a `8 % × valor − 26 443,12`); acima, sem isenção | **Confirmada**, mesmas fontes |
+| `rent_irs` / `mainland` | Taxa autónoma de 25 % sobre rendas de arrendamento habitacional | **Por confirmar**. A tabela por duração do contrato (28/26/23/14/10 %) que a fase 3 trazia tinha sido escrita de memória e não se confirmou, por isso foi retirada. O OE2026 alterou o art. 72.º do CIRS (rendas moderadas a 10 %, condições por confirmar). A calculadora usa 25 % e deixa o utilizador alterar |
+| `imt` / `other_urban` (6,5 %), `stamp_duty_purchase` (0,8 %), `stamp_duty_credit` (0,6 %) | Valores da fase 1 | **Por confirmar** nesta sessão |
 
-A tabela de IMT de habitação própria e permanente que já existia (`hpp_mainland`, 106 346 € … 660 982 € … 1 150 853 €) coincide com a publicada no mesmo ofício-circulado, segundo as fontes consultadas.
+**Limite da confirmação:** o PDF do ofício-circulado da AT não pôde ser aberto a partir do servidor (o acesso a at.madeira.gov.pt falhou). A confirmação é por fontes que reproduzem o ofício e concordam entre si. Antes de lançar, comparar uma vez com o documento oficial no Portal das Finanças e, se houver diferença, corrigir com nova migração.
 
 ## Mais-valias (calculadora `/calculadoras`)
 Não há tabela de mais-valias na base de dados. O utilizador indica a **taxa marginal de IRS**, o **coeficiente de atualização** do ano de aquisição (portaria anual; 1 por omissão) e as despesas documentadas. O cálculo usa 50 % da mais-valia para residentes e 100 % para não residentes, e a exclusão por reinvestimento em habitação própria e permanente em proporção do valor reinvestido. As condições de reinvestimento mudaram em 2024 e 2026 (prazo de residência, reinvestimento em arrendamento) e **não estão modeladas**: a página remete para o Portal das Finanças ou um contabilista.

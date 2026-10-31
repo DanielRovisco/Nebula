@@ -183,7 +183,7 @@ export default async function PropertyPage({ params }: Props) {
               {[p.address, place].filter(Boolean).join(" · ")}
             </p>
           </div>
-          <div className="no-print flex items-center gap-2">
+          <div className="no-print flex flex-wrap items-center gap-2">
             <FavoriteButton propertyId={p.id} className="border border-border-strong" />
             <CompareToggle reference={p.reference} className="border border-border-strong" />
             <ShareButton title={l.title} copiedLabel={cm("copied")} label={cm("share")} />

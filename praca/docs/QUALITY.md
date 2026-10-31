@@ -7,6 +7,9 @@ O axe só apanha o que é automatizável (aprox. um terço dos critérios). Fica
 
 Correções feitas na auditoria: nome acessível do botão de idioma (2.5.3) e gráficos focáveis dentro de `aria-hidden`.
 
+## Telemóvel
+`e2e/mobile.spec.ts` (Pixel 7) verifica que 8 páginas não têm rolagem horizontal, que a navegação inferior funciona, que a pesquisa alterna lista/mapa e que as calculadoras e a pesquisa natural se usam com toque. Apanhou um desbordo real de 11 px na ficha do imóvel (a fila de botões não quebrava linha), já corrigido.
+
 ## Desempenho (Lighthouse 13.6.0, móvel simulado, build de produção local)
 Medido contra `next start` na mesma máquina, sem CDN e com CPU 4× mais lenta. **Valores de laboratório, não de utilizadores reais.** Use o Vercel Speed Insights ou o CrUX depois do lançamento.
 

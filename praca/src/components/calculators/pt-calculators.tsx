@@ -106,8 +106,9 @@ export function PtCalculators({ fiscal }: { fiscal: FiscalProps }) {
   const [condo, setCondo] = useState(600);
   const [ins, setIns] = useState(200);
   const [maint, setMaint] = useState(5);
-  const [lease, setLease] = useState(3);
-  const irsRate = rentIrsRate(lease, fiscal.rentIrs?.brackets ?? null);
+  // Base autonomous rate from the table; the household can override it (reductions and moderate-rent regimes are not modelled).
+  const [irsPct, setIrsPct] = useState(() => Math.round(rentIrsRate(0, fiscal.rentIrs?.brackets ?? null) * 1000) / 10);
+  const irsRate = irsPct / 100;
   const rr = useMemo(() => rentalReturn({ price: rPrice, monthlyRent: rent, vacancyMonths: vac, imiPct: imi, vptShare: vpt / 100, condoYearly: condo, insuranceYearly: ins, maintenancePct: maint, irsRate }), [rPrice, rent, vac, imi, vpt, condo, ins, maint, irsRate]);
 
   // --- Affordability
@@ -221,7 +222,7 @@ export function PtCalculators({ fiscal }: { fiscal: FiscalProps }) {
                 <Num id={`${uid}-rprice`} label={t("price")} value={rPrice} onChange={setRPrice} step={1000} />
                 <Num id={`${uid}-rent`} label={t("monthlyRent")} value={rent} onChange={setRent} step={25} />
                 <Num id={`${uid}-vac`} label={t("vacancy")} value={vac} onChange={(n) => setVac(Math.min(12, n))} step={0.5} max={12} />
-                <Num id={`${uid}-lease`} label={t("lease")} value={lease} onChange={setLease} step={1} />
+                <Num id={`${uid}-irs`} label={t("irsRate")} value={irsPct} onChange={(n) => setIrsPct(Math.min(50, n))} step={0.5} max={50} hint={t("irsRateHint")} />
                 <Num id={`${uid}-imi`} label={t("imiRate")} value={imi} onChange={setImi} step={0.05} hint={t("imiHint")} />
                 <Num id={`${uid}-vpt`} label={t("vpt")} value={vpt} onChange={setVpt} step={5} hint={t("vptHint")} />
                 <Num id={`${uid}-condo`} label={t("condo")} value={condo} onChange={setCondo} step={50} />
