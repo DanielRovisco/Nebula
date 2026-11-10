@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "skills": {
+    "roast": {
+      "source": "alirezarezvani/claude-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "productivity/roast/skills/roast/SKILL.md",
+      "computedHash": "f57078be463d61f41545bce2b79f795e0de75aebb7aeff6f6b3ee83196133972"
+    }
+  }
+}
