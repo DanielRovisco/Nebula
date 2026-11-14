@@ -1,0 +1,1 @@
+var e=e=>`nebula-pass-${e}`;function t(t,n){try{sessionStorage.setItem(e(t),n)}catch{}}function n(t){try{return sessionStorage.getItem(e(t))}catch{return null}}function r(e,t,n){return`${e}\n\nLink: ${t}\nPassword: ${n}`}function i(e,t){return`${e}\n\nLink: ${t}\n\nAbre direto, sem password. Guardem o link: quem o tiver, vê a galeria.`}export{i,n,r,t};
