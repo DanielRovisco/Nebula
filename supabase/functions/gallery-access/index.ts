@@ -1,12 +1,17 @@
 // Edge Function: único caminho pelo qual um cliente chega às fotos.
 //
-// Recebe slug + password, valida no Postgres (crypt), e só então devolve URLs
-// pré-assinados do R2, de curta duração. O bucket é privado, portanto sem
-// passar por aqui não há acesso a ficheiro nenhum — é isto que torna a proteção
-// real e não decorativa.
+// Recebe o código da galeria e uma prova de quem entra, valida no Postgres, e
+// só então devolve URLs pré-assinados do R2, de curta duração. O bucket é
+// privado, portanto sem passar por aqui não há acesso a ficheiro nenhum — é
+// isto que torna a proteção real e não decorativa.
+//
+// A prova é uma de duas, e a galeria decide qual no painel: a password que o
+// cliente escreve, ou o segredo que o link traz nas galerias abertas só com o
+// link. Nunca nenhuma: uma galeria sem password e sem segredo não abre.
 //
 // Deploy:  supabase functions deploy gallery-access --no-verify-jwt
-// (--no-verify-jwt porque o cliente é anónimo; a autorização é a password.)
+// (--no-verify-jwt porque o cliente é anónimo; a autorização é a password ou o
+// segredo do link.)
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { cors, json, presign, presignDownload } from '../_shared/r2.ts'
@@ -30,15 +35,18 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
 
-  let slug: string, password: string
+  let slug: string, password: string, token: string
   try {
     const body = await req.json()
     slug = String(body.slug ?? '').trim().toLowerCase()
     password = String(body.password ?? '')
+    token = String(body.token ?? '')
   } catch {
     return json({ error: 'bad_request' }, 400)
   }
-  if (!slug || !password) return json({ error: 'missing_fields' }, 400)
+  // Uma das duas, e pelo menos uma. Sem isto, um pedido sem nada chegava à
+  // base de dados a perguntar se existe uma galeria com password vazia.
+  if (!slug || (!password && !token)) return json({ error: 'missing_fields' }, 400)
 
   const admin = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -46,12 +54,19 @@ Deno.serve(async (req) => {
     { auth: { persistSession: false } },
   )
 
-  const { data: rows, error } = await admin.rpc('verify_gallery_password', {
-    p_slug: slug,
-    p_password: password,
-  })
+  /*
+    O segredo do link tem precedência quando vem.
+
+    As duas funções devolvem as mesmas colunas e aplicam as mesmas regras de
+    publicação e de prazo; muda só o que serve de prova. A password nunca é
+    tentada com o segredo e vice-versa, para uma galeria com password não poder
+    ser aberta por um link inventado nem o contrário.
+  */
+  const { data: rows, error } = token
+    ? await admin.rpc('verify_gallery_open', { p_slug: slug, p_token: token })
+    : await admin.rpc('verify_gallery_password', { p_slug: slug, p_password: password })
   if (error) {
-    console.error('verify_gallery_password', error)
+    console.error(token ? 'verify_gallery_open' : 'verify_gallery_password', error)
     return json({ error: 'server_error' }, 500)
   }
 

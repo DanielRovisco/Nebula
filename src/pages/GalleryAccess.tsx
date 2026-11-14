@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Lock } from 'lucide-react'
 import Seo from '../lib/Seo'
@@ -19,11 +19,41 @@ export default function GalleryAccess() {
   const [slug, setSlug] = useState(slugParam ?? '')
   const [password, setPassword] = useState('')
   const [status, setStatus] = useState<'idle' | 'checking' | 'error' | 'server'>('idle')
+  const [params] = useSearchParams()
+  const segredo = params.get('k')
 
   // Se o acesso ainda estiver válido nesta sessão, entra direto.
   useEffect(() => {
     if (slugParam && loadSession(slugParam)) navigate(`/galeria/${slugParam}/ver`, { replace: true })
   }, [slugParam, navigate])
+
+  /*
+    Galerias abertas só com o link: o segredo vem no endereço e ninguém escreve
+    nada.
+
+    Entra-se e troca-se o endereço pelo da galeria, sem o segredo à vista. Um
+    link com um segredo dentro não deve ficar na barra de um computador
+    emprestado nem ser copiado de lá sem se dar conta do que leva.
+
+    Falhar aqui não é um beco: o segredo pode ter sido trocado no painel, e aí
+    mostra-se o formulário da password como em qualquer outra galeria.
+  */
+  useEffect(() => {
+    if (!slugParam || !segredo || loadSession(slugParam)) return
+    const codigo = slugParam.toLowerCase()
+    let vivo = true
+    api
+      .access(codigo, '', segredo)
+      .then((access) => {
+        if (!vivo) return
+        saveSession(codigo, access)
+        navigate(`${ROUTES.gallery[lang]}/${codigo}/${GALLERY_VIEW[lang]}`, { replace: true })
+      })
+      .catch(() => {})
+    return () => {
+      vivo = false
+    }
+  }, [slugParam, segredo, navigate, lang])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()

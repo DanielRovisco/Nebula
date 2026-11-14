@@ -40,7 +40,7 @@ function seed(): DemoState {
       published: true,
       downloadEnabled: true,
       lockAttempts: true,
-      expiresAt: null, ordem: 'data',
+      expiresAt: null, ordem: 'data', openToken: null,
       createdAt: new Date(Date.now() - 864e5 * 3).toISOString(),
       password: 'demo',
     },
@@ -58,7 +58,7 @@ function seed(): DemoState {
       published: false,
       downloadEnabled: true,
       lockAttempts: true,
-      expiresAt: null, ordem: 'data',
+      expiresAt: null, ordem: 'data', openToken: null,
       createdAt: new Date(Date.now() - 864e5 * 12).toISOString(),
       password: 'demo',
     },
@@ -199,6 +199,7 @@ export const demoApi = {
       lockAttempts: input.lockAttempts ?? true,
       expiresAt: input.expiresAt ?? null,
       ordem: 'data' as const,
+      openToken: null,
       createdAt: new Date().toISOString(),
       password: input.password,
     }
@@ -396,10 +397,22 @@ export const demoApi = {
     save(s)
   },
 
-  async access(slug: string, password: string): Promise<GalleryAccess> {
+  /* Na demonstração o segredo do link é guardado em claro: não protege nada. */
+  async acessoLivre(galleryId: string, ligar: boolean): Promise<string | null> {
+    await wait(150)
+    const s = load()
+    const g = s.galleries.find((x) => x.id === galleryId)
+    if (!g) return null
+    g.openToken = ligar ? `demo-${Math.random().toString(36).slice(2)}${Date.now()}` : null
+    save(s)
+    return g.openToken
+  },
+
+  async access(slug: string, password: string, token?: string): Promise<GalleryAccess> {
     await wait(500)
     const s = load()
-    const g = s.galleries.find((x) => x.slug === slug && x.published && x.password === password)
+    const g = s.galleries.find((x) => x.slug === slug && x.published
+      && (token ? x.openToken === token : x.password === password))
     if (!g) throw new Error('invalid_credentials')
 
     s.events.unshift({

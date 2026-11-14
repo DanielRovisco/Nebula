@@ -81,7 +81,24 @@ alter table galleries
     no momento de publicar: sem isto, escolher "origem" e carregar em publicar
     a seguir voltava a arrumar tudo, e o botão parecia não servir para nada.
   */
-  add column if not exists ordem text not null default 'data';
+  add column if not exists ordem text not null default 'data',
+  /*
+    A chave que abre a galeria sem password.
+
+    Nula quando a galeria pede password, que é como todas nascem. Quando o
+    painel desliga a password, escreve-se aqui um segredo longo e a entrega
+    passa a ser um link com ele dentro.
+
+    Porquê um segredo no link e não simplesmente deixar entrar quem conhece o
+    endereço: o endereço é o nome do casal. `/galeria/ana-e-tiago` adivinha-se, e
+    uma galeria de casamento aberta a quem adivinha o nome não é uma galeria
+    privada. Assim continua a haver um segredo, só que é o link que o carrega em
+    vez de a pessoa o ter de escrever.
+  */
+  add column if not exists open_token text;
+
+create unique index if not exists galleries_open_token_idx
+  on galleries (open_token) where open_token is not null;
 
 alter table photos
   -- Distingue foto de vídeo sem depender da extensão do nome do ficheiro.
@@ -483,7 +500,7 @@ drop view if exists galleries_admin;
 create view galleries_admin with (security_invoker = true) as
   select id, slug, title, client_name, message, cover_path, cover_photo_id,
          cover_title, cover_font, logo_variant, published, download_enabled,
-         lock_attempts, expires_at, ordem, created_at, updated_at
+         lock_attempts, expires_at, ordem, open_token, created_at, updated_at
   from galleries;
 
 revoke all on galleries_admin from anon;
@@ -577,6 +594,95 @@ begin
 end $$;
 
 revoke all on function verify_gallery_password(text, text) from public, anon, authenticated;
+
+-- ─── Entrar sem password ────────────────────────────────────────────────────
+--
+-- A mesma coisa que a função acima, para as galerias que o painel abriu só com
+-- o link. O que autoriza deixa de ser o que a pessoa escreve e passa a ser o
+-- segredo que o link traz.
+--
+-- Devolve exactamente as mesmas colunas, e aplica exactamente as mesmas regras
+-- de publicação e de prazo. A única coisa que muda é como se prova quem entra.
+--
+-- Sem o travão das dez tentativas, e isto é de propósito. O travão existe para
+-- quem anda a adivinhar uma password de dez caracteres; adivinhar este segredo
+-- é procurar entre 2^144 hipóteses, o que não acontece. Mantê-lo aqui seria dar
+-- a qualquer pessoa com o link uma maneira de trancar a galeria do casal: bastava
+-- pedi-la dez vezes com o segredo trocado.
+create or replace function verify_gallery_open(p_slug text, p_token text)
+returns table (
+  id uuid,
+  slug text,
+  title text,
+  client_name text,
+  message text,
+  download_enabled boolean,
+  cover_photo_id uuid,
+  cover_title text,
+  cover_font text,
+  logo_variant text,
+  expires_at timestamptz
+) language plpgsql security definer
+  set search_path = public, extensions as $$
+begin
+  -- Um segredo curto de mais nunca é válido, mesmo que calhasse estar gravado
+  -- numa linha: protege contra uma coluna preenchida à mão com um valor fraco.
+  if length(coalesce(p_token, '')) < 20 then
+    return;
+  end if;
+
+  return query
+  select g.id, g.slug, g.title, g.client_name, g.message, g.download_enabled,
+         g.cover_photo_id, g.cover_title, g.cover_font, g.logo_variant,
+         g.expires_at
+  from galleries g
+  where lower(g.slug) = lower(p_slug)
+    and g.published = true
+    and (g.expires_at is null or g.expires_at > now())
+    and g.open_token is not null
+    and g.open_token = p_token;
+
+  insert into access_attempts (slug, ok) values (p_slug, found);
+end $$;
+
+revoke all on function verify_gallery_open(text, text) from public, anon, authenticated;
+grant execute on function verify_gallery_open(text, text) to service_role;
+
+/*
+  Ligar e desligar a entrada sem password.
+
+  Vive na base de dados e não no painel porque é aqui que está o gerador de
+  aleatório a sério. Dezoito bytes em base64 dão vinte e quatro caracteres; em
+  URL seguro, porque isto vai dentro de um endereço que o cliente recebe por
+  mensagem e que tem de sobreviver a ser copiado.
+
+  Ligar duas vezes gera um segredo novo, e isso é a maneira de retirar o acesso
+  a um link que já saiu de casa.
+*/
+create or replace function definir_acesso_livre(p_gallery uuid, p_ligar boolean)
+returns text
+language plpgsql
+set search_path = public, extensions
+as $$
+declare
+  novo text;
+begin
+  if not is_admin() then
+    raise exception 'sem permissão para mudar o acesso desta galeria';
+  end if;
+
+  if not p_ligar then
+    update galleries set open_token = null where id = p_gallery;
+    return null;
+  end if;
+
+  novo := translate(encode(gen_random_bytes(18), 'base64'), '+/=', '-_');
+  update galleries set open_token = novo where id = p_gallery;
+  return novo;
+end $$;
+
+revoke all on function definir_acesso_livre(uuid, boolean) from public, anon;
+grant execute on function definir_acesso_livre(uuid, boolean) to authenticated;
 grant execute on function verify_gallery_password(text, text) to service_role;
 
 -- ─── Registo de atividade ───────────────────────────────────────────────────

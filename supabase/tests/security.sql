@@ -261,6 +261,78 @@ select '26. anon nao pode arrumar: ' ||
   case when has_function_privilege('anon', 'arrumar_galeria(uuid, text)', 'EXECUTE')
        then 'NAO' else 'SIM' end;
 
+-- ═══ Entrar sem password ════════════════════════════════════════════════════
+--
+-- A galeria aberta só com o link continua a ter um segredo: ele viaja no link
+-- em vez de ser escrito pela pessoa. Estes testes são sobre esse segredo valer
+-- o mesmo que uma password, e sobre as outras regras não se perderem pelo
+-- caminho.
+
+delete from galleries where slug = 'aberta';
+insert into galleries (slug, title, password_hash, published)
+values ('aberta', 'Aberta', 'x', true);
+
+select '39. ligar devolve um segredo com tamanho a sério: ' ||
+  case when length(definir_acesso_livre(
+         (select id from galleries where slug='aberta'), true)) >= 24
+       then 'SIM' else 'NAO' end;
+
+select '40. o segredo certo abre a galeria: ' ||
+  case when (select count(*) from verify_gallery_open(
+               'aberta', (select open_token from galleries where slug='aberta'))) = 1
+       then 'SIM' else 'NAO' end;
+
+select '41. um segredo trocado nao abre: ' ||
+  case when (select count(*) from verify_gallery_open('aberta', 'nao-e-este-segredo-nada')) = 0
+       then 'SIM' else 'NAO' end;
+
+select '42. um segredo curto nao abre: ' ||
+  case when (select count(*) from verify_gallery_open('aberta', 'curto')) = 0
+       then 'SIM' else 'NAO' end;
+
+-- Uma galeria que pede password não abre por aqui, mesmo com o token vazio ou
+-- com o que quer que seja: o `open_token` dela é nulo.
+select '43. galeria com password nao abre sem ela: ' ||
+  case when (select count(*) from verify_gallery_open('teste', 'qualquer-coisa-comprida-aqui')) = 0
+       then 'SIM' else 'NAO' end;
+
+update galleries set published = false where slug='aberta';
+select '44. por publicar nao abre nem com o segredo: ' ||
+  case when (select count(*) from verify_gallery_open(
+               'aberta', (select open_token from galleries where slug='aberta'))) = 0
+       then 'SIM' else 'NAO' end;
+
+update galleries set published = true, expires_at = now() - interval '1 day' where slug='aberta';
+select '45. expirada nao abre nem com o segredo: ' ||
+  case when (select count(*) from verify_gallery_open(
+               'aberta', (select open_token from galleries where slug='aberta'))) = 0
+       then 'SIM' else 'NAO' end;
+update galleries set expires_at = null where slug='aberta';
+
+-- Voltar a ligar troca o segredo. É assim que se retira o acesso a um link que
+-- já saiu de casa.
+select '46. ligar outra vez troca o segredo: ' ||
+  case when (select open_token from galleries where slug='aberta')
+            <> definir_acesso_livre((select id from galleries where slug='aberta'), true)
+       then 'SIM' else 'NAO' end;
+
+select definir_acesso_livre((select id from galleries where slug='aberta'), false);
+select '47. desligar apaga o segredo: ' ||
+  case when (select open_token from galleries where slug='aberta') is null
+       then 'SIM' else 'NAO' end;
+
+select '48. anon nao pode abrir nem ligar: ' ||
+  case when has_function_privilege('anon','verify_gallery_open(text, text)','execute') = false
+        and has_function_privilege('anon','definir_acesso_livre(uuid, boolean)','execute') = false
+       then 'SIM' else 'NAO' end;
+
+select '49. so o service_role abre: ' ||
+  case when has_function_privilege('service_role','verify_gallery_open(text, text)','execute')
+        and has_function_privilege('authenticated','verify_gallery_open(text, text)','execute') = false
+       then 'SIM' else 'NAO' end;
+
+delete from galleries where slug = 'aberta';
+
 -- ═══ Histórias: o que é público e o que não é ════════════════════════════════
 --
 -- A regra que interessa é a dos blocos. Uma história por publicar não se lê, e

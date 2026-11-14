@@ -134,6 +134,7 @@ const rowToGallery = (r: Record<string, unknown>): Gallery => ({
   lockAttempts: r.lock_attempts === undefined ? true : Boolean(r.lock_attempts),
   expiresAt: (r.expires_at as string) ?? null,
   ordem: ((r.ordem as string) ?? 'data') as Gallery['ordem'],
+  openToken: (r.open_token as string) ?? null,
   createdAt: r.created_at as string,
 })
 
@@ -743,6 +744,21 @@ const realApi = {
    * Passa pela Edge Function porque as credenciais do R2 nunca chegam ao
    * browser — nem ao do admin.
    */
+  /**
+   * Liga ou desliga a entrada sem password, e devolve o segredo quando liga.
+   *
+   * Ligar duas vezes gera um segredo novo, e é assim que se retira o acesso a
+   * um link que já saiu de casa: o antigo deixa de abrir no mesmo instante.
+   */
+  async acessoLivre(galleryId: string, ligar: boolean): Promise<string | null> {
+    const { data, error } = await supabase().rpc('definir_acesso_livre', {
+      p_gallery: galleryId,
+      p_ligar: ligar,
+    })
+    if (error) throw new Error(error.message)
+    return (data as string) ?? null
+  },
+
   async readUrls(keys: string[], nomes?: string[]): Promise<string[]> {
     if (keys.length === 0) return []
     /*
@@ -828,7 +844,13 @@ const realApi = {
     if (!res.ok) throw new Error('favorite_failed')
   },
 
-  async access(slug: string, password: string): Promise<GalleryAccess> {
+  /**
+   * Entrar numa galeria: com a password, ou com o segredo que o link traz.
+   *
+   * Um dos dois, nunca os dois. Quem entra por link não escreve nada; quem
+   * entra por password não tem segredo nenhum no endereço.
+   */
+  async access(slug: string, password: string, token?: string): Promise<GalleryAccess> {
     const res = await fetch(functionsUrl('gallery-access'), {
       method: 'POST',
       headers: {
@@ -838,7 +860,7 @@ const realApi = {
         apikey: anonKey(),
         Authorization: `Bearer ${anonKey()}`,
       },
-      body: JSON.stringify({ slug, password }),
+      body: JSON.stringify(token ? { slug, token } : { slug, password }),
     })
     if (!res.ok) {
       const body = await res.json().catch(() => ({}))

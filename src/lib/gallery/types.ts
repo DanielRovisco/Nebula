@@ -27,6 +27,11 @@ export interface Gallery {
    * vieram da máquina. É isto que manda no momento de publicar.
    */
   ordem: OrdemDaGaleria
+  /**
+   * O segredo que abre a galeria sem password, quando ela está aberta só com o
+   * link. Nulo quando ela pede password, que é como todas nascem.
+   */
+  openToken: string | null
   createdAt: string
   photoCount?: number
 }

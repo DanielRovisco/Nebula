@@ -16,7 +16,9 @@ import {
   isVideo, type CoverFont, type LogoVariant, type OrdemDaGaleria,
 } from '../../lib/gallery/types'
 import { slugify } from '../../lib/gallery/helpers'
-import { guardarPassword, lerPassword, mensagemDePartilha } from '../../lib/gallery/partilha'
+import {
+  guardarPassword, lerPassword, mensagemDePartilha, mensagemSemPassword,
+} from '../../lib/gallery/partilha'
 import { nomeDaCopiaLeve } from '../../lib/gallery/download'
 import ProvaDeVideo from './ProvaDeVideo'
 import GalleryActivity from './GalleryActivity'
@@ -626,7 +628,16 @@ export default function GalleryEditor() {
 
   const field =
     'w-full bg-transparent border-b border-white/15 py-2.5 outline-none focus:border-titanium/60 transition-colors placeholder:text-titanium/25'
+  /*
+    O link que se entrega.
+
+    Com a galeria aberta só com o link, o segredo viaja nele: é ele que faz de
+    password. Sem isso o endereço é o nome do casal e qualquer pessoa que o
+    adivinhe entrava.
+  */
+  const semPassword = Boolean(gallery.openToken)
   const link = `${SITE_URL}/galeria/${gallery.slug}`
+  const linkParaCliente = semPassword ? `${link}?k=${gallery.openToken}` : link
 
   async function copiar(password: string) {
     try {
@@ -679,9 +690,63 @@ export default function GalleryEditor() {
   }
 
   function copiarParaCliente() {
+    // Aberta só com o link não há password para pedir nem para guardar: o que
+    // se copia é o link com o segredo lá dentro.
+    if (gallery?.openToken) {
+      void copiarSemPassword()
+      return
+    }
     const guardada = lerPassword(gallery!.id)
     if (guardada) void copiar(guardada)
     else setPedirPassword(true)
+  }
+
+  async function copiarSemPassword() {
+    try {
+      await navigator.clipboard.writeText(mensagemSemPassword(gallery!.title, linkParaCliente))
+      const arrumadas = await aplicarOrdem(gallery!.ordem)
+      await load()
+      if (!gallery!.published) {
+        try {
+          setGallery(await api.updateGallery(gallery!.id, { published: true }))
+          setCopiado(`Copiado e galeria publicada.${arrumadas ? ` ${arrumadas}` : ''}`)
+        } catch {
+          setCopiado(null)
+          setError('Copiado, mas não consegui publicar a galeria. Publica no botão acima antes de enviares.')
+          return
+        }
+      } else {
+        setCopiado(`Copiado.${arrumadas ? ` ${arrumadas}` : ''}`)
+      }
+      setTimeout(() => setCopiado(null), 6000)
+    } catch {
+      setError('O browser não deixou copiar. Copia à mão o link.')
+    }
+  }
+
+  /**
+   * Liga e desliga a entrada sem password.
+   *
+   * Ligar outra vez numa galeria que já está aberta gera um segredo novo, e o
+   * link antigo deixa de abrir. É assim que se retira o acesso a um link que
+   * foi parar ao sítio errado.
+   */
+  async function trocarAcessoLivre(ligar: boolean) {
+    if (!gallery) return
+    if (ligar && !window.confirm(
+      'A galeria passa a abrir a quem tiver o link, sem password. Continuar?',
+    )) return
+    setSaving(true)
+    setError(null)
+    try {
+      await api.acessoLivre(gallery.id, ligar)
+      await load()
+      flash(ligar ? 'Abre com o link. Copia-o aqui em cima.' : 'Volta a pedir password.')
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setSaving(false)
+    }
   }
 
   function confirmarCopia() {
@@ -721,11 +786,13 @@ export default function GalleryEditor() {
           </button>
         </div>
       </div>
-      <p className="text-xs text-titanium/40 break-all mb-2">{link}</p>
+      <p className="text-xs text-titanium/40 break-all mb-2">{linkParaCliente}</p>
       <p className="text-xs text-titanium/30 mb-4">
-        {gallery.published
-          ? 'Está acessível a quem tiver o link e a password.'
-          : 'Em rascunho. Não abre a ninguém, nem com a password certa.'}
+        {!gallery.published
+          ? 'Em rascunho. Não abre a ninguém, nem com a password certa.'
+          : semPassword
+            ? 'Abre a quem tiver este link, sem password. O link é a chave.'
+            : 'Está acessível a quem tiver o link e a password.'}
       </p>
 
       {/*
@@ -1324,9 +1391,53 @@ export default function GalleryEditor() {
       {/* ── Password ────────────────────────────────────────── */}
       <section className="mb-14 max-w-2xl">
         <h2 className="text-xl mb-2">Password</h2>
+
+        {/*
+          Abrir sem password não é abrir a toda a gente.
+
+          O endereço de uma galeria é o nome do casal, e isso adivinha-se. Ao
+          desligar a password, o link passa a levar um segredo longo: continua a
+          haver uma chave, só que viaja no link em vez de ser escrita. É por isso
+          que o texto aqui em baixo insiste em que o link é a chave — quem o
+          reencaminha está a dar a galeria, e isso não é óbvio para quem está
+          habituado a escrever uma password.
+        */}
+        <label className="flex items-start gap-3 mb-6 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={semPassword}
+            onChange={(e) => trocarAcessoLivre(e.target.checked)}
+            disabled={saving}
+            className="w-4 h-4 accent-[#fcfff0] mt-0.5"
+          />
+          <span className="text-sm text-titanium/70">
+            Abrir só com o link, sem password
+            <span className="block text-xs text-titanium/40 mt-1">
+              {semPassword
+                ? 'O link que está lá em cima leva a chave. Quem o tiver, vê a galeria: não o ponhas num sítio público.'
+                : 'O cliente escreve a password. É o mais seguro, e é assim que todas nascem.'}
+            </span>
+          </span>
+        </label>
+
+        {semPassword && (
+          <button
+            onClick={() => trocarAcessoLivre(true)}
+            disabled={saving}
+            className="text-[10px] uppercase tracking-[0.15em] text-titanium/45 hover:text-titanium/80 transition-colors px-3 py-2 -ml-3 mb-6 block disabled:opacity-40"
+          >
+            Trocar o link
+            <span className="block normal-case tracking-normal text-xs text-titanium/35 mt-1 max-w-md">
+              Gera um link novo e o antigo deixa de abrir. É isto que se faz
+              quando um link foi parar ao sítio errado.
+            </span>
+          </button>
+        )}
+
         <p className="text-xs text-titanium/35 mb-5 leading-relaxed">
           A password atual não pode ser lida: está guardada cifrada. Se o
           cliente a perder, define uma nova aqui.
+          {semPassword && ' Ela continua a funcionar se voltares a ligar a password.'}
         </p>
         <div className="flex items-end gap-3 flex-wrap">
           <div className="flex-1 min-w-[200px]">

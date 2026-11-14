@@ -38,3 +38,15 @@ export function lerPassword(galeriaId: string): string | null {
 export function mensagemDePartilha(titulo: string, link: string, password: string) {
   return `${titulo}\n\nLink: ${link}\nPassword: ${password}`
 }
+
+/**
+ * A mesma mensagem, para uma galeria que abre só com o link.
+ *
+ * Sem linha de password, e com um aviso curto sobre o que o link é. Quem recebe
+ * isto tem de perceber que o link é a chave: reencaminhá-lo é dar a galeria a
+ * quem o receber, e isso não é óbvio para quem está habituado a password.
+ */
+export function mensagemSemPassword(titulo: string, link: string) {
+  return `${titulo}\n\nLink: ${link}\n\n`
+    + 'Abre direto, sem password. Guardem o link: quem o tiver, vê a galeria.'
+}
