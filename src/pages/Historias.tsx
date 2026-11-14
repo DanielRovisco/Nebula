@@ -54,7 +54,7 @@ export default function Historias() {
       {historias === null ? (
         <div className="min-h-[40vh]" />
       ) : historias.length === 0 ? (
-        <p className="container-px text-titanium/40 min-h-[30vh]">{t.stories.empty}</p>
+        <p className="container-px text-titanium/55 min-h-[30vh]">{t.stories.empty}</p>
       ) : (
         <div className="space-y-20 sm:space-y-32 pb-24 sm:pb-40">
           {historias.map((h) => (
@@ -108,7 +108,7 @@ export default function Historias() {
             </h2>
           </Reveal>
           <Reveal delay={0.1}>
-            <p className="text-titanium/45 mb-10">{t.stories.ctaBody}</p>
+            <p className="text-titanium/60 mb-10">{t.stories.ctaBody}</p>
           </Reveal>
           <Reveal delay={0.2}>
             <Link

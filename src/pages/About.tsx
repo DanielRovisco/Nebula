@@ -71,7 +71,7 @@ export default function About() {
           </p>
           <Link
             to={link('contact')}
-            className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-titanium/55 border-b border-titanium/25 pb-1 hover:border-titanium/55 hover:text-titanium/85 transition-all w-fit"
+            className="link-sublinhado"
           >
             {t.about.contactLink} <ArrowRight size={12} />
           </Link>

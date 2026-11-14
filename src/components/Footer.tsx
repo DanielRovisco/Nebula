@@ -30,7 +30,7 @@ export default function Footer() {
             href={CONTACT.instagram}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 mt-5 text-titanium/55 hover:text-titanium/70 transition-colors text-xs"
+            className="alvo-toque inline-flex items-center gap-2 mt-5 text-titanium/55 hover:text-titanium transition-colors text-xs"
           >
             <InstagramIcon size={14} />
             {CONTACT.instagramHandle}
@@ -39,12 +39,17 @@ export default function Footer() {
 
         <div>
           <h2 className="label-sm mb-5">{t.footer.navLabel}</h2>
+          {/*
+            No telemóvel cada link ocupa 44px de altura, que é o alvo mínimo
+            para um dedo, também no tablet; a partir do lg, com rato, volta à lista
+            apertada.
+          */}
           <ul className="flex flex-col gap-0.5 text-sm">
             {NAV.map((n) => (
               <li key={n.to}>
                 <Link
                   to={n.to}
-                  className="inline-block py-1.5 text-titanium/60 hover:text-titanium transition-colors"
+                  className="inline-block py-3 lg:py-1.5 text-titanium/60 hover:text-titanium transition-colors"
                 >
                   {n.label}
                 </Link>
@@ -64,7 +69,7 @@ export default function Footer() {
               */}
               <a
                 href={`mailto:${CONTACT.email}`}
-                className="flex items-start gap-2 py-1.5 text-titanium/60 hover:text-titanium transition-colors break-all"
+                className="flex items-start gap-2 py-3 lg:py-1.5 text-titanium/60 hover:text-titanium transition-colors break-all"
               >
                 <Mail size={14} className="shrink-0 mt-1" />
                 {CONTACT.email}
@@ -75,7 +80,7 @@ export default function Footer() {
                 href={CONTACT.instagramDm}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 py-1.5 text-titanium/60 hover:text-titanium transition-colors"
+                className="inline-flex items-center gap-2 py-3 lg:py-1.5 text-titanium/60 hover:text-titanium transition-colors"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
@@ -92,7 +97,7 @@ export default function Footer() {
       <div className="container-px mt-12 pt-6 border-t border-white/[0.08] flex flex-col sm:flex-row justify-between gap-2 text-xs text-titanium/55">
         <span>&copy; {new Date().getFullYear()} NEBULA. {t.footer.rights}</span>
         <div className="flex items-center gap-4">
-          <Link to={link('privacy')} className="hover:text-titanium/60 transition-colors">
+          <Link to={link('privacy')} className="alvo-toque hover:text-titanium transition-colors">
             {t.footer.privacy}
           </Link>
           <span>{t.footer.trade}</span>

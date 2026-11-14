@@ -502,12 +502,12 @@ export default function Services() {
                 // contar como uma paragem e não como quatro.
                 tabIndex={activa ? 0 : -1}
                 className={`relative z-10 min-w-0 shrink-0 sm:shrink sm:flex-1 px-2 sm:px-5 py-4 min-h-[48px] text-center sm:text-left transition-colors duration-500 ${
-                  activa ? 'text-titanium' : 'text-titanium/40 hover:text-titanium/80'
+                  activa ? 'text-titanium' : 'text-titanium/55 hover:text-titanium/85'
                 }`}
               >
                 <span
                   className="block truncate uppercase tracking-[0.03em] sm:tracking-[0.14em]"
-                  style={{ fontSize: 'clamp(0.6rem, 1.1vw, 0.75rem)' }}
+                  style={{ fontSize: 'clamp(0.65rem, 1.1vw, 0.75rem)' }}
                 >
                   {t.home.services[c.id].title}
                 </span>
@@ -590,7 +590,7 @@ export default function Services() {
                 {cat.portfolio && (
                   <Link
                     to={`${link('portfolio')}#${cat.portfolio}`}
-                    className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all min-h-[44px]"
+                    className="link-sublinhado"
                   >
                     {t.services.seeWork} <ArrowUpRight size={13} />
                   </Link>
@@ -678,7 +678,7 @@ export default function Services() {
                   <Pontos itens={t.services.convidados.pontos} />
                   <Link
                     to={pedido()}
-                    className="mt-8 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all min-h-[44px]"
+                    className="mt-8 link-sublinhado"
                   >
                     {t.services.convidados.cta} <ArrowUpRight size={13} />
                   </Link>
@@ -703,7 +703,7 @@ export default function Services() {
                 <div className="h-full border border-white/10 rounded-2xl p-6 sm:p-7 flex flex-col transition-[transform,border-color,background-color] duration-500 hover:border-white/25 hover:bg-white/[0.02] hover:-translate-y-1.5">
                   <h3 className="text-xl mb-4">{t.services.packs[pack.name]}</h3>
                   {'herda' in pack && (
-                    <p className="text-sm text-titanium/45 mb-3 leading-snug">
+                    <p className="text-sm text-titanium/55 mb-3 leading-snug">
                       {t.services.inheritsFrom(t.services.packs[pack.herda])}
                     </p>
                   )}
@@ -720,7 +720,7 @@ export default function Services() {
                   </ul>
                   <Link
                     to={pedido(pack.name)}
-                    className="mt-6 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-titanium/50 border-b border-titanium/25 pb-1 hover:border-titanium/60 hover:text-titanium/80 transition-all w-fit min-h-[44px]"
+                    className="mt-6 link-sublinhado"
                   >
                     {t.common.requestProposal} <ArrowRight size={12} />
                   </Link>

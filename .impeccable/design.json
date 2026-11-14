@@ -1,0 +1,325 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-29T19:55:20.478297+00:00",
+  "title": "Design System: NEBULA",
+  "extensions": {
+    "colorMeta": {
+      "eerie": {
+        "role": "neutral",
+        "displayName": "Eerie",
+        "canonical": "#141414",
+        "tonalRamp": [
+          "#0a0a0a",
+          "#141414",
+          "#1f1f1f",
+          "#2a2a2a",
+          "#3d3d3d",
+          "#5c5c5c",
+          "#8a8a8a",
+          "#bdbdbd"
+        ]
+      },
+      "titanium": {
+        "role": "primary",
+        "displayName": "Titanium",
+        "canonical": "#fcfff0",
+        "tonalRamp": [
+          "rgba(252,255,240,0.1)",
+          "rgba(252,255,240,0.25)",
+          "rgba(252,255,240,0.45)",
+          "rgba(252,255,240,0.55)",
+          "rgba(252,255,240,0.6)",
+          "rgba(252,255,240,0.8)",
+          "rgba(252,255,240,0.92)",
+          "#fcfff0"
+        ]
+      },
+      "gray": {
+        "role": "neutral",
+        "displayName": "Gray",
+        "canonical": "#8a8a8a"
+      },
+      "gray-dark": {
+        "role": "neutral",
+        "displayName": "Gray Dark",
+        "canonical": "#2a2a2a"
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Fio",
+        "canonical": "rgba(252,255,240,0.1)"
+      },
+      "border-soft": {
+        "role": "neutral",
+        "displayName": "Contorno em repouso",
+        "canonical": "rgba(255,255,255,0.1)"
+      },
+      "border-strong": {
+        "role": "neutral",
+        "displayName": "Contorno de botão fantasma",
+        "canonical": "rgba(255,255,255,0.2)"
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Texto secundário",
+        "canonical": "rgba(252,255,240,0.6)"
+      },
+      "text-label": {
+        "role": "neutral",
+        "displayName": "Etiqueta",
+        "canonical": "rgba(252,255,240,0.55)"
+      },
+      "warning": {
+        "role": "status",
+        "displayName": "Aviso (amber-300)",
+        "canonical": "#fcd34d"
+      },
+      "danger": {
+        "role": "status",
+        "displayName": "Perigo (red-300)",
+        "canonical": "#fca5a5"
+      },
+      "success": {
+        "role": "status",
+        "displayName": "Sucesso (emerald-300)",
+        "canonical": "#6ee7b7"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hero da home e h1 das páginas; linhas partidas à mão."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Títulos de secção (h2)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Títulos de cartão, pack e bloco."
+      },
+      "serif-quote": {
+        "displayName": "Voz serifada",
+        "purpose": "Manifesto, citações e frases dos noivos; só itálico 300/400."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Parágrafos a 55–60% de titanium, até ~65ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Rótulos em maiúsculas a 55%, nomes de campo, metadados."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "Botões e navegação em maiúsculas espaçadas."
+      }
+    },
+    "shadows": [
+      {
+        "name": "none",
+        "value": "none",
+        "purpose": "O site público não usa sombras; a profundidade vem das camadas do céu e de opacidades."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-nebula",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Curva única de entradas, reveals, transições de vista e respiração do logótipo."
+      },
+      {
+        "name": "reveal",
+        "value": "0.7s, 18px",
+        "purpose": "Entrada de apoio das secções (framer-motion); discreta para não disputar o momento focal; desligada com movimento reduzido."
+      },
+      {
+        "name": "state",
+        "value": "200–500ms",
+        "purpose": "Hover de botões, contornos, campos e barra de navegação."
+      },
+      {
+        "name": "view-transition-foto",
+        "value": "480ms",
+        "purpose": "Miniatura do portfólio para a fotografia grande."
+      },
+      {
+        "name": "grao-deriva",
+        "value": "20s ease-in-out infinite",
+        "purpose": "Deriva do grão de fundo; para com movimento reduzido."
+      },
+      {
+        "name": "rack-focus-manifesto",
+        "value": "scroll-linked; blur 0→5px / 9→0px; spring 90/26/0.6",
+        "purpose": "Momento focal único: a mudança de foco entre as duas linhas do manifesto da home."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ação principal: cápsula marfim cheia com seta que avança.",
+      "html": "<a class=\"ds-btn-primary\" href=\"#\">Marcar sessão <svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></a>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;gap:12px;min-height:50px;padding:20px 36px;border-radius:9999px;background:#fcfff0;color:#141414;font-family:'Montserrat Variable', Montserrat, system-ui, sans-serif;font-size:11px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;transition:gap .3s cubic-bezier(0.16,1,0.3,1),transform .2s;}.ds-btn-primary svg{transition:transform .3s cubic-bezier(0.16,1,0.3,1);}.ds-btn-primary:hover{gap:20px;}.ds-btn-primary:hover svg{transform:translateX(4px);}.ds-btn-primary:active{transform:scale(.95);}.ds-btn-primary:focus-visible{outline: 2px solid rgba(252,255,240,0.85); outline-offset: 3px;}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Ação alternativa ao lado da primária (ex.: Instagram).",
+      "html": "<a class=\"ds-btn-ghost\" href=\"#\">Instagram</a>",
+      "css": ".ds-btn-ghost{display:inline-flex;align-items:center;gap:12px;padding:20px 36px;border-radius:9999px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:#fcfff0;font-family:'Montserrat Variable', Montserrat, system-ui, sans-serif;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;transition:border-color .3s;}.ds-btn-ghost:hover{border-color:rgba(255,255,255,0.45);}.ds-btn-ghost:active{transform:scale(.95);}.ds-btn-ghost:focus-visible{outline: 2px solid rgba(252,255,240,0.85); outline-offset: 3px;}"
+    },
+    {
+      "name": "Underline Link",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Ação secundária por omissão (classe link-sublinhado): maiúsculas com o risco colado ao texto; alvo de 44px por ::after.",
+      "html": "<a class=\"ds-link\" href=\"#\">Ver trabalhos desta categoria</a>",
+      "css": ".ds-link{display:inline-flex;align-items:center;position:relative;color:rgba(252,255,240,0.6);border-bottom:1px solid rgba(252,255,240,0.25);padding-bottom:4px;font-family:'Montserrat Variable', Montserrat, system-ui, sans-serif;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;transition:color .3s,border-color .3s;}.ds-link:hover{color:rgba(252,255,240,0.9);border-color:rgba(252,255,240,0.6);}.ds-link:focus-visible{outline: 2px solid rgba(252,255,240,0.85); outline-offset: 3px;}.ds-link::after{content:'';position:absolute;inset:-14px -6px -12px;}"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "button-nav",
+      "description": "Barra fixa: links a 60%, ativo com fio por baixo, cápsula de marcação.",
+      "html": "<nav class=\"ds-nav\"><span class=\"ds-nav-logo\">NEBULA</span><a href=\"#\" class=\"ds-nav-link is-active\">Serviços</a><a href=\"#\" class=\"ds-nav-link\">Portfólio</a><a href=\"#\" class=\"ds-nav-link\">Histórias</a><a href=\"#\" class=\"ds-nav-cta\">Marcar sessão</a></nav>",
+      "css": ".ds-nav{display:flex;align-items:center;gap:32px;padding:20px 24px;background:rgba(20,20,20,0.88);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.08);font-family:'Montserrat Variable', Montserrat, system-ui, sans-serif;}.ds-nav-logo{color:#fcfff0;font-weight:700;letter-spacing:0.12em;margin-right:auto;}.ds-nav-link{position:relative;color:rgba(252,255,240,0.6);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;text-decoration:none;padding:4px 0;transition:color .3s;}.ds-nav-link::after{content:'';position:absolute;left:0;bottom:-2px;height:1px;width:0;background:rgba(252,255,240,0.6);transition:width .3s;}.ds-nav-link:hover,.ds-nav-link.is-active{color:#fcfff0;}.ds-nav-link:hover::after,.ds-nav-link.is-active::after{width:100%;}.ds-nav-link:focus-visible,.ds-nav-cta:focus-visible{outline: 2px solid rgba(252,255,240,0.85); outline-offset: 3px;}.ds-nav-cta{padding:10px 20px;border-radius:9999px;border:1px solid rgba(252,255,240,0.25);color:rgba(252,255,240,0.75);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;text-decoration:none;transition:all .3s;}.ds-nav-cta:hover{background:#fcfff0;color:#141414;border-color:#fcfff0;}"
+    },
+    {
+      "name": "Pack Card",
+      "kind": "card",
+      "refersTo": "card-pack",
+      "description": "Cartão de pack: contorno de 1px, sobe e clareia em hover, sem sombra.",
+      "html": "<div class=\"ds-card\"><h3>Origem</h3><ul><li><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 6 9 17l-5-5\"/></svg> Cobertura do dia completo</li><li><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 6 9 17l-5-5\"/></svg> Galeria online privada</li><li><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 6 9 17l-5-5\"/></svg> Sneak Peek em 24h</li></ul></div>",
+      "css": ".ds-card{max-width:320px;padding:28px;border:1px solid rgba(255,255,255,0.1);border-radius:16px;background:transparent;color:#fcfff0;font-family:'Montserrat Variable', Montserrat, system-ui, sans-serif;transition:transform .5s cubic-bezier(0.16,1,0.3,1),border-color .5s,background-color .5s;}.ds-card:hover{transform:translateY(-6px);border-color:rgba(255,255,255,0.25);background:rgba(255,255,255,0.02);}.ds-card h3{margin:0 0 16px;font-size:20px;font-weight:600;letter-spacing:-0.02em;}.ds-card ul{list-style:none;margin:0;padding:0;display:grid;gap:10px;}.ds-card li{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:rgba(252,255,240,0.55);}.ds-card svg{margin-top:3px;flex-shrink:0;color:rgba(252,255,240,0.7);}"
+    },
+    {
+      "name": "Line Field",
+      "kind": "input",
+      "refersTo": "input-line",
+      "description": "Campo público: só um risco, etiqueta que sobe com foco ou texto.",
+      "html": "<div class=\"ds-field\"><input id=\"ds-nome\" class=\"ds-input\" placeholder=\" \"><label for=\"ds-nome\" class=\"ds-label\">Nome</label></div>",
+      "css": ".ds-field{position:relative;max-width:360px;font-family:'Montserrat Variable', Montserrat, system-ui, sans-serif;}.ds-input{width:100%;background:transparent;border:0;border-bottom:1px solid rgba(252,255,240,0.15);border-radius:0;padding:28px 0 10px;font-size:16px;color:#fcfff0;outline:none;font-family:inherit;transition:border-color .2s;}.ds-input:focus{border-bottom-color:rgba(252,255,240,0.65);}.ds-input[aria-invalid=true]{border-bottom-color:rgba(248,113,113,0.55);}.ds-label{position:absolute;left:0;top:26px;font-size:16px;color:rgba(252,255,240,0.5);pointer-events:none;transition:all .2s;}.ds-input:focus+.ds-label,.ds-input:not(:placeholder-shown)+.ds-label{top:0;font-size:10.4px;letter-spacing:0.22em;text-transform:uppercase;color:rgba(252,255,240,0.55);}"
+    },
+    {
+      "name": "Panel Field",
+      "kind": "input",
+      "refersTo": "input-panel",
+      "description": "Campo do painel de administração: caixa discreta.",
+      "html": "<input class=\"ds-input-panel\" value=\"casamento-ana-tiago\">",
+      "css": ".ds-input-panel{width:280px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:rgba(252,255,240,0.85);font-family:'Montserrat Variable', Montserrat, system-ui, sans-serif;font-size:14px;outline:none;transition:border-color .2s;}.ds-input-panel:focus{border-color:rgba(255,255,255,0.3);}"
+    },
+    {
+      "name": "Manifesto",
+      "kind": "custom",
+      "description": "Assinatura da home: duas linhas em Cormorant Itálico, a segunda a 60%.",
+      "html": "<div class=\"ds-manifesto\"><p class=\"ds-m1\">O tempo passa.</p><p class=\"ds-m2\">As imagens ficam</p><p class=\"ds-m3\">Porque um casamento acontece uma vez.</p></div>",
+      "css": ".ds-manifesto{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:300;line-height:1.12;font-size:56px;}.ds-manifesto p{margin:0;}.ds-m1{color:rgba(252,255,240,0.92);}.ds-m2{color:rgba(252,255,240,0.6);}.ds-m3{margin-top:24px !important;font-family:'Montserrat Variable', Montserrat, system-ui, sans-serif;font-style:normal;font-weight:400;font-size:13px;line-height:1.65;color:rgba(252,255,240,0.55);max-width:32ch;}"
+    },
+    {
+      "name": "Section Label",
+      "kind": "chip",
+      "description": "Rótulo em maiúsculas incumbente; não espalhar para superfícies novas.",
+      "html": "<span class=\"ds-label-sm\">O que fazemos</span>",
+      "css": ".ds-label-sm{font-family:'Montserrat Variable', Montserrat, system-ui, sans-serif;font-size:10.4px;letter-spacing:0.28em;text-transform:uppercase;color:rgba(252,255,240,0.55);}"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Nebulosa",
+    "overview": "Um céu escuro onde algo novo nasce. O fundo é quase preto e não é plano: tem um grão de filme fino a derivar devagar e uma poeira de pontos de luz a flutuar, alguns azulados, atrás de tudo. Por cima desse céu, o texto é cor de marfim e as fotografias aparecem como se fossem a única fonte de luz da sala. A interface existe para desaparecer à volta delas.\n\nA densidade é baixa e o ritmo é lento: secções muito espaçadas, títulos grandes e firmes em Montserrat, e uma frase em Cormorant Itálico de vez em quando para dar a voz humana (o manifesto, as citações). A cor da marca é a ausência de cor: preto e marfim, com o marfim em várias opacidades a fazer toda a hierarquia. Os componentes são discretos e precisos: cápsulas finas, contornos de um pixel, campos que são só um risco.\n\nO movimento é o da poeira: lento, contínuo, quase abaixo do que se nota. As entradas usam uma única curva exponencial, são curtas (18px, 0.7s) e desligam-se por completo com `prefers-reduced-motion`. Há um só momento com autor: a mudança de foco do manifesto, ligada ao scroll.",
+    "keyCharacteristics": [
+      "Fundo escuro único (eerie) com grão SVG e poeira em canvas, sempre **atrás** do conteúdo.",
+      "Hierarquia feita com opacidades de marfim, não com cores.",
+      "Uma família (Montserrat) para títulos e texto; Cormorant Itálico só para a voz poética.",
+      "Botões em cápsula, maiúsculas espaçadas, marfim cheio ou contorno fino.",
+      "Fotografias com cantos suaves e nunca com nada por cima delas que lhes mude a imagem."
+    ],
+    "rules": [
+      {
+        "name": "The No Accent Rule",
+        "body": "O site não tem cor de marca além do marfim. Cor saturada só aparece como estado (aviso, erro, sucesso), nunca como decoração, e quase só no painel.",
+        "section": "colors"
+      },
+      {
+        "name": "The Opacity Ladder Rule",
+        "body": "A hierarquia de texto faz-se com titanium a 100 / 80 / 60 / 55 / 45%, não com cinzentos novos. Abaixo de 55% só para texto grande ou decorativo.",
+        "section": "colors"
+      },
+      {
+        "name": "The Photograph Is Untouched Rule",
+        "body": "Nada que mude a imagem fica por cima de uma fotografia: nem o grão, nem a poeira, nem filtros. Gradientes de legibilidade escuros na base de um cartão são permitidos; tintas e cores não.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Family Rule",
+        "body": "Títulos e texto são todos Montserrat; a diferença faz-se em peso (600 contra 400) e tamanho. Não voltar a introduzir uma segunda sans.",
+        "section": "typography"
+      },
+      {
+        "name": "The Rare Serif Rule",
+        "body": "Cormorant só em itálico, só em 300/400, e só para a frase com voz (manifesto, citação, testemunho). Nunca em navegação, botões ou títulos funcionais, e nunca a negrito (o peso não está carregado).",
+        "section": "typography"
+      },
+      {
+        "name": "The Tight Display Rule",
+        "body": "Títulos com tracking −0.02em e line-height abaixo de 1.1; nunca abaixo de −0.04em.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sky Behind Rule",
+        "body": "Grão e poeira ficam sempre atrás do conteúdo. Por cima, sujavam as fotografias dos clientes.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Lift Not Shadow Rule",
+        "body": "Um elemento interativo responde subindo e clareando o contorno, nunca ganhando sombra.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Authored Moment Rule",
+        "body": "O site tem um só movimento de autor, a mudança de foco do manifesto. Tudo o resto (entradas, hovers, transições) é apoio e fica discreto; não se acrescenta um segundo momento que lhe dispute a atenção.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do usar eerie como fundo e titanium a opacidades para toda a hierarquia.",
+      "Do manter Montserrat em títulos e texto, e guardar Cormorant Itálico para a frase com voz.",
+      "Do dar às fotografias cantos de 16px e deixá-las sem nada por cima.",
+      "Do usar cápsulas em maiúsculas espaçadas para ações, com a seta que avança em hover.",
+      "Do separar secções com 96/144px e um fio de 1px a 10%.",
+      "Do usar a curva `cubic-bezier(0.16, 1, 0.3, 1)` para entradas e transições, e desligá-las com `prefers-reduced-motion`.",
+      "Do manter alvos de toque com pelo menos 44px. Num link pequeno que não pode crescer, usar `alvo-toque` (alarga a zona por um `::after`) em vez de mudar o desenho.",
+      "Do desligar no framer-motion, com `useReducedMotion`, tudo o que o CSS global não apanha."
+    ],
+    "donts": [
+      "Don't introduzir uma cor de destaque: o site é preto e marfim.",
+      "Don't pôr grão, poeira, tintas ou filtros por cima de uma fotografia.",
+      "Don't usar sombras para dar elevação; sobe-se e clareia-se o contorno.",
+      "Don't voltar a carregar a Poppins nem outra sans para títulos.",
+      "Don't usar Cormorant a negrito, em botões ou em navegação.",
+      "Don't pôr texto pequeno abaixo de 55% de titanium.",
+      "Don't acrescentar novos rótulos de secção por cima de títulos em superfícies novas: o padrão existe no site atual, mas um título bom aguenta sozinho, e o sistema não o deve espalhar."
+    ]
+  }
+}
