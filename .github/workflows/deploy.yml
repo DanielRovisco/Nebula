@@ -307,8 +307,12 @@ jobs:
             flag=""
             case "$linha" in *--no-verify-jwt*) flag="--no-verify-jwt" ;; esac
             echo "→ $nome $flag"
+            # O --yes é o que falta quando a CLI decide pedir confirmação:
+            # ela pergunta "Deploy 1 Function?", aqui não há terminal para
+            # responder, e o trabalho falha sem ter publicado nada. Passou a
+            # acontecer sozinho porque isto corre sempre a última versão.
             npx --yes supabase@latest functions deploy "$nome" \
-              --project-ref "$PROJECT_REF" $flag || falhou=1
+              --project-ref "$PROJECT_REF" $flag --yes || falhou=1
           done
           [ "$falhou" -eq 0 ] || { echo "::error::Houve funções por publicar."; exit 1; }
           echo "Edge Functions publicadas."
